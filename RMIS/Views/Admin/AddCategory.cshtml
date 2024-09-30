@@ -1,0 +1,45 @@
+﻿@model RMIS.Models.AddCategoryInput;
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<header style="position: relative; z-index: 1050;">
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow" style="background-color: #9ac43e; padding: 0;">
+        <div class="container-fluid ">
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="btn dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                            Admin
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddSystem">System</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<h2>Create a New Category</h2>
+
+<form method="post">
+    <label asp-for="ParentId">Parent Category (Optional)</label>
+    <select asp-for="ParentId" asp-items="@Model.parentCategories" class="form-control">
+        <option value="">-- None --</option>
+    </select>
+    <div class="form-group">
+        <label asp-for="Name">Category Name</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Category</button>
+</form>

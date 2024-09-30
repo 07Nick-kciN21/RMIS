@@ -1,0 +1,36 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<body>
+    <div id="map" style="height: 800px;"></div>
+
+    <script>
+        var mymap = L.map('map').setView([24.957276277371435, 121.21903318892302], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mymap);
+
+        $.ajax({
+            url: '/api/MapAPI/GetAllArea', // API 地址
+            method: 'GET',
+            success: function (data) {
+                data.forEach(function (area) {
+                    let latlngs = [];
+                    area.points.forEach(function(point){
+                        latlngs.push([point.latitude, point.longitude]);
+                    });
+                    console.log(area);
+                    var polygon = L.polygon(latlngs, { color: 'red' }).addTo(mymap);
+                    polygon.bindTooltip(area.name).openTooltip();
+                });
+            },
+            error: function (err) {
+                console.error('Error fetching area data', err);
+            }
+        });
+    </script>
+</body>

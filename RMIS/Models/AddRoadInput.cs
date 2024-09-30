@@ -1,0 +1,17 @@
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using RMIS.Models.sql;
+
+namespace RMIS.Models
+{
+    public class AddRoadInput
+    {
+        public string Name { get; set; }
+        public string ConstructionUnit { get; set; } // 施工單位
+        public string Type { get; set; } // 類別
+        public string AdminDistId { get; set; }  
+        public IEnumerable<SelectListItem> AdminDists { get; set; }
+        public string PipelineId { get; set; }
+        public IEnumerable<SelectListItem> Pipelines { get; set; }
+        public List<Point> Points { get; set; }
+    }
+}

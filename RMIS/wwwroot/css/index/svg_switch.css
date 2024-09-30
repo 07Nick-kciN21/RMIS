@@ -1,0 +1,16 @@
+﻿.switch {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.switch-off {
+    background-image: url('/svg/switch-off.svg');
+}
+
+.switch-on {
+    background-image: url('/svg/switch-on.svg');
+}

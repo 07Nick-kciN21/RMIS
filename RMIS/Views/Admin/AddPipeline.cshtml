@@ -1,0 +1,67 @@
+﻿@model RMIS.Models.AddPipelineInput;
+
+@{
+    ViewData["Title"] = "Add Pipeline";
+}
+<header style="position: relative; z-index: 1050;">
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow" style="background-color: #9ac43e; padding: 0;">
+        <div class="container-fluid ">
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="btn dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                            Admin
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddSystem">System</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
+                            <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<h2>Add Pipeline</h2>
+
+<form method="post">
+@*     <div class="form-group">
+        <label for="PipelineSysId">選擇管線系統</label>
+        <select asp-for="PipelineSysId" asp-items="@Model.PipelineSys" class=" form-control">
+        </select>
+        <span asp-validation-for="PipelineSysId" class="text-danger"></span>
+    </div> *@
+
+    <div class="form-group">
+        <label asp-for="ManagementUnit">管理單位</label>
+        <input asp-for="ManagementUnit" class="form-control" />
+        <span asp-validation-for="ManagementUnit" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Category">類別</label>
+        <select asp-for="CategoryId" asp-items="@Model.Category" class="form-control">
+            <option value="">-- None --</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label asp-for="Name">管線名稱</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Color">顏色</label>
+        <input asp-for="Color" type="color" class="form-control" />
+        <span asp-validation-for="Color" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Submit" class="btn btn-primary" />
+    </div>
+</form>

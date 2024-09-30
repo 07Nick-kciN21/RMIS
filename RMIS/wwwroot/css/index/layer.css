@@ -1,0 +1,29 @@
+﻿.layerList {
+    width: 70%;
+    border: 3px solid #73AD21;
+    padding: 10px;
+}
+
+.layerBar {
+    display: flex;
+}
+
+.layerTitle {
+    flex-grow: 1; /* This will allow the title to take up the remaining space */
+}
+
+.layerRemove {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.layerRemove {
+    background-image: url('/svg/remove_0.svg');
+}
+
+    .layerRemove:hover {
+        background-image: url('/svg/remove_1.svg');
+    }

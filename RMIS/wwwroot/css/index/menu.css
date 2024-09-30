@@ -1,0 +1,42 @@
+﻿.menu-background {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.menu-sub {
+    padding: 8px 0px 0px 10px;
+    display: none;
+}
+
+.menu-node {
+    display: flex;
+    align-items: center;
+}
+
+    .menu-node h4 {
+        margin: 0;
+    }
+
+.menu-layer {
+    display: flex;
+    align-items: center; /* This will vertically align the items in the center */
+}
+.menu-icon {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    margin-right: 10px;
+}
+
+.menu-node, .menu-layer, .menu-icon {
+    cursor: pointer;
+}
+
+.menu-open {
+    background-image: url('/svg/menu-open.svg');
+}
+
+.menu-close {
+    background-image: url('/svg/menu-close.svg');
+}

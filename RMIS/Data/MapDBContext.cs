@@ -1,0 +1,31 @@
+﻿using Microsoft.AspNetCore;
+using Microsoft.EntityFrameworkCore;
+using RMIS.Models.sql;
+
+namespace RMIS.Data
+{
+    public class MapDBContext:DbContext
+    {
+        public MapDBContext(DbContextOptions<MapDBContext> options) : base(options)
+        {
+        }
+        public DbSet<Road> Roads { get; set; }
+        public DbSet<Area> Areas { get; set; }
+        public DbSet<Point> Points { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<AdminDist> AdminDist { get; set; }
+        public DbSet<Pipeline> Pipelines { get; set; }
+        public DbSet<Pipeline_sys> Pipeline_sys { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Define the self-referencing foreign key for the Category entity
+            modelBuilder.Entity<Category>()
+                .HasOne(c => c.Parent)
+                .WithMany(c => c.Subcategories)
+                .HasForeignKey(c => c.ParentId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascading deletes
+        }
+    }
+}

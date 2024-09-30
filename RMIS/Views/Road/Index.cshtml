@@ -1,0 +1,44 @@
+﻿
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<body>
+    <div id="map" style="height: 800px;"></div>
+
+    <script>
+        var map = L.map('map').setView([24.957276277371435, 121.21903318892302], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+         map.on('click', function(e) {
+            var latitude = e.latlng.lat;  // 获取纬度
+            var longitude = e.latlng.lng; // 获取经度
+            
+            // 输出坐标到控制台
+            console.log("Latitude: " + latitude + ", Longitude: " + longitude);
+        });
+
+        $.ajax({
+            url: '/api/MapAPI/GetAllRoad',
+            method: 'GET',
+            success: function (data) {
+                data.forEach(function (road) {
+                    let latlngs = [];
+                    road.points.forEach(function(point){
+                        latlngs.push([point.latitude, point.longitude]);
+                    });
+                    console.log(road);
+                    var polyline = L.polyline(latlngs, { color: 'red' }).addTo(map);
+                    polyline.bindTooltip(road.name).openTooltip();
+                });
+            },
+            error: function(err) {
+                console.error('Error fetching road data', err);
+                }
+            });
+    </script>
+</body>
