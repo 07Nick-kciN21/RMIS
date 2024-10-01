@@ -2,10 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Data;
-using RMIS.Models.AreaModel;
-using RMIS.Models.RoadModel;
-using RMIS.Models.sql;
-using static RMIS.Models.RoadModel.RoadClass;
+using static RMIS.Models.API.IndexClass;
 
 namespace RMIS.Controllers
 {
@@ -13,92 +10,27 @@ namespace RMIS.Controllers
     [ApiController]
     public class MapAPIController : ControllerBase
     {
-        private readonly MapDBContext _Mapcontext;
+        private readonly MapDBContext _dbContext;
 
-        public MapAPIController(MapDBContext Mapcontext)
+        public MapAPIController(MapDBContext dbContext)
         {
-            _Mapcontext = Mapcontext;
-        }
-        [HttpGet]
-        public async Task<List<RoadClass.View>> GetAllRoad()
-        {
-            var roads = await _Mapcontext.Roads.Include(road => road.Points).Select(road => new RoadClass.View
-            {
-                Name = road.Name,
-                Points = road.Points
-                            .OrderBy(p => p.Index) // 按 Index 排序 Points
-                            .Select(p => new RoadClass.View_input
-                            {
-                                Latitude = p.Latitude,
-                                Longitude = p.Longitude,
-                                Index = p.Index
-                            }).ToList()
-            }).ToListAsync();
-            return roads;
+            _dbContext = dbContext;
         }
 
-        [HttpGet]
-        public async Task<List<AreaClass.View>> GetAllArea()
-        {
-            return await _Mapcontext.Areas.Include(area => area.Points).Select(area => new AreaClass.View
-            {
-                Id = area.Id,
-                Name = area.Name,
-                Points = area.Points
-                            .OrderBy(p => p.Index) // 按 Index 排序 Points
-                            .Select(p => new AreaClass.View_input
-                            {
-                                Latitude = p.Latitude,
-                                Longitude = p.Longitude,
-                                Index = p.Index
-                            }).ToList()
-            }).ToListAsync();
-        }
-
+        /// <summary>
+        /// 根據管道ID獲取道路
+        /// </summary>
+        /// <param name="pipelineId">管道ID</param>
+        /// <returns>道路索引視圖</returns>
         [HttpPost]
-        public async Task<RoadClass.IndexView> GetRoadbyPipeline(Guid pipeId)
+        public async Task<LayersByPipeline> GetLayersByPipeline(Guid pipelineId)
         {
-            var pipeline = await _Mapcontext.Pipelines.FirstOrDefaultAsync(p => p.Id == pipeId);
-            var roads = await _Mapcontext.Roads.Include(road => road.Points).Where(r => r.PipelineId == pipeId).Select(road => new RoadClass.Road
-            {
-                Name = road.Name,
-                Points = road.Points
-                    .OrderBy(p => p.Index) // 按 Index 排序 Points
-                    .Select(p => new RoadClass.View_input
-                    {
-                        Latitude = p.Latitude,
-                        Longitude = p.Longitude,
-                        Index = p.Index
-                    }).ToList()
-            }).ToListAsync();
-            var result = new RoadClass.IndexView
-            {
-                roads = roads,
-                color = pipeline.Color
-            };
-            return result;
-        }
+            var pipeline = await _dbContext.Pipelines.FirstOrDefaultAsync(p => p.Id == pipelineId);
 
-        [HttpPost]
-        public async Task<AreaClass.IndexView> GetAreabyPipeline(Guid pipeId)
-        {
-            var pipeline = await _Mapcontext.Pipelines.FirstOrDefaultAsync(p => p.Id == pipeId);
-            var areas = await _Mapcontext.Areas.Include(area => area.Points).Where(r => r.PipelineId == pipeId).Select(area => new AreaClass.Area
+            var result = new LayersByPipeline
             {
-                Name = area.Name,
-                Points = area.Points
-                    .OrderBy(p => p.Index) // 按 Index 排序 Points
-                    .Select(p => new AreaClass.View_input
-                    {
-                        Latitude = p.Latitude,
-                        Longitude = p.Longitude,
-                        Index = p.Index
-                    }).ToList()
-            }).ToListAsync();
-            var result = new AreaClass.IndexView
-            {
-                areas = areas,
-                color = pipeline.Color
+                // 該id下的所有Layer
+                // 該Layer下的所有Area
             };
             return result;
         }

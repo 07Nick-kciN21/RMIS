@@ -7,8 +7,8 @@
         public string ConstructionUnit { get; set; } // 施工單位
         public Guid AdminDistId { get; set; }
         public AdminDist AdminDist { get; set; }
-        public Guid PipelineId { get; set; } // Func 的外鍵
-        public Pipeline Pipeline { get; set; }
+        public Guid LayerId { get; set; }
+        public Layer Layer { get; set; }
         public ICollection<Point> Points { get; set; }
     }
 }

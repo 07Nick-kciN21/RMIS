@@ -20,7 +20,6 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-
             var allCategories = _mapDBContext.Categories.ToList();
             var jsTreeData = BuildJsTreeData(allCategories, null);
             ViewBag.JsTreeData = jsTreeData;
@@ -79,16 +78,6 @@ namespace RMIS.Controllers
 
             
             return result;
-        }
-        [HttpGet]
-        public IActionResult Add()
-        {
-            var viewModel = new HomeAddModel
-            {
-                RoadInput = new Models.RoadModel.RoadClass.AddInput(),
-                AreaInput = new Models.AreaModel.AreaClass.AddInput()
-            };
-            return View(viewModel);
         }
         public IActionResult Privacy()
         {

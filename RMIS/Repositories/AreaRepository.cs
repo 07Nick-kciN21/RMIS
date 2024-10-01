@@ -22,7 +22,6 @@ namespace RMIS.Repositories
                     var new_point = new Point
                     {
                         Id = Guid.NewGuid(),
-                        AreaId = area_id,
                         Index = point.Index,
                         Latitude = point.Latitude,
                         Longitude = point.Longitude
@@ -46,24 +45,5 @@ namespace RMIS.Repositories
             }
         }
 
-        Task<List<AreaClass.View>> IAreaRepository.AllAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<bool> IAreaRepository.DeleteAsync(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<AreaClass.View> IAreaRepository.GetAsync(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<bool> IAreaRepository.UpdateAsync(AreaClass.View area)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

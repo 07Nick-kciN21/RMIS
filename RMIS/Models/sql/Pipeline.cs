@@ -6,10 +6,9 @@
         public string Name { get; set; } // 管線名稱
         public string ManagementUnit { get; set; } // 管理單位
         public string Color { get; set; } // 顏色
-        public Guid CategoryId { get; set; } // 管線類別
-        public ICollection<Road> Roads { get; set; } // 多條道路
-        //public Guid PipelineSysId { get; set; } // 管線系統 ID
-        //// 導航屬性，用於關聯 Pipeline_sys
-        //public Pipeline_sys PipelineSys { get; set; }
+        public Guid CategoryId { get; set; } // 管線Id
+        public Category Category { get; set; } // 管線類別
+        public ICollection<Layer> Layers { get; set; } // 多個圖層
+        // public ICollection<Road> Roads { get; set; } // 多條道路
     }
 }

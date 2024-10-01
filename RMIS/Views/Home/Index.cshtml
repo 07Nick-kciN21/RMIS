@@ -155,7 +155,6 @@
                                     ${item.text}
                                 </${headingTag}>
                             </div>`;
-                   
                 }
                 else {
                     html += `
@@ -165,14 +164,11 @@
                             </${headingTag}>
                              `;
                     layerList[item.id] = false;
-                    
                 }
-                
                 // 遞歸處理子選單
                 if (item.children && item.children.length > 0) {
                     html += generateMenu(item.children, item.text, index + 1);
                 }
-
                 html += `</li>`;
             });
 
@@ -244,7 +240,7 @@
 
         function addLayer(id, name) {
             $.ajax({
-                url: `/api/MapAPI/GetRoadbyPipeline?pipeId=${id}`,
+                url: `/api/MapAPI/GetRoadsByPipeline?pipelineId=${id}`,
                 method: 'POST',
                 success: function (data) {
                     console.log(data);

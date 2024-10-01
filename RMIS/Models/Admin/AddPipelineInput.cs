@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using RMIS.Models.sql;
 
-namespace RMIS.Models
+namespace RMIS.Models.Admin
 {
     public class AddPipelineInput
     {
@@ -11,6 +11,9 @@ namespace RMIS.Models
         public string Color { get; set; } // 顏色
         public string PipelineSysId { get; set; } // 管線系統 ID
         public IEnumerable<SelectListItem> Category { get; set; } // 類別
+        public IEnumerable<SelectListItem> GeometryTypes { get; set; }
+        public string[] selectedGeometryTypes { get; set; } =  Array.Empty<string>();
+
         //public IEnumerable<SelectListItem> PipelineSys { get; set; }
     }
 }

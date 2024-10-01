@@ -24,7 +24,6 @@ namespace RMIS.Repositories
                     var new_point = new Point
                     {
                         Id = Guid.NewGuid(),
-                        RoadId = road_id,
                         Index = point.Index,
                         Latitude = point.Latitude,
                         Longitude = point.Longitude

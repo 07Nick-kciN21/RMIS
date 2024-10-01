@@ -13,9 +13,10 @@ namespace RMIS.Data
         public DbSet<Area> Areas { get; set; }
         public DbSet<Point> Points { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<AdminDist> AdminDist { get; set; }
         public DbSet<Pipeline> Pipelines { get; set; }
-        public DbSet<Pipeline_sys> Pipeline_sys { get; set; }
+        public DbSet<Layer> Layers { get; set; }
+        public DbSet<AdminDist> AdminDist { get; set; }
+        public DbSet<GeometryType> GeometryTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMIS.Data;
 
@@ -11,9 +12,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20241001070746_Alter Layer")]
+    partial class AlterLayer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,6 +192,9 @@ namespace RMIS.Migrations
                     b.Property<double>("Latitude")
                         .HasColumnType("float");
 
+                    b.Property<Guid?>("LayerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<double>("Longitude")
                         .HasColumnType("float");
 
@@ -198,6 +204,8 @@ namespace RMIS.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AreaId");
+
+                    b.HasIndex("LayerId");
 
                     b.HasIndex("RoadId");
 
@@ -294,15 +302,19 @@ namespace RMIS.Migrations
 
             modelBuilder.Entity("RMIS.Models.sql.Point", b =>
                 {
-                    b.HasOne("RMIS.Models.sql.Area", "Area")
+                    b.HasOne("RMIS.Models.sql.Area", null)
                         .WithMany("Points")
                         .HasForeignKey("AreaId");
+
+                    b.HasOne("RMIS.Models.sql.Layer", "Layer")
+                        .WithMany()
+                        .HasForeignKey("LayerId");
 
                     b.HasOne("RMIS.Models.sql.Road", null)
                         .WithMany("Points")
                         .HasForeignKey("RoadId");
 
-                    b.Navigation("Area");
+                    b.Navigation("Layer");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Road", b =>
