@@ -192,45 +192,11 @@ namespace RMIS.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("float");
 
-                    b.Property<Guid?>("RoadId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AreaId");
 
-                    b.HasIndex("RoadId");
-
                     b.ToTable("Points");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Road", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AdminDistId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ConstructionUnit")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("PipelineId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdminDistId");
-
-                    b.HasIndex("PipelineId");
-
-                    b.ToTable("Roads");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Area", b =>
@@ -298,35 +264,7 @@ namespace RMIS.Migrations
                         .WithMany("Points")
                         .HasForeignKey("AreaId");
 
-                    b.HasOne("RMIS.Models.sql.Road", null)
-                        .WithMany("Points")
-                        .HasForeignKey("RoadId");
-
                     b.Navigation("Area");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Road", b =>
-                {
-                    b.HasOne("RMIS.Models.sql.AdminDist", "AdminDist")
-                        .WithMany("Roads")
-                        .HasForeignKey("AdminDistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RMIS.Models.sql.Pipeline", "Pipeline")
-                        .WithMany()
-                        .HasForeignKey("PipelineId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AdminDist");
-
-                    b.Navigation("Pipeline");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.AdminDist", b =>
-                {
-                    b.Navigation("Roads");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Area", b =>
@@ -352,11 +290,6 @@ namespace RMIS.Migrations
             modelBuilder.Entity("RMIS.Models.sql.Pipeline", b =>
                 {
                     b.Navigation("Layers");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Road", b =>
-                {
-                    b.Navigation("Points");
                 });
 #pragma warning restore 612, 618
         }

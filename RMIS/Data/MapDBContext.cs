@@ -9,7 +9,6 @@ namespace RMIS.Data
         public MapDBContext(DbContextOptions<MapDBContext> options) : base(options)
         {
         }
-        public DbSet<Road> Roads { get; set; }
         public DbSet<Area> Areas { get; set; }
         public DbSet<Point> Points { get; set; }
         public DbSet<Category> Categories { get; set; }

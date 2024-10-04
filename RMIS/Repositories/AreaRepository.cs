@@ -26,7 +26,7 @@ namespace RMIS.Repositories
                         Latitude = point.Latitude,
                         Longitude = point.Longitude
                     };
-                    await _mapDBContext.Points.AddAsync(new_point);
+                    //await _mapDBContext.Points.AddAsync(new_point);
                 }
                 var new_area = new Area
                 {

@@ -12,8 +12,8 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    [Migration("20240923023903_Add Category3")]
-    partial class AddCategory3
+    [Migration("20241004033343_MapDB init")]
+    partial class MapDBinit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -60,18 +60,18 @@ namespace RMIS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("LayerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("PipelineId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AdminDistId");
 
-                    b.HasIndex("PipelineId");
+                    b.HasIndex("LayerId");
 
                     b.ToTable("Areas");
                 });
@@ -86,6 +86,9 @@ namespace RMIS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uniqueidentifier");
 
@@ -96,15 +99,64 @@ namespace RMIS.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("RMIS.Models.sql.GeometryType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Svg")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GeometryTypes");
+                });
+
+            modelBuilder.Entity("RMIS.Models.sql.Layer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("GeometryTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PipelineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GeometryTypeId");
+
+                    b.HasIndex("PipelineId");
+
+                    b.ToTable("Layers");
+                });
+
             modelBuilder.Entity("RMIS.Models.sql.Pipeline", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Color")
                         .IsRequired()
@@ -118,29 +170,11 @@ namespace RMIS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("PipelineSysId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("PipelineSysId");
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Pipelines");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Pipeline_sys", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SystemName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Pipeline_sys");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Point", b =>
@@ -161,45 +195,11 @@ namespace RMIS.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("float");
 
-                    b.Property<Guid?>("RoadId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AreaId");
 
-                    b.HasIndex("RoadId");
-
                     b.ToTable("Points");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Road", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AdminDistId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ConstructionUnit")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("PipelineId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdminDistId");
-
-                    b.HasIndex("PipelineId");
-
-                    b.ToTable("Roads");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Area", b =>
@@ -210,15 +210,15 @@ namespace RMIS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RMIS.Models.sql.Pipeline", "Pipeline")
-                        .WithMany()
-                        .HasForeignKey("PipelineId")
+                    b.HasOne("RMIS.Models.sql.Layer", "Layer")
+                        .WithMany("Areas")
+                        .HasForeignKey("LayerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AdminDist");
 
-                    b.Navigation("Pipeline");
+                    b.Navigation("Layer");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Category", b =>
@@ -231,15 +231,34 @@ namespace RMIS.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("RMIS.Models.sql.Pipeline", b =>
+            modelBuilder.Entity("RMIS.Models.sql.Layer", b =>
                 {
-                    b.HasOne("RMIS.Models.sql.Pipeline_sys", "PipelineSys")
-                        .WithMany("pipelines")
-                        .HasForeignKey("PipelineSysId")
+                    b.HasOne("RMIS.Models.sql.GeometryType", "GeometryType")
+                        .WithMany("Layers")
+                        .HasForeignKey("GeometryTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PipelineSys");
+                    b.HasOne("RMIS.Models.sql.Pipeline", "Pipeline")
+                        .WithMany("Layers")
+                        .HasForeignKey("PipelineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GeometryType");
+
+                    b.Navigation("Pipeline");
+                });
+
+            modelBuilder.Entity("RMIS.Models.sql.Pipeline", b =>
+                {
+                    b.HasOne("RMIS.Models.sql.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Point", b =>
@@ -248,37 +267,7 @@ namespace RMIS.Migrations
                         .WithMany("Points")
                         .HasForeignKey("AreaId");
 
-                    b.HasOne("RMIS.Models.sql.Road", "Road")
-                        .WithMany("Points")
-                        .HasForeignKey("RoadId");
-
                     b.Navigation("Area");
-
-                    b.Navigation("Road");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Road", b =>
-                {
-                    b.HasOne("RMIS.Models.sql.AdminDist", "AdminDist")
-                        .WithMany("Roads")
-                        .HasForeignKey("AdminDistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RMIS.Models.sql.Pipeline", "Pipeline")
-                        .WithMany("Roads")
-                        .HasForeignKey("PipelineId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AdminDist");
-
-                    b.Navigation("Pipeline");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.AdminDist", b =>
-                {
-                    b.Navigation("Roads");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Area", b =>
@@ -291,19 +280,19 @@ namespace RMIS.Migrations
                     b.Navigation("Subcategories");
                 });
 
+            modelBuilder.Entity("RMIS.Models.sql.GeometryType", b =>
+                {
+                    b.Navigation("Layers");
+                });
+
+            modelBuilder.Entity("RMIS.Models.sql.Layer", b =>
+                {
+                    b.Navigation("Areas");
+                });
+
             modelBuilder.Entity("RMIS.Models.sql.Pipeline", b =>
                 {
-                    b.Navigation("Roads");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Pipeline_sys", b =>
-                {
-                    b.Navigation("pipelines");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.Road", b =>
-                {
-                    b.Navigation("Points");
+                    b.Navigation("Layers");
                 });
 #pragma warning restore 612, 618
         }

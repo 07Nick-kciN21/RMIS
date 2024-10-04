@@ -24,11 +24,12 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult AddPipeline()
         {
-            var Categories = _mapDBContext.Categories.ToList();
+            var _Categories = _mapDBContext.Categories.ToList();
+            var _GeometryTypes = _mapDBContext.GeometryTypes.ToList();
             var input = new AddPipelineInput
             {
-                Category = BuildCategorySelectList(Categories, null),
-                GeometryTypes = _mapDBContext.GeometryTypes.Select(g => new SelectListItem
+                Category = BuildCategorySelectList(_Categories, null),
+                GeometryTypes = _GeometryTypes.Select(g => new SelectListItem
                 {
                     Text = g.Name,
                     Value = g.Id.ToString()
@@ -98,30 +99,24 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult AddRoad()
         {
-            var AdminDists = _mapDBContext.AdminDist.OrderBy(ad => ad.orderId).ToList();
-            var Pipelines = _mapDBContext.Pipelines.ToList();
-            var GeometryTypes = _mapDBContext.GeometryTypes.OrderBy(gt => gt.OrderId).ToList();
-
-            var RoadInput = new AddRoadInput
+            var _AdminDists = _mapDBContext.AdminDist.ToList();
+            var _Pipelines = _mapDBContext.Pipelines.ToList();
+            var model = new AddRoadInput
             {
-                AdminDists = AdminDists.Select(ad => new SelectListItem
+                AdminDists = _AdminDists.Select(ad => new SelectListItem
                 {
                     Text = ad.City + ad.Town,
                     Value = ad.Id.ToString()
                 }),
-                Pipelines = Pipelines.Select(p => new SelectListItem
+                Pipelines = _Pipelines.Select(p => new SelectListItem
                 {
                     Text = buildPipelinePath(p.CategoryId) + "/" + p.Name,
                     Value = p.Id.ToString()
-                }),
-                GeometryTypes = GeometryTypes.Select(gt => new SelectListItem
-                {
-                    Text = gt.Name,
-                    Value = gt.Id.ToString()
                 })
             };
-            return View(RoadInput);
+            return View(model);
         }
+
         private string buildPipelinePath(Guid? parentId)
         {
             var parentCategory = _mapDBContext.Categories.FirstOrDefault(p => p.Id == parentId);
@@ -132,6 +127,16 @@ namespace RMIS.Controllers
             return buildPipelinePath(parentCategory.ParentId) + "/" + parentCategory.Name;
         }
 
+        [HttpGet]
+        public IActionResult GetLayers(Guid pipelineId)
+        {
+            var layers = _mapDBContext.Layers
+                .Where(l => l.PipelineId == pipelineId)
+                .Select(l => new { l.Id, l.Name })
+                .ToList();
+            return Json(layers);
+        }
+
         [HttpPost]
         public IActionResult AddRoad(AddRoadInput roadInput)
         {
@@ -139,56 +144,28 @@ namespace RMIS.Controllers
             {
                 Guid Input_id = Guid.NewGuid();
 
-                if (roadInput.Type == "road")
+                foreach (var point in roadInput.Points)
                 {
-                    foreach (var point in roadInput.Points)
+                    var new_point = new Point
                     {
-                        var new_point = new Point
-                        {
-                            Id = Guid.NewGuid(),
-                            Index = point.Index,
-                            Latitude = point.Latitude,
-                            Longitude = point.Longitude
-                        };
-                        _mapDBContext.Points.AddAsync(new_point);
-                    }
-                    var roadItem = new Road
-                    {
-                        Id = Input_id,
-                        Name = roadInput.Name,
-                        ConstructionUnit = roadInput.ConstructionUnit,
-                        AdminDistId = Guid.Parse(roadInput.AdminDistId),
-                        PipelineId = Guid.Parse(roadInput.PipelineId),
+                        Id = Guid.NewGuid(),
+                        Index = point.Index,
+                        Latitude = point.Latitude,
+                        Longitude = point.Longitude,
+                        AreaId = Input_id
                     };
-
-                    // 將新道路添加到資料庫
-                    _mapDBContext.Roads.Add(roadItem);
+                    _mapDBContext.Points.AddAsync(new_point);
                 }
-                else if (roadInput.Type == "area")
+                var areatem = new Area
                 {
-                    foreach (var point in roadInput.Points)
-                    {
-                        var new_point = new Point
-                        {
-                            Id = Guid.NewGuid(),
-                            Index = point.Index,
-                            Latitude = point.Latitude,
-                            Longitude = point.Longitude
-                        };
-                        _mapDBContext.Points.AddAsync(new_point);
-                    }
-                    var areaItem = new Area
-                    {
-                        Id = Input_id,
-                        Name = roadInput.Name,
-                        ConstructionUnit = roadInput.ConstructionUnit,
-                        AdminDistId = Guid.Parse(roadInput.AdminDistId),
-                    };
+                    Id = Input_id,
+                    Name = roadInput.Name,
+                    ConstructionUnit = roadInput.ConstructionUnit,
+                    AdminDistId = Guid.Parse(roadInput.AdminDistId),
+                    LayerId = Guid.Parse(roadInput.LayerId),
+                };
 
-                    // 將新道路添加到資料庫
-                    _mapDBContext.Areas.Add(areaItem);
-                }
-
+                _mapDBContext.Areas.Add(areatem);
                 // 檢查 SaveChanges 返回值
                 int rowsAffected = _mapDBContext.SaveChanges();
 

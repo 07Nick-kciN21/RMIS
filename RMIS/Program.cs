@@ -9,7 +9,6 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<MapDBContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString")));
-builder.Services.AddScoped<IRoadRepository, RoadRepository>();
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 var app = builder.Build();
 

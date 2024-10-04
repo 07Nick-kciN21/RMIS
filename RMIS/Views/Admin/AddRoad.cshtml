@@ -43,25 +43,28 @@
 </header>
 <div class="container">
     <form method="post">
-        <h2>Add Road</h2>
+        <h2>新增圖層資料</h2>
         <div class="form-group">
             <label for="AdminDists">選擇行政區</label>
-            <select asp-for="AdminDistId" asp-items="@Model.AdminDists" class=" form-control">
+            <select asp-for="AdminDistId" asp-items="Model.AdminDists" class=" form-control">
+                <option value="" disabled selected>--None--</option>
             </select>
             <span asp-validation-for="AdminDists" class="text-danger"></span>
         </div>
         <div class="form-group">
             <label for="Pipelines">選擇管線</label>
             <select asp-for="PipelineId" asp-items="@Model.Pipelines" class=" form-control">
+                <option value="" disabled selected>--None--</option>
             </select>
             <span asp-validation-for="Pipelines" class="text-danger"></span>
         </div>
         <!-- 將 GeometryTypes 的數據嵌入到 HTML 元素中 -->
         <div class="form-group ">
-            <label asp-for="GeometryTypeId">類型</label>
-            <select asp-for="GeometryTypeId" asp-items="@Model.GeometryTypes" class=" form-control">
+            <label>圖層</label>
+            <select asp-for="LayerId" id="layersSelect" class=" form-control">
+                <option value="" disabled selected>--None--</option>
+                <!-- 選項 -->
             </select>
-            <span asp-validation-for="GeometryTypeId" class="text-danger"></span>
         </div>
         <div class="form-group">
             <label asp-for="ConstructionUnit">施工單位</label>

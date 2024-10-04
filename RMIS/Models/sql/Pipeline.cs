@@ -9,6 +9,5 @@
         public Guid CategoryId { get; set; } // 管線Id
         public Category Category { get; set; } // 管線類別
         public ICollection<Layer> Layers { get; set; } // 多個圖層
-        // public ICollection<Road> Roads { get; set; } // 多條道路
     }
 }

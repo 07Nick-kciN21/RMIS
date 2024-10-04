@@ -6,14 +6,22 @@ namespace RMIS.Models.API
     {
         public class LayersByPipeline
         {
-            public string Name { get; set; }
-            public Guid Id { get; set; }
-            public List<LayerData> Layers { get; set; }
+            public string id { get; set; }
+            public string name { get; set; }
+            public string svg { get; set; }
         }
-        public class LayerData {
-            public Guid Id { get; set; }
-            public string Name { get; set; }
-            public List<Area> Areas { get; set; }
+
+        public class PointsByLayer
+        {
+            public string id { get; set; }
+            public string name { get; set; }
+            public List<PointDto> points { get; set; }
+        }
+        public class PointDto
+        {
+            public int Index { get; set; }
+            public double Latitude { get; set; }
+            public double Longitude { get; set; }
         }
     }
 }

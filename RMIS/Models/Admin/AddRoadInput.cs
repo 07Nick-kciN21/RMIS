@@ -12,8 +12,7 @@ namespace RMIS.Models.Admin
         public IEnumerable<SelectListItem> AdminDists { get; set; }
         public string PipelineId { get; set; }
         public IEnumerable<SelectListItem> Pipelines { get; set; }
-        public string GeometryTypeId { get; set; }
-        public IEnumerable<SelectListItem> GeometryTypes { get; set; }
+        public string LayerId { get; set; }
         public string[] SelectedTypes { get; set; } = Array.Empty<string>();
         public List<Point> Points { get; set; }
     }

@@ -24,6 +24,19 @@
         height: 100vh;
         width: 100%;
     }
+    .section{
+        display: flex; 
+        align-items: center;
+    }
+
+    .section_icon {
+        width: 24px; /* or any appropriate size */
+        height: 24px;
+        background-size: cover; /* or 'contain' depending on how you want the image to scale */
+        background-repeat: no-repeat;
+        display: block; /* Ensure the element is displayed */
+
+    }
 </style>
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
 <link rel="stylesheet" href="~/css/index/layer.css" />
@@ -238,32 +251,38 @@
             // });
         });
 
-        function addLayer(id, name) {
+        // 新增圖層
+        function addLayer(id, name, map) {
             $.ajax({
-                url: `/api/MapAPI/GetRoadsByPipeline?pipelineId=${id}`,
+                url: `/api/MapAPI/GetLayersByPipeline?pipelineId=${id}`,
                 method: 'POST',
                 success: function (data) {
                     console.log(data);
-                    roads = data.roads;
-                    let latlngs = [];
-                    var color = data.color;
-                    add2List(id, name, color);
-                    roads.forEach(function (road) {
-                        road.points.forEach(function (point) {
-                            latlngs.push([point.latitude, point.longitude]);
-                        });
-                    });
-                    var polyline = L.polyline(latlngs, { color: data.color });
-
-                    polyline.addTo(indexMap);
-
-                    layers[id] = polyline;
-                    console.log("add layer success", latlngs, data.color);
+                    console.log("add layer success");
+                    add2List(id, name, data);
+                    addLayer2Map(data);
                 },
                 error: function (err) {
                     console.error('Error fetching road data', err);
                 }
             });
+        }
+
+        function addLayer2Map(LayerData){
+            LayerData.forEach(function(Ldata){
+                $.ajax({
+                    url: `/api/MapAPI/GetPointsByLayer?LayerId=${Ldata.id}`,
+                    method: 'POST',
+                    success: function (data) {
+                        console.log(data);
+                        console.log(`/api/MapAPI/GetPointsByLayer?LayerId=${Ldata.id}`);
+                    },
+                    error: function (err) {
+                        console.error('Error fetching road data', err);
+                    }
+                });
+            })
+            
         }
 
         function removeLayer(id) {
@@ -275,17 +294,33 @@
                 console.log("Layer not found for id:", id);
             }
         }
+
         function closeLayer(id) {
             indexMap.removeLayer(layers[id]);
         }
+
         function displayLayer(id) {
             indexMap.addLayer(layers[id]);
         }
-        function add2List(id, name, color) {
+
+        // 新增圖資清單
+        function add2List(id, name, datas) {
+            let sections = "";
+            datas.forEach(function(data){
+                var section = `
+                               <div class="section">
+                                    <span class="section_icon" style="background-image: url('/img/${data.svg}');">
+                                    </span>
+                                    ${data.name}
+                               </div>
+                              `
+                sections += section;
+            })
             let layerItem = `
-                            <div class="layerBar featureLayer-Bg" id="${id}">
+                            <div class="layerBar featureLayer-Bg" id="layerBar_${id}">
                                 <div class="layerTitle">
-                                    <div class="layerName" style="color: ${color}">${name}</div>
+                                    <div class="layerName">${name}</div>
+                                    ${sections}
                                 </div>
                                 <div class="eye eyeOpen" id=eye_${id}></div>
                                 <div class="layerRemove" id="layerRemove_${id}"></div>
@@ -295,7 +330,7 @@
 
             $(`#eye_${id}`).on('click', function (e) {
                 if ($(this).hasClass('eyeOpen')) {
-                    closeLayer(id);
+                    // closeLayer(id);
                     $(this).removeClass('eyeOpen');
                     $(this).addClass('eyeClosed');
                 }
@@ -308,17 +343,17 @@
 
             $(`#layerRemove_${id}`).on('click', function (e) {
                 console.log("remove click");
-                removeLayer(id);
+                // removeLayer(id);
                 remove2List(id);
                 var $switch = $(`#switch-${id}`);
                 $switch.removeClass('switch-on');
                 $switch.addClass('switch-off');
             })
         }
-
+        
         function remove2List(id) {
             let $layerList = $(".layerList");
-            $layerList.find('#' + id).remove();
+            $layerList.find('#layerBar_' + id).remove();
             layerList[id] = false;
         }
 

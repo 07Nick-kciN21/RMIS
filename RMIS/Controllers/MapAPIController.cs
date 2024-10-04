@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Data;
+using RMIS.Models.sql;
 using static RMIS.Models.API.IndexClass;
 
 namespace RMIS.Controllers
@@ -10,11 +11,11 @@ namespace RMIS.Controllers
     [ApiController]
     public class MapAPIController : ControllerBase
     {
-        private readonly MapDBContext _dbContext;
+        private readonly MapDBContext _mapDBContext;
 
-        public MapAPIController(MapDBContext dbContext)
+        public MapAPIController(MapDBContext mapDBContext)
         {
-            _dbContext = dbContext;
+            _mapDBContext = mapDBContext;
         }
 
         /// <summary>
@@ -23,16 +24,65 @@ namespace RMIS.Controllers
         /// <param name="pipelineId">管道ID</param>
         /// <returns>道路索引視圖</returns>
         [HttpPost]
-        public async Task<LayersByPipeline> GetLayersByPipeline(Guid pipelineId)
+        public async Task<List<LayersByPipeline>> GetLayersByPipeline(Guid pipelineId)
         {
-            var pipeline = await _dbContext.Pipelines.FirstOrDefaultAsync(p => p.Id == pipelineId);
+            var layers = await _mapDBContext.Layers
+                .Include(l => l.GeometryType)
+                .Where(l => l.PipelineId == pipelineId)
+                .ToListAsync();
 
-            var result = new LayersByPipeline
+            var results = layers.Select(l => new LayersByPipeline
             {
-                // 該id下的所有Layer
-                // 該Layer下的所有Area
-            };
-            return result;
+                id = l.Id.ToString(),
+                name = l.Name,
+                svg = l.GeometryType.Svg
+            }).ToList();
+
+            return results;
+        }
+
+        [HttpPost]
+        public async Task<List<PointsByLayer>> GetPointsByLayer(Guid LayerId)
+        {
+            try
+            {
+                var areas = await _mapDBContext.Areas
+                    .Where(a => a.LayerId == LayerId)
+                    .ToListAsync();
+
+                var result = new List<PointsByLayer>(); // Create an empty list
+
+                foreach (var area in areas)
+                {
+                    var points = await _mapDBContext.Points
+                        .Where(p => p.AreaId == area.Id)
+                        .OrderBy(p => p.Index)
+                        .Select(p => new PointDto // 使用 PointDto 映射屬性
+                        {
+                            Index = p.Index,
+                            Latitude = p.Latitude,
+                            Longitude = p.Longitude
+                        })
+                        .ToListAsync();
+
+                    var pointsByLayer = new PointsByLayer
+                    {
+                        id = area.Id.ToString(),
+                        name = area.Name,
+                        points = points
+                    };
+
+                    result.Add(pointsByLayer);
+                }
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                // 添加錯誤訊息
+                ModelState.AddModelError("", "Error: " + e.Message);
+                return new List<PointsByLayer>();
+            }
         }
     }
 }
