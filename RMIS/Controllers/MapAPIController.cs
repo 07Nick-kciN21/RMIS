@@ -25,9 +25,10 @@ namespace RMIS.Controllers
         /// <returns>道路索引視圖</returns>
         [HttpPost]
         public async Task<List<LayersByPipeline>> GetLayersByPipeline(Guid pipelineId)
-        {
+        {  // layers根據GeometryTypes orderid排序
             var layers = await _mapDBContext.Layers
                 .Include(l => l.GeometryType)
+                .OrderBy(l => l.GeometryType.OrderId)
                 .Where(l => l.PipelineId == pipelineId)
                 .ToListAsync();
 
@@ -42,46 +43,43 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<List<PointsByLayer>> GetPointsByLayer(Guid LayerId)
+        public async Task<AreasByLayer> GetAreasByLayer(Guid LayerId)
         {
             try
             {
+                // 從LayerId獲得Areas
+                // 從Areas獲得points
                 var areas = await _mapDBContext.Areas
-                    .Where(a => a.LayerId == LayerId)
-                    .ToListAsync();
-
-                var result = new List<PointsByLayer>(); // Create an empty list
-
-                foreach (var area in areas)
+                                    .Include(a => a.Points)
+                                    .Include(a => a.Layer)
+                                        .ThenInclude(l => l.GeometryType)
+                                    .Where(a => a.LayerId == LayerId)
+                                    .ToListAsync();
+                var results = new AreasByLayer
                 {
-                    var points = await _mapDBContext.Points
-                        .Where(p => p.AreaId == area.Id)
-                        .OrderBy(p => p.Index)
-                        .Select(p => new PointDto // 使用 PointDto 映射屬性
+                    id = LayerId.ToString(),
+                    name = areas.FirstOrDefault().Layer.Name,
+                    svg = areas.FirstOrDefault().Layer.GeometryType.Svg,
+                    type = areas.FirstOrDefault().Layer.GeometryType.Kind,
+                    areas = areas.Select(a => new AreaDto
+                    {
+                        id = a.Id.ToString(),
+                        ConstructionUnit = a.ConstructionUnit,
+                        points = a.Points.Select(p => new PointDto
                         {
                             Index = p.Index,
                             Latitude = p.Latitude,
                             Longitude = p.Longitude
-                        })
-                        .ToListAsync();
-
-                    var pointsByLayer = new PointsByLayer
-                    {
-                        id = area.Id.ToString(),
-                        name = area.Name,
-                        points = points
-                    };
-
-                    result.Add(pointsByLayer);
-                }
-
-                return result;
+                        }).ToList()
+                    }).ToList()
+                };
+                return results;
             }
             catch (Exception e)
             {
                 // 添加錯誤訊息
                 ModelState.AddModelError("", "Error: " + e.Message);
-                return new List<PointsByLayer>();
+                return new AreasByLayer();
             }
         }
     }

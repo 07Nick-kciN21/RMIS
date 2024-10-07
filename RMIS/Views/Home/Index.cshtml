@@ -69,7 +69,6 @@
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                         <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddSystem">System</a></li>
                         <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
                         <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
                         <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
@@ -271,12 +270,38 @@
         function addLayer2Map(LayerData){
             LayerData.forEach(function(Ldata){
                 $.ajax({
-                    url: `/api/MapAPI/GetPointsByLayer?LayerId=${Ldata.id}`,
+                    url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
                     method: 'POST',
-                    success: function (data) {
-                        console.log(data);
-                        console.log(`/api/MapAPI/GetPointsByLayer?LayerId=${Ldata.id}`);
+                    success: function (result) {
+                        console.log(`/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`);
+                        var areas = result.areas;
+                        areas.forEach(function (area) {
+                            let points = area.points.map(function (point) {
+                                return [point.lat, point.lng];
+                            });
+                            console.log(points);
+                            if (area.type == "point") {
+                                let icon = L.icon({
+                                    iconUrl: `/img/${area.svg}`,
+                                    iconSize: [30, 30],
+                                    iconAnchor: [15, 15],
+                                    popupAnchor: [0, -15]
+                                });
+                                let marker = L.marker(points[0], { icon: icon }).addTo(indexMap);
+                                marker.bindPopup(area.name);
+                                layers[area.id] = marker;
+                            }
+                            else if (area.type == "line") {
+                                let polyline = L.polyline(points, { color: 'red' }).addTo(indexMap);
+                                layers[area.id] = polyline;
+                            }
+                            else if (area.type == "polygon") {
+                                let polygon = L.polygon(points, { color: 'blue' }).addTo(indexMap);
+                                layers[area.id] = polygon;
+                            }
+                        });
                     },
+
                     error: function (err) {
                         console.error('Error fetching road data', err);
                     }

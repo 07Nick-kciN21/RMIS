@@ -132,6 +132,7 @@ namespace RMIS.Controllers
         {
             var layers = _mapDBContext.Layers
                 .Where(l => l.PipelineId == pipelineId)
+                .OrderBy(l => l.GeometryType.OrderId)
                 .Select(l => new { l.Id, l.Name })
                 .ToList();
             return Json(layers);
