@@ -116,7 +116,6 @@
         let indexMap = initMap("indexMap");
         // 遞歸生成選單
         function generateMenu(data, parent_name, index) {
-
             let html = '<ul class=';
             if (index > 0) {
                 html += '"menu-sub"';
@@ -124,7 +123,6 @@
                 html += '"menu-background"';
             }
             html += '>';
-
             data.forEach(function (item) {
                 console.log(item.text, item.parent);
 
@@ -183,7 +181,6 @@
                 }
                 html += `</li>`;
             });
-
             html += '</ul>';
             return html;
         }
@@ -198,7 +195,6 @@
                 e.stopPropagation();
                 var targetId = $(this).data('target');
                 console.log(targetId);
-
                 $(`#${targetId}`).toggle();
             });
 
@@ -215,19 +211,23 @@
                 var name = $(this).children('span').text();
                 var $switch = $(this).children('.switch');
                 if (!layerList[id]) {
-                    layerList[id] = true;
                     console.log(id, name);
-                    addLayer(id, name, indexMap);
-                    $switch.removeClass('switch-off');
-                    $switch.addClass('switch-on');
+                    addPipeline(id).then(result => {
+                        layerList[id] = true;
+                        add2List(id, name, result);
+                        addLayer2Map(result);
+                        $switch.removeClass('switch-off');
+                        $switch.addClass('switch-on');
+                    })
                 }
                 else {
-                    layerList[id] = false;
-                    console.log("Remove to List");
-                    remove2List(id);
-                    removeLayer(id, indexMap);
-                    $switch.removeClass('switch-on');
-                    $switch.addClass('switch-off');
+                    removePipeline(id).then(result => {
+                        layerList[id] = false;
+                        console.log("Remove to List");
+                        remove2List(id);
+                        $switch.removeClass('switch-on');
+                        $switch.addClass('switch-off');
+                    })
                 }
             });
 
@@ -250,56 +250,40 @@
             // });
         });
 
-        // 新增圖層
-        function addLayer(id, name, map) {
-            $.ajax({
-                url: `/api/MapAPI/GetLayersByPipeline?pipelineId=${id}`,
-                method: 'POST',
-                success: function (data) {
-                    console.log(data);
-                    console.log("add layer success");
-                    add2List(id, name, data);
-                    addLayer2Map(data);
-                },
-                error: function (err) {
-                    console.error('Error fetching road data', err);
-                }
+        // 根據Pipeline新增圖層
+        function addPipeline(id) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: `/api/MapAPI/GetLayersByPipeline?pipelineId=${id}`,
+                    method: 'POST',
+                    success: function (result) {
+                        console.log("add layer success");
+                        resolve(result); // 回傳 data
+                    },
+                    error: function (err) {
+                        console.error('Error fetching road data', err);
+                        reject(err); // 回傳錯誤
+                    }
+                });
             });
         }
 
+        //新增圖層到地圖
         function addLayer2Map(LayerData){
             LayerData.forEach(function(Ldata){
                 $.ajax({
                     url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
                     method: 'POST',
                     success: function (result) {
-                        console.log(`/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`);
                         var areas = result.areas;
-                        areas.forEach(function (area) {
-                            let points = area.points.map(function (point) {
-                                return [point.lat, point.lng];
-                            });
-                            console.log(points);
-                            if (area.type == "point") {
-                                let icon = L.icon({
-                                    iconUrl: `/img/${area.svg}`,
-                                    iconSize: [30, 30],
-                                    iconAnchor: [15, 15],
-                                    popupAnchor: [0, -15]
-                                });
-                                let marker = L.marker(points[0], { icon: icon }).addTo(indexMap);
-                                marker.bindPopup(area.name);
-                                layers[area.id] = marker;
-                            }
-                            else if (area.type == "line") {
-                                let polyline = L.polyline(points, { color: 'red' }).addTo(indexMap);
-                                layers[area.id] = polyline;
-                            }
-                            else if (area.type == "polygon") {
-                                let polygon = L.polygon(points, { color: 'blue' }).addTo(indexMap);
-                                layers[area.id] = polygon;
-                            }
-                        });
+                        if (areas != null) {
+                            var newLayer = createNewLayer(result);
+                            indexMap.addLayer(newLayer);
+                            // 將圖層加至layers[layer.id]
+                            console.log("Add to Layer: ", result.id);
+                            layers[result.id] = newLayer;
+                            console.log(`layers[${result.id}]`);
+                        }
                     },
 
                     error: function (err) {
@@ -307,10 +291,81 @@
                     }
                 });
             })
-            
+        }
+        function createNewLayer(result) {
+            var newLayer = L.layerGroup();
+            console.log(result.type);
+            result.areas.forEach(function (area) {
+                let points = area.points.map(function (point) {
+                    return [point.latitude, point.longitude];
+                });
+                console.log(points);
+                if (result.type === "point") {
+                    addMarkersToLayer(points, area, newLayer, result.svg);
+                } else if (result.type === "line") {
+                    // 處理線圖層邏輯
+                    addLineToLayer(points, area, newLayer);
+                } else if (result.type === "polygon") {
+                    // 處理多邊形圖層邏輯
+                    addPolygonToLayer(points, area, newLayer);
+                }
+            });
+            return newLayer;
         }
 
-        function removeLayer(id) {
+        // 處理添加標記點
+        function addMarkersToLayer(points, area, newLayer, svg) {
+            let icon = L.icon({
+                iconUrl: `/img/${svg}`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+            console.log(`/img/${svg}`);
+            points.forEach(function (point) {
+                let marker = L.marker(point, { icon: icon }).addTo(newLayer);
+                marker.bindPopup(area.constructionUnit);
+            });
+        }
+
+        // 處理線的圖層邏輯
+        function addLineToLayer(points, area, newLayer) {
+            console.log("create Line");
+            let marker = L.polyline(points, { color: 'blue' }).addTo(newLayer);
+            marker.bindPopup(area.constructionUnit);
+        }
+
+        // 處理多邊形的圖層邏輯
+        function addPolygonToLayer(points, area, newLayer) {
+            let marker = L.polygon(points, { color: 'green' }).addTo(newLayer);
+            marker.bindPopup(area.constructionUnit);
+        }
+
+
+        function removePipeline(id){
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${id}`,
+                    method: 'POST',
+                    success: function (result) {
+                        console.log(`/api/MapAPI/GetLayerIdByPipeline?PipelineId=${id}`);
+                        var layerIds = result.layerIdList;
+                        layerIds.forEach(function (layerId) {
+                            removeLayer2Map(layerId);
+                        })
+                        console.log("remove Pipeline success", id);
+                        resolve(result);
+                    },
+                    error: function (err) {
+                        console.error('Error fetching road data', err);
+                        reject(err);
+                    }
+                });
+            });
+        }
+
+        function removeLayer2Map(id) {
+            console.log(`layers[${id}]`);
             if (layers[id]) {
                 indexMap.removeLayer(layers[id]);
                 delete layers[id];
@@ -321,11 +376,16 @@
         }
 
         function closeLayer(id) {
-            indexMap.removeLayer(layers[id]);
+            // 移除地圖上的圖層，但不移除layerList
+            removePipeline(id);
+            layerList[id] = false;
         }
-
         function displayLayer(id) {
-            indexMap.addLayer(layers[id]);
+            // 把圖層加回地圖
+            addPipeline(id).then(result => {
+                layerList[id] = true;
+                addLayer2Map(result);
+            });
         }
 
         // 新增圖資清單
@@ -333,7 +393,7 @@
             let sections = "";
             datas.forEach(function(data){
                 var section = `
-                               <div class="section">
+                               <div class="section" id="section_${data.id}">
                                     <span class="section_icon" style="background-image: url('/img/${data.svg}');">
                                     </span>
                                     ${data.name}
@@ -355,24 +415,26 @@
 
             $(`#eye_${id}`).on('click', function (e) {
                 if ($(this).hasClass('eyeOpen')) {
-                    // closeLayer(id);
+                    closeLayer(id);
                     $(this).removeClass('eyeOpen');
                     $(this).addClass('eyeClosed');
                 }
                 else {
-                    displayLayer(id, name);
+                    displayLayer(id);
                     $(this).removeClass('eyeClosed');
                     $(this).addClass('eyeOpen');
                 }
             });
 
             $(`#layerRemove_${id}`).on('click', function (e) {
-                console.log("remove click");
-                // removeLayer(id);
-                remove2List(id);
-                var $switch = $(`#switch-${id}`);
-                $switch.removeClass('switch-on');
-                $switch.addClass('switch-off');
+                removePipeline(id).then(result => {
+                    layerList[id] = false;
+                    console.log("remove click");
+                    remove2List(id);
+                    var $switch = $(`#switch-${id}`);
+                    $switch.removeClass('switch-on');
+                    $switch.addClass('switch-off');
+                })
             })
         }
         

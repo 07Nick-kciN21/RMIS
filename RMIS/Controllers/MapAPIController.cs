@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Data;
 using RMIS.Models.sql;
+using System.Linq;
 using static RMIS.Models.API.IndexClass;
 
 namespace RMIS.Controllers
@@ -47,20 +48,23 @@ namespace RMIS.Controllers
         {
             try
             {
-                // 從LayerId獲得Areas
-                // 從Areas獲得points
                 var areas = await _mapDBContext.Areas
                                     .Include(a => a.Points)
                                     .Include(a => a.Layer)
                                         .ThenInclude(l => l.GeometryType)
                                     .Where(a => a.LayerId == LayerId)
                                     .ToListAsync();
+                var layer = await _mapDBContext.Layers.FirstOrDefaultAsync(l => l.Id == LayerId);
+                if (areas.Count == 0)
+                {
+                    return new AreasByLayer();
+                }
                 var results = new AreasByLayer
                 {
-                    id = LayerId.ToString(),
-                    name = areas.FirstOrDefault().Layer.Name,
-                    svg = areas.FirstOrDefault().Layer.GeometryType.Svg,
-                    type = areas.FirstOrDefault().Layer.GeometryType.Kind,
+                    id = layer.Id.ToString(),
+                    name = layer.Name,
+                    svg = layer.GeometryType.Svg,
+                    type = layer.GeometryType.Kind,
                     areas = areas.Select(a => new AreaDto
                     {
                         id = a.Id.ToString(),
@@ -80,6 +84,27 @@ namespace RMIS.Controllers
                 // 添加錯誤訊息
                 ModelState.AddModelError("", "Error: " + e.Message);
                 return new AreasByLayer();
+            }
+        }
+
+        [HttpPost]
+        public async Task<LayerIdByPipeline> GetLayerIdByPipeline(Guid PipelineId)
+        {
+            try
+            {
+                var LayerIdList = new LayerIdByPipeline
+                {
+                    LayerIdList = await _mapDBContext.Layers
+                        .Where(l => l.PipelineId == PipelineId)
+                        .Select(l => l.Id.ToString().ToLower())
+                        .ToListAsync()
+                };
+                return LayerIdList;
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", "Error: " + e.Message);
+                return new LayerIdByPipeline();
             }
         }
     }

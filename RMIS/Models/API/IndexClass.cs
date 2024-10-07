@@ -33,5 +33,10 @@ namespace RMIS.Models.API
             public double Latitude { get; set; }
             public double Longitude { get; set; }
         }
+
+        public class LayerIdByPipeline
+        {
+            public List<string> LayerIdList { get; set; }
+        }
     }
 }
