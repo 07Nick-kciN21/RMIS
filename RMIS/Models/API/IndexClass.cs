@@ -16,6 +16,7 @@ namespace RMIS.Models.API
         {
             public string id { get; set; }
             public string name { get; set; }
+            public string color { get; set; }
             public string type { get; set; }
             public string svg { get; set; }
             public List<AreaDto> areas { get; set; }

@@ -107,12 +107,16 @@
 <div id="indexMap"></div>
 
 @section Scripts {
-    <script>
+    <script type="text/javascript">
         var MenuData = @Html.Raw(Json.Serialize(ViewBag.JsTreeData));
         // 查看是否加到圖資清單
         let layerList = {};
         // 圖層管理
         let layers = {};
+        
+    </script>
+    <script type="module" src="~/js/index/main.js"></script>
+    @* <script>
         let indexMap = initMap("indexMap");
         // 遞歸生成選單
         function generateMenu(data, parent_name, index) {
@@ -456,5 +460,5 @@
             }).addTo(map);
             return map;
         }
-    </script>
+    </script> *@
 }

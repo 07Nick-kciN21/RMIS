@@ -54,7 +54,7 @@ namespace RMIS.Controllers
                                         .ThenInclude(l => l.GeometryType)
                                     .Where(a => a.LayerId == LayerId)
                                     .ToListAsync();
-                var layer = await _mapDBContext.Layers.FirstOrDefaultAsync(l => l.Id == LayerId);
+                var layer = await _mapDBContext.Layers.Include(l => l.Pipeline).FirstOrDefaultAsync(l => l.Id == LayerId);
                 if (areas.Count == 0)
                 {
                     return new AreasByLayer();
@@ -63,13 +63,14 @@ namespace RMIS.Controllers
                 {
                     id = layer.Id.ToString(),
                     name = layer.Name,
+                    color = layer.Pipeline.Color,
                     svg = layer.GeometryType.Svg,
                     type = layer.GeometryType.Kind,
                     areas = areas.Select(a => new AreaDto
                     {
                         id = a.Id.ToString(),
                         ConstructionUnit = a.ConstructionUnit,
-                        points = a.Points.Select(p => new PointDto
+                        points = a.Points.OrderBy(p => p.Index).Select(p => new PointDto
                         {
                             Index = p.Index,
                             Latitude = p.Latitude,
