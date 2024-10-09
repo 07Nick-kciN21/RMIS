@@ -99,7 +99,7 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult AddRoad()
         {
-            var _AdminDists = _mapDBContext.AdminDist.ToList();
+            var _AdminDists = _mapDBContext.AdminDist.OrderBy(ad => ad.orderId).ToList();
             var _Pipelines = _mapDBContext.Pipelines.ToList();
             var model = new AddRoadInput
             {

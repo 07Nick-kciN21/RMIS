@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Data;
-using RMIS.Models.sql;
 using System.Linq;
 using static RMIS.Models.API.IndexClass;
 
@@ -26,7 +25,7 @@ namespace RMIS.Controllers
         /// <returns>道路索引視圖</returns>
         [HttpPost]
         public async Task<List<LayersByPipeline>> GetLayersByPipeline(Guid pipelineId)
-        {  // layers根據GeometryTypes orderid排序
+        {
             var layers = await _mapDBContext.Layers
                 .Include(l => l.GeometryType)
                 .OrderBy(l => l.GeometryType.OrderId)
@@ -82,7 +81,6 @@ namespace RMIS.Controllers
             }
             catch (Exception e)
             {
-                // 添加錯誤訊息
                 ModelState.AddModelError("", "Error: " + e.Message);
                 return new AreasByLayer();
             }
@@ -107,6 +105,46 @@ namespace RMIS.Controllers
                 ModelState.AddModelError("", "Error: " + e.Message);
                 return new LayerIdByPipeline();
             }
+        }
+
+        [HttpPost]
+        public async Task<List<RoadbyName>> GetRoadbyName(string name)
+        {
+            var result = await _mapDBContext.Areas
+                .Where(a => a.Name.StartsWith(name))
+                .Include(a => a.AdminDist)
+                .OrderBy(a => a.Name)
+                .Select(a => new RoadbyName
+                {
+                    Id = a.Id.ToString(),
+                    Name = a.Name + "(" + a.AdminDist.Town + ")"
+                })
+                .ToListAsync();
+            return result;
+        }
+
+        [HttpPost]
+        public async Task<PointsbyId> GetPointsbyLayerId(Guid LayerId)
+        {
+            var result = await _mapDBContext.Areas
+                .Include(a => a.Points)
+                .FirstOrDefaultAsync(a => a.Id == LayerId);
+
+            if (result == null)
+            {
+                return new PointsbyId();
+            }
+
+            return new PointsbyId
+            {
+                Id = LayerId.ToString(),
+                Points = result.Points.OrderBy(p => p.Index).Select(p => new PointDto
+                {
+                    Index = p.Index,
+                    Latitude = p.Latitude,
+                    Longitude = p.Longitude
+                }).ToList()
+            };
         }
     }
 }

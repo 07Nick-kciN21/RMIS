@@ -6,18 +6,13 @@
         margin: 0;
         padding: 0;
     }
-    .custom-offcanvas-width {
-        width: 20%;
+
+    header .dropdown-button {
+        font-size: 1.5rem; /* 調整字體大小 */
     }
 
-    .toolFGIS {
-        border-bottom: 1px solid #cccccc;
-        border-right: 1px solid #cccccc;
-        position: absolute;
-        top: 50px;
-        left: 0;
-        width: 320px;
-        background: #f5f6fa;
+    .custom-offcanvas-width {
+        width: 20%;
     }
 
     #indexMap {
@@ -35,7 +30,6 @@
         background-size: cover; /* or 'contain' depending on how you want the image to scale */
         background-repeat: no-repeat;
         display: block; /* Ensure the element is displayed */
-
     }
 </style>
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
@@ -43,10 +37,21 @@
 <link rel="stylesheet" href="~/css/index/menu.css" />
 <link rel="stylesheet" href="~/css/index/svg_eye.css" />
 <link rel="stylesheet" href="~/css/index/svg_switch.css" />
-<header class="row" style="position: relative; z-index: 1051; background-color: #9ac43e">
+<header class="row gx-0 custom-header" style="position: relative; z-index: 1051; background-color: #9ac43e">
     <div class="col">
         <div class="nav-item dropdown">
             <button class="dropdown-button" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">側欄</button>
+        </div>
+        <div class="nav-item dropdown">
+            <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                Admin
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
+                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
+                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
+                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
+            </ul>
         </div>
     </div>
         
@@ -60,19 +65,6 @@
                     <button class="dropdown-button" id="header-layer1" data-target="header-layer-list1">業務圖資</button>
                     <div class="dropdown-content" id="header-layer-list1">
                     </div>
-                </div>
-                
-                
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                        Admin
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
-                    </ul>
                 </div>
                 <div class="nav-item dropdown">
                     <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
@@ -94,13 +86,23 @@
     </nav>
 </header>
 
-
 <div class="offcanvas offcanvas-start custom-offcanvas-width" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-labelledby="layerListBlockLabel">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasExampleLabel">圖層套疊</h5>
     </div>
     <div class="layerList container-fluid">
         <h5 class="offcanvas-body" id="offcanvasExampleLabel">圖資清單</h5>
+    </div>
+</div>
+<div id="movablePanel" class="panel" style="z-index: 1051;">
+    <div id="panel-Heading" class="panel-heading">快速搜尋</div>
+    <div class="panel-Search">
+        <input type="text" id="panel-SearchInput" placeholder="請輸入">
+        <button id="panel-SearchBtn">搜尋</button>
+    </div>
+    <div id="panel-Body" class="panel-body">
+        <ul id="panel-searchList">
+        </ul>
     </div>
 </div>
 
@@ -113,352 +115,6 @@
         let layerList = {};
         // 圖層管理
         let layers = {};
-        
     </script>
-    <script type="module" src="~/js/index/main.js"></script>
-    @* <script>
-        let indexMap = initMap("indexMap");
-        // 遞歸生成選單
-        function generateMenu(data, parent_name, index) {
-            let html = '<ul class=';
-            if (index > 0) {
-                html += '"menu-sub"';
-            } else {
-                html += '"menu-background"';
-            }
-            html += '>';
-            data.forEach(function (item) {
-                console.log(item.text, item.parent);
-
-                // 根據index和tag決定<li>的class和id
-                let liClass;
-                if (index == 0) {
-                    liClass = 'head-menu';
-                } else {
-                    if (item.tag == "node") {
-                        liClass = 'menu-sublayer';
-                    } else {
-                        liClass = 'menu-layer';
-                    }
-                }
-
-                let liId;
-                if (item.tag == "node") {
-                    liId = '';
-                } else {
-                    liId = ` id="${item.id}"`;
-                }
-
-                html += `<li class="${liClass}" ${liId}>`;
-
-                let headingTag;
-                let headingClass;
-
-                if (index == 0) {
-                    headingTag = 'h4';
-                    headingClass = 'border-bottom text-success';
-                } else {
-                    headingTag = 'span';
-                    headingClass = 'text-secondary';
-                }
-                
-                if (item.tag == "node") {
-                    html += `<div class="menu-node">
-                                <span class="menu-icon menu-close" id="menu-${item.id}"></span>
-                                <${headingTag} class="${headingClass}">
-                                    ${item.text}
-                                </${headingTag}>
-                            </div>`;
-                }
-                else {
-                    html += `
-                            <div class="switch switch-off" id="switch-${item.id}"></div>
-                            <${headingTag} class="${headingClass}">
-                                ${item.text}
-                            </${headingTag}>
-                             `;
-                    layerList[item.id] = false;
-                }
-                // 遞歸處理子選單
-                if (item.children && item.children.length > 0) {
-                    html += generateMenu(item.children, item.text, index + 1);
-                }
-                html += `</li>`;
-            });
-            html += '</ul>';
-            return html;
-        }
-
-        $(document).ready(function () {
-            var menuHtml = generateMenu(MenuData, "", 0);
-            $('#header-layer-list1').html(menuHtml);
-            // . class
-            // # id
-            // 顯示或隱藏選單
-            $('.dropdown-button').click(function (e) {
-                e.stopPropagation();
-                var targetId = $(this).data('target');
-                console.log(targetId);
-                $(`#${targetId}`).toggle();
-            });
-
-            $('.menu-node').click(function (e) {
-                console.log("click menu");
-                e.stopPropagation();
-                $(this).next('.menu-sub').slideToggle();
-            });
-
-
-            $('.menu-layer').on('click', function (e) {
-                e.stopPropagation();
-                var id = $(this).attr('id');
-                var name = $(this).children('span').text();
-                var $switch = $(this).children('.switch');
-                if (!layerList[id]) {
-                    console.log(id, name);
-                    addPipeline(id).then(result => {
-                        layerList[id] = true;
-                        add2List(id, name, result);
-                        addLayer2Map(result);
-                        $switch.removeClass('switch-off');
-                        $switch.addClass('switch-on');
-                    })
-                }
-                else {
-                    removePipeline(id).then(result => {
-                        layerList[id] = false;
-                        console.log("Remove to List");
-                        remove2List(id);
-                        $switch.removeClass('switch-on');
-                        $switch.addClass('switch-off');
-                    })
-                }
-            });
-
-            $('.menu-node').click(function (e) {
-                let $span = $(this).children('span')
-                if($span.hasClass('menu-close')){
-                    $span.removeClass('menu-close').addClass('menu-open');
-                }
-                else{
-                    $span.removeClass('menu-open').addClass('menu-close');
-                }
-            });
-
-
-            // 點擊頁面其他地方時關閉選單
-            // $(document).click(function (e) {
-            //     if (!$(e.target).closest('.dropdown').length) {
-            //         $('.dropdown-content').hide();
-            //     }
-            // });
-        });
-
-        // 根據Pipeline新增圖層
-        function addPipeline(id) {
-            return new Promise((resolve, reject) => {
-                $.ajax({
-                    url: `/api/MapAPI/GetLayersByPipeline?pipelineId=${id}`,
-                    method: 'POST',
-                    success: function (result) {
-                        console.log("add layer success");
-                        resolve(result); // 回傳 data
-                    },
-                    error: function (err) {
-                        console.error('Error fetching road data', err);
-                        reject(err); // 回傳錯誤
-                    }
-                });
-            });
-        }
-
-        //新增圖層到地圖
-        function addLayer2Map(LayerData){
-            LayerData.forEach(function(Ldata){
-                $.ajax({
-                    url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
-                    method: 'POST',
-                    success: function (result) {
-                        var areas = result.areas;
-                        if (areas != null) {
-                            var newLayer = createNewLayer(result);
-                            indexMap.addLayer(newLayer);
-                            // 將圖層加至layers[layer.id]
-                            console.log("Add to Layer: ", result.id);
-                            layers[result.id] = newLayer;
-                            console.log(`layers[${result.id}]`);
-                        }
-                    },
-
-                    error: function (err) {
-                        console.error('Error fetching road data', err);
-                    }
-                });
-            })
-        }
-        function createNewLayer(result) {
-            var newLayer = L.layerGroup();
-            console.log(result.type);
-            result.areas.forEach(function (area) {
-                let points = area.points.map(function (point) {
-                    return [point.latitude, point.longitude];
-                });
-                console.log(points);
-                if (result.type === "point") {
-                    addMarkersToLayer(points, area, newLayer, result.svg);
-                } else if (result.type === "line") {
-                    // 處理線圖層邏輯
-                    addLineToLayer(points, area, newLayer);
-                } else if (result.type === "polygon") {
-                    // 處理多邊形圖層邏輯
-                    addPolygonToLayer(points, area, newLayer);
-                }
-            });
-            return newLayer;
-        }
-
-        // 處理添加標記點
-        function addMarkersToLayer(points, area, newLayer, svg) {
-            let icon = L.icon({
-                iconUrl: `/img/${svg}`,
-                iconSize: [30, 30],
-                iconAnchor: [15, 15],
-                popupAnchor: [0, -15]
-            });
-            console.log(`/img/${svg}`);
-            points.forEach(function (point) {
-                let marker = L.marker(point, { icon: icon }).addTo(newLayer);
-                marker.bindPopup(area.constructionUnit);
-            });
-        }
-
-        // 處理線的圖層邏輯
-        function addLineToLayer(points, area, newLayer) {
-            console.log("create Line");
-            let marker = L.polyline(points, { color: 'blue' }).addTo(newLayer);
-            marker.bindPopup(area.constructionUnit);
-        }
-
-        // 處理多邊形的圖層邏輯
-        function addPolygonToLayer(points, area, newLayer) {
-            let marker = L.polygon(points, { color: 'green' }).addTo(newLayer);
-            marker.bindPopup(area.constructionUnit);
-        }
-
-
-        function removePipeline(id){
-            return new Promise((resolve, reject) => {
-                $.ajax({
-                    url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${id}`,
-                    method: 'POST',
-                    success: function (result) {
-                        console.log(`/api/MapAPI/GetLayerIdByPipeline?PipelineId=${id}`);
-                        var layerIds = result.layerIdList;
-                        layerIds.forEach(function (layerId) {
-                            removeLayer2Map(layerId);
-                        })
-                        console.log("remove Pipeline success", id);
-                        resolve(result);
-                    },
-                    error: function (err) {
-                        console.error('Error fetching road data', err);
-                        reject(err);
-                    }
-                });
-            });
-        }
-
-        function removeLayer2Map(id) {
-            console.log(`layers[${id}]`);
-            if (layers[id]) {
-                indexMap.removeLayer(layers[id]);
-                delete layers[id];
-                console.log("remove layer success", id);
-            } else {
-                console.log("Layer not found for id:", id);
-            }
-        }
-
-        function closeLayer(id) {
-            // 移除地圖上的圖層，但不移除layerList
-            removePipeline(id);
-            layerList[id] = false;
-        }
-        function displayLayer(id) {
-            // 把圖層加回地圖
-            addPipeline(id).then(result => {
-                layerList[id] = true;
-                addLayer2Map(result);
-            });
-        }
-
-        // 新增圖資清單
-        function add2List(id, name, datas) {
-            let sections = "";
-            datas.forEach(function(data){
-                var section = `
-                               <div class="section" id="section_${data.id}">
-                                    <span class="section_icon" style="background-image: url('/img/${data.svg}');">
-                                    </span>
-                                    ${data.name}
-                               </div>
-                              `
-                sections += section;
-            })
-            let layerItem = `
-                            <div class="layerBar featureLayer-Bg" id="layerBar_${id}">
-                                <div class="layerTitle">
-                                    <div class="layerName">${name}</div>
-                                    ${sections}
-                                </div>
-                                <div class="eye eyeOpen" id=eye_${id}></div>
-                                <div class="layerRemove" id="layerRemove_${id}"></div>
-                            </div>
-                            `
-            $('.layerList').append(layerItem);
-
-            $(`#eye_${id}`).on('click', function (e) {
-                if ($(this).hasClass('eyeOpen')) {
-                    closeLayer(id);
-                    $(this).removeClass('eyeOpen');
-                    $(this).addClass('eyeClosed');
-                }
-                else {
-                    displayLayer(id);
-                    $(this).removeClass('eyeClosed');
-                    $(this).addClass('eyeOpen');
-                }
-            });
-
-            $(`#layerRemove_${id}`).on('click', function (e) {
-                removePipeline(id).then(result => {
-                    layerList[id] = false;
-                    console.log("remove click");
-                    remove2List(id);
-                    var $switch = $(`#switch-${id}`);
-                    $switch.removeClass('switch-on');
-                    $switch.addClass('switch-off');
-                })
-            })
-        }
-        
-        function remove2List(id) {
-            let $layerList = $(".layerList");
-            $layerList.find('#layerBar_' + id).remove();
-            layerList[id] = false;
-        }
-
-        function initMap(mapId) {
-            var map = L.map(mapId).setView([24.957276277371435, 121.21903318892302], 13);
-            let polygons = [];
-            let polylines = [];
-            let AreaLayer = null;
-            let RoadLayer = null;
-            let pipeLayers = {};
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            return map;
-        }
-    </script> *@
+    <script type="module" src="~/js/main.js"></script>
 }

@@ -4,9 +4,9 @@ import { getIndexMap } from './map.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer } from './utils.js';
 
 export let layers = {};
-
+let indexMap;
 export function addLayer2Map(LayerData) {
-    const indexMap = getIndexMap();
+    indexMap = getIndexMap();
     if (!indexMap) {
         console.error('indexMap is not initialized.');
         return;
@@ -38,6 +38,10 @@ export function addLayer2Map(LayerData) {
 
 export function createNewLayer(result) {
     var newLayer = L.layerGroup();
+    if (!indexMap) {
+        console.error('indexMap is not initialized.');
+        return;
+    }
     console.log(result.type);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
@@ -55,6 +59,10 @@ export function createNewLayer(result) {
 }
 
 export function removeLayer2Map(id) {
+    if (!indexMap) {
+        console.error('indexMap is not initialized.');
+        return;
+    }
     console.log(`layers[${id}]`);
     if (layers[id]) {
         indexMap.removeLayer(layers[id]);

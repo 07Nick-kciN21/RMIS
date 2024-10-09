@@ -39,5 +39,16 @@ namespace RMIS.Models.API
         {
             public List<string> LayerIdList { get; set; }
         }
+
+        public class RoadbyName
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+        public class PointsbyId
+        {
+            public string Id { get; set; }
+            public List<PointDto> Points { get; set; }
+        }
     }
 }
