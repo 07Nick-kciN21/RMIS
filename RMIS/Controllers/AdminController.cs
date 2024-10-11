@@ -25,7 +25,7 @@ namespace RMIS.Controllers
         public IActionResult AddPipeline()
         {
             var _Categories = _mapDBContext.Categories.ToList();
-            var _GeometryTypes = _mapDBContext.GeometryTypes.ToList();
+            var _GeometryTypes = _mapDBContext.GeometryTypes.OrderBy(gt => gt.OrderId).ToList();
             var input = new AddPipelineInput
             {
                 Category = BuildCategorySelectList(_Categories, null),

@@ -1,12 +1,12 @@
 ﻿import { getIndexMap } from './map.js';
 
 let roadlayer;
-export function initMovablePanel() {
+export function initPanel(panelId) {
     const $container = $("#indexMap");
-    const $panel = $("#movablePanel");
-    const $panelHeading = $("#panel-Heading");
-    const $panelSearchBtn = $("#panel-SearchBtn");
-
+    const $tb = $(`#tb-${panelId}`);
+    const $panel = $(`#${panelId}`);
+    const $panelHeading = $panel.find(".panelHeading");
+    const $panelCloseBtn = $panel.find(".closeButton");
     let isDragging = false;
     let offsetX, offsetY;
 
@@ -45,62 +45,13 @@ export function initMovablePanel() {
         isDragging = false;
     });
 
-    $panelSearchBtn.on("click", () => {
-        handleSearch();
+    $panelCloseBtn.on("click", () => {
+        console.log("click hide");
+        $panel.hide();
+    })
+    $tb.on("click", () => {
+        console.log("click show");
+        $panel.show();
     })
 }
-function handleSearch() {
-    console.log("click btn");
-    const $searchInput = $("#panel-SearchInput");
-    const $searchList = $("#panel-searchList");
-    const query = $searchInput.val().trim()
-    console.log(query);
-    if (query) {
-        $.ajax({
-            url: `/api/MapAPI/GetRoadbyName?name=${query}`,
-            method: 'POST',
-            success: function (result) {
-                try {
-                    $searchList.empty();
-                    result.forEach(road => {
-                        $searchList.append(`<li id="panel_${road.id}" class="panel-Result">${road.name}</li>`);
-                        $(`#panel_${road.id}`).on('click', function () {
-                            $("#panel-searchList li").removeClass("selected");
-                            $(this).addClass("selected");
-                            addRoadLayer(road.id);
-                            console.log(road.id);
-                        })
-                    });
-                }
-                catch (e) {
-                    console.log(e);
-                }
-            }
-        })
-    }
-}
-function addRoadLayer(id) {
-    var indexMap = getIndexMap();
-    $.ajax({
-        url: `/api/MapAPI/GetPointsbyLayerId?LayerId=${id}`,
-        method: 'POST',
-        success: function (result) {
-            try {
-                if (roadlayer) {
-                    indexMap.removeLayer(roadlayer); // 移除舊的圖層
-                }
-                let points = result.points.map(point => [point.latitude, point.longitude]);
-                if (points.length > 0) {
-                    roadlayer = L.polyline(points, { color: 'blue' }).addTo(indexMap); // 添加新的圖層
-                    indexMap.setView(points[0], 15); // 移動視角到第一個點
-                }
-                console.log("Add Layer Success");
-            } catch (err) {
-                console.error('Add Layer Fail', err);
-            }
-        },
-        error: function (err) {
-            console.error('Call API Fail', err);
-        }
-    });
-}
+

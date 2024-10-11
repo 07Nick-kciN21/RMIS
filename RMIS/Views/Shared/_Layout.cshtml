@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/RMIS.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="~/css/index/dropdown.css" />
     <link rel="stylesheet" href="~/css/index/panel.css" />
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
     <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -23,6 +24,22 @@
             height: 100%;
             display: flex;
             flex-direction: column;
+        }
+
+        header, nav {
+            margin: 0;
+            padding: 0;
+            position: relative;
+            z-index: 1051;
+            background-color: #9ac43e
+        }
+
+            header .dropdown-button {
+                font-size: 1.5rem; /* 調整字體大小 */
+            }
+        .nav-item{
+            position: relative;
+            display: inline-block;
         }
         
     </style>

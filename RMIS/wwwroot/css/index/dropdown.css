@@ -1,9 +1,4 @@
-﻿.dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.dropdown-button {
+﻿.dropdown-button {
     background-color: #9ac43e;
     color: white;
     padding: 10px 20px;
