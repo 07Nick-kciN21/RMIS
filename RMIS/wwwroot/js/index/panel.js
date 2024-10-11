@@ -1,6 +1,6 @@
 ﻿import { getIndexMap } from './map.js';
 
-let roadlayer;
+let open=false;
 export function initPanel(panelId) {
     const $container = $("#indexMap");
     const $tb = $(`#tb-${panelId}`);
@@ -50,8 +50,12 @@ export function initPanel(panelId) {
         $panel.hide();
     })
     $tb.on("click", () => {
-        console.log("click show");
-        $panel.show();
+        // 如果$tb 有.show 切換成 .hide
+        if ($tb.hasClass('show')) {
+            $panel.removeClass('show').addClass('hide'); // 切換為 .hide
+        } else {
+            $panel.removeClass('hide').addClass('show'); // 切換為 .show
+        }
     })
 }
 

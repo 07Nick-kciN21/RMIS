@@ -3,6 +3,7 @@
 let $indexMap;
 let selectedColor;
 let painterLayer = {};
+var isDrawing = false; // 記錄當前是否在繪製狀態
 export function initPainterPanel() {
     $indexMap = getIndexMap();
     const $painterPanel = $('#painterPanel');
@@ -36,6 +37,7 @@ export function initPainterPanel() {
 
 
     $panelCloseBtn.on('click', () => {
+        $indexMap.removeControl(drawControl);
         $painterPanel.hide();
     });
 }

@@ -24,6 +24,14 @@
     background-color: #f9f9f9;
 }
 
+.panel .show{
+    display: block;
+}
+
+.panel .hide{
+    display: none;
+}
+
 .panelHeading {
     background-color: #9ac43e;
     color: white;
