@@ -46,15 +46,14 @@ export function initPanel(panelId) {
     });
 
     $panelCloseBtn.on("click", () => {
-        console.log("click hide");
-        $panel.hide();
+        $panel.addClass('hide'); // 切換為 .hide
     })
     $tb.on("click", () => {
         // 如果$tb 有.show 切換成 .hide
-        if ($tb.hasClass('show')) {
-            $panel.removeClass('show').addClass('hide'); // 切換為 .hide
+        if ($panel.hasClass('hide')) {
+            $panel.removeClass('hide');
         } else {
-            $panel.removeClass('hide').addClass('show'); // 切換為 .show
+            $panel.addClass('hide');
         }
     })
 }

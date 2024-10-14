@@ -1,14 +1,17 @@
-﻿export function initSearchPanel() {
+﻿import { getIndexMap } from "./map.js";
+
+export function initSearchPanel() {
     const $panelSearchBtn = $('#searchPanel').find(".searchPanelBtn");
     $panelSearchBtn.on("click", () => {
-        handleSearch(panelId);
+        handleSearch();
     })
 }
 
-function handleSearch(panelId) {
-    const $searchInput = $(`.${panelId}Input`);
-    const $searchList = $(`.${panelId}List`);
+function handleSearch() {
+    const $searchInput = $(".searchPanelInput");
+    const $searchList = $("#searchList");
     const query = $searchInput.val().trim()
+    console.log(query);
     if (query) {
         $.ajax({
             url: `/api/MapAPI/GetRoadbyName?name=${query}`,
@@ -19,7 +22,7 @@ function handleSearch(panelId) {
                     result.forEach(road => {
                         $searchList.append(`<li id="panel_${road.id}" class="panelResult">${road.name}</li>`);
                         $(`#panel_${road.id}`).on('click', function () {
-                            $(`.${panelId}List li`).removeClass("selected");
+                            $(`#searchList li`).removeClass("selected");
                             $(this).addClass("selected");
                             addRoadLayer(road.id);
                             console.log(road.id);
@@ -33,6 +36,8 @@ function handleSearch(panelId) {
         })
     }
 }
+
+let roadlayer;
 function addRoadLayer(id) {
     var indexMap = getIndexMap();
     $.ajax({

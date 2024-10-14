@@ -2,8 +2,8 @@
     width: 300px;
     height: 270px;
     position: absolute;
-    top: 100px;
-    left: 100px;
+    top: 20%;
+    left: 50%;
     border: 1px solid #ccc;
     border-radius: 10px;
     display: flex;
@@ -15,8 +15,8 @@
     width: 200px;
     height: 270px;
     position: absolute;
-    top: 200px;
-    left: 100px;
+    top: 20%;
+    left: 50%;
     border: 1px solid #ccc;
     border-radius: 10px;
     display: flex;
@@ -24,12 +24,12 @@
     background-color: #f9f9f9;
 }
 
-.panel .show{
-    display: block;
+.panel {
+    z-index:1051;
 }
 
-.panel .hide{
-    display: none;
+.hide {
+    display: none !important;
 }
 
 .panelHeading {
@@ -75,10 +75,10 @@
     height: 100%;
 }
 
-.panelList li {
-    list-style: none;
-    margin: 0;
-}
+    .panelList li {
+        list-style: none;
+        margin: 0;
+    }
 
 .panelResult {
     padding: 5px;
@@ -86,10 +86,45 @@
     transition: background-color 0.3s;
 }
 
-.panelResult:hover {
-    background-color: #e0e0e0;
+    .panelResult:hover {
+        background-color: #e0e0e0;
+    }
+
+    .panelResult.selected {
+        background-color: #e0e0e0;
+    }
+
+
+.searchBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 5px;
 }
 
-.panelResult.selected {
-    background-color: #e0e0e0;
+
+.right-elements {
+    display: flex;
+    gap: 2px;
 }
+
+
+/* 自訂 .layerBar 的滾動條樣式 */
+.panelList::-webkit-scrollbar {
+    width: 2px;
+}
+
+.panelList::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+
+.panelList::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 10px;
+}
+
+    .panelList::-webkit-scrollbar-thumb:hover {
+        background: #444;
+    }

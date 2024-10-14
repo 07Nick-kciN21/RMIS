@@ -20,7 +20,7 @@ export function add2List(id, name, datas) {
             <div class="layerTitle">
                 <div class="layerName">${name}</div>
                 ${sections}
-            </div>
+            </div>s
             <div class="eye eyeOpen" id="eye_${id}"></div>
             <div class="layerRemove" id="layerRemove_${id}"></div>
         </div>

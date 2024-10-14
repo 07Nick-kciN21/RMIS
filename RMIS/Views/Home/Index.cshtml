@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="~/css/index/menu.css" />
 <link rel="stylesheet" href="~/css/index/svg_eye.css" />
 <link rel="stylesheet" href="~/css/index/svg_switch.css" />
+<link rel="stylesheet" href="~/css/index/painterPanel.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 
 <!-- Leaflet Draw Script -->
@@ -96,8 +97,9 @@
         <h5 class="offcanvas-body" id="offcanvasExampleLabel">圖資清單</h5>
     </div>
 </div>
+<div id="indexMap" style="width: 100%; height: 100vh;"></div>
 
-<div id="searchPanel" class="panel searchPanel" style="z-index: 1051; display: none;">
+<div id="searchPanel" class="panel searchPanel hide">
     <div class="panelHeading">
         快速搜尋
         <button class="closeButton">&times;</button>
@@ -107,28 +109,28 @@
         <button class="searchPanelBtn">搜尋</button>
     </div>
     <div class="panelFooter">
-        <ul class="panelList">
+        <ul id="searchList" class="panelList">
         </ul>
     </div>
 </div>
 
-<div id="painterPanel" class="panel painterPanel" style="z-index: 1051; display: none;">
+<div id="painterPanel" class="panel painterPanel hide">
     <div class="panelHeading">
         繪圖板
         <button class="closeButton">&times;</button>
     </div>
     <div class="panelBody">
-        <div id="toolBar">
-        </div>
-        <label for="colorPicker">Select Color:</label>
-        <input type="color" id="colorPicker" name="colorPicker" value="#ff0000">
+        <label>外框</label>
+        <input type="color" id="borderColor" name="colorPicker" value="#ff0000">
+        <label>填滿</label>
+        <input type="color" id="fillColor" name="colorPicker" value="#ff0000">
     </div>
     <div class="panelFooter">
         <ul id="painterList" class="panelList">
         </ul>
     </div>
+    
 </div>
-<div id="indexMap"></div>
 
 @section Scripts {
     <script type="text/javascript">
