@@ -113,7 +113,8 @@ namespace RMIS.Controllers
             var result = await _mapDBContext.Areas
                 .Where(a => a.Name.StartsWith(name))
                 .Include(a => a.AdminDist)
-                .OrderBy(a => a.Name)
+                .OrderBy(a => a.AdminDist.orderId)
+                .ThenBy(a => a.Name)
                 .Select(a => new RoadbyName
                 {
                     Id = a.Id.ToString(),
