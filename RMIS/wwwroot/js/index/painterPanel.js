@@ -5,6 +5,7 @@ let borderColor = '#FF0000';
 let fillColor = '#FF0000';
 let painterLayer = {};
 let drawControl;
+let drawnItems;
 export function initPainterPanel() {
     $indexMap = getIndexMap();
     const $painterPanel = $('#painterPanel');
@@ -17,7 +18,7 @@ export function initPainterPanel() {
         fillColor = $(this).val(); // 更新選擇的顏色
     });
 
-    const drawnItems = new L.FeatureGroup();
+    drawnItems = new L.FeatureGroup();
     $indexMap.addLayer(drawnItems);
 
     drawControl = new L.Control.Draw({
@@ -34,7 +35,7 @@ export function initPainterPanel() {
         }
 
     });
-
+    initDrawMenu();
     $indexMap.on(L.Draw.Event.CREATED, function (e) {
         var layerId = 'layer-' + layerCount++;
         var layer = e.layer;
@@ -64,16 +65,18 @@ export function initPainterPanel() {
             // 計算圓形的面積
             var radius = layer.getRadius(); // 獲取半徑，單位為米
             var area = Math.PI * Math.pow(radius, 2); // 計算圓形的面積
-
             console.log('Circle Area:', area, 'square meters');
 
             // 顯示面積信息在地圖上
             var popupContent = "面積: " + area.toFixed(2) + " 平方公尺";
             layer.bindPopup(popupContent).openPopup();
         }
-        else {
-            // 如果是 marker，可以選擇設置圖標或其他屬性
-            console.log('Marker added at:', layer.getLatLng());
+        else if (e.layerType === 'polyline') {
+            layer.setStyle({
+                color: borderColor,
+                weight: 2,
+                opacity: 1,
+            });
         }
         drawnItems.addLayer(layer);
         addItem(layerId, layer);
@@ -81,6 +84,7 @@ export function initPainterPanel() {
     observePainterPanel()
 }
 
+// 計算圖行面積
 function getArea(layer) {
     // 取得多邊形的經緯度
     var latlngs = layer.getLatLngs()[0]; // 獲取多邊形的第一組經緯度
@@ -99,6 +103,155 @@ function getArea(layer) {
     return area;
 }
 
+
+function initDrawMenu() {
+    // 點擊其他地方時隱藏選單
+    $(document).click(function () {
+        $('#ptbInOut').hide();
+    });
+
+    // 點擊選單內的項目時執行對應操作
+    $('#ptbInOut li').click(function () {
+        // 在這裡添加各個選項的功能
+        const $ptbIO = $(this).text();
+        switch ($(this).text()) {
+            case "匯入Json":
+                importGeoJson();
+                console.log("匯入Json");
+                break;
+            case "匯出Json":
+                exportLayers();
+                break;
+            default:
+                console.log("nothing");
+        }
+    });
+}
+
+function importGeoJson() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = function (event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    var jsonData = JSON.parse(e.target.result);
+                    importCustomJson(jsonData);
+                } catch (error) {
+                    console.error('Invalid JSON file');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function importCustomJson(jsonData) {
+    clearLayers();
+    let layerCount = 0;
+    // 遍歷 JSON 數據並將圖層添加到地圖
+    jsonData.forEach(function (layerData) {
+        var layer;
+        const layerId = 'layer-' + layerCount++;
+        if (layerData.type === 'Circle') {
+            var latlng = L.latLng(layerData.coordinates[0], layerData.coordinates[1]);
+            layer = L.circle(latlng, {
+                radius: layerData.properties.radius,
+                color: layerData.properties.color, // 邊框顏色
+                opacity: 1,
+                fillColor: layerData.properties.fillColor, // 填滿顏色
+                fillOpacity: 1,
+            });
+        } else if (layerData.type === 'Marker') {
+            var latlng = L.latLng(layerData.coordinates[0], layerData.coordinates[1]);
+            layer = L.marker(latlng);
+        } else if (layerData.type === 'Polygon') {
+            var latlngs = layerData.coordinates.map(function (ring) {
+                return ring.map(function (latlng) {
+                    return L.latLng(latlng[0], latlng[1]);
+                });
+            });
+            layer = L.polygon(latlngs, {
+                color: layerData.properties.color, // 邊框顏色
+                opacity: 1,
+                fillColor: layerData.properties.fillColor, // 填滿顏色
+                fillOpacity: 1,
+            });
+        } else if (layerData.type === 'Polyline') {
+            var latlngs = layerData.coordinates.map(function (latlng) {
+                return L.latLng(latlng[0], latlng[1]);
+            });
+            layer = L.polyline(latlngs, {
+                color: layerData.properties.color, // 邊框顏色
+                opacity: 1,
+            });
+        }
+
+        if (layer) {
+            drawnItems.addLayer(layer);
+            addItem(layerId, layer);
+        }
+    });
+}
+
+function clearLayers() {
+    drawnItems.clearLayers();
+    $('#painterList').empty();
+}
+function exportLayers() {
+    var exportData = [];
+
+    drawnItems.eachLayer(function (layer) {
+        var layerData = {
+            type: null,
+            coordinates: null,
+            properties: {}
+        };
+
+        if (layer instanceof L.Circle) {
+            layerData.type = 'Circle';
+            layerData.coordinates = [layer.getLatLng().lat, layer.getLatLng().lng];
+            layerData.properties.radius = layer.getRadius();
+            layerData.properties.color = layer.options.color; // 邊框顏色
+            layerData.properties.fillColor = layer.options.fillColor; // 填滿顏色
+        } else if (layer instanceof L.Marker) {
+            layerData.type = 'Marker';
+            layerData.coordinates = [layer.getLatLng().lat, layer.getLatLng().lng];
+        } else if (layer instanceof L.Polygon) {
+            layerData.type = 'Polygon';
+            layerData.coordinates = layer.getLatLngs().map(function (ring) {
+                return ring.map(function (latlng) {
+                    return [latlng.lat, latlng.lng];
+                });
+            });
+            layerData.properties.color = layer.options.color; // 邊框顏色
+            layerData.properties.fillColor = layer.options.fillColor; // 填滿顏色
+        } else if (layer instanceof L.Polyline) {
+            layerData.type = 'Polyline';
+            layerData.coordinates = layer.getLatLngs().map(function (latlng) {
+                return [latlng.lat, latlng.lng];
+            });
+            layerData.properties.color = layer.options.color; // 邊框顏色
+        }
+
+        exportData.push(layerData);
+    });
+
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    var downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "drawn_layers_custom.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+
+//加入圖形表單
 function addItem(layerId, layer) {
     const $painterList = $('#painterList');
 

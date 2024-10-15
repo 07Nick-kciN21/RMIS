@@ -120,10 +120,18 @@
         <button class="closeButton">&times;</button>
     </div>
     <div class="panelBody">
-        <label>外框</label>
-        <input type="color" id="borderColor" name="colorPicker" value="#ff0000">
-        <label>填滿</label>
-        <input type="color" id="fillColor" name="colorPicker" value="#ff0000">
+        <div class="colorPickers">
+            <label>外框</label>
+            <input type="color" id="borderColor" name="colorPicker" value="#ff0000">
+            <label>填滿</label>
+            <input type="color" id="fillColor" name="colorPicker" value="#ff0000">
+        </div>
+        <div class="drawMenu" title="匯入/匯出">
+            <ul id="ptbInOut" class="dropdown-menu dropdown-left">
+                <li id="ptbIO_0" aria-expanded="true">匯入Json</li>
+                <li id="ptbIO_1">匯出Json</li>
+            </ul>
+        </div>
     </div>
     <div class="panelFooter">
         <ul id="painterList" class="panelList">

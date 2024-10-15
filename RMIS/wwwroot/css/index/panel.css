@@ -12,7 +12,7 @@
 }
 
 #painterPanel {
-    width: 200px;
+    width: 250px;
     height: 270px;
     position: absolute;
     top: 20%;
@@ -51,9 +51,20 @@
     }
 
 .panelBody {
+    display: flex;
+    justify-content: space-between; /* 使內部元素左右對齊 */
+    align-items: center; /* 垂直方向上居中對齊 */
     padding: 10px;
-    padding-bottom: 0px;
-    margin-bottom: 0;
+}
+
+.drawMenu {
+    right: 10%;
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+    background-image: url('/svg/drawmenu.svg');
 }
 
 .panelFooter {
@@ -128,3 +139,25 @@
     .panelList::-webkit-scrollbar-thumb:hover {
         background: #444;
     }
+
+#ptbInOut {
+    display: none; /* 初始狀態下隱藏選單 */
+    position: absolute; /* 相對於 drawMenu 定位 */
+    top: 50px; /* 調整這個值來控制選單的位置 */
+    right: -135px; /* 從圖示的右側顯示 */
+    background: #fff;
+    border: 1px solid #ccc;
+    list-style: none;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+    #ptbInOut li {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+        #ptbInOut li:hover {
+            background: #f0f0f0;
+        }

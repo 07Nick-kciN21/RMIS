@@ -7,6 +7,28 @@ export function initMap(mapId) {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(indexMap);
+
+    var $offcanvasElement = $('#layerListBlock');
+    var $indexMapElement = $('#indexMap');
+
+    // 當 offcanvas 開啟時壓縮地圖
+    $offcanvasElement.on('shown.bs.offcanvas', function () {
+        var offcanvasWidth = $offcanvasElement.outerWidth();
+        $indexMapElement.css({
+            'transition': 'all 0.3s ease-in-out',
+            'margin-left': offcanvasWidth + 'px',
+            'width': 'calc(100% - ' + offcanvasWidth + 'px)'
+        });
+    });
+
+    // 當 offcanvas 關閉時恢復地圖
+    $offcanvasElement.on('hidden.bs.offcanvas', function () {
+        $indexMapElement.css({
+            'margin-left': '0',
+            'width': '100%'
+        });
+    });
+
     return indexMap;
 }
 export function getIndexMap() {
