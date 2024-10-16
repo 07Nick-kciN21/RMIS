@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using RMIS.Models.sql;
 
 namespace RMIS.Models.Admin
 {

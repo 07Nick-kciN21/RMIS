@@ -29,7 +29,6 @@
 <link rel="stylesheet" href="~/css/index/svg_eye.css" />
 <link rel="stylesheet" href="~/css/index/svg_switch.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
-
 <!-- Leaflet Draw Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <header class="row gx-0 custom-header">
@@ -42,7 +41,7 @@
                 Admin
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
+                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddMapSource">MapSource</a></li>
                 <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
                 <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
                 <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
@@ -57,29 +56,36 @@
         <div class="nav-item dropdown">
             <button id="tb-painterPanel" class="dropdown-button">繪圖板</button>
         </div>
-
+        <div class="nav-item dropdown">
+            <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
+        </div>
     </div>
         
     <nav class="col" style="padding: 0;">
         <div class="container-fluid ">
             <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
                 <div class="nav-item dropdown">
-                    <button class="dropdown-button" id="header-layer1" data-target="header-layer-list1">業務圖資</button>
-                    <div class="dropdown-content" id="header-layer-list1">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                        圖層疊加
+                    </button>
+                </div>
+                <div class="nav-item dropdown">
+                    <button class="dropdown-button" id="top-vav1" data-target="top-vav-list1">業務圖資</button>
+                    <div class="dropdown-content" id="top-vav-list1">
                     </div>
                 </div>
                 <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
                         常用連結
                     </button>
                 </div>
                 <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
                         圖資匯入
                     </button>
                 </div>
                 <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
                         下載專區
                     </button>
                 </div>

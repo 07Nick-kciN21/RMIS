@@ -247,5 +247,11 @@ namespace RMIS.Controllers
 
             return View();
         }
+
+        [HttpGet]
+        public IActionResult AddMapSource()
+        {
+            return View();
+        }
     }
 }

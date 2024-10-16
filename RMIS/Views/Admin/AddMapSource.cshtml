@@ -1,0 +1,40 @@
+﻿@model RMIS.Models.Admin.AddMapSourceInput;
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+<form method="post" class="container">
+    <h2>新增地圖來源</h2>
+    <div class="form-group">
+        <label asp-for="Url" class="control-label"></label>
+        <input asp-for="Url" class="form-control" />
+        <span asp-validation-for="Url" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="LayerName" class="control-label"></label>
+        <input asp-for="LayerName" class="form-control" />
+        <span asp-validation-for="LayerName" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Type" class="control-label"></label>
+        <select asp-for="Type" class="form-control">
+            <option value="基本圖層">基本圖層</option>
+            <option value="疊加圖層">疊加圖層</option>
+        </select>
+        <span asp-validation-for="Type" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="ImageFormat" class="control-label"></label>
+        <input asp-for="ImageFormat" class="form-control" />
+        <span asp-validation-for="ImageFormat" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Attribution" class="control-label"></label>
+        <input asp-for="Attribution" class="form-control" />
+        <span asp-validation-for="Attribution" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">新增</button>
+</form>

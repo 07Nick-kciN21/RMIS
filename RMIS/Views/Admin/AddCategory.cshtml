@@ -22,9 +22,9 @@
         </div>
     </div>
 </header>
-<h2>Create a New Category</h2>
 
-<form method="post">
+<form method="post" class="container">
+    <h2>Create a New Category</h2>
     <label asp-for="ParentId">Parent Category (Optional)</label>
     <select asp-for="ParentId" asp-items="@Model.parentCategories" class="form-control">
         <option value="">-- None --</option>

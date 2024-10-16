@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMIS.Data;
 
@@ -11,9 +12,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20241016031046_MapSource Add2")]
+    partial class MapSourceAdd2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

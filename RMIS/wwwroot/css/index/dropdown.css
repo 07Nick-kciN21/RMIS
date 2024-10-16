@@ -11,6 +11,11 @@
         color: black;
     }
 
+.active {
+    background-color: white;
+    color: black;
+}
+
 
 .dropdown-content {
     background-color: #9ac43e;

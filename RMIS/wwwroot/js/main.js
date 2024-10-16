@@ -3,7 +3,8 @@ import { initMap } from './index/map.js';
 import { generateMenu, bindMenuEvents } from './index/menu.js';
 import { initPanel } from './index/panel.js';
 import { initSearchPanel } from './index/searchPanel.js'
-import {initPainterPanel} from './index/painterPanel.js'
+import { initPainterPanel } from './index/painterPanel.js'
+import { initPhoto } from './index/photo.js'
 
 $(document).ready(function () {
     // 初始化地图
@@ -16,11 +17,12 @@ $(document).ready(function () {
 
     // 生成選單
     var menuHtml = generateMenu(MenuData, "", 0);
-    $('#header-layer-list1').html(menuHtml);
+    $('#top-vav-list1').html(menuHtml);
     initPanel("searchPanel");
     initPanel("painterPanel");
     initSearchPanel();
     initPainterPanel();
+    initPhoto();
     // 绑定菜单事件
     bindMenuEvents();
 });
