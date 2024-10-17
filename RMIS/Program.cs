@@ -9,7 +9,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<MapDBContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString")));
-builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+
+builder.Services.AddScoped<AdminInterface, AdminRepository>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

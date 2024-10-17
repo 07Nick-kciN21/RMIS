@@ -18,7 +18,7 @@ function updateLayers(PipelineId) {
 
     // 發送AJAX請求獲取相應的Layers數據
     $.ajax({
-        url: "/Admin/GetLayers",
+        url: "/api/MapAPI/GetLayers",
         type: "GET",
         data: { pipelineId: PipelineId },
         success: function (layers) {
