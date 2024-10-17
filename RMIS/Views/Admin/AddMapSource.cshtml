@@ -1,40 +1,77 @@
 ﻿@model RMIS.Models.Admin.AddMapSourceInput;
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+
+<div class="container">
+    <h2>Add Map Source</h2>
+
+    <form method="post">
+        <div class="form-group">
+            <label asp-for="Url"></label>
+            <input type="text" class="form-control" asp-for="Url" required />
+            <span asp-validation-for="Url" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SourceId"></label>
+            <input type="text" class="form-control" asp-for="SourceId" required />
+            <span asp-validation-for="SourceId" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Name"></label>
+            <input type="text" class="form-control" asp-for="Name" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Type"></label>
+            <select class="form-control" asp-for="Type" onchange="toggleImageFormat()">
+                <option value="basePane">基本圖層</option>
+                <option value="overlayPane">額外圖層</option>
+            </select>
+            <span asp-validation-for="Type" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="TileType"></label>
+            <select class="form-control" asp-for="TileType" onchange="toggleImageFormat()">
+                <option value="WMS">WMS</option>
+                <option value="WMTS">WMTS</option>
+            </select>
+            <span asp-validation-for="TileType" class="text-danger"></span>
+        </div>
+
+        <div class="form-group" id="imageFormatGroup">
+            <label asp-for="ImageFormat"></label>
+            <input type="text" class="form-control" asp-for="ImageFormat" placeholder="e.g., image/png, image/jpeg" />
+            <span asp-validation-for="ImageFormat" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Attribution"></label>
+            <input type="text" class="form-control" asp-for="Attribution" required />
+            <span asp-validation-for="Attribution" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Map Source</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleImageFormat() {
+            var tileType = document.getElementById("TileType").value;
+            var imageFormatGroup = document.getElementById("imageFormatGroup");
+
+            if (tileType === "WMTS") {
+                imageFormatGroup.style.display = "none";
+            } else {
+                imageFormatGroup.style.display = "block";
+            }
+        }
+
+        // Ensure the correct initial state
+        document.addEventListener("DOMContentLoaded", function () {
+            toggleImageFormat();
+        });
+    </script>
 }
-
-
-<form method="post" class="container">
-    <h2>新增地圖來源</h2>
-    <div class="form-group">
-        <label asp-for="Url" class="control-label"></label>
-        <input asp-for="Url" class="form-control" />
-        <span asp-validation-for="Url" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="LayerName" class="control-label"></label>
-        <input asp-for="LayerName" class="form-control" />
-        <span asp-validation-for="LayerName" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Type" class="control-label"></label>
-        <select asp-for="Type" class="form-control">
-            <option value="基本圖層">基本圖層</option>
-            <option value="疊加圖層">疊加圖層</option>
-        </select>
-        <span asp-validation-for="Type" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="ImageFormat" class="control-label"></label>
-        <input asp-for="ImageFormat" class="form-control" />
-        <span asp-validation-for="ImageFormat" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Attribution" class="control-label"></label>
-        <input asp-for="Attribution" class="form-control" />
-        <span asp-validation-for="Attribution" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">新增</button>
-</form>

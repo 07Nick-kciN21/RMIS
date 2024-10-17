@@ -2,10 +2,12 @@
 {
     public class AddMapSourceInput
     {
-        public string Url { get; set; }
-        public string LayerName { get; set; }
-        public string Type { get; set; }
-        public string ImageFormat { get; set; }
-        public string Attribution { get; set; }
+        public string Url { get; set; }      // 地圖來源的 URL
+        public string SourceId { get; set; }    // 地圖來源的圖層名稱
+        public string Name { get; set; }     // 名稱
+        public string Type { get; set; }     // 基本類型或疊加類型
+        public string TileType { get; set; } // WTS 或 WMTS
+        public string? ImageFormat { get; set; } // 圖片格式，例如 "image/png", "image/jpeg"，WMTS時可為 null
+        public string Attribution { get; set; } // 地圖來源的歸屬信息
     }
 }

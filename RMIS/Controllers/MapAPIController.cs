@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using RMIS.Data;
 using System.Linq;
 using static RMIS.Models.API.IndexClass;
+using RMIS.Models.Admin;
 
 namespace RMIS.Controllers
 {
@@ -146,6 +147,72 @@ namespace RMIS.Controllers
                     Longitude = p.Longitude
                 }).ToList()
             };
+        }
+
+        [HttpPost]
+        public async Task<MapSourceOrderbyTileType> GetMapSources()
+        {
+            var mapSources = await _mapDBContext.MapSources.ToListAsync();
+
+            var wmsSources = mapSources.Where(ms => ms.TileType == "WMS").ToList();
+            var wmtsSources = mapSources.Where(ms => ms.TileType == "WMTS").ToList();
+
+            var result = new MapSourceOrderbyTileType
+            {
+                WMS = wmsSources.Select(ms => new MapSource
+                {
+                    Id = ms.Id.ToString(),
+                    Name = ms.Name,
+                    Type = ms.Type,
+                    Url = ms.Url,
+                    SourceId = ms.SourceId,
+                    Attribution = ms.Attribution,
+                    ImageFormat = ms.ImageFormat
+                }).ToList(),
+                WMTS = wmtsSources.Select(ms => new MapSource
+                {
+                    Id = ms.Id.ToString(),
+                    Name = ms.Name,
+                    Type = ms.Type,
+                    Url = ms.Url,
+                    SourceId = ms.SourceId,
+                    Attribution = ms.Attribution,
+                    ImageFormat = ms.ImageFormat
+                }).ToList()
+            };
+
+            return result;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddBulk([FromBody] List<AddMapSourceInput> mapSources)
+        {
+            if (mapSources == null || mapSources.Count == 0)
+            {
+                return BadRequest("No MapSource data provided.");
+            }
+
+            try
+            {
+                var mapSourceEntities = mapSources.Select(ms => new RMIS.Models.sql.MapSource
+                {
+                    Name = ms.Name,
+                    Type = ms.Type,
+                    TileType = ms.TileType,
+                    Url = ms.Url,
+                    SourceId = ms.SourceId,
+                    Attribution = ms.Attribution,
+                    ImageFormat = ms.ImageFormat
+                }).ToList();
+
+                await _mapDBContext.MapSources.AddRangeAsync(mapSourceEntities);
+                await _mapDBContext.SaveChangesAsync();
+                return Ok(new { message = "MapSources added successfully.", count = mapSources.Count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

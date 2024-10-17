@@ -1,4 +1,4 @@
-﻿using RMIS.Models.sql;
+﻿
 
 namespace RMIS.Models.API
 {
@@ -49,6 +49,22 @@ namespace RMIS.Models.API
         {
             public string Id { get; set; }
             public List<PointDto> Points { get; set; }
+        }
+
+        public class MapSourceOrderbyTileType
+        {
+            public List<MapSource> WMS { get; set; }
+            public List<MapSource> WMTS { get; set; }
+        }
+        public class MapSource
+        {
+            public string Id { get; set; }
+            public string Url { get; set; }      // 地圖來源的 URL
+            public string SourceId { get; set; }    // 地圖來源的圖層名稱
+            public string Name { get; set; }     // 名稱
+            public string Type { get; set; }     // 基本類型或疊加類型
+            public string? ImageFormat { get; set; } // 圖片格式，例如 "image/png", "image/jpeg"，WMTS時可為 null
+            public string Attribution { get; set; } // 地圖來源的歸屬信息
         }
     }
 }

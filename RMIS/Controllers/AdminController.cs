@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Data;
-using RMIS.Models;
 using RMIS.Models.Admin;
 using RMIS.Models.sql;
 
@@ -15,6 +14,7 @@ namespace RMIS.Controllers
         {
             _mapDBContext = mapDBContext;
         }
+
         [HttpGet]
         public IActionResult AddSystem()
         {
@@ -39,7 +39,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddPipeline(AddPipelineInput pipelineInput)
+        public async Task<IActionResult> AddPipeline(AddPipelineInput pipelineInput)
         {
             try
             {
@@ -54,13 +54,13 @@ namespace RMIS.Controllers
                 };
 
                 // 將新管線添加到資料庫
-                _mapDBContext.Pipelines.Add(pipeItem);
+                await _mapDBContext.Pipelines.AddAsync(pipeItem);
 
                 var selectedTypeId = new List<GeometryType>();
-                foreach(var selectTypeId in pipelineInput.selectedGeometryTypes)
+                foreach (var selectTypeId in pipelineInput.selectedGeometryTypes)
                 {
                     var selectedTypeGuId = Guid.Parse(selectTypeId);
-                    var selectedType = _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Id == selectedTypeGuId);
+                    var selectedType = await _mapDBContext.GeometryTypes.FirstOrDefaultAsync(gt => gt.Id == selectedTypeGuId);
                     var layerItem = new Layer
                     {
                         Id = Guid.NewGuid(),
@@ -68,10 +68,10 @@ namespace RMIS.Controllers
                         GeometryTypeId = selectedTypeGuId,
                         PipelineId = pipelineId
                     };
-                    _mapDBContext.Layers.Add(layerItem);
+                    await _mapDBContext.Layers.AddAsync(layerItem);
                 }
                 // 檢查 SaveChanges 返回值
-                int rowsAffected = _mapDBContext.SaveChanges();
+                int rowsAffected = await _mapDBContext.SaveChangesAsync();
 
                 if (rowsAffected > 0)
                 {
@@ -139,7 +139,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddRoad(AddRoadInput roadInput)
+        public async Task<IActionResult> AddRoad(AddRoadInput roadInput)
         {
             try
             {
@@ -155,7 +155,7 @@ namespace RMIS.Controllers
                         Longitude = point.Longitude,
                         AreaId = Input_id
                     };
-                    _mapDBContext.Points.AddAsync(new_point);
+                    await _mapDBContext.Points.AddAsync(new_point);
                 }
                 var areatem = new Area
                 {
@@ -166,9 +166,9 @@ namespace RMIS.Controllers
                     LayerId = Guid.Parse(roadInput.LayerId),
                 };
 
-                _mapDBContext.Areas.Add(areatem);
+                await _mapDBContext.Areas.AddAsync(areatem);
                 // 檢查 SaveChanges 返回值
-                int rowsAffected = _mapDBContext.SaveChanges();
+                int rowsAffected = await _mapDBContext.SaveChangesAsync();
 
                 if (rowsAffected > 0)
                 {
@@ -227,7 +227,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddCategory(AddCategoryInput categoryInput)
+        public async Task<IActionResult> AddCategory(AddCategoryInput categoryInput)
         {
             var new_category = new Category
             {
@@ -236,15 +236,14 @@ namespace RMIS.Controllers
                 ParentId = categoryInput.ParentId == null ? null : Guid.Parse(categoryInput.ParentId),
                 OrderId = _mapDBContext.Categories.Count(c => c.ParentId.ToString() == categoryInput.ParentId) + 1
             };
-            _mapDBContext.Categories.Add(new_category);
-            _mapDBContext.SaveChanges();
+            await _mapDBContext.Categories.AddAsync(new_category);
+            await _mapDBContext.SaveChangesAsync();
             return RedirectToAction("AddCategory", "Admin");
         }
 
         [HttpGet]
         public IActionResult AddGeometryType()
         {
-
             return View();
         }
 
@@ -252,6 +251,26 @@ namespace RMIS.Controllers
         public IActionResult AddMapSource()
         {
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddMapSource(AddMapSourceInput mapsourceInput)
+        {
+            var new_mapsource = new MapSource
+            {
+                Url = mapsourceInput.Url,
+                SourceId = mapsourceInput.SourceId,
+                Name = mapsourceInput.Name,
+                Type = mapsourceInput.Type,
+                TileType = mapsourceInput.TileType,
+                ImageFormat = mapsourceInput.ImageFormat,
+                Attribution = mapsourceInput.Attribution
+            };
+
+            await _mapDBContext.MapSources.AddAsync(new_mapsource);
+            await _mapDBContext.SaveChangesAsync();
+
+            return RedirectToAction("AddMapSource", "Admin");
         }
     }
 }

@@ -1,8 +1,6 @@
 ﻿// map.js
 
 let indexMap;
-let currentOverlay;
-let isAddPhotoEnabled = false; // 開關，用於控制是否啟用 addPHOTO
 
 // 初始化地图
 export function initMap(mapId) {
@@ -41,117 +39,75 @@ function createBaseLayers() {
     indexMap.createPane('overlayPane');
     indexMap.createPane('photoPane');
 
-    indexMap.getPane('basePane').style.zIndex = 200;
-    indexMap.getPane('overlayPane').style.zIndex = 400;
-    indexMap.getPane('photoPane').style.zIndex = 300;
+    indexMap.getPane('basePane').style.zIndex = 2;
+    indexMap.getPane('overlayPane').style.zIndex = 4;
+    indexMap.getPane('photoPane').style.zIndex = 3;
 
+
+    //google街景
     var GoogleRoad = L.gridLayer.googleMutant({
         type: "roadmap", // valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
         pane: 'basePane'
     }).addTo(indexMap);
 
+    //openstreet
     var OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         pane: 'basePane'
-    });
-
-    var EMAP = L.tileLayer.wms('https://wms.nlsc.gov.tw/wms',
-        {
-            layers: 'EMAP',  // WMS 圖層名稱
-            format: 'image/png',  // 圖片格式
-            transparent: true,    // 是否透明背景
-            attribution: "Map data © WMS provider",
-            pane: 'basePane'
-        });
-
-    var LANDSECT = L.tileLayer.wms('https://wms.nlsc.gov.tw/wms',
-        {
-            layers: 'LANDSECT',  // WMS 圖層名稱
-            format: 'image/png',  // 圖片格式
-            transparent: true,    // 是否透明背景
-            attribution: "Map data © WMS provider",
-            pane: 'overlayPane'
-        });
-
-
-    //var PHOTO2 = L.tileLayer.wms('https://wms.nlsc.gov.tw/wms',
-    //    {
-    //        layers: 'PHOTO2',  // WMS 圖層名稱
-    //        format: 'image/png',  // 圖片格式
-    //        transparent: true,    // 是否透明背景
-    //        attribution: "Map data © WMS provider",
-    //        pane: 'photoPane'
-    //    });
-
-    var CITY = L.tileLayer.wms('https://wms.nlsc.gov.tw/wms',
-        {
-            layers: 'CITY',  // WMS 圖層名稱
-            format: 'image/png',  // 圖片格式
-            transparent: true,    // 是否透明背景
-            attribution: "Map data © WMS provider",
-            pane: 'overlayPane'
-        });
-
-    var TOWN = L.tileLayer.wms('https://wms.nlsc.gov.tw/wms',
-        {
-            layers: 'TOWN',      // 圖層名稱
-            format: 'image/png',
-            transparent: true,
-            attribution: "WMS layer 2",
-            pane: 'overlayPane'
-        });
-
-    var LUIMAP = L.tileLayer.wms('https://wms.nlsc.gov.tw/wms', {
-        layers: 'LUIMAP',      // 圖層名稱
-        format: 'image/png',
-        transparent: true,
-        attribution: "WMS layer 3",
-        pane: 'overlayPane'
-    });
-
-
-    var Village = L.tileLayer.wms('https://wms.nlsc.gov.tw/wms', {
-        layers: 'Village',      // 圖層名稱
-        format: 'image/png',
-        transparent: true,
-        attribution: "WMS layer 3",
-        pane: 'overlayPane'
     });
 
     // 基本圖層 (單選)
     var baseMaps = {
         "Open Street地圖": OpenStreet,
         "Google 街景地圖": GoogleRoad,
-        "臺灣通用電子地圖": EMAP,
     };
 
     // 疊加圖層 (多選)
-    var overlayMaps = {
-        "地段圖": LANDSECT,
-        "縣市界": CITY,
-        "鄉鎮區界": TOWN,
-        "村里界": Village,
-        "國土利用現況調查成果圖": LUIMAP
-    };
+    var overlayMaps = {};
 
-    L.control.layers(baseMaps, overlayMaps).addTo(indexMap);
+    // 從 API 取得地圖來源資料
+    $.ajax({
+        url: '/api/MapAPI/GetMapSources',
+        type: 'POST',
+        success: function (mapSources) {
+            mapSources.wms.forEach(source => {
+                const layer = L.tileLayer.wms(source.url, {
+                    layers: source.sourceId,
+                    format: source.imageFormat || 'image/png',
+                    transparent: true,
+                    opacity: source.type === 'basePane' ? 1 : 0.5,
+                    attribution: source.attribution,
+                    pane: source.type
+                });
+                if (source.type === 'basePane') {
+                    baseMaps[source.name] = layer;
+                } else {
+                    overlayMaps[source.name] = layer;
+                }
+            });
+
+            mapSources.wmts.forEach(source => {
+                const layer = L.tileLayer(`${source.url}${source.sourceId}/default/EPSG:3857/{z}/{y}/{x}.png`, {
+                    attribution: source.attribution,
+                    opacity: source.type === 'basePane' ? 1 : 0.5,
+                    pane: source.type
+                });
+                if (source.type === 'basePane') {
+                    baseMaps[source.name] = layer;
+                } else {
+                    overlayMaps[source.name] = layer;
+                }
+            });
+
+            // 將疊加圖層作為可複選圖層加入地圖控制
+            L.control.layers(baseMaps, overlayMaps).addTo(indexMap);
+        },
+        error: function (error) {
+            console.error('Error fetching map sources:', error);
+        }
+    });
 }
 
-//function addPHOTO(e) {
-//    if (currentOverlay) {
-//        indexMap.removeLayer(currentOverlay);
-//    }
-
-//    var latlng = e.latlng;
-//    var bounds = [
-//        [latlng.lat - 0.01, latlng.lng - 0.01],
-//        [latlng.lat + 0.01, latlng.lng + 0.01]
-//    ];
-
-//    currentOverlay = L.imageOverlay('https://wms.nlsc.gov.tw/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=PHOTO2&STYLES=&FORMAT=image%2Fpng&TRANSPARENT=true&BBOX='
-//        + bounds[0][1] + ',' + bounds[0][0] + ',' + bounds[1][1] + ',' + bounds[1][0] + '&WIDTH=1024&HEIGHT=1024&SRS=EPSG:4326',
-//        bounds, { pane: 'photoPane', interactive: false }).addTo(indexMap);
-//}
 export function getIndexMap() {
     return indexMap;
 }
