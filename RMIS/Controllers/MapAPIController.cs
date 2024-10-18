@@ -19,6 +19,17 @@ namespace RMIS.Controllers
             _mapDBContext = mapDBContext;
         }
 
+        [HttpGet]
+        public IActionResult GetLayers(Guid pipelineId)
+        {
+            var layers = _mapDBContext.Layers
+                .Where(l => l.PipelineId == pipelineId)
+                .OrderBy(l => l.GeometryType.OrderId)
+                .Select(l => new { l.Id, l.Name })
+                .ToList();
+            return Ok(layers);
+        }
+
         [HttpPost]
         public async Task<List<LayersByPipeline>> GetLayersByPipeline(Guid pipelineId)
         {

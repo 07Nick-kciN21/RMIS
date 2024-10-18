@@ -1,36 +1,17 @@
 ﻿@model RMIS.Models.Admin.AddCategoryInput;
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+
 @{
+    ViewData["Title"] = "新增類別";
 }
-<header class="row gx-0">
-    <div class="col">
-        <div class="nav-item">
-            <button class="dropdown-button" onclick="location.href='@Url.Action("Index", "Home")'">Home</button>
-        </div>
-        <div class="nav-item dropdown">
-            <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                Admin
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
-            </ul>
-        </div>
-    </div>
-</header>
 
 <form method="post" class="container">
-    <h2>Create a New Category</h2>
-    <label asp-for="ParentId">Parent Category (Optional)</label>
+    <h2>新增類別</h2>
+    <label asp-for="ParentId">母類別(None為根類別)</label>
     <select asp-for="ParentId" asp-items="@Model.parentCategories" class="form-control">
         <option value="">-- None --</option>
     </select>
     <div class="form-group">
-        <label asp-for="Name">Category Name</label>
+        <label asp-for="Name">類別名稱</label>
         <input asp-for="Name" class="form-control" />
     </div>
 

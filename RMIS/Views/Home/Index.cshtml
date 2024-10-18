@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "首頁";
 }
 <style>
     .custom-offcanvas-width {
@@ -32,63 +32,49 @@
 <!-- Leaflet Draw Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdkKkFphldL05sNWcu3N9cPbhRPkkJYSg" async defer></script>
-<header class="row gx-0 custom-header">
-    <div class="col">
-        <div class="nav-item">
-            <button class="dropdown-button" onclick="location.href='@Url.Action("Index", "Home")'">首頁</button>
-        </div>
-        <div class="nav-item dropdown">
-            <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                管理員
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddMapSource">新增圖源</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">新增類別</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">新增管線</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">新增分支</a></li>
-            </ul>
-        </div>
-        <div class="nav-item dropdown">
-            <button class="dropdown-button" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">側欄</button>
-        </div>
-        <div class="nav-item dropdown">
-            <button id="tb-searchPanel" class="dropdown-button">快搜</button>
-        </div>
-        <div class="nav-item dropdown">
-            <button id="tb-painterPanel" class="dropdown-button">繪圖板</button>
-        </div>
-        <div class="nav-item dropdown">
-            <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
-        </div>
+@section HomeHeaderToolBar{
+    <div class="nav-item dropdown">
+        <button class="dropdown-button" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">側欄</button>
     </div>
-        
-    <nav class="col" style="padding: 0;">
-        <div class="container-fluid ">
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" id="top-vav1" data-target="top-vav-list1">業務圖資</button>
-                    <div class="dropdown-content" id="top-vav-list1">
-                    </div>
-                </div>
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
-                        常用連結
-                    </button>
-                </div>
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
-                        圖資匯入
-                    </button>
-                </div>
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
-                        下載專區
-                    </button>
+    <div class="nav-item dropdown">
+        <button id="tb-searchPanel" class="dropdown-button">快搜</button>
+    </div>
+    <div class="nav-item dropdown">
+        <button id="tb-painterPanel" class="dropdown-button">繪圖板</button>
+    </div>
+    <div class="nav-item dropdown">
+        <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
+    </div>
+}
+@section HomeHeaderNavList{
+<nav class="col" style="padding: 0;">
+    <div class="container-fluid ">
+        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
+            <div class="nav-item dropdown">
+                <button class="dropdown-button" id="top-vav1" data-target="top-vav-list1">業務圖資</button>
+                <div class="dropdown-content" id="top-vav-list1">
                 </div>
             </div>
+            <div class="nav-item dropdown">
+                <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                    常用連結
+                </button>
+            </div>
+            <div class="nav-item dropdown">
+                <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                    圖資匯入
+                </button>
+            </div>
+            <div class="nav-item dropdown">
+                <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                    下載專區
+                </button>
+            </div>
         </div>
-    </nav>
-</header>
+    </div>
+</nav>
+}
+
 
 <div class="offcanvas offcanvas-start custom-offcanvas-width" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-labelledby="layerListBlockLabel">
     <div class="layerList container-fluid">

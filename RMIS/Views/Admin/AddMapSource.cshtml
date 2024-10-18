@@ -1,29 +1,32 @@
 ﻿@model RMIS.Models.Admin.AddMapSourceInput;
 
-<div class="container">
-    <h2>Add Map Source</h2>
+@{
+    ViewData["Title"] = "新增圖源";
+}
 
+<div class="container">
+    <h2>新增圖源</h2>
     <form method="post">
         <div class="form-group">
-            <label asp-for="Url"></label>
-            <input type="text" class="form-control" asp-for="Url" required />
+            <label asp-for="Url">圖層介接網址</label>
+            <input type="text" class="form-control" asp-for="Url" placeholder="" required />
             <span asp-validation-for="Url" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="SourceId"></label>
-            <input type="text" class="form-control" asp-for="SourceId" required />
+            <label asp-for="SourceId">圖層介接代碼</label>
+            <input type="text" class="form-control" asp-for="SourceId" placeholder="" required />
             <span asp-validation-for="SourceId" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="Name"></label>
+            <label asp-for="Name">名稱</label>
             <input type="text" class="form-control" asp-for="Name" required />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
 
         <div class="form-group">
-            <label asp-for="Type"></label>
+            <label asp-for="Type">圖層類別</label>
             <select class="form-control" asp-for="Type" onchange="toggleImageFormat()">
                 <option value="basePane">基本圖層</option>
                 <option value="overlayPane">額外圖層</option>
@@ -48,7 +51,7 @@
 
         <div class="form-group">
             <label asp-for="Attribution"></label>
-            <input type="text" class="form-control" asp-for="Attribution" required />
+            <input type="text" class="form-control" asp-for="Attribution" placeholder="© OpenStreetMap contributors" required />
             <span asp-validation-for="Attribution" class="text-danger"></span>
         </div>
 

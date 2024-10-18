@@ -16,27 +16,10 @@
         width: 70%;
     }
 </style>
-<header class="row gx-0">
-    <div class="col">
-        <div class="nav-item">
-            <button class="dropdown-button" onclick="location.href='@Url.Action("Index", "Home")'">Home</button>
-        </div>
-        <div class="nav-item dropdown">
-            <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                Admin
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="Index">Map</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">Category</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">Pipeline</a></li>
-                <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">Road</a></li>
-            </ul>
-        </div>
-    </div>
-</header>
+
 <div class="container">
     <form method="post">
-        <h2>新增圖層資料</h2>
+        <h2>新增分支</h2>
         <div class="form-group">
             <label for="AdminDists">選擇行政區</label>
             <select asp-for="AdminDistId" asp-items="Model.AdminDists" class=" form-control">

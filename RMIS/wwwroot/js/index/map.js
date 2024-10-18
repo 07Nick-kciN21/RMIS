@@ -45,10 +45,30 @@ function createBaseLayers() {
 
 
     //google街景
-    var GoogleRoad = L.gridLayer.googleMutant({
-        type: "roadmap", // valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
+    var GoogleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     }).addTo(indexMap);
+    //google衛星
+    var GoogleSatellite = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        pane: 'basePane'
+    });
+    //google地形
+    var GoogleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        pane: 'basePane'
+    });
+
+    //google混和
+    var GoogleHybrid = L.tileLayer('http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        pane: 'basePane'
+    });
 
     //openstreet
     var OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -59,7 +79,10 @@ function createBaseLayers() {
     // 基本圖層 (單選)
     var baseMaps = {
         "Open Street地圖": OpenStreet,
-        "Google 街景地圖": GoogleRoad,
+        "Google 街景地圖": GoogleStreets,
+        "Google 衛星地圖": GoogleSatellite,
+        "Google 地形圖"  : GoogleTerrain,
+        "Google 混和地圖": GoogleHybrid,
     };
 
     // 疊加圖層 (多選)

@@ -73,6 +73,20 @@ namespace RMIS.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> AddRoadByCSV()
+        {
+            var input = await _adminInterface.getRoadByCSVInput();
+            return View(input);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddRoadByCSV(AddRoadByCSVInput roadbycsvInput)
+        {
+            var rowsAffected = await _adminInterface.AddRoadByCSVAsync(roadbycsvInput);
+            return RedirectToAction("AddRoadByCSV", "Admin");
+        }
+
+        [HttpGet]
         public async Task<IActionResult> AddCategory()
         {
             var input = await _adminInterface.getCategoryInput();
