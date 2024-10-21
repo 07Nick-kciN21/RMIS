@@ -130,6 +130,7 @@ namespace RMIS.Repositories
                     Index = point.Index,
                     Latitude = point.Latitude,
                     Longitude = point.Longitude,
+                    Property = point.Property,
                     AreaId = Input_id
                 };
                 await _mapDBContext.Points.AddAsync(new_point);
@@ -216,7 +217,8 @@ namespace RMIS.Repositories
                                         Index = pile_data.pile_distance,
                                         Latitude = pile_data.pile_lat,
                                         Longitude = pile_data.pile_lon,
-                                        AreaId = areaId
+                                        AreaId = areaId,
+                                        Property = pile_data.pile_prop
                                     };
 
                                     await _mapDBContext.Points.AddAsync(point);

@@ -16,6 +16,7 @@ export function addLayer2Map(LayerData) {
             url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
             method: 'POST',
             success: function (result) {
+                console.log(`/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`);
                 try {
                     var areas = result.areas;
                     if (areas != null) {
@@ -45,7 +46,7 @@ export function createNewLayer(result) {
     console.log(result.type);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
-            return [point.latitude, point.longitude];
+            return [[point.latitude, point.longitude], point.prop];
         });
         if (result.type === "point") {
             addMarkersToLayer(points, area, newLayer, result.svg);

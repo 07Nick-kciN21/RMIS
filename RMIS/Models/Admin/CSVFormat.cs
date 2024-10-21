@@ -13,7 +13,6 @@
         public double pile_lon { get; set; }
         public int pile_distance { get; set; }
         public int pile_dir { get; set; }
-
         public string pile_prop { get; set; }
     }
 }

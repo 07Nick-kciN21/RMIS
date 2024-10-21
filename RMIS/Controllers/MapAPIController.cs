@@ -88,7 +88,8 @@ namespace RMIS.Controllers
                         {
                             Index = p.Index,
                             Latitude = p.Latitude,
-                            Longitude = p.Longitude
+                            Longitude = p.Longitude,
+                            Prop = p.Property
                         }).ToList()
                     }).ToList()
                 };

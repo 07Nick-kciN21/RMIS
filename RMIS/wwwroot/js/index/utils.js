@@ -9,11 +9,11 @@ export function addMarkersToLayer(points, area, newLayer, svg) {
         popupAnchor: [0, -15]
     });
     points.forEach(function (point) {
-        let marker = L.marker(point, { icon: icon }).addTo(newLayer);
+        let marker = L.marker(point[0], { icon: icon }).addTo(newLayer);
         marker.bindPopup(`
                           <div>
                             <b>單點資訊</b><br>
-                            起點: ${startPoint[0]}, ${startPoint[1]}
+                            ${point[1]}
                           </div>`);
     });
     console.log("Create Maker");
@@ -26,14 +26,13 @@ export function addLineToLayer(points, color, area, newLayer) {
         var endPoint = points[i + 1];
 
         // 創建線段
-        var segment = L.polyline([startPoint, endPoint], { color: color }).addTo(newLayer);
+        var segment = L.polyline([startPoint[0], endPoint[0]], { color: color }).addTo(newLayer);
 
         // 為每個線段綁定 Popup，顯示其起點和終點座標
         segment.bindPopup(`
                           <div>
                             <b>線段資訊</b><br>
-                            起點: ${startPoint[0]}, ${startPoint[1]}<br>
-                            終點: ${endPoint[0]}, ${endPoint[1]}
+                            ${startPoint[1]}
                           </div>
                         `);
 
