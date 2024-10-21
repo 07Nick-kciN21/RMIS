@@ -26,15 +26,11 @@
                 <!-- 選項 -->
             </select>
         </div>
+        
         <div class="form-group">
-            <label asp-for="pileCsv" class="control-label">街道名稱檔案</label></<br />
-            <input asp-for="pileCsv" type="file" class="form-control-file" />
-            <span asp-validation-for="pileCsv" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="roadCsv" class="control-label">街道名稱檔案</label></<br />
-            <input asp-for="roadCsv" type="file" class="form-control-file" />
-            <span asp-validation-for="roadCsv" class="text-danger"></span>
+            <label asp-for="road_with_pile_Csv" class="control-label">街道檔案</label></<br />
+            <input asp-for="road_with_pile_Csv" type="file" class="form-control-file" />
+            <span asp-validation-for="road_with_pile_Csv" class="text-danger"></span>
         </div>
         <button type="submit" class="btn btn-primary">Upload and Import</button>
     </form>

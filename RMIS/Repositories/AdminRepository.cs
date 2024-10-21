@@ -11,6 +11,7 @@ using RMIS.Models.sql;
 using System.Formats.Asn1;
 using System.Globalization;
 using CsvHelper.Configuration;
+using Newtonsoft.Json;
 
 
 namespace RMIS.Repositories
@@ -163,98 +164,71 @@ namespace RMIS.Repositories
 
         public async Task<int> AddRoadByCSVAsync(AddRoadByCSVInput roadByCSVInput)
         {
-            // 先組合再新增
-            var layerRecords = new List<dynamic>();
-            var pointRecords = new List<dynamic>();
-            if (roadByCSVInput.pileCsv != null && roadByCSVInput.roadCsv != null)
+            if (roadByCSVInput.road_with_pile_Csv != null)
             {
-                // 讀取 pileCsv
-                using (var pileReader = new StreamReader(roadByCSVInput.pileCsv.OpenReadStream()))
+                var firstPiles = new List<pile>();
+                // 讀取 road_with_pile_Csv
+                using (var pileReader = new StreamReader(roadByCSVInput.road_with_pile_Csv.OpenReadStream()))
                 using (var csv = new CsvReader(pileReader, CultureInfo.InvariantCulture))
                 {
-                    pointRecords = csv.GetRecords<dynamic>().ToList();
-                }
-
-                // 讀取 roadCsv
-                using (var roadReader = new StreamReader(roadByCSVInput.roadCsv.OpenReadStream()))
-                using (var csv = new CsvReader(roadReader, CultureInfo.InvariantCulture))
-                {
-                    layerRecords = csv.GetRecords<dynamic>().ToList();
-                }
-                var pilesByRoad = Convert2Dict(pointRecords, layerRecords);
-
-                foreach(KeyValuePair<string, CSVFormat> kvp in pilesByRoad)
-                {
-                    var road = kvp.Value;
-                    var piles = kvp.Value.piles;
-                    var AreaId = Guid.NewGuid();
-                    var roadItem = new Area
+                    var roadPileDataRecords = csv.GetRecords<CSVFormat>();
+                    foreach (var record in roadPileDataRecords)
                     {
-                        Id = AreaId,
-                        Name = road.road_name,
-                        AdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.City == road.road_city && ad.Town == road.road_dist).Id,
-                        LayerId = Guid.Parse(roadByCSVInput.LayerId),
-                        ConstructionUnit = roadByCSVInput.ConstructionUnit
-                    };
-                    await _mapDBContext.Areas.AddAsync(roadItem);
-                    foreach (pile pile in piles)
-                    {
-                        var pointItem = new Point
+                        if (!string.IsNullOrEmpty(record.pile_data))
                         {
-                            Id = Guid.NewGuid(),
-                            Index = pile.pile_distance,
-                            Latitude = pile.pile_lat,
-                            Longitude = pile.pile_lon,
-                            AreaId = AreaId
-                        };
-                        await _mapDBContext.Points.AddAsync(pointItem);
+                            // 解析 pile_data 中的 JSON
+                            var pileList = JsonConvert.DeserializeObject<List<pile>>(record.pile_data);
+
+                            // 根據 pile_dir 值創建兩個不同的 Area
+                            var road_id_1 = Guid.NewGuid();
+                            var road_1 = new Area
+                            {
+                                Id = road_id_1,
+                                Name = record.road_name + " - 方向1",
+                                ConstructionUnit = roadByCSVInput.ConstructionUnit,
+                                AdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.City == record.road_city && ad.Town == record.road_dist).Id,
+                                LayerId = Guid.Parse(roadByCSVInput.LayerId),
+                            };
+                            await _mapDBContext.Areas.AddAsync(road_1);
+
+                            var road_id_2 = Guid.NewGuid();
+                            var road_2 = new Area
+                            {
+                                Id = road_id_2,
+                                Name = record.road_name + " - 方向2",
+                                ConstructionUnit = roadByCSVInput.ConstructionUnit,
+                                AdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.City == record.road_city && ad.Town == record.road_dist).Id,
+                                LayerId = Guid.Parse(roadByCSVInput.LayerId),
+                            };
+                            await _mapDBContext.Areas.AddAsync(road_2);
+
+                            // 將 pileList 中的 pile 分別加入到不同的 Area
+                            if (pileList != null && pileList.Count > 0)
+                            {
+                                foreach (var pile_data in pileList)
+                                {
+                                    // 根據 pile_dir 決定添加到哪個 Area
+                                    Guid areaId = pile_data.pile_dir == 1 ? road_id_1 : road_id_2;
+
+                                    var point = new Point
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        Index = pile_data.pile_distance,
+                                        Latitude = pile_data.pile_lat,
+                                        Longitude = pile_data.pile_lon,
+                                        AreaId = areaId
+                                    };
+
+                                    await _mapDBContext.Points.AddAsync(point);
+                                }
+                            }
+                        }
                     }
-                                    }
+                }
                 var effectCount = await _mapDBContext.SaveChangesAsync();
                 return effectCount;
             }
             return 0;
-        }
-
-        private Dictionary<string, CSVFormat> Convert2Dict(List<dynamic> piles, List<dynamic> roads)
-        {
-            Dictionary<string, CSVFormat> pilesByRoad = new Dictionary<string, CSVFormat>();
-            foreach (var record in roads)
-            {
-                pilesByRoad.Add(record.road_id + "_1", new CSVFormat
-                {
-                    road_id = Convert.ToInt32(record.road_id),
-                    road_name = Convert.ToString(record.road_name),
-                    road_city = Convert.ToString(record.road_city),
-                    road_dist = Convert.ToString(record.road_dist),
-                    piles = new List<pile>()
-                });
-                pilesByRoad.Add(record.road_id + "_2", new CSVFormat
-                {
-                    road_id = Convert.ToInt32(record.road_id),
-                    road_name = Convert.ToString(record.road_name),
-                    road_city = Convert.ToString(record.road_city),
-                    road_dist = Convert.ToString(record.road_dist),
-                    piles = new List<pile>()
-                });
-            }
-
-            foreach (var record in piles)
-            {
-                if (pilesByRoad.ContainsKey(record.road_id + "_" + record.pile_dir))
-                {
-                    pilesByRoad[record.road_id + "_" + record.pile_dir].piles.Add(new pile
-                    {
-                        pile_id = Convert.ToInt32(record.pile_id),
-                        road_id = Convert.ToInt32(record.road_id),
-                        pile_lat = Convert.ToDouble(record.pile_lat),
-                        pile_lon = Convert.ToDouble(record.pile_lon),
-                        pile_distance = Convert.ToInt32(record.pile_distance),
-                        pile_dir = Convert.ToInt32(record.pile_dir)
-                    });
-                }
-            }
-            return pilesByRoad;
         }
         public async Task<AddCategoryInput> getCategoryInput()
         {

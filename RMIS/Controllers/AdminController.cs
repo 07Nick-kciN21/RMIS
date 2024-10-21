@@ -83,6 +83,14 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddRoadByCSV(AddRoadByCSVInput roadbycsvInput)
         {
             var rowsAffected = await _adminInterface.AddRoadByCSVAsync(roadbycsvInput);
+            if (rowsAffected > 0)
+            {
+                return RedirectToAction("AddRoadByCSV", "Admin");
+            }
+            else
+            {
+                Console.WriteLine("No changes were made to the database.");
+            }
             return RedirectToAction("AddRoadByCSV", "Admin");
         }
 

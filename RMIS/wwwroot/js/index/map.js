@@ -11,6 +11,11 @@ export function initMap(mapId) {
     var $offcanvasElement = $('#layerListBlock');
     var $indexMapElement = $('#indexMap');
 
+    L.control.scale({
+        position: 'bottomleft',  // 控制比例尺显示的位置
+        metric: true,            // 显示公制单位
+        imperial: false          // 不显示英制单位
+    }).addTo(indexMap);
 
     // 當 offcanvas 開啟時壓縮地圖
     $offcanvasElement.on('shown.bs.offcanvas', function () {
