@@ -129,7 +129,7 @@ namespace RMIS.Controllers
             try
             {
                 var result = await _mapDBContext.Areas
-                    .Where(a => a.Name.StartsWith(name))
+                    .Where(a => a.Name.StartsWith(name) && a.Layer.Pipeline.Name == "道路")
                     .Include(a => a.AdminDist)
                     .OrderBy(a => a.AdminDist.orderId)
                     .ThenBy(a => a.Name)

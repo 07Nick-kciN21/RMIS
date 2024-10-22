@@ -43,17 +43,17 @@ export function createNewLayer(result) {
         console.error('indexMap is not initialized.');
         return;
     }
-    console.log(result.type);
+    console.log(result.name);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
             return [[point.latitude, point.longitude], point.prop];
         });
         if (result.type === "point") {
-            addMarkersToLayer(points, area, newLayer, result.svg);
+            addMarkersToLayer(points, newLayer, result.svg, result.name);
         } else if (result.type === "line") {
-            addLineToLayer(points, result.color, area, newLayer);
+            addLineToLayer(points, newLayer, result.color, result.name);
         } else if (result.type === "polygon") {
-            addPolygonToLayer(points, result.color, area, newLayer);
+            addPolygonToLayer(points, newLayer, result.color, result.name);
         }
     });
     return newLayer;

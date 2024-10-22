@@ -177,51 +177,46 @@ namespace RMIS.Repositories
                     {
                         if (!string.IsNullOrEmpty(record.pile_data))
                         {
-                            // 解析 pile_data 中的 JSON
                             var pileList = JsonConvert.DeserializeObject<List<pile>>(record.pile_data);
 
-                            // 根據 pile_dir 值創建兩個不同的 Area
-                            var road_id_1 = Guid.NewGuid();
-                            var road_1 = new Area
-                            {
-                                Id = road_id_1,
-                                Name = record.road_name + " - 方向1",
-                                ConstructionUnit = roadByCSVInput.ConstructionUnit,
-                                AdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.City == record.road_city && ad.Town == record.road_dist).Id,
-                                LayerId = Guid.Parse(roadByCSVInput.LayerId),
-                            };
-                            await _mapDBContext.Areas.AddAsync(road_1);
-
-                            var road_id_2 = Guid.NewGuid();
-                            var road_2 = new Area
-                            {
-                                Id = road_id_2,
-                                Name = record.road_name + " - 方向2",
-                                ConstructionUnit = roadByCSVInput.ConstructionUnit,
-                                AdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.City == record.road_city && ad.Town == record.road_dist).Id,
-                                LayerId = Guid.Parse(roadByCSVInput.LayerId),
-                            };
-                            await _mapDBContext.Areas.AddAsync(road_2);
-
-                            // 將 pileList 中的 pile 分別加入到不同的 Area
                             if (pileList != null && pileList.Count > 0)
                             {
-                                foreach (var pile_data in pileList)
-                                {
-                                    // 根據 pile_dir 決定添加到哪個 Area
-                                    Guid areaId = pile_data.pile_dir == 1 ? road_id_1 : road_id_2;
+                                var uniquePileDirs = pileList.Select(p => p.pile_dir).Distinct();
+                                var areaDictionary = new Dictionary<int, Guid>();
 
-                                    var point = new Point
+                                foreach (var dir in uniquePileDirs)
+                                {
+                                    // Create a new Area for each unique pile_dir
+                                    var areaId = Guid.NewGuid();
+                                    var area = new Area
                                     {
-                                        Id = Guid.NewGuid(),
-                                        Index = pile_data.pile_distance,
-                                        Latitude = pile_data.pile_lat,
-                                        Longitude = pile_data.pile_lon,
-                                        AreaId = areaId,
-                                        Property = pile_data.pile_prop
+                                        Id = areaId,
+                                        Name = $"{record.road_name} - 方向{dir}",
+                                        ConstructionUnit = roadByCSVInput.ConstructionUnit,
+                                        AdminDistId = _mapDBContext.AdminDist
+                                            .FirstOrDefault(ad => ad.City == record.road_city && ad.Town == record.road_dist).Id,
+                                        LayerId = Guid.Parse(roadByCSVInput.LayerId),
                                     };
 
-                                    await _mapDBContext.Points.AddAsync(point);
+                                    await _mapDBContext.Areas.AddAsync(area);
+                                    areaDictionary[dir] = areaId;
+                                }
+                                foreach (var pile_data in pileList)
+                                {
+                                    if (areaDictionary.TryGetValue(pile_data.pile_dir, out var areaId))
+                                    {
+                                        var point = new Point
+                                        {
+                                            Id = Guid.NewGuid(),
+                                            Index = pile_data.pile_distance,
+                                            Latitude = pile_data.pile_lat,
+                                            Longitude = pile_data.pile_lon,
+                                            AreaId = areaId,
+                                            Property = pile_data.pile_prop
+                                        };
+
+                                        await _mapDBContext.Points.AddAsync(point);
+                                    }
                                 }
                             }
                         }
