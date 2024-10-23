@@ -1,19 +1,20 @@
 ﻿#searchPanel {
     width: 300px;
     height: 270px;
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    background-color: #f9f9f9;
 }
 
 #painterPanel {
     width: 250px;
     height: 270px;
+}
+
+#searchPropPanel {
+    width: 500px;
+    height: 500px;
+}
+
+.panel {
+    z-index: 1051;
     position: absolute;
     top: 20%;
     left: 50%;
@@ -22,10 +23,6 @@
     display: flex;
     flex-direction: column;
     background-color: #f9f9f9;
-}
-
-.panel {
-    z-index:1051;
 }
 
 .hide {

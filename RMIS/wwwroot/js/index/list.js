@@ -1,9 +1,9 @@
-﻿// list.js
-
-import { layerList } from './menu.js';
+﻿import { layerList } from './menu.js';
 import { removePipeline, addPipeline } from './pipeline.js';
 import { addLayer2Map } from './layers.js';
 
+
+// 圖資清單控制
 export function add2List(id, name, datas) {
     let sections = "";
     datas.forEach(function (data) {
@@ -66,6 +66,6 @@ export function closeLayer(id) {
 export function displayLayer(id) {
     addPipeline(id).then(result => {
         layerList[id] = true;
-        addLayer2Map(result);
+        addLayer2Map(id, result);
     });
 }

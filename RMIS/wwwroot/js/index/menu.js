@@ -1,11 +1,11 @@
-﻿// menu.js
-
-import { addPipeline, removePipeline } from './pipeline.js';
+﻿import { addPipeline, removePipeline } from './pipeline.js';
 import { addLayer2Map } from './layers.js';
 import { add2List, remove2List} from './list.js';
 
 export let layerList = {};
 
+
+// 業務圖資下拉選單控制
 export function generateMenu(data, parent_name, index) {
     let html = '<ul class=';
     if (index > 0) {
@@ -73,7 +73,7 @@ export function generateMenu(data, parent_name, index) {
 }
 
 export function bindMenuEvents() {
-    // 显示或隐藏菜单
+    // 顯示或隱藏菜單
     $('.dropdown-button').click(function (e) {
         e.stopPropagation();
         var targetId = $(this).data('target');
@@ -103,7 +103,7 @@ export function bindMenuEvents() {
             addPipeline(id).then(result => {
                 layerList[id] = true;
                 add2List(id, name, result);
-                addLayer2Map(result);
+                addLayer2Map(id, result);
                 $switch.removeClass('switch-off');
                 $switch.addClass('switch-on');
             });

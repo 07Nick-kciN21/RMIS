@@ -1,16 +1,17 @@
-﻿// layers.js
-
-import { getIndexMap } from './map.js';
+﻿import { getIndexMap } from './map.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer } from './utils.js';
 
-export let layers = {};
+export let layerProps = {};
+let layers = {};
 let indexMap;
-export function addLayer2Map(LayerData) {
+let pipelineId;
+export function addLayer2Map(id ,LayerData) {
     indexMap = getIndexMap();
     if (!indexMap) {
         console.error('indexMap is not initialized.');
         return;
     }
+    pipelineId = id;
     LayerData.forEach(function (Ldata) {
         $.ajax({
             url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
@@ -43,11 +44,16 @@ export function createNewLayer(result) {
         console.error('indexMap is not initialized.');
         return;
     }
+    if (layerProps[pipelineId] == null) {
+        layerProps[pipelineId] = [];
+    }
     console.log(result.name);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
+            layerProps[pipelineId].push(point.prop);
             return [[point.latitude, point.longitude], point.prop];
         });
+        
         if (result.type === "point") {
             addMarkersToLayer(points, newLayer, result.svg, result.name);
         } else if (result.type === "line") {

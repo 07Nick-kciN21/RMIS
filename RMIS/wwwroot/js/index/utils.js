@@ -1,7 +1,8 @@
-﻿// utils.js
+﻿import { getIndexMap } from './map.js'; 
 
-// 
+
 export function addMarkersToLayer(points, newLayer, svg, name) {
+    var $indexMap = getIndexMap();
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
@@ -12,15 +13,22 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
 
         let marker = L.marker(point[0], { icon: icon }).addTo(newLayer);
         marker.bindPopup(`
+                          <div class="data" style="display: none">${point[1]}</div>
                           <div>
                             <h4>圖層：${name}</h4><br>
                             ${popUpForm(point[1])}
                           </div>`);
+        marker.on('click', function (e) {
+            const latLng = e.latlng; // 取得點擊事件中的座標
+            console.log("latlng：", latLng);
+            $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
+        })
     });
     console.log("Create Maker");
 }
 
-export function addLineToLayer(points, newLayer, color, name) {
+export function addLineToLayer(points, newLayer,  color, name) {
+    var $indexMap = getIndexMap();
     console.log("Create Line"); 
     for (var i = 0; i < points.length - 1; i++) {
         var startPoint = points[i][0];
@@ -48,12 +56,14 @@ export function addLineToLayer(points, newLayer, color, name) {
                 color: 'white'
             });
             // 移動地圖中央到點擊的點
+            
             const latLng = e.latlng; // 取得點擊事件中的座標
-            map.setView(latLng, map.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
+            console.log("latlng：", latLng);
+            $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
         })
     }
 }
-export function addPolygonToLayer(points, newLayer, color, name) {
+export function addPolygonToLayer(points, newLayer,  color, name) {
     console.log("Create Polygon");
     let marker = L.polygon(points, { color: color }).addTo(newLayer);
     marker.bindPopup(`<b>${name}</b>`);
@@ -61,7 +71,6 @@ export function addPolygonToLayer(points, newLayer, color, name) {
 
 function popUpForm(prop) {
     if (typeof prop === 'string') {
-        // 將 NaN 替換為 null，使其成為有效的 JSON 格式
         prop = prop.replace(/NaN/g, 'null');
         try {
             prop = JSON.parse(prop);
@@ -70,18 +79,15 @@ function popUpForm(prop) {
             return "無效的 JSON 資料";
         }
     }
-    // 開始創建 HTML 表格
+
     let table = '<table class="popup-table-content"  cellpadding="5" cellspacing="0">';
 
-    // 產生表頭和表身
     Object.keys(prop).forEach(key => {
         table += `<tr><th>${key}</th><td>${prop[key]}</td></tr>`;
     });
 
-    // 關閉表格標籤
     table += '</table>';
 
-    // 返回 HTML 表格字串
     return `
         <div class="popup-table">
             ${table}

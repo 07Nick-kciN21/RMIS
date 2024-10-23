@@ -1,8 +1,5 @@
-﻿// pipeline.js
+﻿import { addLayer2Map, removeLayer2Map } from './layers.js';
 
-import { addLayer2Map, removeLayer2Map } from './layers.js';
-
-// 根据Pipeline新增图层
 export function addPipeline(id) {
     return new Promise((resolve, reject) => {
         $.ajax({
@@ -20,7 +17,7 @@ export function addPipeline(id) {
     });
 }
 
-// 创建新图层
+// 
 export function createNewLayer(result) {
     var newLayer = L.layerGroup();
     console.log(result.type);
@@ -40,7 +37,7 @@ export function createNewLayer(result) {
     return newLayer;
 }
 
-// 移除Pipeline及其图层
+// 
 export function removePipeline(id) {
     return new Promise((resolve, reject) => {
         $.ajax({

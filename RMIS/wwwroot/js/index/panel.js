@@ -10,51 +10,45 @@ export function initPanel(panelId) {
     let isDragging = false;
     let offsetX, offsetY;
 
-    $panelHeading.on("mousedown", (e) => {
-        isDragging = true;
-        offsetX = e.clientX - $panel.offset().left;
-        offsetY = e.clientY - $panel.offset().top;
-    });
-
-    $(document).on("mousemove", (e) => {
+    function handlePanelMove(e) {
         if (isDragging) {
-            let newLeft = e.clientX - offsetX;
-            let newTop = e.clientY - offsetY;
+            let newLeft = e.touches ? e.touches[0].clientX - offsetX : e.clientX - offsetX;
+            let newTop = e.touches ? e.touches[0].clientY - offsetY : e.clientY - offsetY;
 
-            // 限制移動範圍
             const containerRect = $container[0].getBoundingClientRect();
             const panelRect = $panel[0].getBoundingClientRect();
 
-            if (newLeft < containerRect.left) {
-                newLeft = containerRect.left;
-            } else if (newLeft + panelRect.width > containerRect.right) {
-                newLeft = containerRect.right - panelRect.width;
-            }
-
-            if (newTop < containerRect.top) {
-                newTop = containerRect.top;
-            } else if (newTop + panelRect.height > containerRect.bottom) {
-                newTop = containerRect.bottom - panelRect.height;
-            }
+            newLeft = Math.max(containerRect.left, Math.min(newLeft, containerRect.right - panelRect.width));
+            newTop = Math.max(containerRect.top, Math.min(newTop, containerRect.bottom - panelRect.height));
 
             $panel.css({ left: `${newLeft}px`, top: `${newTop}px` });
         }
+    }
+
+    // Event listeners for dragging functionality
+    $panelHeading.on('pointerdown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - $panel.offset().left;
+        offsetY = e.clientY - $panel.offset().top;
+        $panel.css('z-index', 1052);
+        $panel.siblings('.panel').css('z-index', 1051);
+        e.preventDefault();
     });
 
-    $(document).on("mouseup", () => {
+    $(document).on('pointermove', handlePanelMove);
+    $(document).on('pointerup', () => {
         isDragging = false;
     });
 
-    $panelCloseBtn.on("click", () => {
-        $panel.addClass('hide'); // 切換為 .hide
-    })
-    $tb.on("click", () => {
-        // 如果$tb 有.show 切換成 .hide
-        if ($panel.hasClass('hide')) {
-            $panel.removeClass('hide');
-        } else {
-            $panel.addClass('hide');
-        }
-    })
+    // Event listener for closing the panel
+    $panelCloseBtn.on('click', () => {
+        $panel.addClass('hide');
+    });
+
+    // Event listener for toggling the panel visibility
+    $tb.on('click', () => {
+        $panel.toggleClass('hide');
+        $panel.css('z-index', 1053);
+    });
 }
 

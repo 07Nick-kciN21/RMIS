@@ -5,6 +5,7 @@ import { initPanel } from './index/panel.js';
 import { initSearchPanel } from './index/searchPanel.js'
 import { initPainterPanel } from './index/painterPanel.js'
 import { initPhoto } from './index/photo.js'
+import { initSearchPropPanel } from './index/searchProp.js'
 
 $(document).ready(function () {
     // 初始化地图
@@ -20,9 +21,11 @@ $(document).ready(function () {
     $('#top-vav-list1').html(menuHtml);
     initPanel("searchPanel");
     initPanel("painterPanel");
+    initPanel("searchPropPanel");
     initSearchPanel();
     initPainterPanel();
     initPhoto();
+    initSearchPropPanel();
     // 绑定菜单事件
     bindMenuEvents();
 });
