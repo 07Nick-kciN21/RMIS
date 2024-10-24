@@ -25,7 +25,7 @@ export function add2List(id, name, datas) {
             <div class="layerRemove" id="layerRemove_${id}"></div>
         </div>
     `;
-    $('.layerList').append(layerItem);
+    $('#layerBarContainer').append(layerItem);
 
     $(`#eye_${id}`).on('click', function (e) {
         if ($(this).hasClass('eyeOpen')) {

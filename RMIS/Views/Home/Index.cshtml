@@ -31,6 +31,8 @@
 <link rel="stylesheet" href="~/css/index/svg_switch.css" />
 <link rel="stylesheet" href="~/css/index/popup.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
 <!-- Leaflet Draw Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdkKkFphldL05sNWcu3N9cPbhRPkkJYSg" async defer></script>
@@ -82,7 +84,7 @@
 
 
 <div class="offcanvas offcanvas-start custom-offcanvas-width" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-labelledby="layerListBlockLabel">
-    <div class="layerList container-fluid">
+    <div id="layerBarContainer" class="layerList container-fluid">
         <h5 class="offcanvas-body" id="offcanvasExampleLabel">圖資清單</h5>
     </div>
 </div>
@@ -141,40 +143,40 @@
         <label class="btn btn-outline-success" for="btnradio2">依空間</label>
 
         <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
-        <label class="btn btn-outline-success" for="btnradio3">結果</label>
+        <label class="btn btn-outline-success" style="visibility: hidden" for="btnradio3">結果</label>
 
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off">
+        <label class="btn btn-outline-success" style="visibility: hidden" for="btnradio4">數據統計</label>
     </div>
     <div id="prop1" class="panelBody" style="display: block">
         <div class="form-group" style="display: flex; align-items: center;">
-            <label for="pFeatLayers" style="margin-right: 10px;">
-                圖層
-            </label>
-            <select id="pFeatSelect" class="select-full form-control" style="width:90%">
-                <option value="-1">請選擇</option>
+            <select id="pFeatSelect" class="form-control" style="flex-grow: 1;">
+                <option value="-1">請選擇圖層</option>
             </select>
         </div>
         <div id="propContent">
-            <div class="form-group" style="width:40%; float: left;">
+            @* <div style="width:40%; float: left;">
                 <label style="vertical-align: text-top;margin: 0px">欄位</label>
-                <div class="listBox" style="margin:0px; border:solid;">
-                    <div class="listResult" style="height:120px; overflow-y: auto;">
-                        <ul id="propFieldList">
+                <div class="listBox" style="margin:0px;">
+                    <div class="listResult" style="height:150px;">
+                        <ul id="propFieldList" class="panelList" style="max-height:100%">
                         </ul>
                     </div>
                 </div>
             </div>
-            <div class="form-group" style="width:50%; height:120px; margin-right: 12px; float: right;">
+            <div style="width:50%; float: right;">
                 <label style="vertical-align: text-top;margin: 0px">值</label>
-                <div class="listBox" style="margin:0px; border:solid;">
-                    <div class="listResult" style="height:120px; overflow-y: auto;">
-                        <ul id="propValueList">
-
+                <div class="listBox" style="margin:0px;">
+                    <div class="listResult" style="height:150px;">
+                        <ul id="propValueList" class="panelList" style="max-height:100%">
                         </ul>
                     </div>
                 </div>
+            </div> *@
+            <div id="propQuery" style="clear:both; padding-top:6px">
+                
             </div>
-
-            <div style="clear:both; padding-top:8px">
+            <div class="form-group" style="clear:both;">
                 <button class="btn js-modal-toggle" id="propSqlClear">清除</button>
                 <button class="btn js-modal-toggle" id="propSqlVerify">驗證</button>
                 <button class="btn js-modal-toggle" id="propGoFilter">進行篩選</button>
