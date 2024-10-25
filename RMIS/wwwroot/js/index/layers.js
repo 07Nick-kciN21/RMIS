@@ -50,7 +50,7 @@ export function createNewLayer(result) {
     console.log(result.name);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
-            layerProps[pipelineId].push(point.prop);
+            layerProps[pipelineId].push(JSON.parse(point.prop.replace(/NaN/g, 'null')));
             return [[point.latitude, point.longitude], point.prop];
         });
         

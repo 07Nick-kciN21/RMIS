@@ -30,12 +30,15 @@
 <link rel="stylesheet" href="~/css/index/svg_eye.css" />
 <link rel="stylesheet" href="~/css/index/svg_switch.css" />
 <link rel="stylesheet" href="~/css/index/popup.css" />
+<link rel="stylesheet" href="~/css//index/searchPropPanel.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
 <!-- Leaflet Draw Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdkKkFphldL05sNWcu3N9cPbhRPkkJYSg" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 @section HomeHeaderToolBar{
     <div class="nav-item dropdown">
         <button class="dropdown-button" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">側欄</button>
@@ -90,7 +93,7 @@
 </div>
 <div id="indexMap" style="width: 100%; height: 100vh;"></div>
 
-<div id="searchPanel" class="panel searchPanel hide">
+<div id="searchPanel" class="panel hide">
     <div class="panelHeading">
         快速搜尋
         <button class="closeButton">&times;</button>
@@ -105,7 +108,7 @@
     </div>
 </div>
 
-<div id="painterPanel" class="panel painterPanel hide">
+<div id="painterPanel" class="panel hide">
     <div class="panelHeading">
         繪圖板
         <button class="closeButton">&times;</button>
@@ -130,22 +133,22 @@
     </div>
 </div>
 
-<div id="searchPropPanel" class="panel painterPanel hide">
+<div id="searchPropPanel" class="panel hide">
     <div class="panelHeading">
         屬性搜尋
         <button class="closeButton">&times;</button>
     </div>
     <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked>
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked/>
         <label class="btn btn-outline-success" for="btnradio1">依屬性</label>
 
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"/>
         <label class="btn btn-outline-success" for="btnradio2">依空間</label>
 
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"/>
         <label class="btn btn-outline-success" style="visibility: hidden" for="btnradio3">結果</label>
 
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off">
+        <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off"/>
         <label class="btn btn-outline-success" style="visibility: hidden" for="btnradio4">數據統計</label>
     </div>
     <div id="prop1" class="panelBody" style="display: block">
@@ -155,30 +158,10 @@
             </select>
         </div>
         <div id="propContent">
-            @* <div style="width:40%; float: left;">
-                <label style="vertical-align: text-top;margin: 0px">欄位</label>
-                <div class="listBox" style="margin:0px;">
-                    <div class="listResult" style="height:150px;">
-                        <ul id="propFieldList" class="panelList" style="max-height:100%">
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div style="width:50%; float: right;">
-                <label style="vertical-align: text-top;margin: 0px">值</label>
-                <div class="listBox" style="margin:0px;">
-                    <div class="listResult" style="height:150px;">
-                        <ul id="propValueList" class="panelList" style="max-height:100%">
-                        </ul>
-                    </div>
-                </div>
-            </div> *@
-            <div id="propQuery" style="clear:both; padding-top:6px">
-                
+            <div id="propQuery" class="panelList" style="height:300px; max-height:300px; clear:both;">
             </div>
             <div class="form-group" style="clear:both;">
-                <button class="btn js-modal-toggle" id="propSqlClear">清除</button>
-                <button class="btn js-modal-toggle" id="propSqlVerify">驗證</button>
+                <button class="btn js-modal-toggle" id="propClear">清除</button>
                 <button class="btn js-modal-toggle" id="propGoFilter">進行篩選</button>
             </div>
         </div>
@@ -191,6 +174,27 @@
             <select id="gFeatSelect" class="select-full form-control" style="width:90%">
                 <option value="-1">請選擇</option>
             </select>
+        </div>
+    </div>
+    <div id="prop3" class="panelBody" style="background-color: white; padding-bottom: 0.2rem; display: none;">
+        <div style="height:30px;">
+            <span style="width:50px; height:30px; margin:0px">圖層:</span>
+            <span id="propResultLayer" style="margin:0px"></span>
+        </div>
+        <div>
+            <span style="margin-top:4px" id="PQNum">結果列表</span>
+            <a id="exportExcel" style="float:right">匯出Excel</a>
+        </div>
+        <div id="propResultDiv" class="panelList" style="width:100%; max-height:320px; overflow:auto;">
+            <table id="propResult" class="propTable">
+                <thead id="propThead"></thead>
+                <tbody id="propTbody"></tbody>
+            </table>
+        </div>
+        <div class="propPage">
+            <span style="float:left">每頁最多200筆</span>
+            <span id="propPages" style="float:right">
+            </span>
         </div>
     </div>
 </div>

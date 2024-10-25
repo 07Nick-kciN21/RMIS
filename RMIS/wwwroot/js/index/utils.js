@@ -20,7 +20,6 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                           </div>`);
         marker.on('click', function (e) {
             const latLng = e.latlng; // 取得點擊事件中的座標
-            console.log("latlng：", latLng);
             $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
         })
     });

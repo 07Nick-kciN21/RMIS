@@ -121,6 +121,7 @@
 /* 自訂 .layerBar 的滾動條樣式 */
 .panelList::-webkit-scrollbar {
     width: 2px;
+    height:5px;
 }
 
 .panelList::-webkit-scrollbar-track {

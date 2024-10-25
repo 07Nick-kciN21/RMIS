@@ -1,2 +1,43 @@
-﻿body {
+﻿.propTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .propTable th, .propTable td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .propTable th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+
+    .propTable tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+#exportExcel:hover {
+    color: white;
+    background-color: gray;
+}
+
+#propPages a {
+    width: 20px;
+    color: blue;
+    text-align: center;
+    text-decoration: underline;
+    display: inline-block;
+}
+
+#propPages a:hover {
+    background-color:gray;
+}
+
+#propPages .select {
+    background-color: #9ac43e;
 }
