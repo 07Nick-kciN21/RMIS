@@ -12,9 +12,9 @@ export function initMap(mapId) {
     var $indexMapElement = $('#indexMap');
 
     L.control.scale({
-        position: 'bottomleft',  // 控制比例尺显示的位置
-        metric: true,            // 显示公制单位
-        imperial: false          // 不显示英制单位
+        position: 'bottomleft',
+        metric: true, 
+        imperial: false 
     }).addTo(indexMap);
 
     // 當 offcanvas 開啟時壓縮地圖
@@ -79,6 +79,50 @@ function createBaseLayers() {
     var OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         pane: 'basePane'
+    });
+
+    indexMap.pm.addControls({
+        position: 'topleft', // 工具栏的位置
+        drawCircle: false, // 禁用圆形绘制工具
+        drawMarker: true, // 启用标记绘制工具
+        drawPolygon: true, // 启用多边形绘制工具
+        drawPolyline: true, // 启用折线绘制工具
+        drawRectangle: true, // 启用矩形绘制工具
+        cutPolygon: false, // 禁用切割多边形工具
+        editMode: true, // 启用编辑模式
+        dragMode: true, // 启用拖拽模式
+        removalMode: true, // 启用删除模式
+    });
+
+    indexMap.on('pm:create', (e) => {
+        const layer = e.layer;
+
+        const layersInBounds = [];
+        indexMap.eachLayer((layerItem) => {
+            
+            if (layerItem instanceof L.Marker) {
+                if (layer instanceof L.Rectangle) {
+                    if (layer.getBounds().contains(layerItem.getLatLng())) {
+                        layersInBounds.push(layerItem);
+                    }
+                } else if (layer instanceof L.Polygon) {
+                    const results = leafletPip.pointInLayer(layerItem.getLatLng(), layer);
+                    if (results.length > 0) {
+                        layersInBounds.push(layerItem);
+                    }
+                }
+            }
+        });
+
+        // 显示范围内所有物件的 bindPopup 信息
+        layersInBounds.forEach((layerInBound) => {
+            const popupContent = layerInBound.getPopup();
+            if (popupContent) {
+                console.log('物件的 Popup 信息: ', popupContent);
+            } else {
+                console.log('此物件沒有彈窗信息');
+            }
+        });
     });
 
     // 基本圖層 (單選)

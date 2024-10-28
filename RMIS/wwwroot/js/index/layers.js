@@ -50,8 +50,12 @@ export function createNewLayer(result) {
     console.log(result.name);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
-            layerProps[pipelineId].push(JSON.parse(point.prop.replace(/NaN/g, 'null')));
-            return [[point.latitude, point.longitude], point.prop];
+            // 把座標加入layerProps[pipelineId]
+            var item = { "座標": [point.latitude, point.longitude] };
+            var item2 = JSON.parse(point.prop.replace(/NaN/g, 'null'));
+            const merged = { ...item, ...item2 } 
+            layerProps[pipelineId].push(merged);
+            return [[point.latitude, point.longitude], point.prop, merged, null];
         });
         
         if (result.type === "point") {

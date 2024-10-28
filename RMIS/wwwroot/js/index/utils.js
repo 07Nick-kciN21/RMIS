@@ -13,15 +13,16 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
 
         let marker = L.marker(point[0], { icon: icon }).addTo(newLayer);
         marker.bindPopup(`
-                          <div class="data" style="display: none">${point[1]}</div>
                           <div>
                             <h4>圖層：${name}</h4><br>
                             ${popUpForm(point[1])}
                           </div>`);
         marker.on('click', function (e) {
+            console.log(marker.getPopup().getContent());
             const latLng = e.latlng; // 取得點擊事件中的座標
-            $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
-        })
+            $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級别
+        });
+        point[2].marker = marker; // 將 marker 實體加入對應的 merged 中
     });
     console.log("Create Maker");
 }
@@ -43,7 +44,6 @@ export function addLineToLayer(points, newLayer,  color, name) {
                             ${popUpForm(prop)}
                           </div>
                         `);
-
         segment.on('click', function (e) {
             newLayer.eachLayer(function (layer) {
                 if (layer instanceof L.Polyline) {
@@ -60,6 +60,7 @@ export function addLineToLayer(points, newLayer,  color, name) {
             console.log("latlng：", latLng);
             $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
         })
+        points[i][2].marker = segment;
     }
 }
 export function addPolygonToLayer(points, newLayer,  color, name) {

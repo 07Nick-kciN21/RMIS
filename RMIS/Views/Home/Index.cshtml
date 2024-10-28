@@ -34,10 +34,14 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
+
+
+<link rel="stylesheet" href="~/lib/leaflet-geoman/leaflet-geoman.css" />
+<script src="~/lib/leaflet-geoman/leaflet-geoman.min.js"></script>
 <!-- Leaflet Draw Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAdkKkFphldL05sNWcu3N9cPbhRPkkJYSg" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 
 @section HomeHeaderToolBar{
     <div class="nav-item dropdown">
@@ -140,16 +144,16 @@
     </div>
     <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
         <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked/>
-        <label class="btn btn-outline-success" for="btnradio1">依屬性</label>
+        <label class="btn btn-outline-success" style="width:25%" for="btnradio1">依屬性</label>
 
         <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"/>
-        <label class="btn btn-outline-success" for="btnradio2">依空間</label>
+        <label class="btn btn-outline-success" style="width:25%" for="btnradio2">依空間</label>
 
         <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"/>
-        <label class="btn btn-outline-success" style="visibility: hidden" for="btnradio3">結果</label>
+        <label class="btn btn-outline-success" style="width:25%; visibility: hidden" for="btnradio3">結果</label>
 
         <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off"/>
-        <label class="btn btn-outline-success" style="visibility: hidden" for="btnradio4">數據統計</label>
+        <label class="btn btn-outline-success" style="width:25%; visibility: hidden" for="btnradio4">數據統計</label>
     </div>
     <div id="prop1" class="panelBody" style="display: block">
         <div class="form-group" style="display: flex; align-items: center;">
@@ -182,18 +186,26 @@
             <span id="propResultLayer" style="margin:0px"></span>
         </div>
         <div>
-            <span style="margin-top:4px" id="PQNum">結果列表</span>
+            <span style="margin-top:4px">結果列表</span>
+            <span id="totalCount"></span>
             <a id="exportExcel" style="float:right">匯出Excel</a>
         </div>
-        <div id="propResultDiv" class="panelList" style="width:100%; max-height:320px; overflow:auto;">
+        <div id="propResultDiv" class="panelList" style="width:100%; height:280px; max-height:280px; overflow:auto;">
             <table id="propResult" class="propTable">
                 <thead id="propThead"></thead>
                 <tbody id="propTbody"></tbody>
             </table>
         </div>
         <div class="propPage">
-            <span style="float:left">每頁最多200筆</span>
-            <span id="propPages" style="float:right">
+            <span style="float:left">每頁最多</span>
+            <select id="pageSize" style="float:left">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select>
+            <span style="float:left"> 筆</span>
+            <span id="propPages" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
             </span>
         </div>
     </div>

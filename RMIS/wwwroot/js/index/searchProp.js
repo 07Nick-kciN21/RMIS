@@ -1,8 +1,11 @@
 ﻿import { layerProps } from './layers.js'
-
+import { getIndexMap } from './map.js'
 let props;
 let currentPage = 1;
 let filteredProps = [];
+let pageSize = 10;
+let last_item;
+let originalColor;
 export function initSearchPropPanel() {
     $(document).ready(function () {
         const observerConfig = { childList: true, subtree: true };
@@ -60,9 +63,16 @@ export function initSearchPropPanel() {
                 console.error("No valid rules found.");
                 return;
             }
+
+            last_item = null;
+            originalColor = null;
+
+            pageSize = 10;
+            currentPage = 1;
+
             // 過濾 props
             filteredProps = filterPropsByRules(props, result);
-
+            $('#totalCount').text(`(總數:${filteredProps.length})`);
             updatePropTable();
             // 將 btnradio3 的 label 標籤設置為可見
             $('label[for="btnradio3"]').css('visibility', 'visible');
@@ -84,6 +94,13 @@ export function initSearchPropPanel() {
             // 導出為 Excel 文件
             XLSX.writeFile(workbook, "props_data.xlsx");
         });
+
+        $('#pageSize').on('change', function () {
+            pageSize = $(this).find('option:selected').text();
+            currentPage = 1;
+            updatePropTable();
+            console.log($(this).find('option:selected').text());
+        })
     });
 }
 
@@ -145,8 +162,7 @@ function updatePropQuery(selectedId) {
     props.forEach(function (prop, index) {
         // 將每個 prop 字串轉換為 JSON
         for (var key in props[index]) {
-
-            if (props[index].hasOwnProperty(key) && key != '備註') {
+            if (props[index].hasOwnProperty(key) && key != '備註' && key != '座標') {
                 if (key === "設置日期") {
                     var timestamp = prop[key];
                     if (timestamp) {
@@ -218,10 +234,8 @@ function updatePropQuery(selectedId) {
         }
     });
 }
-
 function updatePropTable() {
     // 計算分頁
-    const pageSize = 50;
     const totalPages = Math.ceil(filteredProps.length / pageSize);
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = Math.min(startIndex + pageSize, filteredProps.length);
@@ -231,18 +245,51 @@ function updatePropTable() {
     $propThead.empty();
 
     var headRow = $("<tr></tr>");
+    headRow.append($('<th></th>'));
     Object.keys(pageData[0]).map(function (key) {
-        headRow.append($('<th></th>').text(key));
+        if (key != "座標") {
+            headRow.append($('<th></th>').text(key));
+        }
     });
     $propThead.append(headRow);
 
     var $propTbody = $('#propTbody');
     $propTbody.empty();
-    
+
+    var $indexMap = getIndexMap();
     pageData.forEach(function (item) {
         var tableRow = $("<tr></tr>");
+
+        // 創建一個按鈕，並添加點擊事件
+        var button = $("<button>目標</button>").on("click", function () {
+            try {
+                if (last_item != null) {
+                    last_item.setStyle({
+                        color: originalColor
+                    });
+                    console.log("reset color");
+                }
+
+                // Store the current color of the marker before changing it to white
+                originalColor = item['marker'].options.color;
+
+                item['marker'].setStyle({
+                    color: 'white'
+                });
+                last_item = item['marker'];
+            }
+            finally {
+                $indexMap.setView(item["座標"], 30);
+                console.log(item["座標"]);
+                item['marker'].openPopup();
+            }
+        });
+
+        // 將按鈕放入 td 中，並添加到表格行
+        tableRow.append($("<td></td>").append(button));
+
         for (var key in item) {
-            if (item.hasOwnProperty(key)) {
+            if (item.hasOwnProperty(key) && key != "座標") {
                 tableRow.append($("<td></td>").text(item[key]));
             }
         }
