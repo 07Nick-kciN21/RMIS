@@ -47,6 +47,7 @@ export function createNewLayer(result) {
     if (layerProps[pipelineId] == null) {
         layerProps[pipelineId] = [];
     }
+    layerProps[pipelineId].length = 0;
     console.log(result.name);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {

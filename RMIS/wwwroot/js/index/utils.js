@@ -1,6 +1,9 @@
-﻿import { getIndexMap } from './map.js'; 
+﻿import { Rectangle } from '../../lib/leaflet/leaflet-src.esm.js';
+import { getIndexMap } from './map.js'; 
 
 
+let currentRectangle = null; // 用於保存當前的矩形
+let currentLine = null;
 export function addMarkersToLayer(points, newLayer, svg, name) {
     var $indexMap = getIndexMap();
     let icon = L.icon({
@@ -18,49 +21,79 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                             ${popUpForm(point[1])}
                           </div>`);
         marker.on('click', function (e) {
-            console.log(marker.getPopup().getContent());
-            const latLng = e.latlng; // 取得點擊事件中的座標
-            $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級别
+            const latLng = e.latlng;
+            $indexMap.setView(latLng, $indexMap.getZoom());
+
+            if (currentRectangle) {
+                newLayer.removeLayer(currentRectangle);
+            }
+
+            const bounds = [[
+                latLng.lat - 0.00002, latLng.lng - 0.00002
+            ], [
+                latLng.lat + 0.00002, latLng.lng + 0.00002
+            ]];
+            currentRectangle = L.rectangle(bounds, {
+                color: "#ff7800",
+                weight: 1,
+                fillOpacity: 0.3
+            }).addTo(newLayer);
         });
-        point[2].marker = marker; // 將 marker 實體加入對應的 merged 中
+        $indexMap.on('click', function (e) {
+            if (currentRectangle) {
+                newLayer.removeLayer(currentRectangle);
+            }
+           
+        });
+        point[2].Instance = marker;
     });
     console.log("Create Maker");
 }
 
-export function addLineToLayer(points, newLayer,  color, name) {
+export function addLineToLayer(points, newLayer, color, name) {
     var $indexMap = getIndexMap();
-    console.log("Create Line"); 
+    console.log("Create Line");
     for (var i = 0; i < points.length - 1; i++) {
         var startPoint = points[i][0];
         var endPoint = points[i + 1][0];
         var prop = points[i][1];
+
         // 創建線段
         var segment = L.polyline([startPoint, endPoint], { color: color }).addTo(newLayer);
 
         // 為每個線段綁定 Popup，顯示其起點和終點座標
         segment.bindPopup(`
-                          <div>
-                            <h4>圖層：${name}</h4><br>
-                            ${popUpForm(prop)}
-                          </div>
-                        `);
+            <div>
+                <h4>圖層：${name}</h4><br>
+                ${popUpForm(prop)}
+            </div>
+        `);
+
         segment.on('click', function (e) {
-            newLayer.eachLayer(function (layer) {
-                if (layer instanceof L.Polyline) {
-                    layer.setStyle({ color: color });
-                }
-            });
-            // 將當前點擊的線段設置為白色
-            this.setStyle({
-                color: 'white'
-            });
+            if (currentLine) {
+                $indexMap.removeLayer(currentLine);
+            }
+
+            // 將當前點擊的線段設置為白色並增加線段寬度
+            currentLine = L.polyline(e.target.getLatLngs(), {
+                color: 'white',
+                weight: e.target.options.weight + 2,
+                opacity: 0.8
+            }).addTo(newLayer);
+
             // 移動地圖中央到點擊的點
-            
             const latLng = e.latlng; // 取得點擊事件中的座標
             console.log("latlng：", latLng);
             $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
-        })
-        points[i][2].marker = segment;
+        });
+
+        $indexMap.on('click', function (e) {
+            if (currentLine) {
+                newLayer.removeLayer(currentLine);
+            }
+        });
+
+        points[i][2].Instance = segment;
     }
 }
 export function addPolygonToLayer(points, newLayer,  color, name) {
@@ -94,3 +127,4 @@ function popUpForm(prop) {
         </div>
     `;
 }
+
