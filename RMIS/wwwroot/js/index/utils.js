@@ -15,11 +15,16 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
     points.forEach(function (point) {
 
         let marker = L.marker(point[0], { icon: icon }).addTo(newLayer);
+        let prop = point[1];
         marker.bindPopup(`
-                          <div>
-                            <h4>圖層：${name}</h4><br>
-                            ${popUpForm(point[1])}
-                          </div>`);
+            <div class="popupData" style="display: none;">
+            ${prop}
+            </div>
+            <div>
+            <h4>圖層：${name}</h4><br>
+            ${popUpForm(prop)}
+            </div>`
+        );
         marker.on('click', function (e) {
             const latLng = e.latlng;
             $indexMap.setView(latLng, $indexMap.getZoom());
@@ -63,6 +68,9 @@ export function addLineToLayer(points, newLayer, color, name) {
 
         // 為每個線段綁定 Popup，顯示其起點和終點座標
         segment.bindPopup(`
+            <div class="popupData" style="display: none;">
+                ${prop}
+            </div>
             <div>
                 <h4>圖層：${name}</h4><br>
                 ${popUpForm(prop)}
@@ -83,10 +91,8 @@ export function addLineToLayer(points, newLayer, color, name) {
 
             // 移動地圖中央到點擊的點
             const latLng = e.latlng; // 取得點擊事件中的座標
-            console.log("latlng：", latLng);
             $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
         });
-
         $indexMap.on('click', function (e) {
             if (currentLine) {
                 newLayer.removeLayer(currentLine);

@@ -222,5 +222,41 @@ namespace RMIS.Controllers
                 return new MapSourceOrderbyTileType();
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> ClearData(Guid PipelineId)
+        {
+            var layers = await _mapDBContext.Layers
+                .Where(l => l.PipelineId == PipelineId)
+                .ToListAsync();
+
+            if (layers == null || !layers.Any())
+            {
+                return NotFound("No layers found for the given PipelineId.");
+            }
+
+            foreach (var layer in layers)
+            {
+                var areas = await _mapDBContext.Areas
+                    .Where(a => a.LayerId == layer.Id)
+                    .ToListAsync();
+
+                foreach (var area in areas)
+                {
+                    var points = await _mapDBContext.Points
+                        .Where(p => p.AreaId == area.Id)
+                        .ToListAsync();
+
+                    _mapDBContext.Points.RemoveRange(points);
+                }
+
+                _mapDBContext.Areas.RemoveRange(areas);
+            }
+
+            await _mapDBContext.SaveChangesAsync();
+
+            // 清除PipeLine底下的所有資料
+            return Ok("Data cleared successfully.");
+        }
     }
 }

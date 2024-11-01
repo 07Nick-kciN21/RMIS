@@ -20,7 +20,7 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            var allCategories = _mapDBContext.Categories.ToList();
+            var allCategories = _mapDBContext.Categories.Where(c => c.Id != Guid.Parse("E2726075-D228-4A6B-BC65-0D3D28877681")).ToList();
             var jsTreeData = BuildJsTreeData(allCategories, null);
             ViewBag.JsTreeData = jsTreeData;
             ViewBag.pipelineId = _mapDBContext.Pipelines.Select(p => new

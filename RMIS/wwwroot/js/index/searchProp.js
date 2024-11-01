@@ -1,5 +1,5 @@
 ﻿// Import required modules
-import { layerProps } from './layers.js';
+import { layerProps, layers } from './layers.js';
 import { getIndexMap } from './map.js';
 
 // Global variables
@@ -9,18 +9,34 @@ let filteredProps = [];
 let pageSize = 10;
 let highlightRectangle = null;
 let highlightedLine = null; // 用於保存新增的高亮線
+let currentShape;
+let $indexMap;
+let pselectedId;
+let gselectedId;
 export function initSearchPropPanel() {
     $(document).ready(function () {
         observeLayerBarChanges();
         setupRadioButtonHandlers();
-        setupSelectChangeHandlers();
-        setupFilterAndClearHandlers();
-        setupExportHandlers();
-        setupPaginationHandlers();
-        setupMapClickHandler();
+        initProp1();
+        initProp2();
+        initProp3();
     });
 }
 
+function initProp1() {
+    
+    setupSelectChangeHandlers();
+    setupFilterAndClearHandlers();
+}
+
+function initProp2() {
+}
+
+function initProp3() {
+    setupExportHandlers();
+    setupPaginationHandlers();
+    setupMapClickHandler();
+}
 // 監聽 layerBarContainer 的變動來更新下拉選單
 function observeLayerBarChanges() {
     const observerConfig = { childList: true, subtree: true };
@@ -63,12 +79,17 @@ function setupSelectChangeHandlers() {
             $('#propQuery').queryBuilder('destroy');
         }
         $('#propResultLayer').text($(this).find('option:selected').text());
-        const selectedId = $(this).val();
+        pselectedId = $(this).val();
 
-        if (selectedId == -1) {
+        if (pselectedId == -1) {
             return;
         }
-        updatePropQuery(selectedId);
+        updatePropQuery();
+    });
+
+    $('#gFeatSelect').on('change', function () {
+        gselectedId = $(this).val();
+        handleDrawShape();
     });
 }
 
@@ -79,15 +100,18 @@ function setupFilterAndClearHandlers() {
             console.error("No valid rules found.");
             return;
         }
-
-        resetHighlight();
-
+        resetResult();
         filteredProps = filterPropsByRules(props, result);
         $('#totalCount').text(`(總數:${filteredProps.length})`);
         updatePropTable();
         $('label[for="btnradio3"]').css('visibility', 'visible');
     });
 
+    $('#geoGoFilter').on('click', function () {
+        $('#totalCount').text(`(總數:${filteredProps.length})`);
+        updatePropTable();
+        $('label[for="btnradio3"]').css('visibility', 'visible');
+    })
     $('#propClear').on('click', function () {
         $('label[for="btnradio3"]').css('visibility', 'hidden');
         $('#pFeatSelect').val('-1').trigger('change');
@@ -166,8 +190,8 @@ function updateSelect(featSelect) {
 }
 
 // Update property query builder
-function updatePropQuery(selectedId) {
-    props = layerProps[selectedId];
+function updatePropQuery() {
+    props = layerProps[pselectedId];
     const propsDict = buildPropsDict(props);
     const filters = buildQueryFilters(propsDict);
 
@@ -289,7 +313,7 @@ function renderTableBody(pageData) {
     const $propTbody = $('#propTbody');
     $propTbody.empty();
 
-    const $indexMap = getIndexMap();
+    $indexMap = getIndexMap();
     pageData.forEach(item => {
         const tableRow = $('<tr></tr>');
         const button = $('<button>目標</button>').on('click', () => highlightMapFeature(item, $indexMap));
@@ -305,12 +329,12 @@ function renderTableBody(pageData) {
 }
 
 // Highlight feature on the map
-function highlightMapFeature(item, $indexMap) {
+function highlightMapFeature(item) {
     try {
         if (item['Instance'] instanceof L.Marker) {
-            markerHighlight($indexMap, item['Instance']);
+            markerHighlight(item['Instance']);
         } else if (item['Instance'] instanceof L.Polyline) {
-            lineHighlight($indexMap, item['Instance']);
+            lineHighlight(item['Instance']);
         }
     } catch (e) {
         console.log("error:", e);
@@ -320,7 +344,7 @@ function highlightMapFeature(item, $indexMap) {
     }
 }
 
-function markerHighlight($indexMap, marker) {
+function markerHighlight(marker) {
     console.log('click Marker');
     const latLng = marker.getLatLng();
 
@@ -335,7 +359,7 @@ function markerHighlight($indexMap, marker) {
     }).addTo($indexMap);
 }
 
-function lineHighlight($indexMap, polyline) {
+function lineHighlight(polyline) {
     console.log('click Line');
     if (highlightedLine) {
         $indexMap.removeLayer(highlightedLine);
@@ -350,7 +374,7 @@ function lineHighlight($indexMap, polyline) {
 
 // 設定地圖點擊事件處理程序，用於取消高亮顯示
 function setupMapClickHandler() {
-    const $indexMap = getIndexMap();
+    $indexMap = getIndexMap();
     $indexMap.on('click', function () {
         if (highlightRectangle) {
             $indexMap.removeLayer(highlightRectangle);
@@ -379,7 +403,158 @@ function updatePagination(totalPages) {
     }
 }
 
-function resetHighlight() {
+function resetResult() {
     pageSize = 10;
     currentPage = 1;
+}
+
+let drawingActive = false; // Track if drawing is currently active
+function handleDrawShape() {
+    var $indexMap = getIndexMap();
+    // Initialize editTools once if not already initialized
+    if (!$indexMap.editTools) {
+        $indexMap.editTools = new L.Editable($indexMap);
+    }
+    // Bind the 'editable:drawing:end' event to handle shape drawing completion
+    $indexMap.on('editable:drawing:end', function (e) {
+
+        if (!drawingActive || !currentShape) {
+            return;
+        }
+        drawingActive = false;
+        filteredProps = [];
+        var layer = e.layer;
+        if (layer instanceof L.Rectangle || layer instanceof L.Polygon) {
+            getObjectsInBounds(layer.getBounds());
+        } else if (layer instanceof L.Circle) {
+            getObjectsInCircle(layer);
+        }
+
+        setTimeout(() => layer.disableEdit(), 0); // Disable editing after drawing is complete
+    });
+
+
+    // Listen for button click events
+    $('#propGeoCustom > button').on('click', function () {
+        // Clear existing shape if any
+        if (currentShape) {
+            $indexMap.removeLayer(currentShape);  // Remove shape from map
+            currentShape = null;
+        }
+
+        // Start drawing the appropriate shape based on button id
+        drawingActive = true;
+        if (this.id == 'propRect') {
+            currentShape = $indexMap.editTools.startRectangle();
+        } else if (this.id == 'propCircle') {
+            console.log('click propCircle');
+            currentShape = $indexMap.editTools.startCircle();
+        } else if (this.id == 'propPolygon') {
+            console.log('click propPolygon');
+            currentShape = $indexMap.editTools.startPolygon();
+        }
+    });
+}
+function getObjectsInBounds(bounds) {
+    // Iterate through all layers on the map
+    let count = 0;
+
+    // Helper function to parse popup content and add to filteredProps
+    function processPopupContent(subLayer) {
+        var popup = subLayer.getPopup();
+        if (!popup) return;
+
+        var content = popup.getContent();
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(content, 'text/html');
+
+        // Get .popupData content
+        var popupDataDiv = doc.querySelector('.popupData');
+        if (popupDataDiv) {
+            var jsonData = popupDataDiv.textContent.replace(/NaN/g, 'null');
+            try {
+                var item = JSON.parse(jsonData);
+                item['Instance'] = subLayer;
+                item["座標"] = subLayer instanceof L.Marker ? subLayer.getLatLng() : subLayer.getLatLngs()[0];
+                filteredProps.push(item);
+            } catch (err) {
+                console.error('無法解析 JSON', err);
+            }
+        } else {
+            console.error('未找到 .popupData 元素');
+        }
+    }
+
+    $.ajax({
+        url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${gselectedId}`,
+        method: 'POST',
+        success: function (result) {
+            try {
+                result.layerIdList.forEach(function (id) {
+                    let layer = layers[id];
+                    if (layer instanceof L.LayerGroup) {
+                        layer.eachLayer(function (subLayer) {
+                            if (subLayer instanceof L.Marker && bounds.contains(subLayer.getLatLng())) {
+                                count++;
+                                processPopupContent(subLayer);
+                            } else if (subLayer instanceof L.Polyline && bounds.intersects(subLayer.getBounds())) {
+                                count++;
+                                processPopupContent(subLayer);
+                            }
+                        });
+                    }
+                });
+                console.log(`圖層內的物件數量: ${count}`);
+            } catch (err) {
+                console.error('Get Layer Id', err);
+            }
+        }
+    });
+}
+
+
+function getObjectsInCircle(circle) {
+    // circle 是 L.Circle 的實例
+    let count = 0;
+    const center = circle.getLatLng();
+    const radius = circle.getRadius(); // 以公尺為單位
+    function processPopupContent() {
+
+    }
+    $.ajax({
+        url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${gselectedId}`,
+        method: 'POST',
+        success: function (result) {
+            try {
+                result.layerIdList.forEach(function (id) {
+                    let layer = layers[id];
+                    if (layer instanceof L.LayerGroup) {
+                        layer.eachLayer(function (subLayer) {
+                            if (subLayer instanceof L.Marker) {
+                                const distance = center.distanceTo(subLayer.getLatLng());
+                                if (distance <= radius) {
+                                    processPopupContent(subLayer);
+                                    count++;
+                                }
+                            }
+                            else if (subLayer instanceof L.Polyline) {
+                                subLayer.getLatLngs().forEach(function (point) {
+                                    const distance = center.distanceTo(point);
+                                    if (distance <= radius) {
+                                        processPopupContent(subLayer);
+                                        count++;
+                                        return; // 找到一個符合的點即可停止檢查這條線
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+                console.log(`圓範圍內的物件數量: ${count}`);
+            }
+            catch (err) {
+                console.error('Get Layer Id', err);
+            }
+        }
+    });
 }

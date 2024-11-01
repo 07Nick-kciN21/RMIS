@@ -2,7 +2,7 @@
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer } from './utils.js';
 
 export let layerProps = {};
-let layers = {};
+export let layers = {};
 let indexMap;
 let pipelineId;
 export function addLayer2Map(id ,LayerData) {
@@ -12,6 +12,13 @@ export function addLayer2Map(id ,LayerData) {
         return;
     }
     pipelineId = id;
+
+    if (layerProps[pipelineId] == null) {
+        layerProps[pipelineId] = [];
+    }
+    layerProps[pipelineId].length = 0;
+    
+
     LayerData.forEach(function (Ldata) {
         $.ajax({
             url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
@@ -44,10 +51,6 @@ export function createNewLayer(result) {
         console.error('indexMap is not initialized.');
         return;
     }
-    if (layerProps[pipelineId] == null) {
-        layerProps[pipelineId] = [];
-    }
-    layerProps[pipelineId].length = 0;
     console.log(result.name);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {

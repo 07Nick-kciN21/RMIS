@@ -1,13 +1,12 @@
-﻿// map.js
+﻿
 
 let indexMap;
-
+let currentLayer;
 // 初始化地图
 export function initMap(mapId) {
     indexMap = L.map(mapId).setView([24.957276277371435, 121.21903318892302], 13);
     createBaseLayers();
     
-
     var $offcanvasElement = $('#layerListBlock');
     var $indexMapElement = $('#indexMap');
 
@@ -48,7 +47,6 @@ function createBaseLayers() {
     indexMap.getPane('overlayPane').style.zIndex = 4;
     indexMap.getPane('photoPane').style.zIndex = 3;
 
-
     //google街景
     var GoogleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
         maxZoom: 20,
@@ -79,50 +77,6 @@ function createBaseLayers() {
     var OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
         pane: 'basePane'
-    });
-
-    indexMap.pm.addControls({
-        position: 'topleft', // 工具栏的位置
-        drawCircle: false, // 禁用圆形绘制工具
-        drawMarker: true, // 启用标记绘制工具
-        drawPolygon: true, // 启用多边形绘制工具
-        drawPolyline: true, // 启用折线绘制工具
-        drawRectangle: true, // 启用矩形绘制工具
-        cutPolygon: false, // 禁用切割多边形工具
-        editMode: true, // 启用编辑模式
-        dragMode: true, // 启用拖拽模式
-        removalMode: true, // 启用删除模式
-    });
-
-    indexMap.on('pm:create', (e) => {
-        const layer = e.layer;
-
-        const layersInBounds = [];
-        indexMap.eachLayer((layerItem) => {
-            
-            if (layerItem instanceof L.Marker) {
-                if (layer instanceof L.Rectangle) {
-                    if (layer.getBounds().contains(layerItem.getLatLng())) {
-                        layersInBounds.push(layerItem);
-                    }
-                } else if (layer instanceof L.Polygon) {
-                    const results = leafletPip.pointInLayer(layerItem.getLatLng(), layer);
-                    if (results.length > 0) {
-                        layersInBounds.push(layerItem);
-                    }
-                }
-            }
-        });
-
-        // 显示范围内所有物件的 bindPopup 信息
-        layersInBounds.forEach((layerInBound) => {
-            const popupContent = layerInBound.getPopup();
-            if (popupContent) {
-                console.log('物件的 Popup 信息: ', popupContent);
-            } else {
-                console.log('此物件沒有彈窗信息');
-            }
-        });
     });
 
     // 基本圖層 (單選)
