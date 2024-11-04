@@ -59,7 +59,7 @@
     </div>
 }
 @section HomeHeaderNavList{
-<nav class="col" style="padding: 0;">
+    <nav class="col" style="padding: 0;">
     <div class="container-fluid ">
         <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
             <div class="nav-item dropdown">
@@ -98,7 +98,7 @@
 <div id="searchPanel" class="panel hide">
     <div class="panelHeading">
         快速搜尋
-        <button class="closeButton">&times;</button>
+        <button id="search_Close" class="closeButton">&times;</button>
     </div>
     <div class="panelBody">
         <input type="text" class="searchPanelInput" placeholder="請輸入">
@@ -151,7 +151,7 @@
         <label class="btn btn-outline-success" style="width:25%; visibility: hidden" for="btnradio3">結果</label>
 
         <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off"/>
-        <label class="btn btn-outline-success" style="width:25%; visibility: hidden" for="btnradio4">數據統計</label>
+        <label class="btn btn-outline-success" style="width:25%; visibility: hidden" for="btnradio4">統計</label>
     </div>
     <div id="prop1" class="panelBody" style="display: block">
         <div class="form-group" style="display: flex; align-items: center;">
@@ -159,7 +159,7 @@
                 <option value="-1">請選擇圖層</option>
             </select>
         </div>
-        <div id="propContent">
+        <div>
             <div id="propQuery" class="panelList" style="height:300px; max-height:300px; clear:both;">
             </div>
             <div class="form-group" style="clear:both;">
@@ -170,22 +170,28 @@
     </div>
     <div id="prop2" class="panelBody" style="display: none">
         <div class="form-group" style="display: flex; align-items: center;">
-            <label for="gFeatSelect" style="margin-right: 10px;">
-                圖層
-            </label>
-            <select id="gFeatSelect" class="select-full form-control" style="width:90%">
-                <option value="-1">請選擇</option>
+            <select id="gFeatSelect" class="form-control" style="flex-grow: 1;">
+                <option value="-1">請選擇圖層</option>
             </select>
         </div>
-        <div id="propGeoCustom" class="form-group" style="display: flex; align-items: center;">
-            <button id="propRect">矩形</button>
-            <button id="propPolygon">多邊形</button>
-            <button id="propCircle">圓形</button>
+        <div id="shapeGroup" class="hide">
+            <div id="propGeoCustom" style="height:100px; max-height:100px; clear:both;">
+                <button id="propRect" type="button" style="width:90px; height:90px; float:left; margin-right:10px; background-color: #9ac43e">
+                    <img src="/img/prop/rectangle.png" style="max-width: 100%; max-height: 100%;">
+                </button>
+                <button id="propCircle" type="button" style="width:90px; height:90px; float:left; margin-right:10px; background-color: #9ac43e">
+                    <img src="/img/prop/circle.png" style="max-width: 100%; max-height: 100%;">
+                </button>
+                <button id="propPolygon" type="button" style="width:90px; height:90px; float:left; margin-right:10px; background-color: #9ac43e">
+                    <img src="/img/prop/polygon.png" style="max-width: 100%; max-height: 100%;">
+                </button>
+            </div>
+            <div class="form-group" style="clear:both;">
+                <button class="btn js-modal-toggle" id="geoClear">清除</button>
+                <button class="btn js-modal-toggle" id="geoGoFilter">進行篩選</button>
+            </div>
         </div>
-        <div class="form-group" style="clear:both;">
-            <button class="btn js-modal-toggle" id="geoClear">清除</button>
-            <button class="btn js-modal-toggle" id="geoGoFilter">進行篩選</button>
-        </div>
+        
     </div>
     <div id="prop3" class="panelBody" style="background-color: white; padding-bottom: 0.2rem; display: none;">
         <div style="height:30px;">

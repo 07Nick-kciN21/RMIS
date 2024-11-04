@@ -1,9 +1,15 @@
 ﻿import { getIndexMap } from "./map.js";
 
+let roadlayer;
 export function initSearchPanel() {
     const $panelSearchBtn = $('#searchPanel').find(".searchPanelBtn");
     $panelSearchBtn.on("click", () => {
         handleSearch();
+    })
+
+    $('#search_Close').on('click', () => {
+        var indexMap = getIndexMap();
+        indexMap.removeLayer(roadlayer);
     })
 }
 
@@ -36,8 +42,6 @@ function handleSearch() {
         })
     }
 }
-
-let roadlayer;
 function addRoadLayer(id) {
     var indexMap = getIndexMap();
     $.ajax({

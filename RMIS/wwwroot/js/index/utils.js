@@ -14,7 +14,9 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
     });
     points.forEach(function (point) {
 
-        let marker = L.marker(point[0], { icon: icon }).addTo(newLayer);
+        let marker = L.marker(point[0], {
+            icon: icon,
+        }).addTo(newLayer);
         let prop = point[1];
         marker.bindPopup(`
             <div class="popupData" style="display: none;">
@@ -41,7 +43,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             currentRectangle = L.rectangle(bounds, {
                 color: "#ff7800",
                 weight: 1,
-                fillOpacity: 0.3
+                fillOpacity: 0.3,
             }).addTo(newLayer);
         });
         $indexMap.on('click', function (e) {
@@ -64,7 +66,9 @@ export function addLineToLayer(points, newLayer, color, name) {
         var prop = points[i][1];
 
         // 創建線段
-        var segment = L.polyline([startPoint, endPoint], { color: color }).addTo(newLayer);
+        var segment = L.polyline([startPoint, endPoint], {
+            color: color
+        }).addTo(newLayer);
 
         // 為每個線段綁定 Popup，顯示其起點和終點座標
         segment.bindPopup(`
@@ -85,7 +89,6 @@ export function addLineToLayer(points, newLayer, color, name) {
             // 將當前點擊的線段設置為白色並增加線段寬度
             currentLine = L.polyline(e.target.getLatLngs(), {
                 color: 'white',
-                weight: e.target.options.weight + 2,
                 opacity: 0.8
             }).addTo(newLayer);
 

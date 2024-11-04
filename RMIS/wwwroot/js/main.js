@@ -5,7 +5,7 @@ import { initPanel } from './index/panel.js';
 import { initSearchPanel } from './index/searchPanel.js'
 import { initPainterPanel } from './index/painterPanel.js'
 import { initPhoto } from './index/photo.js'
-import { initSearchPropPanel } from './index/searchProp.js'
+import { initSearchPropPanel } from './index/searchPropPanel.js'
 
 $(document).ready(function () {
     // 初始化地图

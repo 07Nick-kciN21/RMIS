@@ -41,3 +41,7 @@
 #propPages .select {
     background-color: #9ac43e;
 }
+
+.selectRow {
+    background-color: green !important;
+}

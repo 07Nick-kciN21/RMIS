@@ -54,7 +54,6 @@ export function createNewLayer(result) {
     console.log(result.name);
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
-            // 把座標加入layerProps[pipelineId]
             var item = { "座標": [point.latitude, point.longitude] };
             var item2 = JSON.parse(point.prop.replace(/NaN/g, 'null'));
             const merged = { ...item, ...item2 } 
@@ -68,6 +67,25 @@ export function createNewLayer(result) {
             addLineToLayer(points, newLayer, result.color, result.name);
         } else if (result.type === "polygon") {
             addPolygonToLayer(points, newLayer, result.color, result.name);
+        }
+    });
+    // 添加縮放事件來控制圖層顯示
+    indexMap.on('zoomend', function () {
+        var currentZoom = indexMap.getZoom();
+
+        // 圖層在縮放層級小於 15 時變得不可見，在縮放層級大於等於 15 時顯示
+        if (currentZoom >= 15) {
+            newLayer.eachLayer(function (layer) {
+                if (layer.setOpacity) {
+                    layer.setOpacity(1); // 設置圖層為全可見
+                }
+            });
+        } else {
+            newLayer.eachLayer(function (layer) {
+                if (layer.setOpacity) {
+                    layer.setOpacity(0); // 設置圖層為不可見
+                }
+            });
         }
     });
     return newLayer;
