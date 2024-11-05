@@ -13,10 +13,12 @@ let highlightedLine = null; // 用於保存新增的高亮線
 let $indexMap;
 let pselectedId;
 let gselectedId;
+
 export function initSearchPropPanel() {
     $(document).ready(function () {
         observeLayerBarChanges();
         setupRadioButtonHandlers();
+        setupExportHandlers();
         initProp1();
         initProp2();
         initProp3();
@@ -33,7 +35,6 @@ function initProp2() {
 }
 
 function initProp3() {
-    setupExportHandlers();
     setupPaginationHandlers();
     setupMapClickHandler();
 }
@@ -60,7 +61,7 @@ function observeLayerBarChanges() {
 function setupRadioButtonHandlers() {
     $('input[name="btnradio"]').on('change', function () {
         const selectedLabel = $(this).next('label').text();
-        $('#prop1, #prop2, #prop3').css('display', 'none');
+        $('#prop1, #prop2, #prop3, #prop4').css('display', 'none');
 
         if (selectedLabel === '依屬性') {
             $('#prop1').css('display', 'block');
@@ -68,9 +69,12 @@ function setupRadioButtonHandlers() {
             $('#prop2').css('display', 'block');
         } else if (selectedLabel === '結果') {
             $('#prop3').css('display', 'block');
+        } else {
+            $('#prop4').css('display', 'block');
         }
     });
 }
+
 
 // FeatSelect變更的處理程序
 function setupSelectChangeHandlers() {
@@ -89,6 +93,8 @@ function setupSelectChangeHandlers() {
     $('#gFeatSelect').on('change', function () {
         gselectedId = $(this).val();
         if (gselectedId == -1) {
+            $('label[for="btnradio3"]').css('visibility', 'hidden');
+            $('#shapeGroup').addClass('hide');
             return;
         }
         props = layerProps[gselectedId];
@@ -106,12 +112,17 @@ function setupFilterAndClearHandlers() {
             console.error("No valid rules found.");
             return;
         }
-        resetResult();
+        pageSize = 10;
+        currentPage = 1;
         $('#propResultLayer').text($('#pFeatSelect').find('option:selected').text());
+        $('#analysisResultLayer').text($('#pFeatSelect').find('option:selected').text());
+
         filteredProps = filterPropsByRules(props, result);
         $('#totalCount').text(`(總數:${filteredProps.length})`);
         updatePropTable();
+        updateAnalysisList();
         $('label[for="btnradio3"]').css('visibility', 'visible');
+        $('label[for="btnradio4"]').css('visibility', 'visible');
     });
     $('#propClear').on('click', function () {
         $('label[for="btnradio3"]').css('visibility', 'hidden');
@@ -120,6 +131,7 @@ function setupFilterAndClearHandlers() {
 
     $('#geoGoFilter').on('click', function () {
         $('#propResultLayer').text($('#gFeatSelect').find('option:selected').text());
+        $('#analysisResultLayer').text($('#gFeatSelect').find('option:selected').text());
         const filteredPropsbyShape = filterPropsByShape(gselectedId);
         filteredPropsbyShape.then((value) => {
             if (value.length == 0) {
@@ -129,18 +141,21 @@ function setupFilterAndClearHandlers() {
             else {
                 filteredProps = value;
                 updatePropTable();
+                updateAnalysisList();
                 $('#totalCount').text(`(總數:${filteredProps.length})`);
                 $('label[for="btnradio3"]').css('visibility', 'visible');
+                $('label[for="btnradio4"]').css('visibility', 'visible');
             }
         });
     });
     $('#geoClear').on('click', function () {
+        $('#gFeatSelect').val('-1').trigger('change');
         clearShape($indexMap);
     });
 }
 // 匯出excel
 function setupExportHandlers() {
-    $('#exportExcel').on('click', function () {
+    $('#exportExcel1').on('click', function () {
         console.log(filteredProps);
         const filteredPropsWithoutFields = filteredProps.map(({ Instance, 座標, ...rest }) => rest);
 
@@ -150,7 +165,6 @@ function setupExportHandlers() {
         XLSX.writeFile(workbook, "props_data.xlsx");
     });
 }
-
 // 設置分頁顯示資料
 function setupPaginationHandlers() {
     $('#pageSize').on('change', function () {
@@ -172,7 +186,103 @@ function updateSelect(featSelect) {
     $propSelect.trigger('change');
 }
 
-// 結果分頁設定
+const countableTypes = ["作業區分", "設施長度", "孔蓋種類", "尺寸單位", "蓋部寬度", "蓋部長度", "地盤高", "孔深", "孔蓋型態", "設施寬度", "設施高度", "設施型態", "使用狀態", "使用資料", "QualityLV"]
+
+// 統計頁面設定
+function updateAnalysisList() {
+    const $anaFieldList = $('#anaFieldList');
+    const $anaSelList = $('#anaSelList');
+    $anaFieldList.empty();
+    $anaSelList.empty();
+    Object.keys(filteredProps[0]).forEach(key => {
+        if (countableTypes.includes(key)) {
+            $anaFieldList.append($('<li class="panelResult anaField"></li>').text(key));
+        }
+    });
+    $anaFieldList.off('click', '.anaField').on('click', '.anaField', function () {
+        $anaSelList.append($('<li class="panelResult anaSelect"></li>').text($(this).text()));
+        $(this).remove();
+    });
+    $anaSelList.off('click', '.anaSelect').on('click', '.anaSelect', function () {
+        $anaFieldList.append($('<li class="panelResult anaField"></li>').text($(this).text()));
+
+        $(this).remove();  // This should work to remove the clicked element
+    });
+    $('#anaAll').on('click', function () {
+        const isChecked = $(this).is(':checked');
+        $('.anaI').prop('checked', isChecked);
+    });
+
+    $('#anaGoResult').on('click', function () {
+        let statistList = [];
+        let $anaBody = $('#anaBody');
+        let $anaHeader = $('#anaHdr');
+        $anaHeader.empty();
+        $anaHeader.append('<td class="col-3">目標欄位</td>');
+
+        // Append the remaining headers, which will be evenly spaced
+        $('.anaI:checked').each(function () {
+            const label = $(`label[for="${$(this).attr('id')}"]`).text();
+            $anaHeader.append(`<td class="col-2">${label}</td>`);
+            statistList.push(label);
+        });
+
+        $anaBody.empty();
+        $('#anaSelList .anaSelect').each(function () {
+            const name = $(this).text();
+            
+            let $rowItem = `<td>${name}</td>`;
+            statistList.forEach(function (statist) {
+                $rowItem += `<td>${calculate(name, statist)}</td>`;
+            });
+            let $row = `<tr>${$rowItem}</tr>`;
+            $anaBody.append($row);
+        });
+        $('#anaResultDiv').css('display', 'block');
+    })
+
+    $('#exportExcel2').on('click', function () {
+        var $propResult = $('#propAnaResult');
+        const worksheet = XLSX.utils.table_to_book($propResult[0], { sheet: "Sheet1" });
+
+        XLSX.writeFile(worksheet, `屬性統計.xlsx`);
+    });
+}
+function calculate(field, statist) {
+    let ret = 0;
+
+    if (statist == "加總") {
+        // Sum all values of the specified field
+        filteredProps.forEach(function (prop) {
+            ret += prop[field];
+        });
+    }
+
+    if (statist == "最大值") {
+        // Find the maximum value of the specified field
+        ret = filteredProps.reduce((max, prop) => {
+            return prop[field] > max ? prop[field] : max;
+        }, Number.NEGATIVE_INFINITY);
+    }
+
+    if (statist == "最小值") {
+        // Find the minimum value of the specified field
+        ret = filteredProps.reduce((min, prop) => {
+            return prop[field] < min ? prop[field] : min;
+        }, Number.POSITIVE_INFINITY);
+    }
+
+    if (statist == "平均") {
+        // Calculate the average value of the specified field
+        let sum = 0;
+        filteredProps.forEach(function (prop) {
+            sum += prop[field];
+        });
+        ret = filteredProps.length > 0 ? sum / filteredProps.length : 0;
+    }
+
+    return parseFloat(ret.toFixed(3));
+}
 function updatePropTable() {
     const totalPages = Math.ceil(filteredProps.length / pageSize);
     const startIndex = (currentPage - 1) * pageSize;
@@ -184,7 +294,6 @@ function updatePropTable() {
     updatePagination(totalPages);
 }
 
-// Render table headers
 function renderTableHeaders(pageData) {
     const $propThead = $('#propThead');
     $propThead.empty();
@@ -199,7 +308,6 @@ function renderTableHeaders(pageData) {
 }
 
 let currentRow;
-// Render table body
 function renderTableBody(pageData) {
     const $propTbody = $('#propTbody');
     $propTbody.empty();
@@ -225,8 +333,21 @@ function renderTableBody(pageData) {
         $propTbody.append(tableRow);
     });
 }
-
-// Highlight feature on the map
+function updatePagination(totalPages) {
+    const $pagination = $('#propPages');
+    $pagination.empty();
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = $('<a></a>')
+            .text(i)
+            .toggleClass('select', i === currentPage)
+            .on('click', function () {
+                currentPage = i;
+                updatePropTable();
+            });
+        $pagination.append(pageButton);
+    }
+}
+// 物件標記
 function highlightMapFeature(item) {
     try {
         if (item['Instance'] instanceof L.Marker) {
@@ -270,7 +391,7 @@ function lineHighlight(polyline) {
     }).addTo($indexMap);
 }
 
-// 設定地圖點擊事件處理程序，用於取消高亮顯示
+// 設定地圖點擊事件處理，取消顯示
 function setupMapClickHandler() {
     $indexMap = getIndexMap();
     $indexMap.on('click', function () {
@@ -283,25 +404,4 @@ function setupMapClickHandler() {
             highlightedLine = null;
         }
     });
-}
-
-function updatePagination(totalPages) {
-    const $pagination = $('#propPages');
-    $pagination.empty();
-
-    for (let i = 1; i <= totalPages; i++) {
-        const pageButton = $('<a></a>')
-            .text(i)
-            .toggleClass('select', i === currentPage)
-            .on('click', function () {
-                currentPage = i;
-                updatePropTable();
-            });
-        $pagination.append(pageButton);
-    }
-}
-
-function resetResult() {
-    pageSize = 10;
-    currentPage = 1;
 }

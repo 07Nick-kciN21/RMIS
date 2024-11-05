@@ -191,7 +191,6 @@
                 <button class="btn js-modal-toggle" id="geoGoFilter">進行篩選</button>
             </div>
         </div>
-        
     </div>
     <div id="prop3" class="panelBody" style="background-color: white; padding-bottom: 0.2rem; display: none;">
         <div style="height:30px;">
@@ -201,7 +200,7 @@
         <div>
             <span style="margin-top:4px">結果列表</span>
             <span id="totalCount"></span>
-            <a id="exportExcel" style="float:right">匯出Excel</a>
+            <a id="exportExcel1" class="exportExcel" style="float:right">匯出Excel</a>
         </div>
         <div id="propResultDiv" class="panelList" style="width:100%; height:280px; max-height:280px; overflow:auto;">
             <table id="propResult" class="propTable">
@@ -220,6 +219,79 @@
             <span style="float:left"> 筆</span>
             <span id="propPages" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
             </span>
+        </div>
+    </div>
+    <div id="prop4" class="panelBody" style="background-color: white; padding-bottom: 0.2rem; display: none;">
+        <div style="height:30px;">
+            <span style="width:50px; height:30px; margin:0px">圖層:</span>
+            <span id="analysisResultLayer" style="margin:0px"></span>
+        </div>
+        <div id="analysisContent">
+            <div class="form-group" style="width:45%; float: left">
+                <label style="vertical-align: text-top;margin: 0px">屬性欄位(可複選)</label>
+                <div class="listResult" style="height:120px;">
+                    <ul id="anaFieldList" class="panelList">
+
+                    </ul>
+                </div>
+            </div>
+            @* <div class="form-group" style="width:10%; margin-left: 2px; float: left">
+                <button id="addAnaField" type="button" style="margin-top:25px; background-color: lightcyan"> &gt;&gt; </button>
+                <button id="delAnaField" type="button" style="margin-top:2px; background-color: lightcyan"> &lt;&lt; </button>
+            </div> *@
+            <div class="form-group" style="width:45%; margin-left: 2px; float: right">
+                <label style="vertical-align: text-top;margin: 0px">已選欄位</label>
+                <div class="listBox" style="margin: 0px">
+                    <div class="listResult" style="height:120px">
+                        <ul id="anaSelList" class="panelList">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group mb-2">
+                <label class="form-label mb-2">統計方式:</label>
+                <div class="d-flex flex-wrap">
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaSum" name="anaSum" value="sum">
+                        <label class="form-check-label" for="anaSum">加總</label>
+                    </div>
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaAvg" name="anaAvg" value="avg">
+                        <label class="form-check-label" for="anaAvg">平均</label>
+                    </div>
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaMax" name="anaMax" value="max">
+                        <label class="form-check-label" for="anaMax">最大值</label>
+                    </div>
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaMin" name="anaMin" value="min">
+                        <label class="form-check-label" for="anaMin">最小值</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="anaAll" name="anaAll" value="all">
+                        <label class="form-check-label" for="anaAll">全選</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="clear:both; padding:8px; width:100%; margin-left:auto; margin-right:auto; text-align:center">
+                <button class="btn js-modal-toggle" id="anaGoResult">顯示結果</button>
+            </div>
+            <div id="anaResultDiv" style="display:none">
+                <div class="form-group" style="margin: 2px 0px 2px; clear: both;">
+                    <label style="vertical-align: text-top; margin: 0px;">數值統計結果</label>
+                    <a id="exportExcel2" class="exportExcel" style="float: right;">匯出Excel</a>
+                </div>
+                <div style="max-height: 114px; overflow-y: auto;">
+                    <table id="propAnaResult" class="propTable" style="width: 100%;">
+                        <thead>
+                            <tr id="anaHdr" role="row" class="propRow" style="background-color:lightgreen">
+                            </tr>
+                        </thead>
+                        <tbody id="anaBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>

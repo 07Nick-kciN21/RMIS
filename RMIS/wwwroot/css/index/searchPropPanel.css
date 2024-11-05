@@ -21,7 +21,7 @@
         background-color: #f9f9f9;
     }
 
-#exportExcel:hover {
+.exportExcel:hover {
     color: white;
     background-color: gray;
 }

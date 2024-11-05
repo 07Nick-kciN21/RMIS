@@ -199,8 +199,5 @@ async function getObjectsInCircle(circle, gselectedId) {
 }
 
 export function clearShape($indexMap) {
-    $('label[for="btnradio3"]').css('visibility', 'hidden');
-    $('#shapeGroup').addClass('hide');
-    $('#gFeatSelect').val('-1').trigger('change');
     $indexMap.removeLayer(shapeLayer);
 }
