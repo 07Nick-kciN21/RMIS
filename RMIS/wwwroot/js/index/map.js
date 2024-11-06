@@ -1,6 +1,4 @@
-﻿
-
-let indexMap;
+﻿let indexMap;
 let currentLayer;
 // 初始化地图
 export function initMap(mapId) {

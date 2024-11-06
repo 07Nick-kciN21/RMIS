@@ -1,4 +1,4 @@
-﻿import { getIndexMap } from './map.js';
+﻿import { getIndexMap } from '../map.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer } from './utils.js';
 
 export let layerProps = {};
@@ -18,7 +18,6 @@ export function addLayer2Map(id ,LayerData) {
     }
     layerProps[pipelineId].length = 0;
     
-
     LayerData.forEach(function (Ldata) {
         $.ajax({
             url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,

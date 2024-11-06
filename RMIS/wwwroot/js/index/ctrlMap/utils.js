@@ -1,5 +1,5 @@
-﻿import { Rectangle } from '../../lib/leaflet/leaflet-src.esm.js';
-import { getIndexMap } from './map.js'; 
+﻿import { Rectangle } from '../../../lib/leaflet/leaflet-src.esm.js';
+import { getIndexMap } from '../map.js'; 
 
 
 let currentRectangle = null; // 用於保存當前的矩形

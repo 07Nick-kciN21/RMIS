@@ -1,11 +1,11 @@
 ﻿// main.js
 import { initMap } from './index/map.js';
-import { generateMenu, bindMenuEvents } from './index/menu.js';
+import { generateMenu, bindMenuEvents } from './index/ctrlMap/menu.js';
 import { initPanel } from './index/panel.js';
 import { initSearchPanel } from './index/searchPanel.js'
 import { initPainterPanel } from './index/painterPanel.js'
 import { initPhoto } from './index/photo.js'
-import { initSearchPropPanel } from './index/searchPropPanel.js'
+import { initSearchPropPanel } from './index/propPanel/searchPropPanel.js'
 
 $(document).ready(function () {
     // 初始化地图
@@ -26,6 +26,6 @@ $(document).ready(function () {
     initPainterPanel();
     initPhoto();
     initSearchPropPanel();
-    // 绑定菜单事件
+
     bindMenuEvents();
 });

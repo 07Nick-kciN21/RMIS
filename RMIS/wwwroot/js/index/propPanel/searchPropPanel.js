@@ -1,8 +1,8 @@
 ﻿// Import required modules
-import { layerProps } from './layers.js';
-import { getIndexMap } from './map.js';
-import { updatePropQuery, filterPropsByRules } from './propQueryBuilder.js';
-import { handleDrawShape, filterPropsByShape, clearShape } from './shapeSearch.js';
+import { layerProps } from '../ctrlMap/layers.js';
+import { getIndexMap } from '../map.js';
+import { updatePropQuery, filterPropsByRules, parseRules } from './propQueryBuilder.js';
+import { handleDrawShape, filterPropsByShape, clearShape, getShape } from './shapeSearch.js';
 // Global variables
 let props;
 let currentPage = 1;
@@ -18,26 +18,13 @@ export function initSearchPropPanel() {
     $(document).ready(function () {
         observeLayerBarChanges();
         setupRadioButtonHandlers();
-        setupExportHandlers();
-        initProp1();
-        initProp2();
-        initProp3();
+        setupSelectChangeHandlers();
+        setupFilterAndClearHandlers();
+        setupPaginationHandlers();
+        setupMapClickHandler();
     });
 }
 
-function initProp1() {
-    
-    setupSelectChangeHandlers();
-    setupFilterAndClearHandlers();
-}
-
-function initProp2() {
-}
-
-function initProp3() {
-    setupPaginationHandlers();
-    setupMapClickHandler();
-}
 
 // 監聽 layerBarContainer 的變動來更新FeatSelect
 function observeLayerBarChanges() {
@@ -94,6 +81,7 @@ function setupSelectChangeHandlers() {
         gselectedId = $(this).val();
         if (gselectedId == -1) {
             $('label[for="btnradio3"]').css('visibility', 'hidden');
+            $('label[for="btnradio4"]').css('visibility', 'hidden');
             $('#shapeGroup').addClass('hide');
             return;
         }
@@ -114,10 +102,15 @@ function setupFilterAndClearHandlers() {
         }
         pageSize = 10;
         currentPage = 1;
-        $('#propResultLayer').text($('#pFeatSelect').find('option:selected').text());
-        $('#analysisResultLayer').text($('#pFeatSelect').find('option:selected').text());
+        var resultLayer = $('#pFeatSelect').find('option:selected').text();
+        $('#propResultLayer').text(resultLayer);
+        $('#analysisResultLayer').text(resultLayer);
 
         filteredProps = filterPropsByRules(props, result);
+        var condition = parseRules(result);
+        $('#propResultCond').text(condition);
+
+        console.log(parseRules(result));
         $('#totalCount').text(`(總數:${filteredProps.length})`);
         updatePropTable();
         updateAnalysisList();
@@ -126,12 +119,15 @@ function setupFilterAndClearHandlers() {
     });
     $('#propClear').on('click', function () {
         $('label[for="btnradio3"]').css('visibility', 'hidden');
+        $('label[for="btnradio4"]').css('visibility', 'hidden');
         $('#pFeatSelect').val('-1').trigger('change');
     });
 
     $('#geoGoFilter').on('click', function () {
-        $('#propResultLayer').text($('#gFeatSelect').find('option:selected').text());
-        $('#analysisResultLayer').text($('#gFeatSelect').find('option:selected').text());
+        var resultLayer = $('#gFeatSelect').find('option:selected').text();
+        $('#propResultLayer').text(resultLayer);
+        $('#analysisResultLayer').text(resultLayer);
+        $('#propResultCond').text(getShape());
         const filteredPropsbyShape = filterPropsByShape(gselectedId);
         filteredPropsbyShape.then((value) => {
             if (value.length == 0) {
@@ -152,17 +148,17 @@ function setupFilterAndClearHandlers() {
         $('#gFeatSelect').val('-1').trigger('change');
         clearShape($indexMap);
     });
-}
-// 匯出excel
-function setupExportHandlers() {
+
     $('#exportExcel1').on('click', function () {
         console.log(filteredProps);
         const filteredPropsWithoutFields = filteredProps.map(({ Instance, 座標, ...rest }) => rest);
 
         const worksheet = XLSX.utils.json_to_sheet(filteredPropsWithoutFields);
         const workbook = XLSX.utils.book_new();
+        const name = $('#propResultLayer').text();
+        const cond = $('#propResultCond').text();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Props Data");
-        XLSX.writeFile(workbook, "props_data.xlsx");
+        XLSX.writeFile(workbook, `${name}屬性篩選(${cond}).xlsx`);
     });
 }
 // 設置分頁顯示資料
@@ -205,7 +201,6 @@ function updateAnalysisList() {
     });
     $anaSelList.off('click', '.anaSelect').on('click', '.anaSelect', function () {
         $anaFieldList.append($('<li class="panelResult anaField"></li>').text($(this).text()));
-
         $(this).remove();  // This should work to remove the clicked element
     });
     $('#anaAll').on('click', function () {

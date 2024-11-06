@@ -123,3 +123,32 @@ function evaluateSingleRule(item, rule) {
             return false;
     }
 }
+
+export function parseRules(rules) {
+    if (!rules) return '';
+
+    let condition = rules.condition.toUpperCase(); // AND / OR
+    let parts = [];
+
+    rules.rules.forEach(rule => {
+        if (rule.rules) {
+            parts.push('(' + parseRules(rule) + ')');
+        } else {
+            var op = rule.operator;
+            if (op == 'equal') {
+                parts.push(rule.field + ' = ' + rule.value);
+            }
+            else if (op == 'not_equal') {
+                parts.push(rule.field + ' != ' + rule.value);
+            }
+            else if (op == 'less 0') {
+                parts.push(rule.field + ' < ' + rule.value);
+            }
+            else {
+                parts.push(rule.field + ' > ' + rule.value);
+            }
+        }
+    });
+
+    return parts.join(' ' + condition + ' ');
+}

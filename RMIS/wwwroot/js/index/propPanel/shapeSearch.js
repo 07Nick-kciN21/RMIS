@@ -1,8 +1,9 @@
-﻿import { layers } from './layers.js';
+﻿import { layers } from '../ctrlMap/layers.js';
 
 let currentShape;
 let drawingActive = false; // Track if drawing is currently active
 let shapeLayer;
+let condition="";
 export function handleDrawShape($indexMap) {
     if (!$indexMap.editTools) {
         $indexMap.editTools = new L.Editable($indexMap);
@@ -29,17 +30,21 @@ export function handleDrawShape($indexMap) {
         $('#searchPropPanel').addClass('hide');
         drawingActive = true;
         if (this.id == 'propRect') {
+            condition = "空間-自畫正方形";
             currentShape = $indexMap.editTools.startRectangle();
         } else if (this.id == 'propCircle') {
-            console.log('click propCircle');
+            condition = "空間-自畫圓形";
             currentShape = $indexMap.editTools.startCircle();
         } else if (this.id == 'propPolygon') {
-            console.log('click propPolygon');
+            condition = "空間-自畫多邊形";
             currentShape = $indexMap.editTools.startPolygon();
         }
     });
 }
 
+export function getShape() {
+    return condition;
+}
 
 export async function filterPropsByShape(gselectedId) {
     if (!shapeLayer) {

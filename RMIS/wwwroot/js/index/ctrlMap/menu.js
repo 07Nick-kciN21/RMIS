@@ -73,7 +73,7 @@ export function generateMenu(data, parent_name, index) {
 }
 
 export function bindMenuEvents() {
-    // 顯示或隱藏菜單
+    // 顯示或隱藏
     $('.dropdown-button').click(function (e) {
         e.stopPropagation();
         var targetId = $(this).data('target');
