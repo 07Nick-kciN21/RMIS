@@ -23,6 +23,39 @@
         display: block; /* Ensure the element is displayed */
     }
 
+    .map-controls {
+        position: absolute;
+        top: 100px;
+        left: 10px;
+        width: 40px;
+        z-index: 1055;
+        filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.2));
+    }
+
+        .map-controls div {
+            font-size: 1.75rem;
+            text-align: center;
+            float: left;
+            width: 39px;
+            height: 39px;
+            line-height: 42px;
+            background: #567331;
+            cursor: pointer;
+            border: 0.03rem solid #ffffff;
+            border-radius: 10px;
+        }
+
+            .map-controls div:hover {
+                background-color: #91c54d;
+            }
+
+            .map-controls div.is-active {
+                background-color: #91c54d;
+            }
+
+        .map-controls span {
+            display: none;
+        }
 </style>
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
 <link rel="stylesheet" href="~/css/index/layer.css" />
@@ -31,6 +64,8 @@
 <link rel="stylesheet" href="~/css/index/svg_switch.css" />
 <link rel="stylesheet" href="~/css/index/popup.css" />
 <link rel="stylesheet" href="~/css//index/searchPropPanel.css"/>
+<link rel="stylesheet" href="~/css/index/searchPanel.css" />
+<link rel="stylesheet" href="~/css/index/drawtool.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
@@ -93,35 +128,65 @@
         <h5 class="offcanvas-body" id="offcanvasExampleLabel">圖資清單</h5>
     </div>
 </div>
-<div id="indexMap" style="width: 100%; height: 100vh;"></div>
+
+<div id="indexMap" style="width: 100%; height: 100vh;">
+    @* <div class="map-controls">
+        <div class="icon-smallTip toolTip" title="按住shift並用滑鼠在圖面選取範圍"></div>
+        <div class="icon-zoonin toolTip" title="放大" id="tbZoomIn"></div>
+        <div class="icon-zoomout toolTip" title="縮小" id="tbZoomOut"></div>
+        <div class="icon-lastScreen toolTip" title="上一畫面" id="tbPrevE"></div>
+        <div class="icon-nextScreen toolTip" title="下一畫面" id="tbNextE"></div>
+        <div class="icon-windowToggle toolTip" title="隱藏視窗" id="tbToggleWin" data-hides=""></div>
+        <div class="icon-allViewHome toolTip" title="全圖" id="tbFullE"></div>
+        <div class="icon-location toolTip" title="目前位置" id="tbUserLoc"></div>
+        <div class="icon-streetView toolTip" title="GOOGLE街景" id="tbStreetView"></div>
+        <div class="icon-description toolTip" title="屬性資料 1.請點選欲查詢之位置，系統將自動選取圖面上以顯示之圖層屬性。
+2.建議縮放比例尺至1/64000以下，以獲取較好之查詢結果。" id="tbAttr"></div>
+        <div class="icon-ui-blank-map-pin toolTip" title="坐標資訊" id="tbLocInfo" style="font-size:1rem;"></div>
+        <div class="LocateButton" role="presentation" id="LocateButton" widgetid="LocateButton" style="display: none;">
+            <div class="locateContainer">
+                <div data-dojo-attach-point="_locateNode" role="button" class="zoomLocateButton" tabindex="0" title="尋找我的位置"><span>我的位置</span></div>
+            </div>
+        </div>
+    </div> *@
+</div>
 
 <div id="searchPanel" class="panel hide">
     <div class="panelHeading">
-        快速搜尋
+        <span>
+            快速搜尋
+        </span>
         <button id="search_Close" class="closeButton">&times;</button>
     </div>
-    <div class="panelBody">
-        <input type="text" class="searchPanelInput" placeholder="搜尋道路">
-        <button class="searchPanelBtn">搜尋</button>
+    <div class="panelInput">
+        <input type="text" class="searchPanelInput" style="width:80%" placeholder="搜尋道路">
+        <button class="searchPanelBtn" style="width:20%">搜尋</button>
     </div>
     <div class="panelFooter">
         <ul id="searchList" class="panelList">
+
         </ul>
     </div>
 </div>
 
 <div id="painterPanel" class="panel hide">
     <div class="panelHeading">
-        繪圖板
+        <span>
+            繪圖板
+        </span>
+
         <button class="closeButton">&times;</button>
     </div>
-    <div class="panelBody">
+    <div class="panelInput">
         <div class="colorPickers">
-            <label>外框</label>
+            <span>外框</span>
             <input type="color" id="borderColor" name="colorPicker" value="#ff0000">
-            <label>填滿</label>
+            <span>填滿</span>
             <input type="color" id="fillColor" name="colorPicker" value="#ff0000">
         </div>
+       
+    </div>
+    <div id="drawTool" style="display:flex">
         <div class="drawMenu" title="匯入/匯出">
             <ul id="ptbInOut" class="dropdown-menu dropdown-left">
                 <li id="ptbIO_0" aria-expanded="true">匯入Json</li>
@@ -129,6 +194,7 @@
             </ul>
         </div>
     </div>
+
     <div class="panelFooter">
         <ul id="painterList" class="panelList">
         </ul>
@@ -137,40 +203,48 @@
 
 <div id="searchPropPanel" class="panel hide">
     <div class="panelHeading">
-        屬性搜尋
-        <button class="closeButton">&times;</button>
+        <span>
+            屬性搜尋
+        </span>
+        <div>
+            <button class="closeButton">&times;</button>
+        </div>
+        
     </div>
-    <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked/>
-        <label class="btn btn-outline-success" style="width:25%" for="btnradio1">依屬性</label>
-
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off"/>
-        <label class="btn btn-outline-success" style="width:25%" for="btnradio2">依空間</label>
-
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off"/>
-        <label class="btn btn-outline-success" style="width:25%; visibility: hidden" for="btnradio3">結果</label>
-
-        <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off"/>
-        <label class="btn btn-outline-success" style="width:25%; visibility: hidden" for="btnradio4">統計</label>
-    </div>
+    <ul class="panelInput" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
+        <li style="width: 25%">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked />
+            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio1">依屬性</label>
+        </li>
+        <li style="width: 25%">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" />
+            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio2">依空間</label>
+        </li>
+        <li style="width: 25%; visibility: hidden;">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" />
+            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio3">結果</label>
+        </li>
+        <li style="width: 25%; visibility: hidden;">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off" />
+            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio4">統計</label>
+        </li>
+    </ul>
     <div id="prop1" class="panelBody" style="display: block">
         <div class="form-group" style="display: flex; align-items: center;">
-            <select id="pFeatSelect" class="form-control" style="flex-grow: 1;">
+            <select id="pFeatSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
                 <option value="-1">請選擇圖層</option>
             </select>
         </div>
-        <div>
-            <div id="propQuery" class="panelList" style="height:300px; max-height:300px; clear:both;">
-            </div>
-            <div class="form-group" style="clear:both;">
-                <button class="btn js-modal-toggle" id="propClear">清除</button>
-                <button class="btn js-modal-toggle" id="propGoFilter">進行篩選</button>
-            </div>
+        <div id="propQuery" class="panelList" style="height:200px; max-height:200px; clear:both;">
+        </div>
+        <div class="form-group" style="clear:both;">
+            <button class="btn js-modal-toggle" id="propClear">清除</button>
+            <button class="btn js-modal-toggle" id="propGoFilter">進行篩選</button>
         </div>
     </div>
     <div id="prop2" class="panelBody" style="display: none">
         <div class="form-group" style="display: flex; align-items: center;">
-            <select id="gFeatSelect" class="form-control" style="flex-grow: 1;">
+            <select id="gFeatSelect" class="form-select" style="flex-grow: 1;">
                 <option value="-1">請選擇圖層</option>
             </select>
         </div>

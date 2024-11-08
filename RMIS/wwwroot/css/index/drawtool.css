@@ -1,0 +1,44 @@
+﻿#drawTool {
+    padding: 10px 10px 0;
+    top: 50px;
+    left: -10%;
+}
+
+    #drawTool .leaflet-draw-toolbar {
+        box-shadow: none;
+        border-radius: 0;
+        display: flex;
+        flex-direction: row;
+    }
+
+        #drawTool .leaflet-draw-toolbar a {
+            text-indent: -9999px;
+            display: block;
+            width: 26px; /* 根據圖標尺寸調整 */
+            height: 26px; /* 根據圖標尺寸調整 */
+            overflow: hidden;
+            margin-right: 5px; /* 調整工具間距 */
+        }
+
+
+.drawMenu {
+    right: 10%;
+    width: 26px;
+    height: 26px;
+    background-size: cover;
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-image: url('/svg/drawmenu.svg');
+    border-bottom: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.leaflet-bar a{
+    border-radius:4px;
+}
+
+.leaflet-bar a:last-child {
+    border-bottom: 1px solid #ccc;
+}

@@ -100,13 +100,19 @@ function setupFilterAndClearHandlers() {
             console.error("No valid rules found.");
             return;
         }
+        filteredProps = filterPropsByRules(props, result);
+        if (filteredProps.length == 0) {
+            alert("沒有符合條件的結果");
+            return;
+        }
         pageSize = 10;
         currentPage = 1;
+
         var resultLayer = $('#pFeatSelect').find('option:selected').text();
         $('#propResultLayer').text(resultLayer);
         $('#analysisResultLayer').text(resultLayer);
 
-        filteredProps = filterPropsByRules(props, result);
+       
         var condition = parseRules(result);
         $('#propResultCond').text(condition);
 

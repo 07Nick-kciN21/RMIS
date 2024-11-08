@@ -32,13 +32,15 @@
     background-color: #9ac43e;
     border-radius: 10px 10px 0 0;
     color: white;
-    padding: 10px;
+    padding: 5px 5px 5px 10px;
     cursor: move;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-
+    .panelHeading span {
+        font-size: 20px;
+    }
     .panelHeading .close-button {
         background: none;
         border: none;
@@ -47,21 +49,22 @@
         cursor: pointer;
     }
 
+.panelInput {
+    padding: 10px 10px 0;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+}
 .panelBody {
     display: flex;
     justify-content: space-between; /* 使內部元素左右對齊 */
     align-items: center; /* 垂直方向上居中對齊 */
-    padding: 10px;
+    padding: 0 10px 10px;
 }
-
-.drawMenu {
-    right: 10%;
-    width: 24px; /* or any appropriate size */
-    height: 24px;
-    background-size: cover; /* or 'contain' depending on how you want the image to scale */
-    background-repeat: no-repeat;
-    cursor: pointer;
-    background-image: url('/svg/drawmenu.svg');
+.colorPickers {
+    display: flex;
+    align-items: center; /* 垂直置中所有子元素 */
+    gap: 10px; /* 控制元素之間的間距 */
 }
 
 .panelFooter {
@@ -79,7 +82,7 @@
     max-height: 150px;
     overflow-x: hidden;
     overflow-y: auto;
-    border: 2px solid green;
+    border: 2px solid gray;
     height: 100%;
 }
 
@@ -90,7 +93,6 @@
 
 .panelResult {
     padding: 5px;
-    cursor: pointer;
     transition: background-color 0.3s;
 }
 
@@ -98,12 +100,8 @@
         background-color: #e0e0e0;
     }
 
-    .panelResult.selected {
-        background-color: #e0e0e0;
-    }
-
-
 .searchBar {
+    font-weight: bold;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -159,3 +157,7 @@
         #ptbInOut li:hover {
             background: #f0f0f0;
         }
+
+.closeButton{
+    border-radius:10px;
+}

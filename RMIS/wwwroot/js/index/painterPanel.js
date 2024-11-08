@@ -20,10 +20,11 @@ export function initPainterPanel() {
 
     drawnItems = new L.FeatureGroup();
     $indexMap.addLayer(drawnItems);
-
+    
     drawControl = new L.Control.Draw({
         edit: {
             featureGroup: drawnItems,
+            edit: true,
             remove: false,
         },
         draw: {
@@ -31,16 +32,59 @@ export function initPainterPanel() {
             polyline: true,
             rectangle: true,
             circle: true,
-            marker: true
+            marker: true,
+            circlemarker: true
         }
-
     });
-    initDrawMenu();
+
+    $indexMap.addControl(drawControl);
+    var toolbar = document.querySelector('.leaflet-draw-toolbar');
+    var toobarContainer = document.getElementById('drawTool');
+    toobarContainer.append(toolbar);
+
+    // 隱藏工具列的函數
+    function hideToolbar() {
+        $('#painterPanel').addClass('hide');
+    }
+
+    // 顯示工具列的函數
+    function showToolbar() {
+        $('#painterPanel').removeClass('hide'); // 使用 'flex' 恢復水平排列
+    }
+
+    // 監聽繪圖開始事件
+    $indexMap.on('draw:drawstart', function () {
+        hideToolbar();
+    });
+
+    // 監聽繪圖停止事件
+    $indexMap.on('draw:drawstop', function () {
+        showToolbar();
+    });
+
+    // 監聽繪圖創建事件以重新顯示工具列
+    $indexMap.on('draw:created', function () {
+        showToolbar();
+    });
+
+    initInOut();
     $indexMap.on(L.Draw.Event.CREATED, function (e) {
         handleLayerCreation(e, layerCount++);
     });
     observePainterPanel()
 }
+
+// 隱藏工具列的函數
+function hideToolbar(customContainer) {
+    $('#painterPanel').addClass('hide');
+}
+
+// 顯示工具列的函數
+function showToolbar(customContainer) {
+    $('#painterPanel').removeClass('hide');
+}
+
+
 
 function handleLayerCreation(event, layerCount) {
     var layerId = 'layer-' + layerCount;
@@ -95,7 +139,7 @@ function getArea(layer) {
     })]);
     return turf.area(polygon);
 }
-function initDrawMenu() {
+function initInOut() {
     $(document).click(function () {
         $('#ptbInOut').hide();
     });
@@ -258,8 +302,11 @@ function downloadJson(data, filename) {
 function addItem(layerId, layer) {
     const $painterList = $('#painterList');
 
-    const item = `<div id=${layerId} class="searchBar panelResult">
-        ${layerId}
+    const item = `
+    <div id=${layerId} class="searchBar panelResult">
+        <div id="editable_${layerId}">
+            ${layerId}
+        </div>    
         <div class="right-elements">
             <div class="eye eyeOpen" id="eye_${layerId}"></div>
             <div class="layerRemove" id="layerRemove_${layerId}"></div>
@@ -275,6 +322,32 @@ function addItem(layerId, layer) {
     const $layerRemove = $(`#layerRemove_${layerId}`);
     $layerRemove.on('click', function () {
         removeLayer(layerId, layer);
+    });
+
+    const $editable = $(`#editable_${layerId}`);
+    let isEditing = false;
+    // 使用事件委派，將事件綁定到一個已經存在的父元素上
+    $editable.on('click', function () {
+        if (isEditing)
+            return;
+
+        isEditing = true;
+        var cname = $(this).text().trim();
+        $(this).empty().append(`<input id="edit_${layerId}" style="border: none; outline: none;" type="text" value="${cname}"></input>`);
+        var newInput = $(`#edit_${layerId}`);
+        newInput.focus();
+        newInput.on('keyup', function (e) {
+            if (e.keyCode == 13) {
+                var nvalue = (this.value.length == 0 ? cname : this.value);
+                $editable.empty().text(nvalue);
+                isEditing = false;
+            }
+        });
+        newInput.on('blur', function (e) {
+            var nvalue = (this.value.length == 0 ? cname : this.value);
+            $editable.empty().text(nvalue);
+            isEditing = false;
+        });
     });
 }
 function toggleLayerVisibility($eye, layer) {
