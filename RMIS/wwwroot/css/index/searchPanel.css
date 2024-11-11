@@ -1,3 +1,16 @@
 ﻿.searchPanelBtn:hover{
     background-color:gainsboro;
 }
+.searchPanelBtn {
+    width: 25px; /* or any appropriate size */
+    height: 27px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    background-image: url('/svg/search.svg');
+    cursor: pointer;
+}
+
+.searchPanelInput {
+    margin-bottom: 0;
+    width:90%;
+}

@@ -1,10 +1,10 @@
 ﻿#searchPanel {
-    width: 300px;
-    height: 270px;
+    width: 200px;
+    height: 250px;
 }
 
 #painterPanel {
-    width: 250px;
+    width: 279px;
     height: 270px;
 }
 
@@ -73,13 +73,9 @@
     border-radius: 0 0 10px 10px;
 }
 
-.searchPanelInput {
-    margin-bottom: 0;
-}
 
 .panelList {
     padding: 0;
-    max-height: 150px;
     overflow-x: hidden;
     overflow-y: auto;
     border: 2px solid gray;
@@ -109,13 +105,6 @@
     margin-bottom: 5px;
 }
 
-
-.right-elements {
-    display: flex;
-    gap: 2px;
-}
-
-
 /* 自訂 .layerBar 的滾動條樣式 */
 .panelList::-webkit-scrollbar {
     width: 2px;
@@ -139,13 +128,11 @@
 #ptbInOut {
     display: none; /* 初始狀態下隱藏選單 */
     position: absolute; /* 相對於 drawMenu 定位 */
-    top: 50px; /* 調整這個值來控制選單的位置 */
-    right: -135px; /* 從圖示的右側顯示 */
+    right: -95px; /* 從圖示的右側顯示 */
     background: #fff;
     border: 1px solid #ccc;
     list-style: none;
     padding: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
 }
 
@@ -158,6 +145,21 @@
             background: #f0f0f0;
         }
 
-.closeButton{
-    border-radius:10px;
+.leaflet-draw-toolbar{
+    transform:scale(1.2);
+    transform-origin: top left;
+    
+}
+
+.closeButton {
+    border-radius: 10px;
+}
+
+.point_on_map {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+    background-image: url('/svg/point__on_map.svg');
 }

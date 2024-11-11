@@ -9,7 +9,7 @@ let drawnItems;
 export function initPainterPanel() {
     $indexMap = getIndexMap();
     const $painterPanel = $('#painterPanel');
-    const $panelCloseBtn = $painterPanel.find('.closeButton');
+
     let layerCount = 0;
     $('#borderColor').on('input', function () {
         borderColor = $(this).val(); // 更新選擇的顏色
@@ -18,13 +18,36 @@ export function initPainterPanel() {
         fillColor = $(this).val(); // 更新選擇的顏色
     });
 
+    initDraw();
+
+    // 監聽繪圖開始事件
+    $indexMap.on('draw:drawstart', function () {
+        $('#painterPanel').addClass('hide');
+    });
+
+    // 監聽繪圖停止事件
+    $indexMap.on('draw:drawstop', function () {
+        $('#painterPanel').removeClass('hide');
+    });
+
+    // 監聽繪圖創建事件以重新顯示工具列
+    $indexMap.on('draw:created', function () {
+        $('#painterPanel').removeClass('hide');
+    });
+
+    $indexMap.on(L.Draw.Event.CREATED, function (e) {
+        handleLayerCreation(e, layerCount++);
+    });
+    observePainterPanel()
+}
+
+function initDraw() {
     drawnItems = new L.FeatureGroup();
     $indexMap.addLayer(drawnItems);
-    
     drawControl = new L.Control.Draw({
         edit: {
             featureGroup: drawnItems,
-            edit: true,
+            edit: false,
             remove: false,
         },
         draw: {
@@ -36,55 +59,16 @@ export function initPainterPanel() {
             circlemarker: true
         }
     });
-
     $indexMap.addControl(drawControl);
-    var toolbar = document.querySelector('.leaflet-draw-toolbar');
-    var toobarContainer = document.getElementById('drawTool');
-    toobarContainer.append(toolbar);
-
-    // 隱藏工具列的函數
-    function hideToolbar() {
-        $('#painterPanel').addClass('hide');
-    }
-
-    // 顯示工具列的函數
-    function showToolbar() {
-        $('#painterPanel').removeClass('hide'); // 使用 'flex' 恢復水平排列
-    }
-
-    // 監聽繪圖開始事件
-    $indexMap.on('draw:drawstart', function () {
-        hideToolbar();
-    });
-
-    // 監聽繪圖停止事件
-    $indexMap.on('draw:drawstop', function () {
-        showToolbar();
-    });
-
-    // 監聽繪圖創建事件以重新顯示工具列
-    $indexMap.on('draw:created', function () {
-        showToolbar();
-    });
+    $('.leaflet-draw-draw-polyline').attr('title', '繪製線段');
+    $('.leaflet-draw-draw-polygon').attr('title', '繪製多邊形');
+    $('.leaflet-draw-draw-rectangle').attr('title', '繪製矩形');
+    $('.leaflet-draw-draw-circle').attr('title', '繪製圓形');
+    $('.leaflet-draw-draw-marker').attr('title', '繪製標記');
+    $('.leaflet-draw-draw-circlemarker').attr('title', '繪製圓標記');
 
     initInOut();
-    $indexMap.on(L.Draw.Event.CREATED, function (e) {
-        handleLayerCreation(e, layerCount++);
-    });
-    observePainterPanel()
 }
-
-// 隱藏工具列的函數
-function hideToolbar(customContainer) {
-    $('#painterPanel').addClass('hide');
-}
-
-// 顯示工具列的函數
-function showToolbar(customContainer) {
-    $('#painterPanel').removeClass('hide');
-}
-
-
 
 function handleLayerCreation(event, layerCount) {
     var layerId = 'layer-' + layerCount;
@@ -140,15 +124,34 @@ function getArea(layer) {
     return turf.area(polygon);
 }
 function initInOut() {
-    $(document).click(function () {
+
+    const $drawIO = $('<div>', { id: 'drawIO' }).html(`
+        <div class="drawMenu" title="匯入/匯出">
+            <ul id="ptbInOut">
+                <li id="ptbIO_0" aria-expanded="true">匯入Json</li>
+                <li id="ptbIO_1">匯出Json</li>
+            </ul>
+        </div>
+    `);
+    const $toolbar = $('.leaflet-draw-toolbar');
+    $toolbar.append($drawIO);
+    $('#drawTool').append($toolbar);
+
+    $('.drawMenu').on('click', function (event) {
+        event.stopPropagation(); // 防止事件冒泡，避免選單立即隱藏
+        $('#ptbInOut').toggle(); // 切換選單顯示和隱藏
+    });
+
+    $(document).on('click', function () {
         $('#ptbInOut').hide();
     });
 
-    $('#ptbInOut li').click(function () {
+    $(document).on('click', '#ptbInOut li', function () {
         handleMenuClick($(this).text());
     });
 }
 
+// 匯入匯出事件
 function handleMenuClick(option) {
     switch (option) {
         case "匯入Json":
@@ -304,7 +307,8 @@ function addItem(layerId, layer) {
 
     const item = `
     <div id=${layerId} class="searchBar panelResult">
-        <div id="editable_${layerId}">
+        <div id="point_${layerId}" class="point_on_map"></div>
+        <div id="editable_${layerId}" class="editableBox">
             ${layerId}
         </div>    
         <div class="right-elements">
@@ -313,6 +317,23 @@ function addItem(layerId, layer) {
         </div>
     </div>`
     $painterList.append(item);
+
+    const $point = $(`#point_${layerId}`);
+    
+    $point.on('click', function () {
+        let center = null;
+        if (layer instanceof L.Polygon || layer instanceof L.Rectangle || layer instanceof L.polyline) {
+            const bounds = layer.getBounds();
+            center = bounds.getCenter();
+            console.log('中央座標:', center); // 顯示中央座標
+        }
+        else if (layer instanceof L.Marker) {
+            center = layer.getLatLng();
+        } else if (layer instanceof L.Circle) {
+            center = layer.getLatLng();
+        }
+        $indexMap.setView(center, 18);
+    });
 
     const $eye = $(`#eye_${layerId}`);
     $eye.on('click', function () {
@@ -377,10 +398,11 @@ function observePainterPanel() {
         for (let mutation of mutationsList) {
             if (mutation.type === 'attributes') {
                 if ($painterPanel.hasClass('hide')) {
-                    console.log("hide");
+                    console.log("關閉leaflet draw");
                     drawControl.remove();
                 } else {
                     drawControl.addTo($indexMap);
+                    $('.leaflet-draw').css('display', 'none');
                 }
             }
         }

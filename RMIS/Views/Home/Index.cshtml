@@ -10,18 +10,6 @@
         height: 100vh;
         width: 100%;
     }
-    .section{
-        display: flex; 
-        align-items: center;
-    }
-
-    .section_icon {
-        width: 24px; /* or any appropriate size */
-        height: 24px;
-        background-size: cover; /* or 'contain' depending on how you want the image to scale */
-        background-repeat: no-repeat;
-        display: block; /* Ensure the element is displayed */
-    }
 
     .map-controls {
         position: absolute;
@@ -66,6 +54,7 @@
 <link rel="stylesheet" href="~/css//index/searchPropPanel.css"/>
 <link rel="stylesheet" href="~/css/index/searchPanel.css" />
 <link rel="stylesheet" href="~/css/index/drawtool.css" />
+<link rel="stylesheet" href="~/css/index/painterPanel.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
@@ -125,32 +114,27 @@
 
 <div class="offcanvas offcanvas-start custom-offcanvas-width" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-labelledby="layerListBlockLabel">
     <div id="layerBarContainer" class="layerList container-fluid">
-        <h5 class="offcanvas-body" id="offcanvasExampleLabel">圖資清單</h5>
+        <h5 id="offcanvasExampleLabel" class="offcanvas-body">圖資清單</h5>
     </div>
 </div>
 
 <div id="indexMap" style="width: 100%; height: 100vh;">
-    @* <div class="map-controls">
-        <div class="icon-smallTip toolTip" title="按住shift並用滑鼠在圖面選取範圍"></div>
-        <div class="icon-zoonin toolTip" title="放大" id="tbZoomIn"></div>
-        <div class="icon-zoomout toolTip" title="縮小" id="tbZoomOut"></div>
-        <div class="icon-lastScreen toolTip" title="上一畫面" id="tbPrevE"></div>
-        <div class="icon-nextScreen toolTip" title="下一畫面" id="tbNextE"></div>
-        <div class="icon-windowToggle toolTip" title="隱藏視窗" id="tbToggleWin" data-hides=""></div>
-        <div class="icon-allViewHome toolTip" title="全圖" id="tbFullE"></div>
-        <div class="icon-location toolTip" title="目前位置" id="tbUserLoc"></div>
-        <div class="icon-streetView toolTip" title="GOOGLE街景" id="tbStreetView"></div>
-        <div class="icon-description toolTip" title="屬性資料 1.請點選欲查詢之位置，系統將自動選取圖面上以顯示之圖層屬性。
-2.建議縮放比例尺至1/64000以下，以獲取較好之查詢結果。" id="tbAttr"></div>
-        <div class="icon-ui-blank-map-pin toolTip" title="坐標資訊" id="tbLocInfo" style="font-size:1rem;"></div>
-        <div class="LocateButton" role="presentation" id="LocateButton" widgetid="LocateButton" style="display: none;">
-            <div class="locateContainer">
-                <div data-dojo-attach-point="_locateNode" role="button" class="zoomLocateButton" tabindex="0" title="尋找我的位置"><span>我的位置</span></div>
-            </div>
-        </div>
-    </div> *@
+    <div class="map-controls" style="display:none">
+        <div class="toolTip" id="tb-searchPanel"></div>
+        <div class="toolTip"id="tbZoomIn"></div>
+        <div class="toolTip"id="tbZoomOut"></div>
+        <div class="toolTip"id="tbPrevE"></div>
+        <div class="toolTip"id="tbNextE"></div>
+        <div class="toolTip"id="tbToggleWin" data-hides=""></div>
+        <div class="toolTip"id="tbFullE"></div>
+        <div class="toolTip"id="tbUserLoc"></div>
+        <div class="toolTip"id="tbStreetView"></div>
+        <div class="toolTip"id="tbAttr"></div>
+        <div class="toolTip" id="tbLocInfo" style="font-size:1rem;"></div>
+    </div>
 </div>
 
+@* 快搜面板 *@
 <div id="searchPanel" class="panel hide">
     <div class="panelHeading">
         <span>
@@ -159,16 +143,16 @@
         <button id="search_Close" class="closeButton">&times;</button>
     </div>
     <div class="panelInput">
-        <input type="text" class="searchPanelInput" style="width:80%" placeholder="搜尋道路">
-        <button class="searchPanelBtn" style="width:20%">搜尋</button>
+        <input type="text" class="searchPanelInput" placeholder="搜尋道路">
+        <button class="searchPanelBtn"></button>
     </div>
     <div class="panelFooter">
-        <ul id="searchList" class="panelList">
-
+        <ul id="searchList" class="panelList" style="max-height:160px">
         </ul>
     </div>
 </div>
 
+@* 繪圖面板 *@
 <div id="painterPanel" class="panel hide">
     <div class="panelHeading">
         <span>
@@ -187,20 +171,14 @@
        
     </div>
     <div id="drawTool" style="display:flex">
-        <div class="drawMenu" title="匯入/匯出">
-            <ul id="ptbInOut" class="dropdown-menu dropdown-left">
-                <li id="ptbIO_0" aria-expanded="true">匯入Json</li>
-                <li id="ptbIO_1">匯出Json</li>
-            </ul>
-        </div>
     </div>
 
     <div class="panelFooter">
-        <ul id="painterList" class="panelList">
+        <ul id="painterList" class="panelList" style="max-height:130px">
         </ul>
     </div>
 </div>
-
+@* 屬性搜尋面板 *@
 <div id="searchPropPanel" class="panel hide">
     <div class="panelHeading">
         <span>
@@ -313,10 +291,6 @@
                     </ul>
                 </div>
             </div>
-            @* <div class="form-group" style="width:10%; margin-left: 2px; float: left">
-                <button id="addAnaField" type="button" style="margin-top:25px; background-color: lightcyan"> &gt;&gt; </button>
-                <button id="delAnaField" type="button" style="margin-top:2px; background-color: lightcyan"> &lt;&lt; </button>
-            </div> *@
             <div class="form-group" style="width:45%; margin-left: 2px; float: right">
                 <label style="vertical-align: text-top;margin: 0px">已選欄位</label>
                 <div class="listBox" style="margin: 0px">

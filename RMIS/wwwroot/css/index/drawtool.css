@@ -11,13 +11,18 @@
         flex-direction: row;
     }
 
-        #drawTool .leaflet-draw-toolbar a {
+        #drawTool .leaflet-draw-toolbar a
+        {
             text-indent: -9999px;
             display: block;
-            width: 26px; /* 根據圖標尺寸調整 */
-            height: 26px; /* 根據圖標尺寸調整 */
+            width: 26px;
+            height: 26px;
             overflow: hidden;
-            margin-right: 5px; /* 調整工具間距 */
+            margin-right: 5px;
+        }
+        #drawTool .leaflet-draw-toolbar a:hover,
+        .drawMenu:hover {
+            background-color:lightgray;
         }
 
 
@@ -30,14 +35,10 @@
     background-repeat: no-repeat;
     background-image: url('/svg/drawmenu.svg');
     border-bottom: 1px solid #ccc;
-    border-radius: 4px;
     cursor: pointer;
     margin-right: 5px;
 }
 
-.leaflet-bar a{
-    border-radius:4px;
-}
 
 .leaflet-bar a:last-child {
     border-bottom: 1px solid #ccc;

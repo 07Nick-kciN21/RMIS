@@ -1,0 +1,9 @@
+﻿.editableBox {
+    padding-left:5px;
+}
+
+.right-elements {
+    margin-left: auto;
+    display: flex;
+    gap: 2px;
+}

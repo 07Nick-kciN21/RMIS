@@ -17,9 +17,15 @@ export function add2List(id, name, datas) {
     });
     let layerItem = `
         <div class="layerBar featureLayer-Bg" id="layerBar_${id}">
-            <div class="layerTitle">
-                <div class="layerName">${name}</div>
-                ${sections}
+            <div class="layerTitle" style="border-top">
+                <div style="display: flex; border-bottom: solid 1px green;"> 
+                    <span class="menu-icon menu-open" id="layerLegend_${id}"></span>
+                    <div class="layerName">${name}</div>
+                </div>
+                <div id="sections_${id}">
+                    ${sections}
+                </div>
+                
             </div>
             <div class="eye eyeOpen" id="eye_${id}"></div>
             <div class="layerRemove" id="layerRemove_${id}"></div>
@@ -39,6 +45,17 @@ export function add2List(id, name, datas) {
         }
     });
 
+    $(`#layerLegend_${id}`).on('click', function (e) {
+        if ($(this).hasClass('menu-open')) {
+            $(this).removeClass('menu-open');
+            $(this).addClass('menu-close');
+            $(`#sections_${id}`).css('display', 'none');
+        } else {
+            $(this).removeClass('menu-close');
+            $(this).addClass('menu-open');
+            $(`#sections_${id}`).css('display', 'block');
+        }
+    });
     $(`#layerRemove_${id}`).on('click', function (e) {
         removePipeline(id).then(result => {
             layerList[id] = false;
