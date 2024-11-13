@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\js\index\ctrlSidebar\" />
+    <Folder Include="wwwroot\svg\drawtool\" />
   </ItemGroup>
 
 </Project>

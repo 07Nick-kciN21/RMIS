@@ -3,20 +3,13 @@
 let $indexMap;
 let borderColor = '#FF0000';
 let fillColor = '#FF0000';
+let borderWidth = 1;
 let painterLayer = {};
 let drawControl;
 let drawnItems;
+let layerCount = 0;
 export function initPainterPanel() {
     $indexMap = getIndexMap();
-    const $painterPanel = $('#painterPanel');
-
-    let layerCount = 0;
-    $('#borderColor').on('input', function () {
-        borderColor = $(this).val(); // 更新選擇的顏色
-    });
-    $('#fillColor').on('input', function () {
-        fillColor = $(this).val(); // 更新選擇的顏色
-    });
 
     initDraw();
 
@@ -35,39 +28,60 @@ export function initPainterPanel() {
         $('#painterPanel').removeClass('hide');
     });
 
+    // 監聽 L.Draw.Event.CREATED 並處理圖層創建
     $indexMap.on(L.Draw.Event.CREATED, function (e) {
+        console.log("draw Created", layerCount);
         handleLayerCreation(e, layerCount++);
     });
-    observePainterPanel()
+
+    $('.goDraw').on('click', function (e) {
+        draw();
+    });
+
+    // observePainterPanel()
 }
 
+let selectTool;
 function initDraw() {
     drawnItems = new L.FeatureGroup();
     $indexMap.addLayer(drawnItems);
-    drawControl = new L.Control.Draw({
-        edit: {
-            featureGroup: drawnItems,
-            edit: false,
-            remove: false,
-        },
-        draw: {
-            polygon: true,
-            polyline: true,
-            rectangle: true,
-            circle: true,
-            marker: true,
-            circlemarker: true
+
+    // 使用 jQuery 手動啟用多邊形繪製
+    $('.drawMenu').click(function (event) {
+        if (selectTool) {
+            selectTool.removeClass('active');
+        }
+        selectTool = $(this);
+        let drawItem = selectTool.attr('id');
+        if (drawItem == "drawIO") {
+            console.log("drawIO click");
+            event.stopPropagation();
+            $('#ptbInOut').toggle(); // 切換選單顯示和隱藏
+            initInOut();
+        }
+        else {
+            initColorPicker(drawItem);
+            $(this).addClass('active');
         }
     });
-    $indexMap.addControl(drawControl);
-    $('.leaflet-draw-draw-polyline').attr('title', '繪製線段');
-    $('.leaflet-draw-draw-polygon').attr('title', '繪製多邊形');
-    $('.leaflet-draw-draw-rectangle').attr('title', '繪製矩形');
-    $('.leaflet-draw-draw-circle').attr('title', '繪製圓形');
-    $('.leaflet-draw-draw-marker').attr('title', '繪製標記');
-    $('.leaflet-draw-draw-circlemarker').attr('title', '繪製圓標記');
+}
 
-    initInOut();
+function initColorPicker(drawItem) {
+    if (drawItem == "drawPolyline") {
+        $('#colorPicker_1').addClass('hide');
+        $('#colorPicker_3').addClass('hide');
+        $('#colorPicker_2').removeClass('hide');
+    }
+    else if (drawItem == "drawPolygon" || drawItem == "drawRectangle" || drawItem == "drawCircle" || drawItem == "drawCircleMarker") {
+        $('#colorPicker_2').addClass('hide');
+        $('#colorPicker_3').addClass('hide');
+        $('#colorPicker_1').removeClass('hide');
+    }
+    else if (drawItem == "drawText") {
+        $('#colorPicker_1').addClass('hide');
+        $('#colorPicker_2').addClass('hide');
+        $('#colorPicker_3').removeClass('hide');
+    }
 }
 
 function handleLayerCreation(event, layerCount) {
@@ -84,11 +98,11 @@ function handleLayerCreation(event, layerCount) {
 }
 
 function applyLayerStyle(layer, layerType) {
-    if (layerType != 'marker') {
+    if (layerType != 'marker' && layerType != 'text') {
         let style = {
             color: borderColor,
-            weight: 2,
-            opacity: 1
+            weight: borderWidth,
+            opacity: 1,
         };
         if (layerType === 'polygon' || layerType === 'rectangle' || layerType === 'circle') {
             style.fillColor = fillColor;
@@ -123,32 +137,340 @@ function getArea(layer) {
     })]);
     return turf.area(polygon);
 }
+function draw() {
+    if (selectTool.attr('id') == "drawPolyline") {
+        initPolyline();
+    }
+    if (selectTool.attr('id') == "drawPolygon") {
+        initPolygon();
+    }
+    if (selectTool.attr('id') == "drawRectangle") {
+        initRectangle();
+    }
+    if (selectTool.attr('id') == "drawCircle") {
+        initCircle();
+    }
+    if (selectTool.attr('id') == "drawMarker") {
+        initMarker();
+    }
+    if (selectTool.attr('id') == "drawCircleMarker") {
+        initCircleMarker();
+    }
+    if (selectTool.attr('id') == "drawText") {
+        initText();
+    }
+}
+function getShapeOption1() {
+    const fillColor = $('#cp1_fillColor').val();
+    const borderColor = $('#cp1_borderColor').val();
+    const borderWidth = $('#cp1_borderWidth').val();
+    return {
+        color: borderColor,
+        fillColor: fillColor,
+        weight: borderWidth
+    };
+}
+function getShapeOption2() {
+    // 從 colorPicker_2 中獲取設置的值
+    const fillColor = $('#cp2_fillColor').val();
+    const lineThick = $('#cp2_lineThick').val();
+
+    return {
+        fillColor: fillColor,
+        weight: parseInt(lineThick) || 1, // 線段粗細，確保為數字並設置默認值為 1
+        color: fillColor, // 使用填滿顏色作為邊框顏色
+    };
+}
+function getShapeOption3() {
+    // 從 colorPicker_3 中獲取設置的值
+    const fillColor = $('#cp3_fillColor').val();
+    const fontSize = $('#cp3_fontSize').val();
+    console.log(fillColor, fontSize);
+    return {
+        fontSize: parseInt(fontSize) * 10, // 將字級轉換為合理的 px 大小，例如字級 1~10 轉為 2px ~ 20px
+        fillColor: fillColor,
+    };
+}
+function initPolyline() {
+
+    // 手動觸發繪圖開始事件
+    $indexMap.fire('draw:drawstart');
+
+    // 創建折線工具
+    const polylineDrawer = new L.Draw.Polyline($indexMap, {
+        shapeOptions: {
+            color: '#0000FF', // 可以更改為你想要的顏色
+            weight: 3,        // 線的寬度
+            opacity: 1.0
+        }
+    });
+
+    // 啟用折線繪製模式
+    polylineDrawer.enable();
+    // 使用一次性事件監聽器，只在繪製完成後處理一次
+    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+        if (event.layerType === 'polyline') {
+            const layer = event.layer;
+
+            layer.setStyle(getShapeOption2())
+            // 添加到地圖
+            $indexMap.addLayer(layer);
+
+            console.log("Polyline created");
+
+            // 停止繪製
+            polylineDrawer.disable();
+
+            // 手動觸發繪圖停止事件，重新顯示工具面板
+            $indexMap.fire('draw:drawstop');
+        }
+    });
+}
+function initPolygon() {
+    // 手動觸發繪圖開始事件
+    $indexMap.fire('draw:drawstart');
+
+    // 創建多邊形工具
+    const polygonDrawer = new L.Draw.Polygon($indexMap, {
+        shapeOptions: getShapeOption1()
+    });
+
+    // 啟用多邊形繪製模式
+    polygonDrawer.enable();
+
+    // 使用一次性事件監聽器，只在繪製完成後處理一次
+    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+        if (event.layerType === 'polygon') {
+            const layer = event.layer;
+
+            // 更新多邊形的樣式為最新的 shapeOptions
+            layer.setStyle(getShapeOption1());
+
+            // 添加到地圖
+            $indexMap.addLayer(layer);
+
+            console.log("Polygon created");
+
+            // 停止繪製
+            polygonDrawer.disable();
+
+            // 手動觸發繪圖停止事件，重新顯示工具面板
+            $indexMap.fire('draw:drawstop');
+        }
+    });
+}
+function initCircle() {
+    // 手動觸發繪圖開始事件
+    $indexMap.fire('draw:drawstart');
+
+    // 創建圓形工具
+    const circleDrawer = new L.Draw.Circle($indexMap, {
+        shapeOptions: {
+            color: '#00FF00', // 可以更改為你想要的顏色
+            weight: 3,        // 線的寬度
+            opacity: 1.0
+        }
+    });
+
+    // 啟用圓形繪製模式
+    circleDrawer.enable();
+
+    // 使用一次性事件監聽器，只在繪製完成後處理一次
+    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+        if (event.layerType === 'circle') {
+            const layer = event.layer;
+
+            layer.setStyle(getShapeOption1());
+            // 添加到地圖
+            $indexMap.addLayer(layer);
+
+            console.log("Circle created");
+
+            // 停止繪製
+            circleDrawer.disable();
+
+            // 手動觸發繪圖停止事件，重新顯示工具面板
+            $indexMap.fire('draw:drawstop');
+        }
+    });
+}
+
+function initMarker() {
+    // 手動觸發繪圖開始事件
+    $indexMap.fire('draw:drawstart');
+
+    // 創建標記工具
+    const markerDrawer = new L.Draw.Marker($indexMap, {
+        icon: new L.Icon.Default() // 可以更改為你想要的圖標
+    });
+
+    // 啟用標記繪製模式
+    markerDrawer.enable();
+
+    // 使用一次性事件監聽器，只在繪製完成後處理一次
+    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+        if (event.layerType === 'marker') {
+            const layer = event.layer;
+
+            // 添加到地圖
+            $indexMap.addLayer(layer);
+
+            console.log("Marker created");
+
+            // 停止繪製
+            markerDrawer.disable();
+
+            // 手動觸發繪圖停止事件，重新顯示工具面板
+            $indexMap.fire('draw:drawstop');
+        }
+    });
+}
+
+function initRectangle() {
+    // 手動觸發繪圖開始事件
+    $indexMap.fire('draw:drawstart');
+
+    // 創建矩形工具
+    const rectangleDrawer = new L.Draw.Rectangle($indexMap, {
+        shapeOptions: {
+            color: '#FFA500', // 可以更改為你想要的顏色
+            weight: 3,        // 線的寬度
+            opacity: 1.0
+        }
+    });
+
+    // 啟用矩形繪製模式
+    rectangleDrawer.enable();
+
+    // 使用一次性事件監聽器，只在繪製完成後處理一次
+    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+        if (event.layerType === 'rectangle') {
+            const layer = event.layer;
+            layer.setStyle(getShapeOption1());
+            // 添加到地圖
+            $indexMap.addLayer(layer);
+
+            console.log("Rectangle created");
+
+            // 停止繪製
+            rectangleDrawer.disable();
+
+            // 手動觸發繪圖停止事件，重新顯示工具面板
+            $indexMap.fire('draw:drawstop');
+        }
+    });
+}
+
+function initCircleMarker() {
+    // 手動觸發繪圖開始事件
+    $indexMap.fire('draw:drawstart');
+
+    // 創建圓形標記工具
+    const circleMarkerDrawer = new L.Draw.CircleMarker($indexMap, {
+        shapeOptions: {
+            color: '#800080', // 可以更改為你想要的顏色
+            weight: 3,        // 線的寬度
+            opacity: 1.0,
+            radius: 10        // 圓形標記的半徑大小
+        }
+    });
+
+    // 啟用圓形標記繪製模式
+    circleMarkerDrawer.enable();
+
+    // 使用一次性事件監聽器，只在繪製完成後處理一次
+    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+        if (event.layerType === 'circlemarker') {
+            const layer = event.layer;
+            layer.setStyle(getShapeOption1());
+            // 添加到地圖
+            $indexMap.addLayer(layer);
+
+            console.log("CircleMarker created");
+
+            // 停止繪製
+            circleMarkerDrawer.disable();
+
+            // 手動觸發繪圖停止事件，重新顯示工具面板
+            $indexMap.fire('draw:drawstop');
+        }
+    });
+}
+
+// 初始化添加文字的功能
+function initText() {
+    $indexMap.fire('draw:drawstart');
+    // 讓用戶點擊地圖來添加文字
+    $indexMap.once('click', function (e) {
+        const latlng = e.latlng;
+        console.log(latlng);
+        // 將地圖上的經緯度轉換為容器的像素坐標
+        const containerPoint = $indexMap.latLngToContainerPoint(latlng);
+        // 在地圖上創建輸入框
+        const input = $('<input type="text" placeholder="輸入文字..." />').css({
+            position: 'absolute',
+            top: containerPoint.y + 'px',
+            left: containerPoint.x + 'px',
+            zIndex: 1000
+        });
+        
+        $('body').append(input);
+        input.css({
+            top: containerPoint.y - input.outerHeight() / 10 + 'px',
+            left: containerPoint.x - input.outerWidth() / 10 + 'px'
+        });
+        input.focus();
+
+        input.on('ketdown blur', function (e) {
+            if (e.type === 'blur' || e.key === 'Enter') {
+                const text = input.val();
+                if (text) {
+                    const { fontSize, fillColor } = getShapeOption3();
+                    const textMarker = L.marker(latlng, {
+                        icon: L.divIcon({
+                            className: 'custom-text-label',
+                            html: `<b style="color:${fillColor}; font-size:${fontSize}px">${text}</b>`,
+                            iconSize: null,
+                            iconAnchor: [parseInt(fontSize) / 10, parseInt(fontSize) / 10] // 將圖標的錨點設置在文字的正中央
+                        }),
+                    })
+
+                    $indexMap.addLayer(textMarker);
+                    // 手動觸發 L.Draw.Event.CREATED 事件，確保流程一致
+                    $indexMap.fire(L.Draw.Event.CREATED, {
+                        layer: textMarker,
+                        layerType: 'text'
+                    });
+                }
+                // 移除輸入框
+                input.remove();
+
+                // 手動觸發繪圖停止事件，重新顯示工具面板
+                $indexMap.fire('draw:drawstop');
+            }
+        })
+    });
+}
+
 function initInOut() {
+    // 解除先前的事件監聽器，以避免重複綁定
+    $(document).off('click', hideMenu);
+    $("#ptbInOut").off('click', 'li', handleMenuClickWrapper);
 
-    const $drawIO = $('<div>', { id: 'drawIO' }).html(`
-        <div class="drawMenu" title="匯入/匯出">
-            <ul id="ptbInOut">
-                <li id="ptbIO_0" aria-expanded="true">匯入Json</li>
-                <li id="ptbIO_1">匯出Json</li>
-            </ul>
-        </div>
-    `);
-    const $toolbar = $('.leaflet-draw-toolbar');
-    $toolbar.append($drawIO);
-    $('#drawTool').append($toolbar);
+    // 重新綁定事件監聽器
+    $(document).on('click', hideMenu);
+    $("#ptbInOut").on('click', 'li', handleMenuClickWrapper);
+}
 
-    $('.drawMenu').on('click', function (event) {
-        event.stopPropagation(); // 防止事件冒泡，避免選單立即隱藏
-        $('#ptbInOut').toggle(); // 切換選單顯示和隱藏
-    });
+// 將隱藏選單的函數提取出來，方便解除和綁定
+function hideMenu() {
+    $('#ptbInOut').hide();
+}
 
-    $(document).on('click', function () {
-        $('#ptbInOut').hide();
-    });
-
-    $(document).on('click', '#ptbInOut li', function () {
-        handleMenuClick($(this).text());
-    });
+// 為 click 事件提供一個包裝函數
+function handleMenuClickWrapper(event) {
+    console.log("ptbInOut click");
+    handleMenuClick($(event.currentTarget).text());
 }
 
 // 匯入匯出事件
@@ -159,6 +481,7 @@ function handleMenuClick(option) {
             console.log("匯入Json");
             break;
         case "匯出Json":
+            console.log("匯出Json");
             exportLayers();
             break;
         default:
@@ -248,7 +571,6 @@ function clearLayers() {
 
 function exportLayers() {
     var exportData = [];
-    console.log(drawnItems);
     drawnItems.eachLayer(function (layer) {
         var layerData = getLayerData(layer);
         if (layerData) {
@@ -322,7 +644,7 @@ function addItem(layerId, layer) {
     
     $point.on('click', function () {
         let center = null;
-        if (layer instanceof L.Polygon || layer instanceof L.Rectangle || layer instanceof L.polyline) {
+        if (layer instanceof L.Polygon || layer instanceof L.Rectangle || layer instanceof L.Polyline) {
             const bounds = layer.getBounds();
             center = bounds.getCenter();
             console.log('中央座標:', center); // 顯示中央座標
