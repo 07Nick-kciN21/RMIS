@@ -178,74 +178,17 @@
         </div>
     </div>
     <div class="panelInput" style="display:block">
-        @* 線段設定 *@
-        <div id="colorPicker_2" class="colorPickers hide">
-            <span>填滿</span>
-            <input type="color" id="cp2_fillColor" name="colorPicker" value="#ff0000">
-            <span>線段粗細</span>
-            <select id="cp2_lineThick" name="colorPicker">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-            </select>
-            <button class="goDraw" style="width:100%">繪製</button>
-        </div>
-        @* 圓形矩形多邊形圓形標記設定 *@
-        <div id="colorPicker_1" class="colorPickers hide">
-            <div style="width: 35%">
-                <span>填滿</span>
-                <input type="color" id="cp1_fillColor" name="colorPicker" value="#ff0000">
+        <div id="colorPicker" class="colorPickers">
+            <div id="colorPickerContent">
+                <!-- Default content -->
             </div>
-            <div style="width: 35%">
-                <span>外框</span>
-                <input type="color" id="cp1_borderColor" name="colorPicker" value="#ff0000">
+            <div>
+                <button class="goDraw" style="width: 100%;">繪製</button>
             </div>
-            <div style="width: 30%; display:flex">
-                <span>外框粗細</span>
-                <select id="cp1_borderWidth" name="colorPicker">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
-                </select>
-            </div>
-            <button class="goDraw" style="width:100%">繪製</button>
-        </div>
-        @* 標記與文字設定 *@
-        <div id="colorPicker_3" class="colorPickers hide">
-            <span>顏色</span>
-            <input type="color" id="cp3_fillColor" name="colorPicker" value="#ff0000">
-            <span>字級</span>
-            <select id="cp3_fontSize" name="colorPicker">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-            </select>
-            <button class="goDraw" style="width:100%">繪製</button>
         </div>
     </div>
     <div class="panelFooter">
-        <ul id="painterList" class="panelList" style="max-height:130px">
+        <ul id="painterList" class="panelList" style="height:130px; max-height:130px">
         </ul>
     </div>
 </div>

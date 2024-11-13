@@ -5,7 +5,6 @@
 
 #painterPanel {
     width: 315px;
-    height: 330px;
 }
 
 #searchPropPanel {
@@ -60,11 +59,6 @@
     justify-content: space-between; /* 使內部元素左右對齊 */
     align-items: center; /* 垂直方向上居中對齊 */
     padding: 0 10px 10px;
-}
-.colorPickers {
-    display: flex;
-    align-items: center; /* 垂直置中所有子元素 */
-    gap: 10px; /* 控制元素之間的間距 */
 }
 
 .panelFooter {

@@ -67,21 +67,101 @@ function initDraw() {
 }
 
 function initColorPicker(drawItem) {
+    let colorPickerContent = '';
     if (drawItem == "drawPolyline") {
-        $('#colorPicker_1').addClass('hide');
-        $('#colorPicker_3').addClass('hide');
-        $('#colorPicker_2').removeClass('hide');
+        colorPickerContent = `
+            <div>
+                <span>填滿</span>
+            </div>
+            <div>
+                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            </div>
+            <div>
+                <span>線段粗細</span>
+            </div>
+            <div>
+                <select id="cp_lineThick" name="colorPicker">
+                    ${generateOptions(1, 10)}
+                </select>
+            </div>
+        `;
     }
     else if (drawItem == "drawPolygon" || drawItem == "drawRectangle" || drawItem == "drawCircle" || drawItem == "drawCircleMarker") {
-        $('#colorPicker_2').addClass('hide');
-        $('#colorPicker_3').addClass('hide');
-        $('#colorPicker_1').removeClass('hide');
+        colorPickerContent = `
+            <div>
+                <span>填滿</span>
+            </div>
+            <div>
+                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            </div>
+            <div>
+                <span>外框</span>
+            </div>
+            <div>
+                <input type="color" id="cp_borderColor" name="colorPicker" value="#ff0000">
+            </div>
+            <div>
+                <span>外框粗細</span>
+            </div>
+            <div>
+                <select id="cp_borderWidth" name="colorPicker">
+                    ${generateOptions(1, 10)}
+                </select>
+            </div>
+        `;
     }
     else if (drawItem == "drawText") {
-        $('#colorPicker_1').addClass('hide');
-        $('#colorPicker_2').addClass('hide');
-        $('#colorPicker_3').removeClass('hide');
+        colorPickerContent = `
+            <div>
+                <span>顏色</span>
+            </div>
+            <div>
+                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            </div>
+            <div>
+                <span>字級</span>
+            </div>
+            <div>
+                <select id="cp_fontSize" name="colorPicker">
+                    ${generateOptions(1, 10)}
+                </select>
+            </div>
+            <div style="width:100%">
+                <input id="cp_text" type="text" style="width:100%" placeholder="輸入文字..." />
+            </div>
+        `;
     }
+    else if (drawItem == "drawMarker") {
+        colorPickerContent = `
+            <div>
+                <span>顏色</span>
+            </div>
+            <div>
+                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            </div>
+            <div>
+                <span>樣式</span>
+            </div>
+            <div>
+                <select></select>
+            </div>
+            <div>
+                <span>大小</span>
+            </div>
+            <div>
+                <input type="color" id="cp_size" name="colorPicker" value="#ff0000">
+            </div>
+        `;
+    }
+    $('#colorPickerContent').html(colorPickerContent);
+}
+
+function generateOptions(min, max) {
+    let options = '';
+    for (let i = min; i <= max; i++) {
+        options += `<option value="${i}">${i}</option>`;
+    }
+    return options;
 }
 
 function handleLayerCreation(event, layerCount) {
@@ -161,9 +241,9 @@ function draw() {
     }
 }
 function getShapeOption1() {
-    const fillColor = $('#cp1_fillColor').val();
-    const borderColor = $('#cp1_borderColor').val();
-    const borderWidth = $('#cp1_borderWidth').val();
+    const fillColor = $('#cp_fillColor').val();
+    const borderColor = $('#cp_borderColor').val();
+    const borderWidth = $('#cp_borderWidth').val();
     return {
         color: borderColor,
         fillColor: fillColor,
@@ -172,8 +252,8 @@ function getShapeOption1() {
 }
 function getShapeOption2() {
     // 從 colorPicker_2 中獲取設置的值
-    const fillColor = $('#cp2_fillColor').val();
-    const lineThick = $('#cp2_lineThick').val();
+    const fillColor = $('#cp_fillColor').val();
+    const lineThick = $('#cp_lineThick').val();
 
     return {
         fillColor: fillColor,
@@ -183,8 +263,8 @@ function getShapeOption2() {
 }
 function getShapeOption3() {
     // 從 colorPicker_3 中獲取設置的值
-    const fillColor = $('#cp3_fillColor').val();
-    const fontSize = $('#cp3_fontSize').val();
+    const fillColor = $('#cp_fillColor').val();
+    const fontSize = $('#cp_fontSize').val();
     console.log(fillColor, fontSize);
     return {
         fontSize: parseInt(fontSize) * 10, // 將字級轉換為合理的 px 大小，例如字級 1~10 轉為 2px ~ 20px
@@ -249,7 +329,7 @@ function initPolygon() {
             // 添加到地圖
             $indexMap.addLayer(layer);
 
-            console.log("Polygon created");
+            console.log("Polygon created", getShapeOption1());
 
             // 停止繪製
             polygonDrawer.disable();
@@ -294,16 +374,13 @@ function initCircle() {
         }
     });
 }
-
 function initMarker() {
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
-
     // 創建標記工具
     const markerDrawer = new L.Draw.Marker($indexMap, {
         icon: new L.Icon.Default() // 可以更改為你想要的圖標
     });
-
     // 啟用標記繪製模式
     markerDrawer.enable();
 
@@ -311,21 +388,16 @@ function initMarker() {
     $indexMap.once(L.Draw.Event.CREATED, function (event) {
         if (event.layerType === 'marker') {
             const layer = event.layer;
-
             // 添加到地圖
             $indexMap.addLayer(layer);
-
             console.log("Marker created");
-
             // 停止繪製
             markerDrawer.disable();
-
             // 手動觸發繪圖停止事件，重新顯示工具面板
             $indexMap.fire('draw:drawstop');
         }
     });
 }
-
 function initRectangle() {
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
@@ -360,7 +432,6 @@ function initRectangle() {
         }
     });
 }
-
 function initCircleMarker() {
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
@@ -404,51 +475,29 @@ function initText() {
     $indexMap.once('click', function (e) {
         const latlng = e.latlng;
         console.log(latlng);
-        // 將地圖上的經緯度轉換為容器的像素坐標
-        const containerPoint = $indexMap.latLngToContainerPoint(latlng);
-        // 在地圖上創建輸入框
-        const input = $('<input type="text" placeholder="輸入文字..." />').css({
-            position: 'absolute',
-            top: containerPoint.y + 'px',
-            left: containerPoint.x + 'px',
-            zIndex: 1000
-        });
-        
-        $('body').append(input);
-        input.css({
-            top: containerPoint.y - input.outerHeight() / 10 + 'px',
-            left: containerPoint.x - input.outerWidth() / 10 + 'px'
-        });
-        input.focus();
+        const text = $('#cp_text').val();
+        if (text) {
+            const { fontSize, fillColor } = getShapeOption3();
+            const textMarker = L.marker(latlng, {
+                icon: L.divIcon({
+                    className: 'custom-text-label',
+                    html: `<b style="color:${fillColor}; font-size:${fontSize}px">${text}</b>`,
+                    iconSize: null,
+                }),
+            })
 
-        input.on('ketdown blur', function (e) {
-            if (e.type === 'blur' || e.key === 'Enter') {
-                const text = input.val();
-                if (text) {
-                    const { fontSize, fillColor } = getShapeOption3();
-                    const textMarker = L.marker(latlng, {
-                        icon: L.divIcon({
-                            className: 'custom-text-label',
-                            html: `<b style="color:${fillColor}; font-size:${fontSize}px">${text}</b>`,
-                            iconSize: null,
-                            iconAnchor: [parseInt(fontSize) / 10, parseInt(fontSize) / 10] // 將圖標的錨點設置在文字的正中央
-                        }),
-                    })
+            $indexMap.addLayer(textMarker);
+            // 手動觸發 L.Draw.Event.CREATED 事件，確保流程一致
+            $indexMap.fire(L.Draw.Event.CREATED, {
+                layer: textMarker,
+                layerType: 'text'
+            });
+        }
+        // 移除輸入框
+        input.remove();
 
-                    $indexMap.addLayer(textMarker);
-                    // 手動觸發 L.Draw.Event.CREATED 事件，確保流程一致
-                    $indexMap.fire(L.Draw.Event.CREATED, {
-                        layer: textMarker,
-                        layerType: 'text'
-                    });
-                }
-                // 移除輸入框
-                input.remove();
-
-                // 手動觸發繪圖停止事件，重新顯示工具面板
-                $indexMap.fire('draw:drawstop');
-            }
-        })
+        // 手動觸發繪圖停止事件，重新顯示工具面板
+        $indexMap.fire('draw:drawstop');
     });
 }
 

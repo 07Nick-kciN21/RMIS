@@ -100,3 +100,22 @@
 .active{
     background-color:lightgray;
 }
+
+.colorPickers {
+    gap: 10px;
+    display: flex;
+    align-items: center; 
+    flex-wrap: wrap;
+}
+
+    .colorPickers > div {
+        flex-basis: 100%; 
+        gap: 10px;
+        justify-content: flex-start;
+        display:contents;
+        font-size:0.9rem;
+    }
+
+#colorPickerContent > div > select {
+    height: 27px;
+}
