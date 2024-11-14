@@ -140,20 +140,44 @@ function initColorPicker(drawItem) {
                 <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
             </div>
             <div>
-                <span>樣式</span>
-            </div>
-            <div>
-                <select></select>
-            </div>
-            <div>
                 <span>大小</span>
             </div>
             <div>
                 <input type="color" id="cp_size" name="colorPicker" value="#ff0000">
             </div>
+            <div>
+                <span>樣式</span>
+            </div>
+            <div>
+                <select name="state" id="imageSelect">
+			        <option value="markSquare" data-tag="markSquare" value="markSquare"></option>
+                    <option value="markCircle" data-tag="markCircle" value="markCircle"></option>
+                    <option value="markCross" data-tag="markCross" value="markCross"></option>
+		        </select>
+            </div>
         `;
     }
     $('#colorPickerContent').html(colorPickerContent);
+    if (drawItem == "drawMarker") {
+        $('#imageSelect').select2({
+            templateResult: formatState,
+            templateSelection: formatState,
+            minimumResultsForSearch: Infinity, // 隱藏搜索框
+            width: '55px'
+        });
+
+        function formatState(option) {
+            if (!option.id) {
+                return option.text;  // 保留預設的選項顯示（例如空選項）
+            }
+            var tagId = $(option.element).data('tag');
+
+            // 構建 span 元素
+            var span = `<img src="/img/marker/${tagId}.png" style="width: 20px; height: 20px;"></img>`
+
+            return $(span);
+        }
+    }
 }
 
 function generateOptions(min, max) {
@@ -254,7 +278,6 @@ function getShapeOption2() {
     // 從 colorPicker_2 中獲取設置的值
     const fillColor = $('#cp_fillColor').val();
     const lineThick = $('#cp_lineThick').val();
-
     return {
         fillColor: fillColor,
         weight: parseInt(lineThick) || 1, // 線段粗細，確保為數字並設置默認值為 1
@@ -375,6 +398,23 @@ function initCircle() {
     });
 }
 function initMarker() {
+    // 取得選中圖標的值（例如標記的 ID）
+    var selectedTag = $('#imageSelect').val();
+
+    // 如果沒有選擇圖標，則不繼續執行
+    if (!selectedTag) {
+        console.error("請先選擇一個圖標");
+        return;
+    }
+
+    // 創建自定義圖標
+    const customIcon = new L.Icon({
+        iconUrl: `/img/marker/${selectedTag}.png`, // 使用選中的圖標
+        iconSize: [32, 32], // 可根據需要更改圖標大小
+        iconAnchor: [16, 32], // 圖標的錨點
+        popupAnchor: [0, -32] // 彈出窗口的錨點
+    });
+
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
     // 創建標記工具
@@ -388,9 +428,13 @@ function initMarker() {
     $indexMap.once(L.Draw.Event.CREATED, function (event) {
         if (event.layerType === 'marker') {
             const layer = event.layer;
+
+            // 將自定義圖標應用於繪製的標記
+            layer.setIcon(customIcon);
+
             // 添加到地圖
             $indexMap.addLayer(layer);
-            console.log("Marker created");
+
             // 停止繪製
             markerDrawer.disable();
             // 手動觸發繪圖停止事件，重新顯示工具面板
@@ -703,7 +747,7 @@ function addItem(layerId, layer) {
         } else if (layer instanceof L.Circle) {
             center = layer.getLatLng();
         }
-        $indexMap.setView(center, 18);
+        $indexMap.setView(center, 15);
     });
 
     const $eye = $(`#eye_${layerId}`);
@@ -718,7 +762,6 @@ function addItem(layerId, layer) {
 
     const $editable = $(`#editable_${layerId}`);
     let isEditing = false;
-    // 使用事件委派，將事件綁定到一個已經存在的父元素上
     $editable.on('click', function () {
         if (isEditing)
             return;

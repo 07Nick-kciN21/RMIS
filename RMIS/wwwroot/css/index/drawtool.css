@@ -119,3 +119,18 @@
 #colorPickerContent > div > select {
     height: 27px;
 }
+
+.marker-icon {
+    width: 35px;
+    height: 35px;
+    background-size: cover;
+    background-color: #fff;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+#markerCircle {
+    background-image: url(/svg/marker-circle.svg);
+    background-repeat: no-repeat;
+}

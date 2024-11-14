@@ -2,9 +2,10 @@
     background-color:gainsboro;
 }
 .searchPanelBtn {
-    width: 25px; /* or any appropriate size */
+    width: 25px;
     height: 27px;
-    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-position: center;
+    background-size: 90%;
     background-repeat: no-repeat;
     background-image: url('/svg/search.svg');
     cursor: pointer;

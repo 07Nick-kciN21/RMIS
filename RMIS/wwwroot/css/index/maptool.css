@@ -1,0 +1,55 @@
+﻿.map-controls {
+    position: absolute;
+    top: 100px;
+    width: 40px;
+    z-index: 1055;
+    filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.2));
+}
+
+    .map-controls span {
+        font-size: 1.75rem;
+        text-align: center;
+        float: left;
+        width: 39px;
+        height: 39px;
+        line-height: 42px;
+        background: #567331;
+        cursor: pointer;
+        background-size: cover;
+        background-repeat: no-repeat;
+        border: 0.03rem solid #ffffff;
+        border-radius: 0 10px 10px 0;
+    }
+
+        .map-controls span:hover {
+            background-color: #91c54d;
+        }
+
+#tb-zoomIn {
+    background-image: url('/svg/tiptool/add.svg');
+    background-position: center;
+}
+
+#tb-zoomOut {
+    background-image: url('/svg/tiptool/subtract.svg');
+    background-size: 60%;
+    background-position: center;
+}
+
+#tb-painterPanel {
+    background-image: url('/svg/tiptool/paint.svg');
+    background-size: 70%;
+    background-position: center;
+}
+
+#tb-searchPanel {
+    background-image: url('/svg/tiptool/searchRoad.svg');
+    background-size: 70%;
+    background-position: center;
+}
+
+#tb-searchPropPanel {
+    background-image: url('/svg/tiptool/searchProp.svg');
+    background-size: 80%;
+    background-position: center;
+}

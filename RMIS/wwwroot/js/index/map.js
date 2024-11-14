@@ -2,7 +2,7 @@
 let currentLayer;
 // 初始化地图
 export function initMap(mapId) {
-    indexMap = L.map(mapId).setView([24.957276277371435, 121.21903318892302], 15);
+    indexMap = L.map(mapId, { zoomControl: false, doubleClickZoom: false }).setView([24.957276277371435, 121.21903318892302], 15);
     createBaseLayers();
     
     var $offcanvasElement = $('#layerListBlock');
@@ -30,6 +30,15 @@ export function initMap(mapId) {
             'margin-left': '0',
             'width': '100%'
         });
+    });
+
+    // 綁定自訂縮放按鈕
+    $('#tb-zoomIn').on('click', function () {
+        indexMap.zoomIn(); // 放大地圖
+    });
+
+    $('#tb-zoomOut').on('click', function () {
+        indexMap.zoomOut(); // 縮小地圖
     });
 
     return indexMap;
