@@ -117,20 +117,68 @@
     }
 
 #colorPickerContent > div > select {
-    height: 27px;
+    height: 28px;
 }
 
-.marker-icon {
-    width: 35px;
-    height: 35px;
-    background-size: cover;
-    background-color: #fff;
-    border-bottom: 1px solid #ccc;
-    cursor: pointer;
-    margin-right: 5px;
+.markerSelect {
+    width: 50%; /* or any appropriate size */
+    height: 50%;
 }
+
 
 #markerCircle {
-    background-image: url(/svg/marker-circle.svg);
+    width: 24px; /* or any appropriate size */
+    height: 27px;
+    background-size: 65%;
     background-repeat: no-repeat;
+    background-position-y: center;
+    background-image: url('/svg/drawtool/marker/markerCircle.svg');
+}
+
+#markerRectangle {
+    width: 24px; /* or any appropriate size */
+    height: 27px;
+    background-size: 70%;
+    background-repeat: no-repeat;
+    background-position-y: center;
+    background-image: url('/svg/drawtool/marker/markerRectangle.svg');
+}
+
+#markerCross {
+    width: 24px; /* or any appropriate size */
+    height: 27px;
+    background-size: 70%;
+    background-repeat: no-repeat;
+    background-position-y: center;
+    background-image: url('/svg/drawtool/marker/markerCross.svg');
+}
+
+.custom-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+.select2-container{
+    width: 45px !important;
+}
+
+.select2-container--open {
+    z-index: 9999 !important; /* 提高 z-index */
+}
+
+.select2-selection {
+    border: 1px solid #000000 !important;
+    border-radius: 0 !important;
+}
+
+.custom-color-picker {
+    position: relative;
+    display: inline-block;
+}
+
+.color-box {
+    width: 40px;
+    height: 28px;
+    vertical-align: middle;
+    cursor: pointer;
 }

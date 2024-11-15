@@ -67,20 +67,20 @@ function initDraw() {
 }
 
 function initColorPicker(drawItem) {
-    let colorPickerContent = '';
+    let colorPickerContent;
     if (drawItem == "drawPolyline") {
         colorPickerContent = `
             <div>
                 <span>填滿</span>
             </div>
-            <div>
-                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            <div class="custom-color-picker">
+                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
             </div>
             <div>
                 <span>線段粗細</span>
             </div>
             <div>
-                <select id="cp_lineThick" name="colorPicker">
+                <select id="cp_lineThick" class="select2">
                     ${generateOptions(1, 10)}
                 </select>
             </div>
@@ -91,20 +91,20 @@ function initColorPicker(drawItem) {
             <div>
                 <span>填滿</span>
             </div>
-            <div>
-                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            <div class="custom-color-picker">
+                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
             </div>
             <div>
                 <span>外框</span>
             </div>
-            <div>
-                <input type="color" id="cp_borderColor" name="colorPicker" value="#ff0000">
+            <div class="custom-color-picker">
+                <input class="color-box" type="color" id="cp_borderColor" name="colorPicker" value="#ff0000">
             </div>
             <div>
                 <span>外框粗細</span>
             </div>
             <div>
-                <select id="cp_borderWidth" name="colorPicker">
+                <select id="cp_borderWidth" class="select2">
                     ${generateOptions(1, 10)}
                 </select>
             </div>
@@ -115,14 +115,14 @@ function initColorPicker(drawItem) {
             <div>
                 <span>顏色</span>
             </div>
-            <div>
-                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            <div class="custom-color-picker">
+                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
             </div>
             <div>
                 <span>字級</span>
             </div>
             <div>
-                <select id="cp_fontSize" name="colorPicker">
+                <select id="cp_fontSize" class="select2">
                     ${generateOptions(1, 10)}
                 </select>
             </div>
@@ -136,34 +136,46 @@ function initColorPicker(drawItem) {
             <div>
                 <span>顏色</span>
             </div>
-            <div>
-                <input type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
+            <div class="custom-color-picker">
+                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
             </div>
             <div>
                 <span>大小</span>
             </div>
             <div>
-                <input type="color" id="cp_size" name="colorPicker" value="#ff0000">
+                <select id="cp_fontSize" class="select2">
+                    ${generateOptions(1, 10)}
+                </select>
             </div>
             <div>
                 <span>樣式</span>
             </div>
-            <div>
-                <select name="state" id="imageSelect">
-			        <option value="markSquare" data-tag="markSquare" value="markSquare"></option>
-                    <option value="markCircle" data-tag="markCircle" value="markCircle"></option>
-                    <option value="markCross" data-tag="markCross" value="markCross"></option>
-		        </select>
+            <div class="custom-select">
+                <select name="state" id="imageSelect" class="select2">
+                    <option value="markerRectangle" data-tag="markerRectangle"></option>
+                    <option value="markerCircle" data-tag="markerCircle"></option>
+                    <option value="markerCross" data-tag="markerCross"></option>
+                </select>
             </div>
         `;
     }
-    $('#colorPickerContent').html(colorPickerContent);
+    if (colorPickerContent) {
+        $('#colorPickerContent').html(colorPickerContent);
+        $('.goDraw').css('display', 'block');
+
+        // 初始化所有的 select 為 select2
+        $('.select2').select2({
+            minimumResultsForSearch: Infinity, // 隱藏搜索框
+        });
+    }
+
     if (drawItem == "drawMarker") {
         $('#imageSelect').select2({
             templateResult: formatState,
             templateSelection: formatState,
             minimumResultsForSearch: Infinity, // 隱藏搜索框
-            width: '55px'
+            width: '55px',
+            height: '27px'
         });
 
         function formatState(option) {
@@ -173,8 +185,7 @@ function initColorPicker(drawItem) {
             var tagId = $(option.element).data('tag');
 
             // 構建 span 元素
-            var span = `<img src="/img/marker/${tagId}.png" style="width: 20px; height: 20px;"></img>`
-
+            var span = `<span id="${tagId}" style="display:block"></span>`;
             return $(span);
         }
     }
@@ -187,6 +198,7 @@ function generateOptions(min, max) {
     }
     return options;
 }
+
 
 function handleLayerCreation(event, layerCount) {
     var layerId = 'layer-' + layerCount;
@@ -275,7 +287,6 @@ function getShapeOption1() {
     };
 }
 function getShapeOption2() {
-    // 從 colorPicker_2 中獲取設置的值
     const fillColor = $('#cp_fillColor').val();
     const lineThick = $('#cp_lineThick').val();
     return {
@@ -285,12 +296,24 @@ function getShapeOption2() {
     };
 }
 function getShapeOption3() {
-    // 從 colorPicker_3 中獲取設置的值
     const fillColor = $('#cp_fillColor').val();
     const fontSize = $('#cp_fontSize').val();
     console.log(fillColor, fontSize);
     return {
         fontSize: parseInt(fontSize) * 10, // 將字級轉換為合理的 px 大小，例如字級 1~10 轉為 2px ~ 20px
+        fillColor: fillColor,
+    };
+}
+
+function getShapeOption4() {
+    // 取得選中圖標的值（例如標記的 ID）
+    var image = $('#imageSelect').val();
+    var fontSize = $('#cp_fontSize').val();
+    var fillColor = $('#cp_fillColor').val();
+    console.log(fillColor, fontSize);
+    return {
+        image: image,
+        fontSize: parseInt(fontSize) * 8, // 將字級轉換為合理的 px 大小，例如字級 1~10 轉為 2px ~ 20px
         fillColor: fillColor,
     };
 }
@@ -398,50 +421,60 @@ function initCircle() {
     });
 }
 function initMarker() {
-    // 取得選中圖標的值（例如標記的 ID）
-    var selectedTag = $('#imageSelect').val();
+    const { image, fontSize, fillColor } = getShapeOption4();
 
     // 如果沒有選擇圖標，則不繼續執行
-    if (!selectedTag) {
+    if (!image) {
         console.error("請先選擇一個圖標");
         return;
     }
+    // 加载 SVG 文件
+    $.get(`/svg/drawtool/marker/${image}.svg`, function (svgContent) {
+        const svgElement = svgContent.documentElement;
+        svgElement.setAttribute('width', fontSize);
+        svgElement.setAttribute('height', fontSize);
+        svgElement.setAttribute('fill', fillColor);
+        
+        const customIcon = new L.DivIcon({
+            html: new XMLSerializer().serializeToString(svgElement),
+            className: '',
+            iconAnchor: [16, 16], // 设置锚点
+            popupAnchor: [0, -16] // 设置弹出窗口锚点
+        });
 
-    // 創建自定義圖標
-    const customIcon = new L.Icon({
-        iconUrl: `/img/marker/${selectedTag}.png`, // 使用選中的圖標
-        iconSize: [32, 32], // 可根據需要更改圖標大小
-        iconAnchor: [16, 32], // 圖標的錨點
-        popupAnchor: [0, -32] // 彈出窗口的錨點
-    });
+        // 手動觸發繪圖開始事件
+        $indexMap.fire('draw:drawstart');
 
-    // 手動觸發繪圖開始事件
-    $indexMap.fire('draw:drawstart');
-    // 創建標記工具
-    const markerDrawer = new L.Draw.Marker($indexMap, {
-        icon: new L.Icon.Default() // 可以更改為你想要的圖標
-    });
-    // 啟用標記繪製模式
-    markerDrawer.enable();
+        // 創建標記工具
+        const markerDrawer = new L.Draw.Marker($indexMap, {
+            icon: customIcon // 使用自定義圖標
+        });
 
-    // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once(L.Draw.Event.CREATED, function (event) {
-        if (event.layerType === 'marker') {
-            const layer = event.layer;
+        // 啟用標記繪製模式
+        markerDrawer.enable();
 
-            // 將自定義圖標應用於繪製的標記
-            layer.setIcon(customIcon);
+        // 使用一次性事件監聽器，只在繪製完成後處理一次
+        $indexMap.once(L.Draw.Event.CREATED, function (event) {
+            if (event.layerType === 'marker') {
+                const layer = event.layer;
 
-            // 添加到地圖
-            $indexMap.addLayer(layer);
+                // 將自定義圖標應用於繪製的標記
+                layer.setIcon(customIcon);
 
-            // 停止繪製
-            markerDrawer.disable();
-            // 手動觸發繪圖停止事件，重新顯示工具面板
-            $indexMap.fire('draw:drawstop');
-        }
+                // 添加到地圖
+                $indexMap.addLayer(layer);
+                // 停止繪製
+                markerDrawer.disable();
+
+                // 手動觸發繪圖停止事件，重新顯示工具面板
+                $indexMap.fire('draw:drawstop');
+            }
+        });
+    }).fail(function () {
+        console.error("無法加載選中的圖標文件");
     });
 }
+
 function initRectangle() {
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');

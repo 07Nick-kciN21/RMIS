@@ -40,3 +40,21 @@
 .menu-close {
     background-image: url('/svg/menu-close.svg');
 }
+
+
+.toggle {
+    float: right;
+    display: none !important;
+}
+
+@media (min-width: 900px) {
+    #navbar-menu {
+        display: block !important;
+    }
+}
+
+@media (max-width: 899px) {
+    #menu-toggle {
+        display: block !important;
+    }
+}

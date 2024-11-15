@@ -8,22 +8,3 @@
     gap: 2px;
 }
 
-.markerSelect {
-    width: 50%; /* or any appropriate size */
-    height: 50%;
-}
-
-
-#markerCircle {
-    background-position: left;
-    background-size: 20%;
-    background-repeat: no-repeat;
-    background-image: url('/svg/drawtool/marker/markerCircle.svg');
-}
-
-select2-container{
-    width:100px !important;
-}
-.select2-container--open {
-    z-index: 9999 !important; /* 提高 z-index */
-}

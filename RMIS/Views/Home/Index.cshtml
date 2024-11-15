@@ -3,7 +3,7 @@
 }
 <style>
     .custom-offcanvas-width {
-        width: 18%;
+        width: 300px;
     }
 
     #indexMap {
@@ -50,35 +50,36 @@
     </div> *@
 }
 @section HomeHeaderNavList{
-    <nav class="col" style="padding: 0;">
-    <div class="container-fluid ">
-        <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
-            <div class="nav-item dropdown">
-                <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
+    <nav id="head-nav" style="padding: 0; margin-left:auto">
+        <div class="container-fluid ">
+            <!-- Responsive Button for Small Screens -->
+            <div id="menu-toggle" class="toggle">
+                <button class="dropdown-button" style="float: right;">
+                    ☰ 菜單
+                </button>
             </div>
-            <div class="nav-item dropdown">
-                <button class="dropdown-button" id="top-vav1" data-target="top-vav-list1">業務圖資</button>
-                <div class="dropdown-content" id="top-vav-list1">
+            <div id="navbar-menu" class="toggle navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
+                <div class="nav-item dropdown">
+                    <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
+                </div>
+                <div class="nav-item dropdown">
+                    <button class="dropdown-button" id="top-vav1" data-target="top-vav-list1">業務圖資</button>
+                    <div class="dropdown-content" id="top-vav-list1">
+                    </div>
+                </div>
+                <div class="nav-item dropdown">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                        常用連結
+                    </button>
+                </div>
+                <div class="nav-item dropdown">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                        下載專區
+                    </button>
                 </div>
             </div>
-            <div class="nav-item dropdown">
-                <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
-                    常用連結
-                </button>
-            </div>
-            <div class="nav-item dropdown">
-                <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
-                    圖資匯入
-                </button>
-            </div>
-            <div class="nav-item dropdown">
-                <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
-                    下載專區
-                </button>
-            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 }
 
 
@@ -143,10 +144,10 @@
     <div class="panelInput" style="display:block">
         <div id="colorPicker" class="colorPickers">
             <div id="colorPickerContent">
-                <!-- Default content -->
+                
             </div>
             <div>
-                <button class="goDraw" style="width: 100%;">繪製</button>
+                <button class="goDraw" style="width: 100%; display:none">繪製</button>
             </div>
         </div>
     </div>
@@ -334,4 +335,30 @@
         let layers = {};
     </script>
     <script type="module" src="~/js/main.js"></script>
+    <script>
+        $(document).ready(function () {
+            function checkNavbarWidth() {
+                if ($(window).width() < 768) {
+                    $('#navbar-menu').hide();
+                    $('#toggle-menu').show();
+                } else {
+                    $('#navbar-menu').show();
+                    $('#toggle-menu').hide();
+                }
+            }
+
+            // 初次檢查
+            checkNavbarWidth();
+
+            // 當視窗大小改變時檢查
+            $(window).resize(function () {
+                checkNavbarWidth();
+            });
+
+            // 按下 toggle-menu 顯示選單
+            $('#toggle-menu').click(function () {
+                $('#navbar-menu').toggle(); // 顯示或隱藏選單
+            });
+        });
+    </script>
 }

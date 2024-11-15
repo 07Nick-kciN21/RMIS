@@ -18,17 +18,28 @@ export function initMap(mapId) {
     $offcanvasElement.on('shown.bs.offcanvas', function () {
         var offcanvasWidth = $offcanvasElement.outerWidth();
         $indexMapElement.css({
-            'transition': 'all 0.3s ease-in-out',
+            'transition': 'margin-left 0.3s ease, width 0.3s ease',
             'margin-left': offcanvasWidth + 'px',
             'width': 'calc(100% - ' + offcanvasWidth + 'px)'
+        });
+
+        // 當動畫完成後更新地圖尺寸
+        $indexMapElement.on('transitionend', function () {
+            indexMap.invalidateSize(); // 更新地圖顯示
         });
     });
 
     // 當 offcanvas 關閉時恢復地圖
     $offcanvasElement.on('hidden.bs.offcanvas', function () {
+        // 恢復地圖容器的大小
         $indexMapElement.css({
             'margin-left': '0',
             'width': '100%'
+        });
+
+        // 當動畫完成後更新地圖尺寸
+        $indexMapElement.on('transitionend', function () {
+            indexMap.invalidateSize(); // 更新地圖顯示
         });
     });
 
@@ -133,7 +144,7 @@ function createBaseLayers() {
             });
 
             // 將疊加圖層作為可複選圖層加入地圖控制
-            L.control.layers(baseMaps, overlayMaps).addTo(indexMap);
+            L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(indexMap);
         },
         error: function (error) {
             console.error('Error fetching map sources:', error);
