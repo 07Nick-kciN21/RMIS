@@ -1,0 +1,16 @@
+﻿
+@model RMIS.Models.Admin.AddCategoryByJsonInput;
+
+@{
+    ViewData["Title"] = "上傳路線資料";
+}
+
+<form enctype="multipart/form-data" method="post">
+    <div>
+        <label for="categoryWithpipeline">請上傳 JSON 檔案：</label>
+        <input type="file" asp-for="categoryWithpipeline" name="categoryWithpipeline" accept=".json" />
+    </div>
+    <div>
+        <button type="submit">上傳並解析</button>
+    </div>
+</form>

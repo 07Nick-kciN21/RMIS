@@ -9,7 +9,9 @@ export function initSearchPanel() {
 
     $('#search_Close').on('click', () => {
         var indexMap = getIndexMap();
-        indexMap.removeLayer(roadlayer);
+        if (roadlayer) {
+            indexMap.removeLayer(roadlayer);
+        }
     })
 }
 

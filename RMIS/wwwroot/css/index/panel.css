@@ -3,6 +3,11 @@
     height: 250px;
 }
 
+#searchPanel2 {
+    width: 200px;
+    height: 250px;
+}
+
 #painterPanel {
     width: 315px;
 }
@@ -10,6 +15,12 @@
 #searchPropPanel {
     width: 500px;
 }
+
+#photoPanel {
+    width: 300px;
+    height:100px;
+}
+
 
 .panel {
     z-index: 1051;

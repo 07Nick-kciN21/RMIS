@@ -4,7 +4,6 @@ let $indexMap;
 let borderColor = '#FF0000';
 let fillColor = '#FF0000';
 let borderWidth = 1;
-let painterLayer = {};
 let drawControl;
 let drawnItems;
 let layerCount = 0;
@@ -14,8 +13,51 @@ export function initPainterPanel() {
     initDraw();
 
     // 監聽繪圖開始事件
-    $indexMap.on('draw:drawstart', function () {
+    $indexMap.on('draw:drawstart', function (e) {
         $('#painterPanel').addClass('hide');
+
+        const type = e.layerType;
+        let tooltipMessage;
+
+        switch (type) {
+            case 'polygon':
+                tooltipMessage = '開始繪製多邊形，雙擊或點選起點完成';
+                break;
+            case 'polyline':
+                tooltipMessage = '開始繪製折線，雙擊完成';
+                break;
+            case 'rectangle':
+                tooltipMessage = '點擊並拖動以繪製矩形';
+                break;
+            case 'circle':
+                tooltipMessage = '點擊並拖動以繪製圓形';
+                break;
+            case 'marker':
+                tooltipMessage = '點擊地圖以放置標記';
+                break;
+            case 'text':
+                tooltipMessage = '點擊地圖以放置文字';
+                break;
+            default:
+                tooltipMessage = '開始繪製';
+        }
+
+        const tooltip = L.tooltip({
+            permanent: false,
+            className: 'custom-tooltip',
+            direction: 'top'
+        }).setContent(tooltipMessage)
+          .setLatLng($indexMap.getCenter())
+          .addTo($indexMap);
+
+        $indexMap.on('mousemove', function (event) {
+            tooltip.setLatLng(event.latlng);
+        });
+
+        // 移除 Tooltip 当绘图结束
+        $indexMap.on('draw:drawstop', function () {
+            $indexMap.removeLayer(tooltip);
+        });
     });
 
     // 監聽繪圖停止事件
@@ -232,7 +274,10 @@ function displayArea(layer) {
     var area = getArea(layer);
     console.log('Area:', area, 'square meters');
     var popupContent = "面積: " + area.toFixed(2) + " 平方公尺";
-    layer.bindPopup(popupContent).openPopup();
+    layer.bindPopup(popupContent, {
+        maxWidth: 200, // 最大寬度
+        maxHeight: 50 // 最大高度
+    }).openPopup();
 }
 
 function displayCircleArea(layer) {
@@ -240,7 +285,10 @@ function displayCircleArea(layer) {
     var area = Math.PI * Math.pow(radius, 2);
     console.log('Circle Area:', area, 'square meters');
     var popupContent = "面積: " + area.toFixed(2) + " 平方公尺";
-    layer.bindPopup(popupContent).openPopup();
+    layer.bindPopup(popupContent, {
+        maxWidth: 200, // 最大寬度
+        maxHeight: 50 // 最大高度
+    }).openPopup();
 }
 // 計算多邊形面積
 function getArea(layer) {
@@ -570,8 +618,6 @@ function initText() {
                 layerType: 'text'
             });
         }
-        // 移除輸入框
-        input.remove();
 
         // 手動觸發繪圖停止事件，重新顯示工具面板
         $indexMap.fire('draw:drawstop');

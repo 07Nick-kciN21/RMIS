@@ -25,8 +25,10 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             <div>
             <h4>圖層：${name}</h4><br>
             ${popUpForm(prop)}
-            </div>`
-        );
+            </div>`, {
+            maxWidth: 300,
+            maxHeight: 450
+        });
         marker.on('click', function (e) {
             const latLng = e.latlng;
             $indexMap.setView(latLng, $indexMap.getZoom());
@@ -78,8 +80,10 @@ export function addLineToLayer(points, newLayer, color, name) {
             <div>
                 <h4>圖層：${name}</h4><br>
                 ${popUpForm(prop)}
-            </div>
-        `);
+            </div>`, {
+            maxWidth: 300,
+            maxHeight: 450
+        });
 
         segment.on('click', function (e) {
             if (currentLine) {

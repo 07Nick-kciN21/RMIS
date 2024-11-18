@@ -1,6 +1,5 @@
 ﻿import { getIndexMap } from './map.js';
 
-let open=false;
 export function initPanel(panelId) {
     const $container = $("#indexMap");
     const $tb = $(`#tb-${panelId}`);
@@ -47,8 +46,12 @@ export function initPanel(panelId) {
 
     // Event listener for toggling the panel visibility
     $tb.on('click', () => {
+        if ($("#tb-addPhoto").hasClass("active")) {
+            $("#tb-addPhoto").trigger('click');
+        }
         $panel.toggleClass('hide');
         $panel.css('z-index', 1053);
     });
+
 }
 
