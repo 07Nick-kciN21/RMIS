@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using RMIS.Data;
 using RMIS.Models.Admin;
 using RMIS.Models.sql;
 using RMIS.Repositories;
+using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace RMIS.Controllers
 {
@@ -150,79 +153,25 @@ namespace RMIS.Controllers
         [HttpPost]
         public async Task<IActionResult> AddCategoryByJson(AddCategoryByJsonInput categoryByJsonInput)
         {
-            // 讀取上傳的檔案內容
-            using var stream = categoryByJsonInput.categoryWithpipeline.OpenReadStream();
-            using var reader = new StreamReader(stream);
-            var jsonContent = await reader.ReadToEndAsync();
-
-            // 將 JSON 反序列化為物件
-            var rawData = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, List<string>>>>(jsonContent);
-
-            if (rawData == null)
+            if (categoryByJsonInput?.categoryWithpipeline == null || categoryByJsonInput.categoryWithpipeline.Length == 0)
             {
-                return BadRequest("無效的JSON格式。");
+                ModelState.AddModelError("categoryWithpipeline", "請上傳有效的 JSON 檔案。");
+                return View();
             }
-
-            // 建立分類和管線的集合
-            var categories = new List<Category>();
-            foreach (var outerCategory in rawData)
+            
+            using (var stream = categoryByJsonInput.categoryWithpipeline.OpenReadStream())
+            using (var reader = new StreamReader(stream, Encoding.UTF8)) // 指定 UTF-8 編碼
             {
-                // 外層分類
-                var parentCategory = new Category
+                var jsonContent = await reader.ReadToEndAsync();
+                var jsonToken = JToken.Parse(jsonContent);
+                var count = 0;
+                if(jsonToken is JObject jObject)
                 {
-                    Id = Guid.NewGuid(),
-                    Name = outerCategory.Key,
-                    OrderId = categories.Count + 1
-                };
-
-                foreach (var subCategory in outerCategory.Value)
-                {
-                    // 子分類
-                    var childCategory = new Category
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = subCategory.Key,
-                        ParentId = parentCategory.Id,
-                        Parent = parentCategory,
-                        OrderId = parentCategory.Subcategories.Count + 1
-                    };
-
-                    foreach (var pipelineName in subCategory.Value)
-                    {
-                        // 管線
-                        var pipeline = new Pipeline
-                        {
-                            Id = Guid.NewGuid(),
-                            Name = pipelineName,
-                            CategoryId = childCategory.Id,
-                            Category = childCategory,
-                            Color = "DefaultColor" // 可以根據需要設置顏色
-                        };
-
-                        // 將管線添加到子分類
-                        childCategory.Subcategories.Add(new Category
-                        {
-                            Id = Guid.NewGuid(),
-                            Name = pipelineName,
-                            ParentId = childCategory.Id,
-                            Parent = childCategory
-                        });
-                    }
-
-                    // 添加子分類到父分類
-                    parentCategory.Subcategories.Add(childCategory);
+                    int result = await _adminInterface.AddCategoryByJsonAsync(jObject);
                 }
-
-                // 添加外層分類到集合
-                categories.Add(parentCategory);
+                
+                return RedirectToAction("AddCategoryByJson", "Admin");
             }
-
-            // 儲存資料到資料庫 (假設使用 Entity Framework)
-            // _dbContext 是您的 DbContext
-            await _dbContext.Categories.AddRangeAsync(categories);
-            await _dbContext.SaveChangesAsync();
-
-            return RedirectToAction("AddCategoryByJson", "Admin");
         }
     }
 }

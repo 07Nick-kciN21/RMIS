@@ -12,6 +12,7 @@ using System.Formats.Asn1;
 using System.Globalization;
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace RMIS.Repositories
@@ -101,7 +102,7 @@ namespace RMIS.Repositories
         public async Task<AddRoadInput> getRoadInput()
         {
             var _AdminDists = await _mapDBContext.AdminDist.OrderBy(ad => ad.orderId).ToListAsync();
-            var _Pipelines = await  _mapDBContext.Pipelines.ToListAsync();
+            var _Pipelines = await _mapDBContext.Pipelines.ToListAsync();
             var model = new AddRoadInput
             {
                 AdminDists = _AdminDists.Select(ad => new SelectListItem
@@ -277,5 +278,241 @@ namespace RMIS.Repositories
             }
             return buildPipelinePath(parentCategory.ParentId) + "/" + parentCategory.Name;
         }
+
+        public async Task<int> AddCategoryByJsonAsync(JObject jObject)
+        {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                // 用于存储批量插入的实体
+                var categories = new List<Category>();
+                var pipelines = new List<Pipeline>();
+                var layers = new List<Layer>();
+                var geometryTypes = new List<GeometryType>();
+
+                var count = await _mapDBContext.Categories.CountAsync(c => c.ParentId == null) + 1;
+
+                foreach (var category in jObject.Properties())
+                {
+                    // 新增母類別
+                    var id = Guid.NewGuid();
+                    var newCategory = new Category
+                    {
+                        Id = id,
+                        Name = category.Name,
+                        ParentId = null,
+                        OrderId = count
+                    };
+                    count++;
+                    categories.Add(newCategory);
+
+                    // 处理子类别和管道
+                    await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                }
+
+                // 批量插入所有收集的实体
+                if (categories.Any())
+                {
+                    await _mapDBContext.Categories.AddRangeAsync(categories);
+                }
+                if (pipelines.Any())
+                {
+                    await _mapDBContext.Pipelines.AddRangeAsync(pipelines);
+                }
+                if (geometryTypes.Any())
+                {
+                    // 排除已经存在的 GeometryTypes，防止重复插入
+                    var existingNames = _mapDBContext.GeometryTypes
+                        .Where(gt => geometryTypes.Select(g => g.Name).Contains(gt.Name))
+                        .Select(gt => gt.Name)
+                        .ToHashSet();
+
+                    var newGeometryTypes = geometryTypes.Where(g => !existingNames.Contains(g.Name)).ToList();
+                    if (newGeometryTypes.Any())
+                    {
+                        await _mapDBContext.GeometryTypes.AddRangeAsync(newGeometryTypes);
+                    }
+                }
+                if (layers.Any())
+                {
+                    await _mapDBContext.Layers.AddRangeAsync(layers);
+                }
+
+                // 保存更改
+                int rowsAffected = await _mapDBContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return rowsAffected;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task ProcessCategoryJsonAsync(
+            JToken categorys,
+            Guid parentId,
+            List<Category> categories,
+            List<Pipeline> pipelines,
+            List<Layer> layers,
+            List<GeometryType> geometryTypes)
+        {
+            // jObject为Category
+            if (categorys is JObject jObject)
+            {
+                var count = 0;
+                foreach (var category in jObject.Properties())
+                {
+                    // 新增子類別
+                    var id = Guid.NewGuid();
+                    var newCategory = new Category
+                    {
+                        Id = id,
+                        Name = category.Name,
+                        ParentId = parentId,
+                        OrderId = count
+                    };
+                    count++;
+                    categories.Add(newCategory);
+
+                    // 递归处理子类别
+                    await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                }
+            }
+            // jArray为Pipeline
+            else if (categorys is JArray jArray)
+            {
+                foreach (var item in jArray)
+                {
+                    // 新增Pipeline
+                    var pipelineId = Guid.NewGuid();
+                    var newPipeline = new Pipeline
+                    {
+                        Id = pipelineId,
+                        Name = item["名稱"]?.ToString(),
+                        ManagementUnit = item["管理單位"]?.ToString(),
+                        Color = item["顏色"]?.ToString(),
+                        CategoryId = parentId
+                    };
+                    pipelines.Add(newPipeline);
+
+                    // 新增Pipeline的Layers
+                    foreach (var prop in item["屬性"])
+                    {
+                        var propName = prop.ToString();
+                        var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propName)
+                            ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propName);
+
+                        Guid geometryTypeId;
+
+                        if (existingGeometryType == null)
+                        {
+                            // 新增GeometryType
+                            geometryTypeId = Guid.NewGuid();
+                            var newGeometryType = new GeometryType
+                            {
+                                Id = geometryTypeId,
+                                Name = propName,
+                                Svg = "",
+                                OrderId = geometryTypes.Count + 1,
+                                Kind = "point"
+                            };
+                            geometryTypes.Add(newGeometryType);
+                        }
+                        else
+                        {
+                            geometryTypeId = existingGeometryType.Id;
+                        }
+
+                        // 新增Layer
+                        var newLayer = new Layer
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = propName,
+                            GeometryTypeId = geometryTypeId,
+                            PipelineId = pipelineId
+                        };
+                        layers.Add(newLayer);
+                    }
+                }
+            }
+        }
+
+        public async Task<int> DeletePipelineAndCategoryAsync(Guid? pipelineId, Guid? categoryId)
+        {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                int rowsAffected = 0;
+
+                // 删除 Pipeline
+                if (pipelineId.HasValue)
+                {
+                    // 删除 Pipeline 的相关 Layers
+                    var layersToDelete = _mapDBContext.Layers.Where(l => l.PipelineId == pipelineId.Value);
+                    _mapDBContext.Layers.RemoveRange(layersToDelete);
+
+                    // 删除 Pipeline
+                    var pipelineToDelete = await _mapDBContext.Pipelines.FindAsync(pipelineId.Value);
+                    if (pipelineToDelete != null)
+                    {
+                        _mapDBContext.Pipelines.Remove(pipelineToDelete);
+                    }
+                }
+
+                // 删除 Category
+                if (categoryId.HasValue)
+                {
+                    // 递归删除子类别
+                    await DeleteCategoryRecursiveAsync(categoryId.Value);
+
+                    // 删除当前 Category
+                    var categoryToDelete = await _mapDBContext.Categories.FindAsync(categoryId.Value);
+                    if (categoryToDelete != null)
+                    {
+                        _mapDBContext.Categories.Remove(categoryToDelete);
+                    }
+                }
+
+                rowsAffected += await _mapDBContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return rowsAffected;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private async Task DeleteCategoryRecursiveAsync(Guid parentId)
+        {
+            // 获取子类别
+            var childCategories = _mapDBContext.Categories.Where(c => c.ParentId == parentId).ToList();
+
+            foreach (var childCategory in childCategories)
+            {
+                // 递归删除子类别
+                await DeleteCategoryRecursiveAsync(childCategory.Id);
+            }
+
+            // 删除当前类别的 Pipelines
+            var pipelinesToDelete = _mapDBContext.Pipelines.Where(p => p.CategoryId == parentId);
+            foreach (var pipeline in pipelinesToDelete)
+            {
+                // 删除 Pipeline 的 Layers
+                var layersToDelete = _mapDBContext.Layers.Where(l => l.PipelineId == pipeline.Id);
+                _mapDBContext.Layers.RemoveRange(layersToDelete);
+
+                // 删除 Pipeline
+                _mapDBContext.Pipelines.Remove(pipeline);
+            }
+
+            // 删除当前类别的子类别
+            _mapDBContext.Categories.RemoveRange(childCategories);
+        }
+
     }
 }
