@@ -152,6 +152,7 @@ namespace RMIS.Repositories
         }
         public async Task<AddRoadByCSVInput> getRoadByCSVInput()
         {
+            var _Categories = await _mapDBContext.Categories.ToListAsync();
             var _Pipelines = await _mapDBContext.Pipelines.ToListAsync();
             var model = new AddRoadByCSVInput
             {
@@ -163,6 +164,16 @@ namespace RMIS.Repositories
             };
             return model;
         }
+        private string buildPipelinePath(Guid? parentId)
+        {
+            var parentCategory = _mapDBContext.Categories.FirstOrDefault(p => p.Id == parentId);
+            if (parentCategory.ParentId == null)
+            {
+                return parentCategory.Name;
+            }
+            return buildPipelinePath(parentCategory.ParentId) + "/" + parentCategory.Name;
+        }
+
 
         public async Task<int> AddRoadByCSVAsync(AddRoadByCSVInput roadByCSVInput)
         {
@@ -269,17 +280,8 @@ namespace RMIS.Repositories
             int rowsAffected = await _mapDBContext.SaveChangesAsync();
             return rowsAffected;
         }
-        private string buildPipelinePath(Guid? parentId)
-        {
-            var parentCategory = _mapDBContext.Categories.FirstOrDefault(p => p.Id == parentId);
-            if (parentCategory.ParentId == null)
-            {
-                return parentCategory.Name;
-            }
-            return buildPipelinePath(parentCategory.ParentId) + "/" + parentCategory.Name;
-        }
 
-        public async Task<int> AddCategoryByJsonAsync(JObject jObject)
+        public async Task<(int categoryCount, int pipelineCount)> AddCategoryByJsonAsync(JObject jObject)
         {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
@@ -341,7 +343,7 @@ namespace RMIS.Repositories
                 // 保存更改
                 int rowsAffected = await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return rowsAffected;
+                return (categories.Count, pipelines.Count);
             }
             catch
             {
@@ -376,7 +378,7 @@ namespace RMIS.Repositories
                     count++;
                     categories.Add(newCategory);
 
-                    // 递归处理子类别
+
                     await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
                 }
             }
@@ -464,10 +466,10 @@ namespace RMIS.Repositories
                 // 删除 Category
                 if (categoryId.HasValue)
                 {
-                    // 递归删除子类别
+                    // 遞迴刪除子類別
                     await DeleteCategoryRecursiveAsync(categoryId.Value);
 
-                    // 删除当前 Category
+                    // 删除目前 Category
                     var categoryToDelete = await _mapDBContext.Categories.FindAsync(categoryId.Value);
                     if (categoryToDelete != null)
                     {
@@ -489,30 +491,76 @@ namespace RMIS.Repositories
 
         private async Task DeleteCategoryRecursiveAsync(Guid parentId)
         {
-            // 获取子类别
+            var pipelines = new List<Pipeline>();
+            var layers = new List<Layer>();
+            var areas = new List<Area>();
+            var points = new List<Point>();
+            // 獲得子類別
             var childCategories = _mapDBContext.Categories.Where(c => c.ParentId == parentId).ToList();
 
             foreach (var childCategory in childCategories)
             {
-                // 递归删除子类别
+                // 遞迴刪除子類別
                 await DeleteCategoryRecursiveAsync(childCategory.Id);
             }
 
-            // 删除当前类别的 Pipelines
-            var pipelinesToDelete = _mapDBContext.Pipelines.Where(p => p.CategoryId == parentId);
+            // 刪除當前類别的 Pipelines
+            var pipelinesToDelete = await getPipelinesToDeleteAsync(parentId);
             foreach (var pipeline in pipelinesToDelete)
             {
                 // 删除 Pipeline 的 Layers
-                var layersToDelete = _mapDBContext.Layers.Where(l => l.PipelineId == pipeline.Id);
-                _mapDBContext.Layers.RemoveRange(layersToDelete);
-
-                // 删除 Pipeline
-                _mapDBContext.Pipelines.Remove(pipeline);
+                var layersToDelete = await getLayersToDeleteAsync(pipeline.Id);
+                foreach (var layer in layersToDelete)
+                {
+                    // 删除 Layer 的 Areas
+                    var areasToDelete = await getAreasToDeleteAsync(layer.Id);
+                    foreach (var area in areasToDelete)
+                    {
+                        // 删除 Area 的 Points
+                        var pointsToDelete = await getPointsToDeleteAsync(area.Id);
+                        points.AddRange(pointsToDelete);
+                    }
+                    areas.AddRange(areasToDelete);
+                }
+                layers.AddRange(layersToDelete);
             }
+            pipelines.AddRange(pipelinesToDelete);
 
-            // 删除当前类别的子类别
+            _mapDBContext.Points.RemoveRange(points);
+            _mapDBContext.Areas.RemoveRange(areas);
+            _mapDBContext.Layers.RemoveRange(layers);
+            _mapDBContext.Pipelines.RemoveRange(pipelines);
             _mapDBContext.Categories.RemoveRange(childCategories);
         }
 
+        private async Task<List<Point>> getPointsToDeleteAsync(Guid areaId)
+        {
+            var pointsToDelete = await _mapDBContext.Points.Where(p => p.AreaId == areaId).ToListAsync();
+            return pointsToDelete;
+        }
+
+        private async Task<List<Area>> getAreasToDeleteAsync(Guid layerId)
+        {
+            var areasToDelete = await _mapDBContext.Areas.Where(p => p.LayerId == layerId).ToListAsync();
+            return areasToDelete;
+        }
+
+        private async Task<List<Layer>> getLayersToDeleteAsync(Guid pipelineId)
+        {
+            var layersToDelete = await _mapDBContext.Layers.Where(l => l.PipelineId == pipelineId).ToListAsync();
+            return layersToDelete;
+        }
+
+        private async Task<List<Pipeline>> getPipelinesToDeleteAsync(Guid categoryId)
+        {
+            var pipelinesToDelete = await _mapDBContext.Pipelines.Where(p => p.CategoryId == categoryId).ToListAsync();
+            return pipelinesToDelete;
+        }
+
+        private async Task<List<Category>> getCategoriesToDeleteAsync(Guid parentId)
+        {
+            var categoriesToDelete = await _mapDBContext.Categories.Where(c => c.ParentId == parentId).ToListAsync();
+            return categoriesToDelete;
+        }
     }
 }

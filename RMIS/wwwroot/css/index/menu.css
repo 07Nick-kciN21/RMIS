@@ -58,3 +58,11 @@
         display: block !important;
     }
 }
+
+@media (max-width: 568px) and (max-height: 700px) {
+    #searchPanel {
+        position: fixed; /* 設置固定位置 */
+        left: 0px; /* 固定到左側 */
+        top: 100px; /* 固定到距離頂部 100px */
+    }
+}

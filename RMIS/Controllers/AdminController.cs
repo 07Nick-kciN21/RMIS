@@ -88,13 +88,14 @@ namespace RMIS.Controllers
             var rowsAffected = await _adminInterface.AddRoadByCSVAsync(roadbycsvInput);
             if (rowsAffected > 0)
             {
+                TempData["rowCount"] = rowsAffected;
                 return RedirectToAction("AddRoadByCSV", "Admin");
             }
             else
             {
                 Console.WriteLine("No changes were made to the database.");
             }
-            return RedirectToAction("AddRoadByCSV", "Admin");
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
@@ -164,12 +165,18 @@ namespace RMIS.Controllers
             {
                 var jsonContent = await reader.ReadToEndAsync();
                 var jsonToken = JToken.Parse(jsonContent);
-                var count = 0;
-                if(jsonToken is JObject jObject)
+
+                (int categoryCount, int pipelineCount) result = (0, 0);
+                if (jsonToken is JObject jObject)
                 {
-                    int result = await _adminInterface.AddCategoryByJsonAsync(jObject);
+                    result = await _adminInterface.AddCategoryByJsonAsync(jObject);
+                    
                 }
-                
+                if(result.categoryCount > 0 || result.pipelineCount > 0)
+                {
+                    TempData["categoryCount"] = result.categoryCount;
+                    TempData["pipelineCount"] = result.pipelineCount;
+                }
                 return RedirectToAction("AddCategoryByJson", "Admin");
             }
         }

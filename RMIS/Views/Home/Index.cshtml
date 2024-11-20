@@ -2,9 +2,6 @@
     ViewData["Title"] = "首頁";
 }
 <style>
-    .custom-offcanvas-width {
-        width: 300px;
-    }
 
     #indexMap {
         height: 100vh;
@@ -29,7 +26,7 @@
 </style>
 
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
-<link rel="stylesheet" href="~/css/index/layer.css" />
+<link rel="stylesheet" href="~/css/index/offcanvas.css" />
 <link rel="stylesheet" href="~/css/index/menu.css" />
 <link rel="stylesheet" href="~/css/index/svg_eye.css" />
 <link rel="stylesheet" href="~/css/index/svg_switch.css" />
@@ -55,15 +52,6 @@
     <div class="nav-item dropdown">
         <button class="dropdown-button" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">側欄</button>
     </div>
-    @* <div class="nav-item dropdown">
-        <button id="tb-searchPanel" class="dropdown-button">快搜</button>
-    </div> *@
-    @* <div class="nav-item dropdown">
-        <button id="tb-painterPanel" class="dropdown-button">繪圖板</button>
-    </div> *@
-    @* <div class="nav-item dropdown">
-        <button id="tb-searchPropPanel" class="dropdown-button">屬性搜尋</button>
-    </div> *@
 }
 @section HomeHeaderNavList{
     <nav id="head-nav" style="padding: 0; margin-left:auto">

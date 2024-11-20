@@ -14,7 +14,7 @@ namespace RMIS.Repositories
         Task<AddCategoryInput> getCategoryInput();
         Task<int> AddCategoryAsync(AddCategoryInput categoryInput);
         Task<int> AddMapSourceAsync(AddMapSourceInput mapsourceInput);
-        Task<int> AddCategoryByJsonAsync(JObject jObject);
+        Task<(int categoryCount, int pipelineCount)> AddCategoryByJsonAsync(JObject jObject);
         Task<int> DeletePipelineAndCategoryAsync(Guid? pipelineId, Guid? categoryId);
     }
 }

@@ -1,0 +1,16 @@
+﻿header, nav {
+    margin: 0;
+    padding: 0;
+    position: relative;
+    z-index: 1051;
+    background-color: #9ac43e
+}
+
+    header .dropdown-button {
+        font-size: 1.5rem; /* 調整字體大小 */
+    }
+
+.nav-item {
+    position: relative;
+    display: inline-block;
+}

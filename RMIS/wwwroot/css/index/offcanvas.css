@@ -59,3 +59,13 @@
     font-size: 1.5rem;
     line-height: 1.55rem;
 }
+
+.custom-offcanvas-width {
+    width: 300px;
+}
+
+@media (max-width: 768px){
+    .custom-offcanvas-width {
+        width: 100%;
+    }
+}

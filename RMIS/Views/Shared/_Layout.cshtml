@@ -9,7 +9,9 @@
     <link rel="stylesheet" href="~/RMIS.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/index/dropdown.css" />
     <link rel="stylesheet" href="~/css/index/panel.css" />
+    <link rel="stylesheet" href="~/css/index/_layout.css" />
     <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.js"></script>
@@ -29,30 +31,12 @@
             display: flex;
             flex-direction: column;
         }
-
-        header, nav {
-            margin: 0;
-            padding: 0;
-            position: relative;
-            z-index: 1051;
-            background-color: #9ac43e
-        }
-
-            header .dropdown-button {
-                font-size: 1.5rem; /* 調整字體大小 */
-            }
-        .nav-item{
-            position: relative;
-            display: inline-block;
-        }
-        
     </style>
-    
 </head>
 <body>
     <div class="content-wrapper">
         <header class="gx-0 custom-header" style="display:flex">
-            <div>
+            <div class="">
                 <div class="nav-item">
                     <button class="dropdown-button" onclick="location.href='@Url.Action("Index", "Home")'">首頁</button>
                 </div>
@@ -66,6 +50,7 @@
                         <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">新增管線</a></li>
                         <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">新增路線</a></li>
                         <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoadByCSV">上傳路線資料</a></li>
+                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategoryByJson">上傳圖資類別</a></li>
                     </ul>
                 </div>
                 @if (IsSectionDefined("HomeHeaderToolBar"))

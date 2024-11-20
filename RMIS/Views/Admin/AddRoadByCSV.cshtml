@@ -6,7 +6,11 @@
 
 <div class="container">
     <h2>上傳路線資料</h2>
-    <form asp-action="AddRoadByCSV" method="post" enctype="multipart/form-data">
+    @if (TempData["rowCount"] != null)
+    {
+        <h>(上傳 @TempData["rowCount"] 筆 資料)</h>
+    }
+    <form method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label asp-for="ConstructionUnit" class="control-label">施工單位</label>
             <input asp-for="ConstructionUnit" class="form-control" />
@@ -28,11 +32,11 @@
         </div>
         
         <div class="form-group">
-            <label asp-for="road_with_pile_Csv" class="control-label">街道檔案</label></<br />
-            <input asp-for="road_with_pile_Csv" type="file" class="form-control-file" />
+            <label asp-for="road_with_pile_Csv" class="control-label">請上傳CSV檔案：</label> <br />
+            <input asp-for="road_with_pile_Csv" type="file" class="form-control-file" accept=".csv" />
             <span asp-validation-for="road_with_pile_Csv" class="text-danger"></span>
         </div>
-        <button type="submit" class="btn btn-primary">Upload and Import</button>
+        <button type="submit" class="btn btn-primary">上傳資料</button>
     </form>
 </div>
 
