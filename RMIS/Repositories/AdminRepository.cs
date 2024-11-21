@@ -174,24 +174,93 @@ namespace RMIS.Repositories
             return buildPipelinePath(parentCategory.ParentId) + "/" + parentCategory.Name;
         }
 
+        // 補全 road_id	city_id	dist_id	road_city	road_dist	road_name	road_level	pile_id	pile_lat	pile_lon	pile_dir	pile_lane	pile_distance	pile_angle	pile_width	pile_prop	
+
+        public class road_pile
+        {
+            public string road_id { get; set; }
+            public string city_id { get; set; }
+            public string dist_id { get; set; }
+            public string road_city { get; set; }
+            public string road_dist { get; set; }
+            public string road_name { get; set; }
+            public string road_level { get; set; }
+            public string pile_id { get; set; }
+            public double pile_lat { get; set; }
+            public double pile_lon { get; set; }
+            public string pile_dir { get; set; }
+            public int pile_distance { get; set; }
+            public string pile_prop { get; set; }
+        }
 
         public async Task<int> AddRoadByCSVAsync(AddRoadByCSVInput roadByCSVInput)
         {
             if (roadByCSVInput.road_with_pile_Csv != null)
             {
-                var firstPiles = new List<pile>();
-                // 讀取 road_with_pile_Csv
-                using (var pileReader = new StreamReader(roadByCSVInput.road_with_pile_Csv.OpenReadStream()))
-                using (var csv = new CsvReader(pileReader, CultureInfo.InvariantCulture))
+                using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+                try
                 {
-                    var roadPileDataRecords = csv.GetRecords<CSVFormat>();
-                    foreach (var record in roadPileDataRecords)
+                    var roadId2AreaId = new Dictionary<string, Guid>();
+                    var areas = new List<Area>();
+                    var points = new List<Point>();
+                    // 讀取 road_with_pile_Csv
+                    using (var pileReader = new StreamReader(roadByCSVInput.road_with_pile_Csv.OpenReadStream()))
+                    using (var csv = new CsvReader(pileReader, CultureInfo.InvariantCulture))
                     {
-                        Console.WriteLine($"{data.road_name}-方向{data.pile_dir}");
+                        var roadpileDatas = csv.GetRecords<road_pile>().ToList();
+                        var roadpileDataDistinct = roadpileDatas
+                                                        .GroupBy(x => new { x.road_dist, x.road_id, x.pile_dir })
+                                                        .Select(x => x.First())
+                                                        .ToList();
+                        foreach (var data in roadpileDataDistinct)
+                        {
+                            var areaId = Guid.NewGuid();
+                            var area = new Area
+                            {
+                                Id = areaId,
+                                Name = data.road_name,
+                                ConstructionUnit = roadByCSVInput.ConstructionUnit,
+                                AdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.City == data.road_city && ad.Town == data.road_dist).Id,
+                                LayerId = Guid.Parse(roadByCSVInput.LayerId),
+                            };
+                            areas.Add(area);
+                            roadId2AreaId[data.road_id] = areaId;
+                        }
+
+                        foreach (var data in roadpileDatas)
+                        {
+                            var point = new Point
+                            {
+                                Id = Guid.NewGuid(),
+                                Index = data.pile_distance,
+                                Latitude = data.pile_lat,
+                                Longitude = data.pile_lon,
+                                AreaId = roadId2AreaId[data.road_id],
+                                Property = data.pile_prop
+                            };
+                            Console.WriteLine(data.pile_prop);
+                            points.Add(point);
+                        }
                     }
+                    await _mapDBContext.AddRangeAsync(areas);
+                    var areaCount = await _mapDBContext.SaveChangesAsync();
+                    await _mapDBContext.AddRangeAsync(points);
+                    var pointCount = await _mapDBContext.SaveChangesAsync();
+                    if(areaCount != 0 && pointCount != 0)
+                    {
+                        await transaction.CommitAsync();
+                    }
+                    else
+                    {
+                        _mapDBContext.ChangeTracker.Clear();
+                    }
+                    return pointCount;
                 }
-                var effectCount = await _mapDBContext.SaveChangesAsync();
-                return effectCount;
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
             return 0;
         }

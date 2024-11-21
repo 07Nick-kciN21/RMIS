@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="測試資料\" />
     <Folder Include="wwwroot\js\index\ctrlSidebar\" />
   </ItemGroup>
 
