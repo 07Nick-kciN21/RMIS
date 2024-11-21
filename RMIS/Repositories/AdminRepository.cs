@@ -187,51 +187,7 @@ namespace RMIS.Repositories
                     var roadPileDataRecords = csv.GetRecords<CSVFormat>();
                     foreach (var record in roadPileDataRecords)
                     {
-                        if (!string.IsNullOrEmpty(record.pile_data))
-                        {
-                            var pileList = JsonConvert.DeserializeObject<List<pile>>(record.pile_data);
-
-                            if (pileList != null && pileList.Count > 0)
-                            {
-                                var uniquePileDirs = pileList.Select(p => p.pile_dir).Distinct();
-                                var areaDictionary = new Dictionary<int, Guid>();
-
-                                foreach (var dir in uniquePileDirs)
-                                {
-                                    // Create a new Area for each unique pile_dir
-                                    var areaId = Guid.NewGuid();
-                                    var area = new Area
-                                    {
-                                        Id = areaId,
-                                        Name = $"{record.road_name} - 方向{dir}",
-                                        ConstructionUnit = roadByCSVInput.ConstructionUnit,
-                                        AdminDistId = _mapDBContext.AdminDist
-                                            .FirstOrDefault(ad => ad.City == record.road_city && ad.Town == record.road_dist).Id,
-                                        LayerId = Guid.Parse(roadByCSVInput.LayerId),
-                                    };
-
-                                    await _mapDBContext.Areas.AddAsync(area);
-                                    areaDictionary[dir] = areaId;
-                                }
-                                foreach (var pile_data in pileList)
-                                {
-                                    if (areaDictionary.TryGetValue(pile_data.pile_dir, out var areaId))
-                                    {
-                                        var point = new Point
-                                        {
-                                            Id = Guid.NewGuid(),
-                                            Index = pile_data.pile_distance,
-                                            Latitude = pile_data.pile_lat,
-                                            Longitude = pile_data.pile_lon,
-                                            AreaId = areaId,
-                                            Property = pile_data.pile_prop
-                                        };
-
-                                        await _mapDBContext.Points.AddAsync(point);
-                                    }
-                                }
-                            }
-                        }
+                        Console.WriteLine($"{data.road_name}-方向{data.pile_dir}");
                     }
                 }
                 var effectCount = await _mapDBContext.SaveChangesAsync();
