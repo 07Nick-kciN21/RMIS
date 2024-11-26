@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RMIS.Data;
@@ -7,9 +8,12 @@ using RMIS.Repositories;
 using Serilog;
 using Serilog.Expressions;
 using Serilog.Sinks.Map;
+using System.IO;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 builder.Host.UseSerilog((context, services, configuration) =>
 {
@@ -23,8 +27,15 @@ builder.Host.UseSerilog((context, services, configuration) =>
                 : "Default", // 如果沒有 Controller，存入 Default 檔案
             configure: (controller, wt) =>
             {
+                
+                var homePath = Environment.GetEnvironmentVariable("USERPROFILE").Replace("\\", "/");
+                if (string.IsNullOrEmpty(homePath))
+                {
+                    throw new InvalidOperationException("環境變數 'HOMEPATH' 無法解析");
+                }
+                var logPath = $"{homePath}/Documents/Logs/{controller}log-.log";
                 wt.File(
-                    $"logs/{controller}.log",
+                    logPath,
                     rollingInterval: RollingInterval.Day
                 ); // 根據 Controller與日期分檔
             }

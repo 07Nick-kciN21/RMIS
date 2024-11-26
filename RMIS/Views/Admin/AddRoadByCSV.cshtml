@@ -5,12 +5,11 @@
 }
 
 <div class="container">
-    <h2>上傳路線資料</h2>
     @if (TempData["rowCount"] != null)
     {
         <h>(上傳 @TempData["rowCount"] 筆 資料)</h>
     }
-    <form method="post" enctype="multipart/form-data">
+    <form asp-controller="Admin" asp-action="AddRoadByCSV" method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label asp-for="ConstructionUnit" class="control-label">施工單位</label>
             <input asp-for="ConstructionUnit" class="form-control" />

@@ -5,8 +5,7 @@
 }
 
 <div class="container">
-    <h2>新增圖源</h2>
-    <form method="post">
+    <form asp-controller="Admin" method="post">
         <div class="form-group">
             <label asp-for="Url">圖層介接網址</label>
             <input type="text" class="form-control" asp-for="Url" placeholder="" required />

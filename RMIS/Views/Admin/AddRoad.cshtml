@@ -18,8 +18,7 @@
 </style>
 
 <div class="container">
-    <form method="post">
-        <h2>新增分支</h2>
+    <form asp-controller="Admin" method="post">
         <div class="form-group">
             <label for="AdminDists">選擇行政區</label>
             <select asp-for="AdminDistId" asp-items="Model.AdminDists" class=" form-control">

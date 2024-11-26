@@ -37,22 +37,9 @@
     <div class="content-wrapper">
         <header class="gx-0 custom-header" style="display:flex">
             <div class="">
-                <div class="nav-item">
+                @* <div class="nav-item">
                     <button class="dropdown-button" onclick="location.href='@Url.Action("Index", "Home")'">首頁</button>
-                </div>
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                        管理員
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddMapSource">新增圖源</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategory">新增類別</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddPipeline">新增管線</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoad">新增路線</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddRoadByCSV">上傳路線資料</a></li>
-                        <li><a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="AddCategoryByJson">上傳圖資類別</a></li>
-                    </ul>
-                </div>
+                </div> *@
                 @if (IsSectionDefined("HomeHeaderToolBar"))
                 {
                     @RenderSection("HomeHeaderToolBar", required: false)

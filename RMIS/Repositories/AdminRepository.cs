@@ -335,7 +335,6 @@ namespace RMIS.Repositories
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
-                // 用于存储批量插入的实体
                 var categories = new List<Category>();
                 var pipelines = new List<Pipeline>();
                 var layers = new List<Layer>();
@@ -345,7 +344,6 @@ namespace RMIS.Repositories
 
                 foreach (var category in jObject.Properties())
                 {
-                    // 新增母類別
                     var id = Guid.NewGuid();
                     var newCategory = new Category
                     {
@@ -358,7 +356,12 @@ namespace RMIS.Repositories
                     categories.Add(newCategory);
 
                     // 处理子类别和管道
-                    await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                    var success = await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                    if (!success)
+                    {
+                        await transaction.RollbackAsync();
+                        return (-1, -1);
+                    }
                 }
 
                 // 批量插入所有收集的实体
@@ -397,18 +400,17 @@ namespace RMIS.Repositories
             catch
             {
                 await transaction.RollbackAsync();
-                throw;
+                return (-1, -1);
             }
         }
 
-
-        private async Task ProcessCategoryJsonAsync(
-    JToken categorys,
-    Guid parentId,
-    List<Category> categories,
-    List<Pipeline> pipelines,
-    List<Layer> layers,
-    List<GeometryType> geometryTypes)
+        private async Task<bool> ProcessCategoryJsonAsync(
+            JToken categorys,
+            Guid parentId,
+            List<Category> categories,
+            List<Pipeline> pipelines,
+            List<Layer> layers,
+            List<GeometryType> geometryTypes)
         {
             try
             {
@@ -418,116 +420,96 @@ namespace RMIS.Repositories
                     var count = 0;
                     foreach (var category in jObject.Properties())
                     {
-                        try
+                        // 新增子類別
+                        var id = Guid.NewGuid();
+                        var newCategory = new Category
                         {
-                            // 新增子類別
-                            var id = Guid.NewGuid();
-                            var newCategory = new Category
-                            {
-                                Id = id,
-                                Name = category.Name,
-                                ParentId = parentId,
-                                OrderId = count
-                            };
-                            count++;
-                            categories.Add(newCategory);
+                            Id = id,
+                            Name = category.Name,
+                            ParentId = parentId,
+                            OrderId = count
+                        };
+                        count++;
+                        categories.Add(newCategory);
 
-                            _logger.LogInformation("Added Category: {Name}, ParentId: {ParentId}", category.Name, parentId);
+                        _logger.LogInformation("Added Category: {Name}, ParentId: {ParentId}", category.Name, parentId);
 
-                            // 遞歸處理子類別
-                            await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
-                        }
-                        catch (Exception ex)
+                        // 遞歸處理子類別
+                        var success = await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                        if (!success)
                         {
-                            _logger.LogError(ex, "Error processing subcategory: {CategoryName}", category.Name);
-                            throw;
+                            return false;
                         }
                     }
                 }
-                // jArray为Pipeline
                 else if (categorys is JArray jArray)
                 {
                     foreach (var item in jArray)
                     {
-                        try
+                        // 新增Pipeline
+                        var pipelineId = Guid.NewGuid();
+                        var newPipeline = new Pipeline
                         {
-                            // 新增Pipeline
-                            var pipelineId = Guid.NewGuid();
-                            var newPipeline = new Pipeline
+                            Id = pipelineId,
+                            Name = item["名稱"].ToString(),
+                            ManagementUnit = item["管理單位"].ToString(),
+                            Color = item["顏色"].ToString(),
+                            CategoryId = parentId
+                        };
+                        pipelines.Add(newPipeline);
+
+                        _logger.LogInformation("Added Pipeline: {Name}, ParentId: {ParentId}", newPipeline.Name, parentId);
+
+                        // 新增Pipeline的Layers
+                        foreach (var prop in item["屬性"])
+                        {
+                            var propName = prop.ToString();
+                            var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propName)
+                                ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propName);
+
+                            Guid geometryTypeId;
+
+                            if (existingGeometryType == null)
                             {
-                                Id = pipelineId,
-                                Name = item["名稱"].ToString(),
-                                ManagementUnit = item["管理單位"].ToString(),
-                                Color = item["顏色"].ToString(),
-                                CategoryId = parentId
-                            };
-                            pipelines.Add(newPipeline);
-
-                            _logger.LogInformation("Added Pipeline: {Name}, ParentId: {ParentId}", newPipeline.Name, parentId);
-
-                            // 新增Pipeline的Layers
-                            foreach (var prop in item["屬性"])
-                            {
-                                try
+                                // 新增GeometryType
+                                geometryTypeId = Guid.NewGuid();
+                                var newGeometryType = new GeometryType
                                 {
-                                    var propName = prop.ToString();
-                                    var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propName)
-                                        ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propName);
+                                    Id = geometryTypeId,
+                                    Name = propName,
+                                    Svg = "",
+                                    OrderId = geometryTypes.Count + 1,
+                                    Kind = "point"
+                                };
+                                geometryTypes.Add(newGeometryType);
 
-                                    Guid geometryTypeId;
-
-                                    if (existingGeometryType == null)
-                                    {
-                                        // 新增GeometryType
-                                        geometryTypeId = Guid.NewGuid();
-                                        var newGeometryType = new GeometryType
-                                        {
-                                            Id = geometryTypeId,
-                                            Name = propName,
-                                            Svg = "",
-                                            OrderId = geometryTypes.Count + 1,
-                                            Kind = "point"
-                                        };
-                                        geometryTypes.Add(newGeometryType);
-
-                                        _logger.LogInformation("Added GeometryType: {Name}", newGeometryType.Name);
-                                    }
-                                    else
-                                    {
-                                        geometryTypeId = existingGeometryType.Id;
-                                    }
-
-                                    // 新增Layer
-                                    var newLayer = new Layer
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        Name = propName,
-                                        GeometryTypeId = geometryTypeId,
-                                        PipelineId = pipelineId
-                                    };
-                                    layers.Add(newLayer);
-
-                                    _logger.LogInformation("Added Layer: {Name}, PipelineId: {PipelineId}", newLayer.Name, pipelineId);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Error adding Layer or GeometryType for Pipeline: {PipelineId}", pipelineId);
-                                    throw;
-                                }
+                                _logger.LogInformation("Added GeometryType: {Name}", newGeometryType.Name);
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error processing Pipeline: {PipelineName}", item["名稱"]?.ToString());
-                            throw;
+                            else
+                            {
+                                geometryTypeId = existingGeometryType.Id;
+                            }
+
+                            // 新增Layer
+                            var newLayer = new Layer
+                            {
+                                Id = Guid.NewGuid(),
+                                Name = propName,
+                                GeometryTypeId = geometryTypeId,
+                                PipelineId = pipelineId
+                            };
+                            layers.Add(newLayer);
+
+                            _logger.LogInformation("Added Layer: {Name}, PipelineId: {PipelineId}", newLayer.Name, pipelineId);
                         }
                     }
                 }
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error in ProcessCategoryJsonAsync. ParentId: {ParentId}", parentId);
-                throw;
+                return false;
             }
         }
 

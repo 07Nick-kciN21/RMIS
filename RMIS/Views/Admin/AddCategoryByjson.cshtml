@@ -6,7 +6,6 @@
 }
 
 <div class="container">
-    <h2>上傳路線資料</h2>
     @if (TempData["categoryCount"] != null && int.TryParse(TempData["categoryCount"].ToString(), out int categoryCount) && categoryCount > 0)
     {
         <h>上傳 @TempData["categoryCount"] 筆類別</h>
@@ -15,7 +14,7 @@
     {
         <h>上傳 @TempData["pipelineCount"] 筆管線</h>
     }
-    <form enctype="multipart/form-data" method="post">
+    <form asp-controller="Admin" enctype="multipart/form-data" method="post">
         <div class="form-group">
             <label for="categoryWithpipeline" class="control-label">請上傳 JSON 檔案：</label> <br />
             <input asp-for="categoryWithpipeline" type="file" class="form-control-file" accept=".json" />

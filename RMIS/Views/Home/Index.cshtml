@@ -62,6 +62,20 @@
                     ☰ 菜單
                 </button>
             </div>
+            <div class="nav-item dropdown">
+                <button id="dropdownMenuLink" class="dropdown-button" data-target="adminMenu">管理員</button>
+                <div id="adminMenu">
+                    <ul class="dropdown-content">
+                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddMapSource">新增圖源</a></li>
+                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddCategory">新增類別</a></li>
+                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddPipeline">新增管線</a></li>
+                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddRoad">新增路線</a></li>
+                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddRoadByCSV">上傳路線資料</a></li>
+                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddCategoryByJson">上傳圖資類別</a></li>
+                    </ul>
+                </div>
+                
+            </div>
             <div id="navbar-menu" class="toggle navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
                 <div class="nav-item dropdown">
                     <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
@@ -87,7 +101,7 @@
 }
 
 
-<div class="offcanvas offcanvas-start custom-offcanvas-width show" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-labelledby="layerListBlockLabel" aria-hidden="false">
+<div class="offcanvas offcanvas-start custom-offcanvas-width show" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="false">
     <div id="layerBarContainer" class="layerList container-fluid">
         <h5 id="offcanvasExampleLabel" class="offcanvas-body">圖資清單</h5>
     </div>
@@ -332,6 +346,20 @@
 
 <div id="tooltip" style="display: none;">點擊地圖顯示正射影像</div>
 
+<div class="modal fade" id="ajaxModal" tabindex="-1" aria-labelledby="ajaxModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ajaxModalLabel">Loading...</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Loading content...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 @section Scripts {
     <script type="text/javascript">
         var MenuData = @Html.Raw(Json.Serialize(ViewBag.JsTreeData));
@@ -343,27 +371,23 @@
     <script type="module" src="~/js/main.js"></script>
     <script>
         $(document).ready(function () {
-            function checkNavbarWidth() {
-                if ($(window).width() < 768) {
-                    $('#navbar-menu').hide();
-                    $('#toggle-menu').show();
-                } else {
-                    $('#navbar-menu').show();
-                    $('#toggle-menu').hide();
-                }
-            }
 
-            // 初次檢查
-            checkNavbarWidth();
-
-            // 當視窗大小改變時檢查
-            $(window).resize(function () {
-                checkNavbarWidth();
-            });
-
-            // 按下 toggle-menu 顯示選單
-            $('#toggle-menu').click(function () {
-                $('#navbar-menu').toggle(); // 顯示或隱藏選單
+            $('.modal-link').on('click', function (e) {
+                e.preventDefault();
+                // 獲取要加載的頁面 URL
+                var url = $(this).data('action');
+                // 打開 Modal 並顯示 Loading 信息
+                var modal = new bootstrap.Modal($('#ajaxModal'));
+                $('#ajaxModalLabel').text($(this).text());
+                $('#ajaxModal .modal-body').html('<p>Loading content...</p>');
+                // 發送 AJAX 請求來加載頁面內容
+                $.get(url, function (data) {
+                    $('#ajaxModal .modal-body').html(data);
+                }).fail(function () {
+                    $('#ajaxModal .modal-body').html('<p>Error loading content. Please try again later.</p>');
+                });
+                // 顯示 Modal
+                modal.show();
             });
         });
     </script>

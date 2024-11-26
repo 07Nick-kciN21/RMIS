@@ -169,16 +169,24 @@ namespace RMIS.Controllers
                 var jsonToken = JToken.Parse(jsonContent);
 
                 (int categoryCount, int pipelineCount) result = (0, 0);
+
                 if (jsonToken is JObject jObject)
                 {
                     result = await _adminInterface.AddCategoryByJsonAsync(jObject);
 
                 }
+
                 if (result.categoryCount > 0 || result.pipelineCount > 0)
                 {
                     _logger.LogInformation($"Add {result.categoryCount} Category and {result.pipelineCount} Pipeline data from JSON to Database");
                     TempData["categoryCount"] = result.categoryCount;
                     TempData["pipelineCount"] = result.pipelineCount;
+                }
+                else if (result.categoryCount == -1 && result.pipelineCount == -1)
+                {
+                    _logger.LogError("An error occurred while processing the JSON file. All changes have been discarded.");
+                    ModelState.AddModelError("categoryWithpipeline", "發生錯誤，所有變更已被捨棄。");
+                    return View();
                 }
                 else
                 {
