@@ -20,9 +20,12 @@ namespace RMIS.Repositories
     public class AdminRepository : AdminInterface
     {
         private readonly MapDBContext _mapDBContext;
-        public AdminRepository(MapDBContext mapDBContext)
+        private readonly ILogger<AdminRepository> _logger;
+
+        public AdminRepository(MapDBContext mapDBContext, ILogger<AdminRepository> loger)
         {
             _mapDBContext = mapDBContext;
+            _logger = loger;
         }
 
         public async Task<AddPipelineInput> getPipelineInput()
@@ -174,9 +177,7 @@ namespace RMIS.Repositories
             return buildPipelinePath(parentCategory.ParentId) + "/" + parentCategory.Name;
         }
 
-        // 補全 road_id	city_id	dist_id	road_city	road_dist	road_name	road_level	pile_id	pile_lat	pile_lon	pile_dir	pile_lane	pile_distance	pile_angle	pile_width	pile_prop	
-
-        public class road_pile
+        private class road_pile
         {
             public string road_id { get; set; }
             public string city_id { get; set; }
@@ -195,74 +196,97 @@ namespace RMIS.Repositories
 
         public async Task<int> AddRoadByCSVAsync(AddRoadByCSVInput roadByCSVInput)
         {
-            if (roadByCSVInput.road_with_pile_Csv != null)
+            if (roadByCSVInput.road_with_pile_Csv == null)
             {
-                using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
-                try
+                _logger.LogWarning("No CSV file provided.");
+                return 0;
+            }
+
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                var roadId2AreaId = new Dictionary<string, Guid>();
+                var areas = new List<Area>();
+                var points = new List<Point>();
+
+                var adminDistMap = _mapDBContext.AdminDist.ToDictionary(ad => new { ad.City, ad.Town }, ad => ad.Id);
+                // 讀取 road_with_pile_Csv
+                using (var pileReader = new StreamReader(roadByCSVInput.road_with_pile_Csv.OpenReadStream()))
+                using (var csv = new CsvReader(pileReader, CultureInfo.InvariantCulture))
                 {
-                    var roadId2AreaId = new Dictionary<string, Guid>();
-                    var areas = new List<Area>();
-                    var points = new List<Point>();
-                    // 讀取 road_with_pile_Csv
-                    using (var pileReader = new StreamReader(roadByCSVInput.road_with_pile_Csv.OpenReadStream()))
-                    using (var csv = new CsvReader(pileReader, CultureInfo.InvariantCulture))
+                    var roadpileDatas = csv.GetRecords<road_pile>().ToList();
+                    var roadpileDataDistinct = roadpileDatas
+                                                    .GroupBy(x => new { x.road_dist, x.road_id, x.pile_dir })
+                                                    .Select(x => x.First())
+                                                    .ToList();
+                    foreach (var data in roadpileDataDistinct)
                     {
-                        var roadpileDatas = csv.GetRecords<road_pile>().ToList();
-                        var roadpileDataDistinct = roadpileDatas
-                                                        .GroupBy(x => new { x.road_dist, x.road_id, x.pile_dir })
-                                                        .Select(x => x.First())
-                                                        .ToList();
-                        foreach (var data in roadpileDataDistinct)
+                        if (!adminDistMap.TryGetValue(new { City = data.road_city, Town = data.road_dist }, out var adminDistId))
                         {
-                            var areaId = Guid.NewGuid();
-                            var area = new Area
-                            {
-                                Id = areaId,
-                                Name = data.road_name,
-                                ConstructionUnit = roadByCSVInput.ConstructionUnit,
-                                AdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.City == data.road_city && ad.Town == data.road_dist).Id,
-                                LayerId = Guid.Parse(roadByCSVInput.LayerId),
-                            };
-                            areas.Add(area);
-                            roadId2AreaId[data.road_id] = areaId;
+                            // 如果 AdminDist 找不到，跳過或引發異常
+                            var errorMessage = $"AdminDist not found for city: {data.road_city}, dist: {data.road_dist}";
+                            _logger.LogError(errorMessage);
+                            throw new Exception(errorMessage);
+                        }
+                        var areaId = Guid.NewGuid();
+                        var area = new Area
+                        {
+                            Id = areaId,
+                            Name = data.road_name,
+                            ConstructionUnit = roadByCSVInput.ConstructionUnit,
+                            AdminDistId = adminDistId,
+                            LayerId = Guid.Parse(roadByCSVInput.LayerId),
+                        };
+                        areas.Add(area);
+                        roadId2AreaId[data.road_id] = areaId;
+                    }
+
+                    foreach (var data in roadpileDatas)
+                    {
+                        if (!roadId2AreaId.ContainsKey(data.road_id))
+                        {
+                            var errorMessage = $"Road ID {data.road_id} not found in roadId2AreaId map.";
+                            _logger.LogError(errorMessage);
+                            throw new Exception(errorMessage);
                         }
 
-                        foreach (var data in roadpileDatas)
+                        var point = new Point
                         {
-                            var point = new Point
-                            {
-                                Id = Guid.NewGuid(),
-                                Index = data.pile_distance,
-                                Latitude = data.pile_lat,
-                                Longitude = data.pile_lon,
-                                AreaId = roadId2AreaId[data.road_id],
-                                Property = data.pile_prop
-                            };
-                            Console.WriteLine(data.pile_prop);
-                            points.Add(point);
-                        }
+                            Id = Guid.NewGuid(),
+                            Index = data.pile_distance,
+                            Latitude = data.pile_lat,
+                            Longitude = data.pile_lon,
+                            AreaId = roadId2AreaId[data.road_id],
+                            Property = data.pile_prop
+                        };
+                        points.Add(point);
                     }
-                    await _mapDBContext.AddRangeAsync(areas);
-                    var areaCount = await _mapDBContext.SaveChangesAsync();
-                    await _mapDBContext.AddRangeAsync(points);
-                    var pointCount = await _mapDBContext.SaveChangesAsync();
-                    if(areaCount != 0 && pointCount != 0)
-                    {
-                        await transaction.CommitAsync();
-                    }
-                    else
-                    {
-                        _mapDBContext.ChangeTracker.Clear();
-                    }
-                    return pointCount;
                 }
-                catch
+                await _mapDBContext.AddRangeAsync(areas);
+                var areaCount = await _mapDBContext.SaveChangesAsync();
+                await _mapDBContext.AddRangeAsync(points);
+                var pointCount = await _mapDBContext.SaveChangesAsync();
+                if (areaCount != 0 && pointCount != 0)
+                {
+                    await transaction.CommitAsync();
+                    _logger.LogInformation("Transaction committed successfully. Points added: {PointCount}", pointCount);
+                }
+                else
                 {
                     await transaction.RollbackAsync();
-                    throw;
+                    _mapDBContext.ChangeTracker.Clear();
+                    var errorMessage = "No rows were affected during SaveChanges.";
+                    _logger.LogError(errorMessage);
+                    throw new Exception(errorMessage);
                 }
+                return pointCount;
             }
-            return 0;
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "An error occurred while adding roads by CSV.");
+                throw;
+            }
         }
         public async Task<AddCategoryInput> getCategoryInput()
         {
@@ -377,94 +401,136 @@ namespace RMIS.Repositories
             }
         }
 
+
         private async Task ProcessCategoryJsonAsync(
-            JToken categorys,
-            Guid parentId,
-            List<Category> categories,
-            List<Pipeline> pipelines,
-            List<Layer> layers,
-            List<GeometryType> geometryTypes)
+    JToken categorys,
+    Guid parentId,
+    List<Category> categories,
+    List<Pipeline> pipelines,
+    List<Layer> layers,
+    List<GeometryType> geometryTypes)
         {
-            // jObject为Category
-            if (categorys is JObject jObject)
+            try
             {
-                var count = 0;
-                foreach (var category in jObject.Properties())
+                // jObject为Category
+                if (categorys is JObject jObject)
                 {
-                    // 新增子類別
-                    var id = Guid.NewGuid();
-                    var newCategory = new Category
+                    var count = 0;
+                    foreach (var category in jObject.Properties())
                     {
-                        Id = id,
-                        Name = category.Name,
-                        ParentId = parentId,
-                        OrderId = count
-                    };
-                    count++;
-                    categories.Add(newCategory);
-
-
-                    await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
-                }
-            }
-            // jArray为Pipeline
-            else if (categorys is JArray jArray)
-            {
-                foreach (var item in jArray)
-                {
-                    // 新增Pipeline
-                    var pipelineId = Guid.NewGuid();
-                    var newPipeline = new Pipeline
-                    {
-                        Id = pipelineId,
-                        Name = item["名稱"]?.ToString(),
-                        ManagementUnit = item["管理單位"]?.ToString(),
-                        Color = item["顏色"]?.ToString(),
-                        CategoryId = parentId
-                    };
-                    pipelines.Add(newPipeline);
-
-                    // 新增Pipeline的Layers
-                    foreach (var prop in item["屬性"])
-                    {
-                        var propName = prop.ToString();
-                        var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propName)
-                            ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propName);
-
-                        Guid geometryTypeId;
-
-                        if (existingGeometryType == null)
+                        try
                         {
-                            // 新增GeometryType
-                            geometryTypeId = Guid.NewGuid();
-                            var newGeometryType = new GeometryType
+                            // 新增子類別
+                            var id = Guid.NewGuid();
+                            var newCategory = new Category
                             {
-                                Id = geometryTypeId,
-                                Name = propName,
-                                Svg = "",
-                                OrderId = geometryTypes.Count + 1,
-                                Kind = "point"
+                                Id = id,
+                                Name = category.Name,
+                                ParentId = parentId,
+                                OrderId = count
                             };
-                            geometryTypes.Add(newGeometryType);
-                        }
-                        else
-                        {
-                            geometryTypeId = existingGeometryType.Id;
-                        }
+                            count++;
+                            categories.Add(newCategory);
 
-                        // 新增Layer
-                        var newLayer = new Layer
+                            _logger.LogInformation("Added Category: {Name}, ParentId: {ParentId}", category.Name, parentId);
+
+                            // 遞歸處理子類別
+                            await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                        }
+                        catch (Exception ex)
                         {
-                            Id = Guid.NewGuid(),
-                            Name = propName,
-                            GeometryTypeId = geometryTypeId,
-                            PipelineId = pipelineId
-                        };
-                        layers.Add(newLayer);
+                            _logger.LogError(ex, "Error processing subcategory: {CategoryName}", category.Name);
+                            throw;
+                        }
+                    }
+                }
+                // jArray为Pipeline
+                else if (categorys is JArray jArray)
+                {
+                    foreach (var item in jArray)
+                    {
+                        try
+                        {
+                            // 新增Pipeline
+                            var pipelineId = Guid.NewGuid();
+                            var newPipeline = new Pipeline
+                            {
+                                Id = pipelineId,
+                                Name = item["名稱"].ToString(),
+                                ManagementUnit = item["管理單位"].ToString(),
+                                Color = item["顏色"].ToString(),
+                                CategoryId = parentId
+                            };
+                            pipelines.Add(newPipeline);
+
+                            _logger.LogInformation("Added Pipeline: {Name}, ParentId: {ParentId}", newPipeline.Name, parentId);
+
+                            // 新增Pipeline的Layers
+                            foreach (var prop in item["屬性"])
+                            {
+                                try
+                                {
+                                    var propName = prop.ToString();
+                                    var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propName)
+                                        ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propName);
+
+                                    Guid geometryTypeId;
+
+                                    if (existingGeometryType == null)
+                                    {
+                                        // 新增GeometryType
+                                        geometryTypeId = Guid.NewGuid();
+                                        var newGeometryType = new GeometryType
+                                        {
+                                            Id = geometryTypeId,
+                                            Name = propName,
+                                            Svg = "",
+                                            OrderId = geometryTypes.Count + 1,
+                                            Kind = "point"
+                                        };
+                                        geometryTypes.Add(newGeometryType);
+
+                                        _logger.LogInformation("Added GeometryType: {Name}", newGeometryType.Name);
+                                    }
+                                    else
+                                    {
+                                        geometryTypeId = existingGeometryType.Id;
+                                    }
+
+                                    // 新增Layer
+                                    var newLayer = new Layer
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        Name = propName,
+                                        GeometryTypeId = geometryTypeId,
+                                        PipelineId = pipelineId
+                                    };
+                                    layers.Add(newLayer);
+
+                                    _logger.LogInformation("Added Layer: {Name}, PipelineId: {PipelineId}", newLayer.Name, pipelineId);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error adding Layer or GeometryType for Pipeline: {PipelineId}", pipelineId);
+                                    throw;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error processing Pipeline: {PipelineName}", item["名稱"]?.ToString());
+                            throw;
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error in ProcessCategoryJsonAsync. ParentId: {ParentId}", parentId);
+                throw;
+            }
         }
+
 
         public async Task<int> DeletePipelineAndCategoryAsync(Guid? pipelineId, Guid? categoryId)
         {

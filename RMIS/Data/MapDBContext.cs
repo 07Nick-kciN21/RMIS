@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using RMIS.Models.sql;
 
 namespace RMIS.Data
@@ -17,10 +18,13 @@ namespace RMIS.Data
         public DbSet<AdminDist> AdminDist { get; set; }
         public DbSet<MapSource> MapSources { get; set; }
         public DbSet<GeometryType> GeometryTypes { get; set; }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
+        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
             // Define the self-referencing foreign key for the Category entity
             modelBuilder.Entity<Category>()
                 .HasOne(c => c.Parent)

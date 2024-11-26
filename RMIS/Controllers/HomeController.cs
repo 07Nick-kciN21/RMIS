@@ -11,10 +11,13 @@ namespace RMIS.Controllers
     {
         private readonly MapDBContext _mapDBContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        public HomeController(MapDBContext mapDBContext, IWebHostEnvironment webHostEnvironment)
+        private readonly ILogger<HomeController> _logger;
+
+        public HomeController(MapDBContext mapDBContext, IWebHostEnvironment webHostEnvironment, ILogger<HomeController> logger)
         {
             _mapDBContext = mapDBContext;
             _webHostEnvironment = webHostEnvironment;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -27,6 +30,7 @@ namespace RMIS.Controllers
             {
                 id = p.Id
             }).ToList();
+            _logger.LogInformation("Index page loaded");
             return View();
         }
 
