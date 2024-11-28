@@ -1,8 +1,11 @@
 ﻿@model RMIS.Models.Admin.AddCategoryInput;
 
+@{
+    ViewData["Title"] = "新增類別";
+    Layout = null; // 禁用 _Layout.cshtml 加载
+}
 
-
-<form asp-controller="Admin" method="post" class="container">
+<form method="post" class="container modal-form">
     <label asp-for="ParentId">母類別(None為根類別)</label>
     <select asp-for="ParentId" asp-items="@Model.parentCategories" class="form-control">
         <option value="">-- None --</option>
@@ -11,6 +14,5 @@
         <label asp-for="Name">類別名稱</label>
         <input asp-for="Name" class="form-control" />
     </div>
-
     <button type="submit" class="btn btn-primary">Create Category</button>
 </form>

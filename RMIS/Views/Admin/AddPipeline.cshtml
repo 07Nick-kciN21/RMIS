@@ -2,10 +2,11 @@
 
 @{
     ViewData["Title"] = "新增管線";
+    Layout = null; // 禁用 _Layout.cshtml 加载
 }
 
 
-<form asp-controller="Admin" method="post" class="container">
+<form method="post" class="container modal-form">
     <div class="form-group">
         <label asp-for="ManagementUnit">管理單位</label>
         <input asp-for="ManagementUnit" class="form-control" />

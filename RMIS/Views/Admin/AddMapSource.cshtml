@@ -2,61 +2,60 @@
 
 @{
     ViewData["Title"] = "新增圖源";
+    Layout = null; // 禁用 _Layout.cshtml 加载
 }
 
-<div class="container">
-    <form asp-controller="Admin" method="post">
-        <div class="form-group">
-            <label asp-for="Url">圖層介接網址</label>
-            <input type="text" class="form-control" asp-for="Url" placeholder="" required />
-            <span asp-validation-for="Url" class="text-danger"></span>
-        </div>
+<form method="post" class="container modal-form">
+    <div class="form-group">
+        <label asp-for="Url">圖層介接網址</label>
+        <input type="text" class="form-control" asp-for="Url" placeholder="" required />
+        <span asp-validation-for="Url" class="text-danger"></span>
+    </div>
 
-        <div class="form-group">
-            <label asp-for="SourceId">圖層介接代碼</label>
-            <input type="text" class="form-control" asp-for="SourceId" placeholder="" required />
-            <span asp-validation-for="SourceId" class="text-danger"></span>
-        </div>
+    <div class="form-group">
+        <label asp-for="SourceId">圖層介接代碼</label>
+        <input type="text" class="form-control" asp-for="SourceId" placeholder="" required />
+        <span asp-validation-for="SourceId" class="text-danger"></span>
+    </div>
 
-        <div class="form-group">
-            <label asp-for="Name">名稱</label>
-            <input type="text" class="form-control" asp-for="Name" required />
-            <span asp-validation-for="Name" class="text-danger"></span>
-        </div>
+    <div class="form-group">
+        <label asp-for="Name">名稱</label>
+        <input type="text" class="form-control" asp-for="Name" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
 
-        <div class="form-group">
-            <label asp-for="Type">圖層類別</label>
-            <select class="form-control" asp-for="Type" onchange="toggleImageFormat()">
-                <option value="basePane">基本圖層</option>
-                <option value="overlayPane">額外圖層</option>
-            </select>
-            <span asp-validation-for="Type" class="text-danger"></span>
-        </div>
+    <div class="form-group">
+        <label asp-for="Type">圖層類別</label>
+        <select class="form-control" asp-for="Type" onchange="toggleImageFormat()">
+            <option value="basePane">基本圖層</option>
+            <option value="overlayPane">額外圖層</option>
+        </select>
+        <span asp-validation-for="Type" class="text-danger"></span>
+    </div>
 
-        <div class="form-group">
-            <label asp-for="TileType"></label>
-            <select class="form-control" asp-for="TileType" onchange="toggleImageFormat()">
-                <option value="WMS">WMS</option>
-                <option value="WMTS">WMTS</option>
-            </select>
-            <span asp-validation-for="TileType" class="text-danger"></span>
-        </div>
+    <div class="form-group">
+        <label asp-for="TileType"></label>
+        <select class="form-control" asp-for="TileType" onchange="toggleImageFormat()">
+            <option value="WMS">WMS</option>
+            <option value="WMTS">WMTS</option>
+        </select>
+        <span asp-validation-for="TileType" class="text-danger"></span>
+    </div>
 
-        <div class="form-group" id="imageFormatGroup">
-            <label asp-for="ImageFormat"></label>
-            <input type="text" class="form-control" asp-for="ImageFormat" placeholder="e.g., image/png, image/jpeg" />
-            <span asp-validation-for="ImageFormat" class="text-danger"></span>
-        </div>
+    <div class="form-group" id="imageFormatGroup">
+        <label asp-for="ImageFormat"></label>
+        <input type="text" class="form-control" asp-for="ImageFormat" placeholder="e.g., image/png, image/jpeg" />
+        <span asp-validation-for="ImageFormat" class="text-danger"></span>
+    </div>
 
-        <div class="form-group">
-            <label asp-for="Attribution"></label>
-            <input type="text" class="form-control" asp-for="Attribution" placeholder="© OpenStreetMap contributors" required />
-            <span asp-validation-for="Attribution" class="text-danger"></span>
-        </div>
+    <div class="form-group">
+        <label asp-for="Attribution"></label>
+        <input type="text" class="form-control" asp-for="Attribution" placeholder="© OpenStreetMap contributors" required />
+        <span asp-validation-for="Attribution" class="text-danger"></span>
+    </div>
 
-        <button type="submit" class="btn btn-primary">Add Map Source</button>
-    </form>
-</div>
+    <button type="submit" class="btn btn-primary">Add Map Source</button>
+</form>
 
 @section Scripts {
     <script>

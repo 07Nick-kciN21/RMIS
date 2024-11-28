@@ -33,7 +33,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
                 {
                     throw new InvalidOperationException("環境變數 'HOMEPATH' 無法解析");
                 }
-                var logPath = $"{homePath}/Documents/Logs/{controller}log-.log";
+                var logPath = $"{homePath}/Documents/Logs/{controller}-.log";
                 wt.File(
                     logPath,
                     rollingInterval: RollingInterval.Day

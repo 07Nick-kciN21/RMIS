@@ -1,38 +1,49 @@
-﻿.dropdown-button {
+﻿.active {
+    background-color: white;
+    color: black;
+}
+
+#adminMenuContent {
+    font-size: 1.5rem;
+    width:180px;
+}
+
+#imageData {
+    max-height: 400px;
+    min-width: 300px;
+}
+
+.dropdown-button {
     background-color: #9ac43e;
-    color: white;
-    padding: 10px 20px;
     border: none;
+    color: white;
     cursor: pointer;
+    padding: 10px 20px;
 }
 
     .dropdown-button:hover {
         background-color: white;
         color: black;
     }
-
-.active {
-    background-color: white;
-    color: black;
-}
-
+    .open {
+        background-color: white;
+        color: black;
+    }
 
 .dropdown-content {
     background-color: #9ac43e;
-    display: none;
-    position: absolute;
-    min-width: 300px;
-    z-index: 1;
-    max-height: 400px;
-    overflow-y: auto;
     border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px
+    border-bottom-right-radius: 5px;
+    display: none;
+    left:-10px;
+    overflow-y: auto;
+    position: absolute;
+    z-index: 1;
 }
 
-
     .dropdown-content li {
-        position: relative;
         background-color: white;
+        position: relative;
     }
 
         .dropdown-content li:hover {
@@ -43,4 +54,7 @@
         list-style-type: none;
     }
 
-
+.modal-link{
+    cursor: pointer;
+    font-size:large
+}

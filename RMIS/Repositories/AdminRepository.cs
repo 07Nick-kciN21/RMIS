@@ -232,18 +232,18 @@ namespace RMIS.Repositories
                         var area = new Area
                         {
                             Id = areaId,
-                            Name = data.road_name,
+                            Name = $"{data.road_name} - 方向 {data.pile_dir}",
                             ConstructionUnit = roadByCSVInput.ConstructionUnit,
                             AdminDistId = adminDistId,
                             LayerId = Guid.Parse(roadByCSVInput.LayerId),
                         };
                         areas.Add(area);
-                        roadId2AreaId[data.road_id] = areaId;
+                        roadId2AreaId[$"{data.road_id}_{data.pile_dir}"] = areaId;
                     }
 
                     foreach (var data in roadpileDatas)
                     {
-                        if (!roadId2AreaId.ContainsKey(data.road_id))
+                        if (!roadId2AreaId.ContainsKey($"{data.road_id}_{data.pile_dir}"))
                         {
                             var errorMessage = $"Road ID {data.road_id} not found in roadId2AreaId map.";
                             _logger.LogError(errorMessage);
@@ -256,7 +256,7 @@ namespace RMIS.Repositories
                             Index = data.pile_distance,
                             Latitude = data.pile_lat,
                             Longitude = data.pile_lon,
-                            AreaId = roadId2AreaId[data.road_id],
+                            AreaId = roadId2AreaId[$"{data.road_id}_{data.pile_dir}"],
                             Property = data.pile_prop
                         };
                         points.Add(point);
@@ -512,9 +512,7 @@ namespace RMIS.Repositories
                 return false;
             }
         }
-
-
-        public async Task<int> DeletePipelineAndCategoryAsync(Guid? pipelineId, Guid? categoryId)
+        public async Task<int> DeletePipelineAsync(Guid? pipelineId)
         {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
@@ -524,10 +522,21 @@ namespace RMIS.Repositories
                 // 删除 Pipeline
                 if (pipelineId.HasValue)
                 {
-                    // 删除 Pipeline 的相关 Layers
+                    // 删除 Pipeline 下的 Layers
                     var layersToDelete = _mapDBContext.Layers.Where(l => l.PipelineId == pipelineId.Value);
+                    foreach (var layer in layersToDelete)
+                    {
+                        // 刪除 Layer 下的 Areas
+                        var areasToDelete = _mapDBContext.Areas.Where(a => a.LayerId == layer.Id);
+                        foreach (var area in areasToDelete)
+                        {
+                            // 刪除 Areas 下的 Points
+                            var pointsToDelete = _mapDBContext.Points.Where(p => p.AreaId == area.Id);
+                            _mapDBContext.Points.RemoveRange(pointsToDelete);
+                        }
+                        _mapDBContext.Areas.RemoveRange(areasToDelete);
+                    }
                     _mapDBContext.Layers.RemoveRange(layersToDelete);
-
                     // 删除 Pipeline
                     var pipelineToDelete = await _mapDBContext.Pipelines.FindAsync(pipelineId.Value);
                     if (pipelineToDelete != null)
@@ -536,7 +545,24 @@ namespace RMIS.Repositories
                     }
                 }
 
-                // 删除 Category
+                rowsAffected += await _mapDBContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return rowsAffected;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        public async Task<int> DeleteCategoryAsync(Guid? categoryId)
+        {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                int rowsAffected = 0;
+
                 if (categoryId.HasValue)
                 {
                     // 遞迴刪除子類別
@@ -548,11 +574,9 @@ namespace RMIS.Repositories
                     {
                         _mapDBContext.Categories.Remove(categoryToDelete);
                     }
+                    rowsAffected += await _mapDBContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
                 }
-
-                rowsAffected += await _mapDBContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-
                 return rowsAffected;
             }
             catch
@@ -577,19 +601,19 @@ namespace RMIS.Repositories
                 await DeleteCategoryRecursiveAsync(childCategory.Id);
             }
 
-            // 刪除當前類别的 Pipelines
+            // 取得當前類别的 Pipelines
             var pipelinesToDelete = await getPipelinesToDeleteAsync(parentId);
             foreach (var pipeline in pipelinesToDelete)
             {
-                // 删除 Pipeline 的 Layers
+                // 取得 Pipeline 的 Layers
                 var layersToDelete = await getLayersToDeleteAsync(pipeline.Id);
                 foreach (var layer in layersToDelete)
                 {
-                    // 删除 Layer 的 Areas
+                    // 取得 Layer 的 Areas
                     var areasToDelete = await getAreasToDeleteAsync(layer.Id);
                     foreach (var area in areasToDelete)
                     {
-                        // 删除 Area 的 Points
+                        // 取得 Area 的 Points
                         var pointsToDelete = await getPointsToDeleteAsync(area.Id);
                         points.AddRange(pointsToDelete);
                     }
@@ -598,7 +622,6 @@ namespace RMIS.Repositories
                 layers.AddRange(layersToDelete);
             }
             pipelines.AddRange(pipelinesToDelete);
-
             _mapDBContext.Points.RemoveRange(points);
             _mapDBContext.Areas.RemoveRange(areas);
             _mapDBContext.Layers.RemoveRange(layers);

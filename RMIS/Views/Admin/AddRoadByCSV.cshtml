@@ -2,13 +2,10 @@
 
 @{
     ViewData["Title"] = "上傳路線資料";
+    Layout = null; // 禁用 _Layout.cshtml 加载
 }
 
 <div class="container">
-    @if (TempData["rowCount"] != null)
-    {
-        <h>(上傳 @TempData["rowCount"] 筆 資料)</h>
-    }
     <form asp-controller="Admin" asp-action="AddRoadByCSV" method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label asp-for="ConstructionUnit" class="control-label">施工單位</label>
@@ -29,7 +26,7 @@
                 <!-- 選項 -->
             </select>
         </div>
-        
+
         <div class="form-group">
             <label asp-for="road_with_pile_Csv" class="control-label">請上傳CSV檔案：</label> <br />
             <input asp-for="road_with_pile_Csv" type="file" class="form-control-file" accept=".csv" />
@@ -38,7 +35,4 @@
         <button type="submit" class="btn btn-primary">上傳資料</button>
     </form>
 </div>
-
-@section Scripts {
-    <script src="~/js/admin/AddRoadByCSV.js"></script>
-}
+<script src="~/js/admin/AddRoadByCSV.js"></script>

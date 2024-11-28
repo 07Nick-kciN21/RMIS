@@ -1,164 +1,167 @@
-﻿#drawTool {
-    padding: 10px 10px 10px;
-    top: 50px;
-    left: -10%;
+﻿.active {
+    background-color: lightgray;
 }
 
-    #drawTool .leaflet-draw-toolbar {
-        box-shadow: none;
-        border-radius: 0;
-        display: flex;
-        flex-direction: row;
-    }
-
-        #drawTool .leaflet-draw-toolbar a
-        {
-            text-indent: -9999px;
-            display: block;
-            width: 26px;
-            height: 26px;
-            overflow: hidden;
-            margin-right: 5px;
-        }
-        #drawTool .leaflet-draw-toolbar a:hover,
-        .drawMenu:hover {
-            background-color:lightgray;
-        }
-
-#drawPolyline {
-    background-image: url('/svg/drawtool/polyline.svg');
-    background-repeat: no-repeat;
-    background-clip: padding-box;
-    background-size: 80%;
-    background-position: center;
-}
-#drawPolygon {
-    background-image: url('/svg/drawtool/polygon.svg');
-    background-repeat: no-repeat;
-    background-clip: padding-box;
-    background-size: 70%;
-    background-position: center;
-}
-#drawRectangle {
-    background-image: url('/svg/drawtool/rectangle.svg');
-    background-repeat: no-repeat;
-    background-clip: padding-box;
-    background-size: 60%;
-    background-position: center;
-}
-#drawCircle {
-    background-image: url('/svg/drawtool/circle.svg');
-    background-repeat: no-repeat;
-    background-clip: padding-box;
-    background-size: 60%;
-    background-position: center;
-}
-
-#drawMarker {
-    background-image: url('/svg/drawtool/marker.svg');
-    background-repeat: no-repeat;
-    background-clip: padding-box;
-    background-size: 60%;
-    background-position: center;
-}
-
-#drawCircleMarker {
-    background-image: url('/svg/drawtool/circlemarker.svg');
-    background-repeat: no-repeat;
-    background-clip: padding-box;
-    background-size: 60%;
-    background-position: center;
-}
-
-#drawText {
-    background-image: url('/svg/drawtool/text.svg');
-    background-repeat: no-repeat;
-}
-
-#drawIO {
-    background-image: url('/svg/drawtool/drawmenu.svg');
-    background-repeat: no-repeat;
-}
-
-
-.drawMenu {
-    right: 10%;
-    width: 35px;
-    height: 35px;
-    background-size: cover;
-    background-color: #fff;
-    border-bottom: 1px solid #ccc;
+.color-box {
     cursor: pointer;
-    margin-right: 5px;
-}
-
-
-.leaflet-bar a:last-child {
-    border-bottom: 1px solid #ccc;
-}
-
-.active{
-    background-color:lightgray;
+    height: 28px;
+    vertical-align: middle;
+    width: 40px;
 }
 
 .colorPickers {
-    gap: 10px;
+    align-items: center;
     display: flex;
-    align-items: center; 
     flex-wrap: wrap;
+    gap: 10px;
 }
 
     .colorPickers > div {
-        flex-basis: 100%; 
+        display: contents;
+        flex-basis: 100%;
+        font-size: 0.9rem;
         gap: 10px;
         justify-content: flex-start;
-        display:contents;
-        font-size:0.9rem;
     }
+
+.custom-color-picker {
+    display: inline-block;
+    position: relative;
+}
+
+.custom-icon svg {
+    height: 48px;
+    width: 48px;
+}
+
+.drawMenu {
+    background-clip: padding-box;
+    background-color: #fff;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+    height: 35px;
+    right: 10%;
+    width: 35px;
+    margin-right:5px;
+}
 
 #colorPickerContent > div > select {
     height: 28px;
 }
 
-.markerSelect {
-    width: 50%; /* or any appropriate size */
-    height: 50%;
+#drawClear {
+    background-image: url('/svg/drawtool/clear.svg');
+    background-size: 60%;
 }
 
+#drawCircle {
+    background-image: url('/svg/drawtool/circle.svg');
+    background-size: 50%;
+}
+
+#drawCircleMarker {
+    background-image: url('/svg/drawtool/circlemarker.svg');
+    background-size: 60%;
+}
+
+#drawIO {
+    background-image: url('/svg/drawtool/drawmenu.svg');
+}
+
+#drawMarker {
+    background-image: url('/svg/drawtool/marker.svg');
+    background-size: 60%;
+}
+
+#drawPolygon {
+    background-image: url('/svg/drawtool/polygon.svg');
+    background-size: 70%;
+}
+
+#drawPolyline {
+    background-image: url('/svg/drawtool/polyline.svg');;
+    background-size: 80%;
+}
+
+#drawRectangle {
+    background-image: url('/svg/drawtool/rectangle.svg');
+    background-size: 60%;
+}
+
+#drawText {
+    background-image: url('/svg/drawtool/text.svg');
+}
+
+#drawTool {
+    left: -10%;
+    padding: 10px 10px 10px;
+    top: 50px;
+}
+
+    #drawTool .leaflet-draw-toolbar {
+        border-radius: 0;
+        box-shadow: none;
+        display: flex;
+        flex-direction: row;
+    }
+
+        #drawTool .leaflet-draw-toolbar a {
+            display: block;
+            height: 26px;
+            margin-right: 5px;
+            overflow: hidden;
+            text-indent: -9999px;
+            width: 26px;
+        }
+
+            #drawTool .leaflet-draw-toolbar a:hover,
+            .drawMenu:hover {
+                background-color: lightgray;
+            }
+    #drawTool .active {
+        background-color: lightgray;
+    }
 
 #markerCircle {
-    width: 24px; /* or any appropriate size */
-    height: 27px;
-    background-size: 65%;
-    background-repeat: no-repeat;
-    background-position-y: center;
     background-image: url('/svg/drawtool/marker/markerCircle.svg');
-}
-
-#markerRectangle {
-    width: 24px; /* or any appropriate size */
-    height: 27px;
-    background-size: 70%;
-    background-repeat: no-repeat;
     background-position-y: center;
-    background-image: url('/svg/drawtool/marker/markerRectangle.svg');
+    background-repeat: no-repeat;
+    background-size: 65%;
+    height: 27px;
+    width: 24px;
 }
 
 #markerCross {
-    width: 24px; /* or any appropriate size */
-    height: 27px;
-    background-size: 70%;
-    background-repeat: no-repeat;
-    background-position-y: center;
     background-image: url('/svg/drawtool/marker/markerCross.svg');
+    background-position-y: center;
+    background-repeat: no-repeat;
+    background-size: 70%;
+    height: 27px;
+    width: 24px;
 }
 
-.custom-icon svg {
-    width: 48px;
-    height: 48px;
+#markerRectangle {
+    background-image: url('/svg/drawtool/marker/markerRectangle.svg');
+    background-position-y: center;
+    background-repeat: no-repeat;
+    background-size: 70%;
+    height: 27px;
+    width: 24px;
 }
 
-.select2-container{
+.markerSelect {
+    height: 50%;
+    width: 50%;
+}
+
+.leaflet-bar a:last-child {
+    border-bottom: 1px solid #ccc;
+}
+
+.select2-container {
     width: 45px !important;
 }
 
@@ -169,16 +172,4 @@
 .select2-selection {
     border: 1px solid #000000 !important;
     border-radius: 0 !important;
-}
-
-.custom-color-picker {
-    position: relative;
-    display: inline-block;
-}
-
-.color-box {
-    width: 40px;
-    height: 28px;
-    vertical-align: middle;
-    cursor: pointer;
 }

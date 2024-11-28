@@ -9,7 +9,7 @@
     }
 
     .leaflet-draw-tooltip {
-        display: none !important; /* 隐藏默认的 Leaflet.draw Tooltip */
+        display: none !important;
     }
 
     #tooltip {
@@ -36,6 +36,7 @@
 <link rel="stylesheet" href="~/css/index/drawtool.css" />
 <link rel="stylesheet" href="~/css/index/painterPanel.css"/>
 <link rel="stylesheet" href="~/css/index/maptool.css" />
+<link rel="stylesheet" href="~/css/index/customModal.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
@@ -62,36 +63,56 @@
                     ☰ 菜單
                 </button>
             </div>
-            <div class="nav-item dropdown">
-                <button id="dropdownMenuLink" class="dropdown-button" data-target="adminMenu">管理員</button>
-                <div id="adminMenu">
-                    <ul class="dropdown-content">
-                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddMapSource">新增圖源</a></li>
-                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddCategory">新增類別</a></li>
-                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddPipeline">新增管線</a></li>
-                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddRoad">新增路線</a></li>
-                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddRoadByCSV">上傳路線資料</a></li>
-                        <li><a class="nav-link text-dark modal-link" data-action="/Admin/AddCategoryByJson">上傳圖資類別</a></li>
-                    </ul>
-                </div>
-                
-            </div>
+            
             <div id="navbar-menu" class="toggle navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
+                <div class="nav-item dropdown">
+                    <button id="dropdownMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
+                    <div id="adminMenuContent" class="dropdown-content">
+                        <ul id="adminMenu" class="menu-background">
+                            <li>
+                                <a class="nav-link text-success modal-link" data-action="/Admin/AddMapSource">
+                                    <h4>新增圖源</h4>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link text-success modal-link" data-action="/Admin/AddCategory">
+                                    <h4>新增類別</h4>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link text-success modal-link" data-action="/Admin/AddPipeline">
+                                    <h4>新增管線</h4>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadByCSV">
+                                    <h4>上傳路線資料</h4>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link text-success modal-link" data-action="/Admin/AddCategoryByJson">
+                                    <h4>上傳圖資類別</h4>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
                 <div class="nav-item dropdown">
                     <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
                 </div>
                 <div class="nav-item dropdown">
-                    <button class="dropdown-button" id="top-vav1" data-target="top-vav-list1">業務圖資</button>
-                    <div class="dropdown-content" id="top-vav-list1">
+                    <button class="dropdown-button" id="imageDataBtn" data-target="imageData">業務圖資</button>
+                    <div class="dropdown-content" id="imageData">
                     </div>
                 </div>
                 <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list2" aria-expanded="false">
                         常用連結
                     </button>
                 </div>
                 <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list3" aria-expanded="false">
                         下載專區
                     </button>
                 </div>
@@ -144,6 +165,7 @@
         <button class="closeButton">&times;</button>
     </div>
     <div id="drawTool" style="display:flex">
+        <div id="drawClear" class="drawMenu" title="橡皮擦"></div>
         <div id="drawPolyline" class="drawMenu" title="繪製線段"></div>
         <div id="drawPolygon" class="drawMenu" title="繪製多邊形"></div>
         <div id="drawRectangle" class="drawMenu" title="繪製矩形"></div>
@@ -161,10 +183,9 @@
     <div class="panelInput" style="display:block">
         <div id="colorPicker" class="colorPickers">
             <div id="colorPickerContent">
-                
             </div>
             <div>
-                <button class="goDraw" style="width: 100%; display:none">繪製</button>
+                <button class="goDraw">繪製</button>
             </div>
         </div>
     </div>
@@ -346,18 +367,16 @@
 
 <div id="tooltip" style="display: none;">點擊地圖顯示正射影像</div>
 
-<div class="modal fade" id="ajaxModal" tabindex="-1" aria-labelledby="ajaxModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+<div id="customModal" class="modal-overlay hidden">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="ajaxModalLabel">Loading...</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p>Loading content...</p>
-      </div>
+        <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Loading...</h5>
+            <button class="close-modal">x</button>
+        </div>
+        <div class="modal-body">
+            <p>Loading content...</p>
+        </div>
     </div>
-  </div>
 </div>
 
 @section Scripts {
@@ -369,26 +388,4 @@
         let layers = {};
     </script>
     <script type="module" src="~/js/main.js"></script>
-    <script>
-        $(document).ready(function () {
-
-            $('.modal-link').on('click', function (e) {
-                e.preventDefault();
-                // 獲取要加載的頁面 URL
-                var url = $(this).data('action');
-                // 打開 Modal 並顯示 Loading 信息
-                var modal = new bootstrap.Modal($('#ajaxModal'));
-                $('#ajaxModalLabel').text($(this).text());
-                $('#ajaxModal .modal-body').html('<p>Loading content...</p>');
-                // 發送 AJAX 請求來加載頁面內容
-                $.get(url, function (data) {
-                    $('#ajaxModal .modal-body').html(data);
-                }).fail(function () {
-                    $('#ajaxModal .modal-body').html('<p>Error loading content. Please try again later.</p>');
-                });
-                // 顯示 Modal
-                modal.show();
-            });
-        });
-    </script>
 }

@@ -27,26 +27,25 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddPipeline()
         {
             var input = await _adminInterface.getPipelineInput();
-            _logger.LogInformation("AddPipeline page loaded");
+            _logger.LogInformation("已載入新增管線頁面");
             return View(input);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddPipeline(AddPipelineInput pipelineInput)
+        public async Task<IActionResult> AddPipeline(AddPipelineInput input)
         {
-            var rowsAffected = await _adminInterface.AddPipelineAsync(pipelineInput);
+            var rowsAffected = await _adminInterface.AddPipelineAsync(input);
 
             if (rowsAffected > 0)
             {
-                _logger.LogInformation($"Add {rowsAffected} Pipeline data to Database");
-                return RedirectToAction("AddPipeline", "Admin");
+                _logger.LogInformation($"已新增 {rowsAffected} 筆管線資料到資料庫");
+                return Ok($"已新增 {rowsAffected} 筆管線資料到資料庫");
             }
             else
             {
-                _logger.LogInformation($"No changes were made to the database.");
+                _logger.LogInformation("未對資料庫進行任何變更");
+                return BadRequest("未對資料庫進行任何變更");
             }
-
-            return RedirectToAction("AddPipeline", "Admin");
         }
 
         [HttpGet]
@@ -57,21 +56,20 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddRoad(AddRoadInput roadInput)
+        public async Task<IActionResult> AddRoad(AddRoadInput input)
         {
-            var rowsAffected = await _adminInterface.AddRoadAsync(roadInput);
+            var rowsAffected = await _adminInterface.AddRoadAsync(input);
 
             if (rowsAffected > 0)
             {
-                _logger.LogInformation($"Add {rowsAffected} Road data to Database");
-                return RedirectToAction("AddRoad", "Admin");
+                _logger.LogInformation($"已新增 {rowsAffected} 筆道路資料到資料庫");
+                return Ok($"已新增 {rowsAffected} 筆道路資料到資料庫");
             }
             else
             {
-                _logger.LogInformation($"No changes were made to the database.");
+                _logger.LogInformation("未對資料庫進行任何變更");
+                return BadRequest("未對資料庫進行任何變更");
             }
-
-            return RedirectToAction("AddRoad", "Admin");
         }
 
         [HttpGet]
@@ -82,20 +80,19 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddRoadByCSV(AddRoadByCSVInput roadbycsvInput)
+        public async Task<IActionResult> AddRoadByCSV(AddRoadByCSVInput input)
         {
-            var rowsAffected = await _adminInterface.AddRoadByCSVAsync(roadbycsvInput);
+            var rowsAffected = await _adminInterface.AddRoadByCSVAsync(input);
             if (rowsAffected > 0)
             {
-                _logger.LogInformation($"Add {rowsAffected} Road data from CSV to Database");
-                TempData["rowCount"] = rowsAffected;
-                return RedirectToAction("AddRoadByCSV", "Admin");
+                _logger.LogInformation($"已從CSV新增 {rowsAffected} 筆道路資料到資料庫");
+                return Ok($"已從CSV新增 {rowsAffected} 筆道路資料到資料庫");
             }
             else
             {
-                _logger.LogInformation($"No changes were made to the database.");
+                _logger.LogInformation("未對資料庫進行任何變更");
+                return BadRequest("未對資料庫進行任何變更");
             }
-            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
@@ -106,21 +103,20 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCategory(AddCategoryInput categoryInput)
+        public async Task<IActionResult> AddCategory(AddCategoryInput input)
         {
-            var rowsAffected = await _adminInterface.AddCategoryAsync(categoryInput);
+            var rowsAffected = await _adminInterface.AddCategoryAsync(input);
 
             if (rowsAffected > 0)
             {
-                _logger.LogInformation($"Add {rowsAffected} Category data to Database");
-                return RedirectToAction("AddCategory", "Admin");
+                _logger.LogInformation($"已新增 {rowsAffected} 筆類別資料到資料庫");
+                return Ok($"已新增 {rowsAffected} 筆類別資料到資料庫");
             }
             else
             {
-                _logger.LogInformation($"No changes were made to the database.");
+                _logger.LogInformation("未對資料庫進行任何變更");
+                return BadRequest("未對資料庫進行任何變更");
             }
-
-            return RedirectToAction("AddCategory", "Admin");
         }
 
         [HttpGet]
@@ -130,21 +126,20 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddMapSource(AddMapSourceInput mapsourceInput)
+        public async Task<IActionResult> AddMapSource(AddMapSourceInput input)
         {
-            var rowsAffected = await _adminInterface.AddMapSourceAsync(mapsourceInput);
+            var rowsAffected = await _adminInterface.AddMapSourceAsync(input);
 
             if (rowsAffected > 0)
             {
-                _logger.LogInformation($"Add {rowsAffected} MapSource data to Database");
-                return RedirectToAction("AddMapSource", "Admin");
+                _logger.LogInformation($"已新增 {rowsAffected} 筆地圖來源資料到資料庫");
+                return Ok($"已新增 {rowsAffected} 筆地圖來源資料到資料庫");
             }
             else
             {
-                _logger.LogInformation($"No changes were made to the database.");
+                _logger.LogInformation("未對資料庫進行任何變更");
+                return BadRequest("未對資料庫進行任何變更");
             }
-
-            return RedirectToAction("AddMapSource", "Admin");
         }
 
         [HttpGet]
@@ -154,16 +149,16 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCategoryByJson(AddCategoryByJsonInput categoryByJsonInput)
+        public async Task<IActionResult> AddCategoryByJson(AddCategoryByJsonInput input)
         {
-            if (categoryByJsonInput?.categoryWithpipeline == null || categoryByJsonInput.categoryWithpipeline.Length == 0)
+            if (input?.categoryWithpipeline == null || input.categoryWithpipeline.Length == 0)
             {
                 ModelState.AddModelError("categoryWithpipeline", "請上傳有效的 JSON 檔案。");
-                return View();
+                return BadRequest("請上傳有效的 JSON 檔案。");
             }
 
-            using (var stream = categoryByJsonInput.categoryWithpipeline.OpenReadStream())
-            using (var reader = new StreamReader(stream, Encoding.UTF8)) // 指定 UTF-8 編碼
+            using (var stream = input.categoryWithpipeline.OpenReadStream())
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
                 var jsonContent = await reader.ReadToEndAsync();
                 var jsonToken = JToken.Parse(jsonContent);
@@ -173,26 +168,24 @@ namespace RMIS.Controllers
                 if (jsonToken is JObject jObject)
                 {
                     result = await _adminInterface.AddCategoryByJsonAsync(jObject);
-
                 }
 
                 if (result.categoryCount > 0 || result.pipelineCount > 0)
                 {
-                    _logger.LogInformation($"Add {result.categoryCount} Category and {result.pipelineCount} Pipeline data from JSON to Database");
-                    TempData["categoryCount"] = result.categoryCount;
-                    TempData["pipelineCount"] = result.pipelineCount;
+                    _logger.LogInformation($"已從JSON檔案新增 {result.categoryCount} 筆類別及 {result.pipelineCount} 筆管線資料到資料庫");
+                    return Ok($"上傳{result.categoryCount}筆類別, {result.pipelineCount}筆項目");
                 }
                 else if (result.categoryCount == -1 && result.pipelineCount == -1)
                 {
-                    _logger.LogError("An error occurred while processing the JSON file. All changes have been discarded.");
+                    _logger.LogError("處理JSON檔案時發生錯誤，所有變更已被捨棄。");
                     ModelState.AddModelError("categoryWithpipeline", "發生錯誤，所有變更已被捨棄。");
-                    return View();
+                    return BadRequest(ModelState);
                 }
                 else
                 {
-                    _logger.LogInformation($"No changes were made to the database.");
+                    _logger.LogInformation("未對資料庫進行任何變更");
+                    return BadRequest("沒有輸入資料");
                 }
-                return RedirectToAction("AddCategoryByJson", "Admin");
             }
         }
     }

@@ -1,25 +1,15 @@
-﻿
-@model RMIS.Models.Admin.AddCategoryByJsonInput;
+﻿@model RMIS.Models.Admin.AddCategoryByJsonInput;
 
 @{
     ViewData["Title"] = "上傳圖資類別";
+    Layout = null; // 禁用 _Layout.cshtml 加载
 }
 
-<div class="container">
-    @if (TempData["categoryCount"] != null && int.TryParse(TempData["categoryCount"].ToString(), out int categoryCount) && categoryCount > 0)
-    {
-        <h>上傳 @TempData["categoryCount"] 筆類別</h>
-    }
-    @if (TempData["pipelineCount"] != null && int.TryParse(TempData["pipelineCount"].ToString(), out int pipelineCount) && pipelineCount > 0)
-    {
-        <h>上傳 @TempData["pipelineCount"] 筆管線</h>
-    }
-    <form asp-controller="Admin" enctype="multipart/form-data" method="post">
-        <div class="form-group">
-            <label for="categoryWithpipeline" class="control-label">請上傳 JSON 檔案：</label> <br />
-            <input asp-for="categoryWithpipeline" type="file" class="form-control-file" accept=".json" />
-            <span asp-validation-for="categoryWithpipeline" class="text-danger"></span>
-        </div>
-        <button type="submit" class="btn btn-primary">上傳資料</button>
-    </form>
-</div>
+<form method="post" class="container modal-form">
+    <div class="form-group">
+        <label for="categoryWithpipeline" class="control-label">請上傳 JSON 檔案：</label> <br />
+        <input asp-for="categoryWithpipeline" type="file" class="form-control-file" accept=".json" />
+        <span asp-validation-for="categoryWithpipeline" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">上傳資料</button>
+</form>

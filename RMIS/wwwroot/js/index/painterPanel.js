@@ -7,6 +7,7 @@ let borderWidth = 1;
 let drawControl;
 let drawnItems;
 let layerCount = 0;
+let itemMap = {};
 export function initPainterPanel() {
     $indexMap = getIndexMap();
 
@@ -37,6 +38,9 @@ export function initPainterPanel() {
                 break;
             case 'text':
                 tooltipMessage = '點擊地圖以放置文字';
+                break;
+            case 'clear':
+                tooltipMessage = '點擊圖形進行清除'
                 break;
             default:
                 tooltipMessage = '開始繪製';
@@ -80,7 +84,6 @@ export function initPainterPanel() {
         draw();
     });
 
-    // observePainterPanel()
 }
 
 let selectTool;
@@ -101,15 +104,21 @@ function initDraw() {
             $('#ptbInOut').toggle(); // 切換選單顯示和隱藏
             initInOut();
         }
+        else if (drawItem == "drawClear") {
+            $('#colorPickerContent').empty();
+            $('.goDraw').css('display', 'none');
+            initClear();
+        }
         else {
             initColorPicker(drawItem);
-            $(this).addClass('active');
         }
+        $(this).addClass('active');
     });
 }
 
 function initColorPicker(drawItem) {
     let colorPickerContent;
+    
     if (drawItem == "drawPolyline") {
         colorPickerContent = `
             <div>
@@ -433,6 +442,47 @@ function initPolygon() {
         }
     });
 }
+
+
+var eraserMode = false;
+function initClear() {
+    // 啟用橡皮擦模式
+    eraserMode = true;
+    console.log("eraser on")
+    // 改變地圖樣式提示用戶進入橡皮擦模式
+    $($indexMap.getContainer()).css('cursor', 'not-allowed');
+
+    // 監聽所有圖層的點擊事件來刪除圖層
+    drawnItems.eachLayer(function (layer) {
+        $(layer).on('click', function () {
+            if (eraserMode) {
+                drawnItems.removeLayer(layer); // 刪除被點擊的圖層
+                var layerId = itemMap[layer._leaflet_id];
+                $(`#${layerId}`).remove();
+            }
+        });
+    });
+
+    // 點擊其他 ".drawMenu" 元素時退出橡皮擦模式
+    $('.drawMenu').not('#drawClear').on('click', exitEraserMode);
+}
+
+// 退出橡皮擦模式的函數
+function exitEraserMode() {
+    eraserMode = false;
+
+    // 恢復地圖光標樣式
+    $($indexMap.getContainer()).css('cursor', '');
+
+    // 移除每個圖層上的刪除事件，防止誤刪除
+    drawnItems.eachLayer(function (layer) {
+        $(layer).off('click');
+    });
+
+    // 移除 ".drawMenu" 的事件監聽器
+    $('.drawMenu').off('click', exitEraserMode);
+}
+
 function initCircle() {
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
@@ -797,8 +847,11 @@ function downloadJson(data, filename) {
 
 //加入圖層表單
 function addItem(layerId, layer) {
-    const $painterList = $('#painterList');
 
+    console.log(`layer._leaflet_id: ${layer._leaflet_id}`);
+    itemMap[layer._leaflet_id] = layerId;
+
+    const $painterList = $('#painterList');
     const item = `
     <div id=${layerId} class="searchBar panelResult">
         <div id="point_${layerId}" class="point_on_map"></div>

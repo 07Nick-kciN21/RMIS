@@ -4,7 +4,6 @@ import { add2List, remove2List} from './list.js';
 
 export let layerList = {};
 
-
 // 業務圖資下拉選單控制
 export function generateMenu(data, parent_name, index) {
     let html = '<ul class=';
@@ -72,15 +71,20 @@ export function generateMenu(data, parent_name, index) {
     return html;
 }
 
+var isAdminMenuEnabled = false;
 export function bindMenuEvents() {
-    // 顯示或隱藏
-    $('.dropdown-button').click(function (e) {
+    $(document).ready(function () {
+        var targetId = $('#imageDataBtn').data('target');
+        var targetElement = $(`#${targetId}`);
+        observeDisplayChanges($('#imageDataBtn'), targetElement);
+    });
+    $('#imageDataBtn').click(function (e) {
         e.stopPropagation();
         var targetId = $(this).data('target');
         console.log(targetId);
         $(`#${targetId}`).toggle();
+        updateOpenState($(this), $(`#${targetId}`));
     });
-
     $('.menu-node').click(function (e) {
         console.log("click menu");
         e.stopPropagation();
@@ -117,4 +121,22 @@ export function bindMenuEvents() {
             });
         }
     });
+}
+
+function observeDisplayChanges(triggerElement, targetElement) {
+    const observer = new MutationObserver(() => {
+        updateOpenState(triggerElement, targetElement);
+    });
+
+    observer.observe(targetElement[0], {
+        attributes: true,
+        attributeFilter: ['style'] // 監控 style 屬性變化
+    });
+}
+function updateOpenState(triggerElement, targetElement) {
+    if (targetElement.is(':visible')) {
+        triggerElement.addClass("open");
+    } else {
+        triggerElement.removeClass("open");
+    }
 }
