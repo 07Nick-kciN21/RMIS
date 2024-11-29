@@ -8,6 +8,11 @@ let drawControl;
 let drawnItems;
 let layerCount = 0;
 let itemMap = {};
+// 操作堆疊
+let operationStack = [];
+// 取消堆疊
+let cancelStack = [];
+let importJsonData = null;
 export function initPainterPanel() {
     $indexMap = getIndexMap();
 
@@ -87,12 +92,14 @@ export function initPainterPanel() {
 }
 
 let selectTool;
+
+// 開始繪製
 function initDraw() {
     drawnItems = new L.FeatureGroup();
     $indexMap.addLayer(drawnItems);
 
     // 使用 jQuery 手動啟用多邊形繪製
-    $('.drawMenu').click(function (event) {
+    $('.dtPan').click(function (event) {
         if (selectTool) {
             selectTool.removeClass('active');
         }
@@ -114,8 +121,15 @@ function initDraw() {
         }
         $(this).addClass('active');
     });
+    $('#drawUndo').click(function () {
+        undo();
+    });
+    $('#drawRedo').click(function () {
+        redo();
+    })
 }
 
+// 選擇工具時創造對應的選項
 function initColorPicker(drawItem) {
     let colorPickerContent;
     
@@ -250,10 +264,15 @@ function generateOptions(min, max) {
     return options;
 }
 
-
+// 生成繪畫物件
 function handleLayerCreation(event, layerCount) {
     var layerId = 'layer-' + layerCount;
     var layer = event.layer;
+    var action = {
+        type: 'create',
+        layer: layer
+    }
+    saveOperation(action);
     applyLayerStyle(layer, event.layerType);
     if (event.layerType === 'polygon' || event.layerType === 'rectangle') {
         displayArea(layer);
@@ -264,6 +283,7 @@ function handleLayerCreation(event, layerCount) {
     addItem(layerId, layer);
 }
 
+// 物件加入設定
 function applyLayerStyle(layer, layerType) {
     if (layerType != 'marker' && layerType != 'text') {
         let style = {
@@ -463,8 +483,8 @@ function initClear() {
         });
     });
 
-    // 點擊其他 ".drawMenu" 元素時退出橡皮擦模式
-    $('.drawMenu').not('#drawClear').on('click', exitEraserMode);
+    // 點擊其他 ".dtPan" 元素時退出橡皮擦模式
+    $('.dtPan').not('#drawClear').on('click', exitEraserMode);
 }
 
 // 退出橡皮擦模式的函數
@@ -479,8 +499,8 @@ function exitEraserMode() {
         $(layer).off('click');
     });
 
-    // 移除 ".drawMenu" 的事件監聽器
-    $('.drawMenu').off('click', exitEraserMode);
+    // 移除 ".dtPan" 的事件監聽器
+    $('.dtPan').off('click', exitEraserMode);
 }
 
 function initCircle() {
@@ -722,10 +742,13 @@ function importGeoJson() {
             var reader = new FileReader();
             reader.onload = function (e) {
                 try {
+                    cancelStack.length = 0;
+                    operationStack.length = 0;
                     var jsonData = JSON.parse(e.target.result);
                     importCustomJson(jsonData);
+                    importJsonData = jsonData;
                 } catch (error) {
-                    console.error('Invalid JSON file');
+                    alert('Json檔案讀取失敗');
                 }
             };
             reader.readAsText(file);
@@ -734,9 +757,26 @@ function importGeoJson() {
     input.click();
 }
 
+// 從還原操作中復原json
+function recoverJson(jsonData) {
+    let layerCount = 0;
+    jsonData.forEach(function (layerData) {
+        var layer;
+        const layerId = 'layer-' + layerCount++;
+        layer = createLayerFromData(layerData);
+        if (layer) {
+            drawnItems.addLayer(layer);
+            addItem(layerId, layer);
+        }
+    });
+}
+
 function importCustomJson(jsonData) {
     clearLayers();
     let layerCount = 0;
+    
+    var action = { type: 'import' };
+    saveOperation(action);
     jsonData.forEach(function (layerData) {
         var layer;
         const layerId = 'layer-' + layerCount++;
@@ -785,12 +825,14 @@ function createLayerFromData(layerData) {
     }
 }
 
+// 清空當前的物件列表
 function clearLayers() {
     console.log("clear Layer");
     drawnItems.clearLayers();
     $('#painterList').empty();
 }
 
+// 匯出物件
 function exportLayers() {
     var exportData = [];
     drawnItems.eachLayer(function (layer) {
@@ -801,6 +843,8 @@ function exportLayers() {
     });
     downloadJson(exportData, "drawn_layers_custom.json");
 }
+
+// 取得物件資訊
 function getLayerData(layer) {
     var layerData = {
         type: null,
@@ -847,7 +891,6 @@ function downloadJson(data, filename) {
 
 //加入圖層表單
 function addItem(layerId, layer) {
-
     console.log(`layer._leaflet_id: ${layer._leaflet_id}`);
     itemMap[layer._leaflet_id] = layerId;
 
@@ -866,7 +909,6 @@ function addItem(layerId, layer) {
     $painterList.append(item);
 
     const $point = $(`#point_${layerId}`);
-    
     $point.on('click', function () {
         let center = null;
         if (layer instanceof L.Polygon || layer instanceof L.Rectangle || layer instanceof L.Polyline) {
@@ -897,7 +939,6 @@ function addItem(layerId, layer) {
     $editable.on('click', function () {
         if (isEditing)
             return;
-
         isEditing = true;
         var cname = $(this).text().trim();
         $(this).empty().append(`<input id="edit_${layerId}" style="border: none; outline: none;" type="text" value="${cname}"></input>`);
@@ -917,6 +958,7 @@ function addItem(layerId, layer) {
         });
     });
 }
+
 function toggleLayerVisibility($eye, layer) {
     if ($eye.hasClass('eyeOpen')) {
         $indexMap.removeLayer(layer);
@@ -928,10 +970,85 @@ function toggleLayerVisibility($eye, layer) {
 }
 
 function removeLayer(layerId, layer) {
+    var action = {
+        type: 'delete',
+        layer: layer
+    }
+    saveOperation(action);
     drawnItems.removeLayer(layer);
     $(`#${layerId}`).remove();
 }
 
+// 保存操作到操作堆疊並清空取消堆疊
+function saveOperation(state) {
+    operationStack.push(state);
+    cancelStack.length = 0; // 清空取消堆疊
+}
+
+// 撤銷操作
+function undo() {
+    console.log("operationStack：", operationStack);
+    console.log("cancelStack：", cancelStack);
+    if (operationStack.length > 0) {
+        const state = operationStack.pop();
+        excuteUndoOP(state);
+        cancelStack.push(state);
+    }
+    else {
+        alert('沒有可以復原的操作');
+    }
+}
+
+// 取消撤銷
+function redo() {
+    console.log("operationStack：", operationStack);
+    console.log("cancelStack：", cancelStack);
+    if (cancelStack.length > 0) {
+        const state = cancelStack.pop();
+        excuteRedoOP(state);
+        operationStack.push(state); // 將操作重新放回操作堆疊
+    } else {
+        alert('沒有可以取消復原的操作');
+    }
+
+}
+
+// 執行返回操作
+function excuteUndoOP(state) {
+    
+    if (state.type == 'create') {
+        var layer_id = itemMap[state.layer._leaflet_id];
+        drawnItems.removeLayer(state.layer);
+        $(`#${layer_id}`).remove();
+    }
+    else if (state.type == 'remove') {
+        var layer_id = itemMap[state.layer._leaflet_id];
+        drawnItems.addLayer(state.layer);
+        addItem(layer_id, state.layer);
+    }
+    else if (state.type == 'import') {
+        clearLayers();
+    }
+}
+
+// 執行取消府回操作
+function excuteRedoOP(state) {
+    
+    if (state.type == 'create') {
+        var layer_id = itemMap[state.layer._leaflet_id];
+        drawnItems.addLayer(state.layer);
+        addItem(layer_id, state.layer);
+    }
+    else if (state.type == 'remove') {
+        var layer_id = itemMap[state.layer._leaflet_id];
+        drawnItems.removeLayer(state.layer);
+        $(`#${layer_id}`).remove();
+    }
+    else if (state.type == 'import') {
+        recoverJson(importJsonData);
+    }
+    
+}
 // 監聽painterPanel，綁定顯示
 function observePainterPanel() {
     const $painterPanel = $('#painterPanel');
@@ -957,3 +1074,4 @@ function observePainterPanel() {
     const observer = new MutationObserver(callback);
     observer.observe($painterPanel[0], config);
 }
+

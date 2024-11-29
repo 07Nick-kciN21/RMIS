@@ -62,10 +62,18 @@
     background-size: 50%;
 }
 
-#drawCircleMarker {
-    background-image: url('/svg/drawtool/circlemarker.svg');
-    background-size: 60%;
+#drawUndo {
+    background-image: url('/svg/drawtool/back.svg');
 }
+
+#drawRedo {
+    background-image: url('/svg/drawtool/noback.svg');
+}
+
+    #drawCircleMarker {
+        background-image: url('/svg/drawtool/circlemarker.svg');
+        background-size: 60%;
+    }
 
 #drawIO {
     background-image: url('/svg/drawtool/drawmenu.svg');
@@ -82,7 +90,7 @@
 }
 
 #drawPolyline {
-    background-image: url('/svg/drawtool/polyline.svg');;
+    background-image: url('/svg/drawtool/polyline.svg');
     background-size: 80%;
 }
 
@@ -152,6 +160,9 @@
     width: 24px;
 }
 
+.finalTool{
+    margin-right:0 !important;
+}
 .markerSelect {
     height: 50%;
     width: 50%;
