@@ -395,7 +395,6 @@ function getShapeOption4() {
     };
 }
 function initPolyline() {
-
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
 
@@ -408,17 +407,51 @@ function initPolyline() {
         }
     });
 
+    let vertexLatLngs = [];
+
+    // 創建自定義的 tooltip 並添加到 body 中
+    const lengthTooltip = document.createElement('div');
+    lengthTooltip.className = "tip";
+    document.body.appendChild(lengthTooltip);
+
     // 啟用折線繪製模式
     polylineDrawer.enable();
+
+    // 監聽 mousemove 事件來動態顯示長度
+    $indexMap.on('mousemove', function (e) {
+        if (vertexLatLngs.length > 0) {
+            // 添加鼠標當前位置作為新的點
+            const currentLatLngs = vertexLatLngs.concat(e.latlng);
+
+            // 計算從起點到當前位置的總長度
+            let length = 0;
+            for (let i = 1; i < currentLatLngs.length; i++) {
+                length += currentLatLngs[i - 1].distanceTo(currentLatLngs[i]);
+            }
+
+            // 更新 tooltip 的位置和顯示內容
+            lengthTooltip.style.left = (e.originalEvent.pageX + 15) + 'px';
+            lengthTooltip.style.top = (e.originalEvent.pageY + 15) + 'px';
+            lengthTooltip.style.display = 'block';
+            lengthTooltip.innerHTML = '距離: ' + length.toFixed(2) + ' 米';
+        }
+    });
+
+    // 監聽點擊事件來添加頂點
+    $indexMap.on('click', function (e) {
+        vertexLatLngs.push(e.latlng);
+    });
+
     // 使用一次性事件監聽器，只在繪製完成後處理一次
     $indexMap.once(L.Draw.Event.CREATED, function (event) {
         if (event.layerType === 'polyline') {
             const layer = event.layer;
 
-            layer.setStyle(getShapeOption2())
+            // 設置完成後的樣式
+            layer.setStyle(getShapeOption2());
+
             // 添加到地圖
             $indexMap.addLayer(layer);
-
             console.log("Polyline created");
 
             // 停止繪製
@@ -426,9 +459,35 @@ function initPolyline() {
 
             // 手動觸發繪圖停止事件，重新顯示工具面板
             $indexMap.fire('draw:drawstop');
+
+            // 隱藏 tooltip
+            lengthTooltip.style.display = 'none';
+
+            // 添加長度標籤到地圖上最後的位置
+            const lastLatLng = vertexLatLngs[vertexLatLngs.length - 1];
+            if (lastLatLng) {
+                const totalLength = vertexLatLngs.reduce((acc, cur, idx, arr) => {
+                    if (idx === 0) return acc;
+                    return acc + arr[idx - 1].distanceTo(cur);
+                }, 0);
+
+                // 在最後的點位置添加一個 Marker 或 Tooltip 來顯示距離
+                L.marker(lastLatLng, {
+                    icon: L.divIcon({
+                        className: 'length-label',
+                        html: `<div class="tip" >距離: ${totalLength.toFixed(2)} 米</div>`,
+                        iconSize: null // 確保大小不隨縮放變化
+                    }),
+                    interactive: false // 不讓它阻礙鼠標事件
+                }).addTo($indexMap);
+            }
+
+            // 移除 mousemove 事件監聽
+            $indexMap.off('mousemove');
         }
     });
 }
+
 function initPolygon() {
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
@@ -605,7 +664,7 @@ function initRectangle() {
             opacity: 1.0
         }
     });
-
+    $('#measuretip').css('display', 'block');
     // 啟用矩形繪製模式
     rectangleDrawer.enable();
 
