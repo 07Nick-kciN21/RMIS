@@ -70,10 +70,15 @@
     background-image: url('/svg/drawtool/noback.svg');
 }
 
-    #drawCircleMarker {
-        background-image: url('/svg/drawtool/circlemarker.svg');
-        background-size: 60%;
-    }
+#drawEdit {
+    background-image: url('/svg/drawtool/edit.svg');
+    background-size: 50%;
+}
+
+#drawCircleMarker {
+    background-image: url('/svg/drawtool/circlemarker.svg');
+    background-size: 60%;
+}
 
 #drawIO {
     background-image: url('/svg/drawtool/drawmenu.svg');

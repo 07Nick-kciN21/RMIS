@@ -53,3 +53,9 @@
     background-size: 80%;
     background-position: center;
 }
+
+#tb-measure {
+    background-image: url('/svg/tiptool/measure.svg');
+    background-size: 80%;
+    background-position: right;
+}

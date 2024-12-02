@@ -18,6 +18,11 @@ export function initPainterPanel() {
 
     initDraw();
 
+    // 監聽編輯開始
+    $indexMap.on('draw:editstart', function () {
+        $('#painterPanel').addClass('hide');
+    });
+
     // 監聽繪圖開始事件
     $indexMap.on('draw:drawstart', function (e) {
         $('#painterPanel').addClass('hide');
@@ -56,8 +61,8 @@ export function initPainterPanel() {
             className: 'custom-tooltip',
             direction: 'top'
         }).setContent(tooltipMessage)
-          .setLatLng($indexMap.getCenter())
-          .addTo($indexMap);
+            .setLatLng($indexMap.getCenter())
+            .addTo($indexMap);
 
         $indexMap.on('mousemove', function (event) {
             tooltip.setLatLng(event.latlng);
@@ -74,13 +79,18 @@ export function initPainterPanel() {
         $('#painterPanel').removeClass('hide');
     });
 
+    // 監聽編輯結束
+    $indexMap.on('draw:editstop', function () {
+        $('#painterPanel').removeClass('hide');
+    });
+
     // 監聽繪圖創建事件以重新顯示工具列
     $indexMap.on('draw:created', function () {
         $('#painterPanel').removeClass('hide');
     });
 
-    // 監聽 L.Draw.Event.CREATED 並處理圖層創建
-    $indexMap.on(L.Draw.Event.CREATED, function (e) {
+    // 監聽 'draw:created' 並處理圖層創建
+    $indexMap.on('draw:created', function (e) {
         console.log("draw Created", layerCount);
         handleLayerCreation(e, layerCount++);
     });
@@ -132,7 +142,7 @@ function initDraw() {
 // 選擇工具時創造對應的選項
 function initColorPicker(drawItem) {
     let colorPickerContent;
-    
+
     if (drawItem == "drawPolyline") {
         colorPickerContent = `
             <div>
@@ -352,6 +362,9 @@ function draw() {
     if (selectTool.attr('id') == "drawText") {
         initText();
     }
+    if (selectTool.attr('id') == "drawEdit") {
+        initEdit();
+    }
 }
 function getShapeOption1() {
     const fillColor = $('#cp_fillColor').val();
@@ -394,7 +407,9 @@ function getShapeOption4() {
         fillColor: fillColor,
     };
 }
+
 function initPolyline() {
+
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
 
@@ -407,51 +422,17 @@ function initPolyline() {
         }
     });
 
-    let vertexLatLngs = [];
-
-    // 創建自定義的 tooltip 並添加到 body 中
-    const lengthTooltip = document.createElement('div');
-    lengthTooltip.className = "tip";
-    document.body.appendChild(lengthTooltip);
-
     // 啟用折線繪製模式
     polylineDrawer.enable();
-
-    // 監聽 mousemove 事件來動態顯示長度
-    $indexMap.on('mousemove', function (e) {
-        if (vertexLatLngs.length > 0) {
-            // 添加鼠標當前位置作為新的點
-            const currentLatLngs = vertexLatLngs.concat(e.latlng);
-
-            // 計算從起點到當前位置的總長度
-            let length = 0;
-            for (let i = 1; i < currentLatLngs.length; i++) {
-                length += currentLatLngs[i - 1].distanceTo(currentLatLngs[i]);
-            }
-
-            // 更新 tooltip 的位置和顯示內容
-            lengthTooltip.style.left = (e.originalEvent.pageX + 15) + 'px';
-            lengthTooltip.style.top = (e.originalEvent.pageY + 15) + 'px';
-            lengthTooltip.style.display = 'block';
-            lengthTooltip.innerHTML = '距離: ' + length.toFixed(2) + ' 米';
-        }
-    });
-
-    // 監聽點擊事件來添加頂點
-    $indexMap.on('click', function (e) {
-        vertexLatLngs.push(e.latlng);
-    });
-
     // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+    $indexMap.once('draw:created', function (event) {
         if (event.layerType === 'polyline') {
             const layer = event.layer;
 
-            // 設置完成後的樣式
-            layer.setStyle(getShapeOption2());
-
+            layer.setStyle(getShapeOption2())
             // 添加到地圖
             $indexMap.addLayer(layer);
+
             console.log("Polyline created");
 
             // 停止繪製
@@ -459,31 +440,6 @@ function initPolyline() {
 
             // 手動觸發繪圖停止事件，重新顯示工具面板
             $indexMap.fire('draw:drawstop');
-
-            // 隱藏 tooltip
-            lengthTooltip.style.display = 'none';
-
-            // 添加長度標籤到地圖上最後的位置
-            const lastLatLng = vertexLatLngs[vertexLatLngs.length - 1];
-            if (lastLatLng) {
-                const totalLength = vertexLatLngs.reduce((acc, cur, idx, arr) => {
-                    if (idx === 0) return acc;
-                    return acc + arr[idx - 1].distanceTo(cur);
-                }, 0);
-
-                // 在最後的點位置添加一個 Marker 或 Tooltip 來顯示距離
-                L.marker(lastLatLng, {
-                    icon: L.divIcon({
-                        className: 'length-label',
-                        html: `<div class="tip" >距離: ${totalLength.toFixed(2)} 米</div>`,
-                        iconSize: null // 確保大小不隨縮放變化
-                    }),
-                    interactive: false // 不讓它阻礙鼠標事件
-                }).addTo($indexMap);
-            }
-
-            // 移除 mousemove 事件監聽
-            $indexMap.off('mousemove');
         }
     });
 }
@@ -501,7 +457,7 @@ function initPolygon() {
     polygonDrawer.enable();
 
     // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+    $indexMap.once('draw:created', function (event) {
         if (event.layerType === 'polygon') {
             const layer = event.layer;
 
@@ -562,6 +518,54 @@ function exitEraserMode() {
     $('.dtPan').off('click', exitEraserMode);
 }
 
+function initEdit() {
+
+    var editHandler = new L.EditToolbar.Edit($indexMap, {
+        featureGroup: drawnItems
+    });
+    editHandler.enable(); // 啟動編輯模式
+
+    // 當使用者開始編輯時
+    $indexMap.on('draw:editstart', function (e) {
+        console.log('Edit mode activated.');
+    });
+
+    // 當使用者在編輯過程中，例如移動圖層、調整形狀等
+    $indexMap.on('draw:editmove', function (e) {
+        var layer = e.layer;
+        console.log('Layer moved:', layer);
+    });
+
+    // 當使用者調整多邊形的頂點
+    $indexMap.on('draw:editvertex', function (e) {
+        console.log('Vertex edited.');
+    });
+
+    // 當使用者完成編輯並點擊保存按鈕時
+    $indexMap.on('draw:edited', function (e) {
+        var layers = e.layers;
+
+        layers.eachLayer(function (layer) {
+            console.log('Layer edited:', layer);
+
+            var updatedGeoJSON = layer.toGeoJSON();
+            console.log('Updated GeoJSON:', updatedGeoJSON);
+
+        });
+        console.log('Edit mode finished.');
+    });
+
+    // 當使用者結束編輯模式（無論是否保存）
+    $indexMap.on('draw:editstop', function (e) {
+        console.log('Edit mode deactivated.');
+    });
+
+    // 右鍵退出編輯模式
+    $indexMap.on('contextmenu', function (e) {
+        editHandler.disable();
+    });
+}
+
 function initCircle() {
     // 手動觸發繪圖開始事件
     $indexMap.fire('draw:drawstart');
@@ -579,7 +583,7 @@ function initCircle() {
     circleDrawer.enable();
 
     // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+    $indexMap.once('draw:created', function (event) {
         if (event.layerType === 'circle') {
             const layer = event.layer;
 
@@ -611,7 +615,7 @@ function initMarker() {
         svgElement.setAttribute('width', fontSize);
         svgElement.setAttribute('height', fontSize);
         svgElement.setAttribute('fill', fillColor);
-        
+
         const customIcon = new L.DivIcon({
             html: new XMLSerializer().serializeToString(svgElement),
             className: '',
@@ -631,7 +635,7 @@ function initMarker() {
         markerDrawer.enable();
 
         // 使用一次性事件監聽器，只在繪製完成後處理一次
-        $indexMap.once(L.Draw.Event.CREATED, function (event) {
+        $indexMap.once('draw:created', function (event) {
             if (event.layerType === 'marker') {
                 const layer = event.layer;
 
@@ -669,7 +673,7 @@ function initRectangle() {
     rectangleDrawer.enable();
 
     // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+    $indexMap.once('draw:created', function (event) {
         if (event.layerType === 'rectangle') {
             const layer = event.layer;
             layer.setStyle(getShapeOption1());
@@ -704,7 +708,7 @@ function initCircleMarker() {
     circleMarkerDrawer.enable();
 
     // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once(L.Draw.Event.CREATED, function (event) {
+    $indexMap.once('draw:created', function (event) {
         if (event.layerType === 'circlemarker') {
             const layer = event.layer;
             layer.setStyle(getShapeOption1());
@@ -741,8 +745,8 @@ function initText() {
             })
 
             $indexMap.addLayer(textMarker);
-            // 手動觸發 L.Draw.Event.CREATED 事件，確保流程一致
-            $indexMap.fire(L.Draw.Event.CREATED, {
+            // 手動觸發 'draw:created' 事件，確保流程一致
+            $indexMap.fire('draw:created', {
                 layer: textMarker,
                 layerType: 'text'
             });
@@ -833,7 +837,7 @@ function recoverJson(jsonData) {
 function importCustomJson(jsonData) {
     clearLayers();
     let layerCount = 0;
-    
+
     var action = { type: 'import' };
     saveOperation(action);
     jsonData.forEach(function (layerData) {
@@ -1074,7 +1078,7 @@ function redo() {
 
 // 執行返回操作
 function excuteUndoOP(state) {
-    
+
     if (state.type == 'create') {
         var layer_id = itemMap[state.layer._leaflet_id];
         drawnItems.removeLayer(state.layer);
@@ -1092,7 +1096,7 @@ function excuteUndoOP(state) {
 
 // 執行取消府回操作
 function excuteRedoOP(state) {
-    
+
     if (state.type == 'create') {
         var layer_id = itemMap[state.layer._leaflet_id];
         drawnItems.addLayer(state.layer);
@@ -1106,7 +1110,7 @@ function excuteRedoOP(state) {
     else if (state.type == 'import') {
         recoverJson(importJsonData);
     }
-    
+
 }
 // 監聽painterPanel，綁定顯示
 function observePainterPanel() {
@@ -1133,4 +1137,3 @@ function observePainterPanel() {
     const observer = new MutationObserver(callback);
     observer.observe($painterPanel[0], config);
 }
-
