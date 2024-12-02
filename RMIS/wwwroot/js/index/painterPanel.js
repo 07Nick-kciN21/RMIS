@@ -21,6 +21,31 @@ export function initPainterPanel() {
     // 監聽編輯開始
     $indexMap.on('draw:editstart', function () {
         $('#painterPanel').addClass('hide');
+
+        // 提示訊息
+        const tooltipMessage = "右鍵退出編輯模式";
+
+        // 創建一個臨時的 Tooltip 並將其添加到地圖
+        const tooltip = L.tooltip({
+            permanent: false,
+            className: 'tip',
+            direction: 'right'
+        }).setContent(tooltipMessage)
+            .setLatLng($indexMap.getCenter())
+            .addTo($indexMap);
+
+        // 當鼠標移動時，更新 Tooltip 位置
+        function moveTooltip(event) {
+            tooltip.setLatLng(event.latlng);
+        }
+
+        $indexMap.on('mousemove', moveTooltip);
+
+        // 當編輯模式停止時，移除 Tooltip 並取消鼠標移動事件綁定
+        $indexMap.on('draw:editstop', function () {
+            $indexMap.removeLayer(tooltip);
+            $indexMap.off('mousemove', moveTooltip);
+        });
     });
 
     // 監聽繪圖開始事件
@@ -58,8 +83,8 @@ export function initPainterPanel() {
 
         const tooltip = L.tooltip({
             permanent: false,
-            className: 'custom-tooltip',
-            direction: 'top'
+            className: 'tip',
+            direction: 'right'
         }).setContent(tooltipMessage)
             .setLatLng($indexMap.getCenter())
             .addTo($indexMap);
@@ -68,7 +93,7 @@ export function initPainterPanel() {
             tooltip.setLatLng(event.latlng);
         });
 
-        // 移除 Tooltip 当绘图结束
+        // 繪圖完成時移除tooltip
         $indexMap.on('draw:drawstop', function () {
             $indexMap.removeLayer(tooltip);
         });
@@ -125,6 +150,9 @@ function initDraw() {
             $('#colorPickerContent').empty();
             $('.goDraw').css('display', 'none');
             initClear();
+        }
+        else if (drawItem == "drawEdit") {
+            initEdit();
         }
         else {
             initColorPicker(drawItem);
@@ -361,9 +389,6 @@ function draw() {
     }
     if (selectTool.attr('id') == "drawText") {
         initText();
-    }
-    if (selectTool.attr('id') == "drawEdit") {
-        initEdit();
     }
 }
 function getShapeOption1() {
@@ -1084,7 +1109,7 @@ function excuteUndoOP(state) {
         drawnItems.removeLayer(state.layer);
         $(`#${layer_id}`).remove();
     }
-    else if (state.type == 'remove') {
+    else if (state.type == 'remove' || state.type == 'delete') {
         var layer_id = itemMap[state.layer._leaflet_id];
         drawnItems.addLayer(state.layer);
         addItem(layer_id, state.layer);
@@ -1102,7 +1127,7 @@ function excuteRedoOP(state) {
         drawnItems.addLayer(state.layer);
         addItem(layer_id, state.layer);
     }
-    else if (state.type == 'remove') {
+    else if (state.type == 'remove' || state.type == 'delete') {
         var layer_id = itemMap[state.layer._leaflet_id];
         drawnItems.removeLayer(state.layer);
         $(`#${layer_id}`).remove();
