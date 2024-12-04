@@ -6,44 +6,52 @@ let drawnItems;
 let dynamicMarker;
 let area;
 let latlngs = [];
+let labelMarker;
+let labelLengths = [];
+let measureItem;
+let lineVisible = true;
+let totalVisible = true;
 export function initMeasurePanel() {
     $indexMap = getIndexMap();
     initMeasure();
 
     // 設定中文語言
-    $indexMap.pm.setLang('zh', {
-        tooltips: {
-            placeMarker: '點擊放置標記',
-            firstVertex: '點擊開始繪製',
-            continueLine: '點擊繼續繪製線段',
-            finishLine: '點擊完成繪製線段',
-            finishPoly: '點擊完成繪製多邊形',
-            finishRect: '點擊完成繪製矩形',
-            startCircle: '點擊並拖動繪製圓形',
-            finishCircle: '釋放滑鼠完成圓形繪製',
-            placeCircleMarker: '點擊放置圓標記'
-        },
-        actions: {
-            finish: '完成',
-            cancel: '取消',
-            removeLastVertex: '移除最後一個頂點'
-        },
-        buttonTitles: {
-            drawMarkerButton: '繪製標記',
-            drawPolylineButton: '繪製線段',
-            drawPolygonButton: '繪製多邊形',
-            drawRectangleButton: '繪製矩形',
-            drawCircleButton: '繪製圓形',
-            drawCircleMarkerButton: '繪製圓標記',
-            editModeButton: '編輯圖層',
-            dragModeButton: '拖曳圖層',
-            cutPolygonButton: '剪切多邊形',
-            removalModeButton: '刪除圖層'
-        }
-    });
+    //$indexMap.pm.setLang('zh', {
+    //    tooltips: false,
+    //    //tooltips: {
+    //    //    placeMarker: '點擊放置標記',
+    //    //    firstVertex: '點擊開始繪製',
+    //    //    continueLine: '點擊繼續繪製線段',
+    //    //    finishLine: '點擊完成繪製線段',
+    //    //    finishPoly: '點擊完成繪製多邊形',
+    //    //    finishRect: '點擊完成繪製矩形',
+    //    //    startCircle: '點擊並拖動繪製圓形',
+    //    //    finishCircle: '釋放滑鼠完成圓形繪製',
+    //    //    placeCircleMarker: '點擊放置圓標記'
+    //    //},
+    //    actions: {
+    //        finish: '完成',
+    //        cancel: '取消',
+    //        removeLastVertex: '移除最後一個頂點'
+    //    },
+    //    buttonTitles: {
+    //        drawMarkerButton: '繪製標記',
+    //        drawPolylineButton: '繪製線段',
+    //        drawPolygonButton: '繪製多邊形',
+    //        drawRectangleButton: '繪製矩形',
+    //        drawCircleButton: '繪製圓形',
+    //        drawCircleMarkerButton: '繪製圓標記',
+    //        editModeButton: '編輯圖層',
+    //        dragModeButton: '拖曳圖層',
+    //        cutPolygonButton: '剪切多邊形',
+    //        removalModeButton: '刪除圖層'
+    //    }
+    //});
 
     // 切換到中文
-    $indexMap.pm.setLang('zh');
+    // $indexMap.pm.setLang('zh');
+    $indexMap.pm.setGlobalOptions({ tooltips: false });
+
     $indexMap.pm.enableGlobalRemovalMode();
 
     dynamicMarker = null; // 儲存動態更新的 Marker
@@ -54,27 +62,26 @@ export function initMeasurePanel() {
             $indexMap.removeLayer(dynamicMarker);
             dynamicMarker = null;
         }
-
-        // 對正在製作的圖層進行編輯
+        labelMarker = null;
+        labelLengths = [];
         const workingLayer = e.workingLayer;
-        $("#measureTip").toggle();
-        workingLayer.lengthMarkers = [];
-        workingLayer.lengths = [];
+        if (measureItem == "measurePolygon") {
+            $("#measureTip").html(`面積: 0.00 m²`);
+        }
+        else {
+            $("#measureTip").html(`長度: 0.00 m`);
+        }
+        $("#measureTip").show();
+
         // 新增頂點時，同時新增長度標籤
         workingLayer.on("pm:vertexadded", (event) => {
-            console.log("pm:vertexadded", latlngs);
 
             if (latlngs.length >= 2) {
-                const start = latlngs[latlngs.length - 2];
-                const end = latlngs[latlngs.length - 1];
-                const length = $indexMap.distance(start, end);
-                updateLineLength(start, end, workingLayer.lengthMarkers);
-                console.log("pm:vertexadded");
+                updateLineLength();
             }
         });
         // 根據滑鼠移動
         workingLayer.on('pm:change', function (event) {
-            const measureItem = selectTool.attr('id');
             if (measureItem == "measurePolygon") {
                 latlngs = event.latlngs;
                 const { lat, lng } = latlngs[latlngs.length - 1]; // 當前滑鼠座標
@@ -104,35 +111,52 @@ export function initMeasurePanel() {
                     const start = latlngs[latlngs.length - 2];
                     const end = latlngs[latlngs.length - 1];
                     const length = $indexMap.distance(start, end);
-                    $("#measureTip").html(`長度: ${ length.toFixed(2) } m²`);
+                    $("#measureTip").html(`長度: ${ length.toFixed(2) } m`);
                 }
             }
         });
-$(document).on('mousemove', function (e) {
-    $('#measureTip')
-        .css({
-            left: e.pageX + 10 + 'px',
-            top: e.pageY - 20 + 'px',
+    });
+    $(document).on('mousemove', function (e) {
+        $('#measureTip').css({
+            left: e.pageX - 45 + 'px',
+            top: e.pageY + 20 + 'px',
         });
-});
+    });
+    // 繪圖完成事件
+    $indexMap.on('pm:create', function (e) {
+        const layer = e.layer;
+        console.log('繪圖完成:', layer);
+        
+        layer.labelLengths = labelLengths;
+        $("#measureTip").hide();
+        $("#measureTip").html("");
+        drawnItems.addLayer(layer);
+
+        if (measureItem === "measurePolygon") {
+            updateLineLength();
+            updatePolygonArea(layer);
+        } else if (measureItem === "measurePolyline") {
+            updatePolylineLength(layer);
+        }
     });
 
-// 繪圖完成事件
-$indexMap.on('pm:create', function (e) {
-    const layer = e.layer;
-    console.log('繪圖完成:', layer);
-    $("#measureTip").toggle();
-    drawnItems.addLayer(layer);
-    const measureItem = selectTool.attr('id');
+    $('#showLine').on('click', function () {
+        lineVisible = !lineVisible;
+        if (lineVisible) {
+            $('.measureLine').removeClass('hidden');
+        } else {
+            $('.measureLine').addClass('hidden');
+        }
+    });
 
-    if (measureItem === "measurePolygon") {
-        console.log(`多邊形面積: ${ area.toFixed(2) } 平方米`);
-        updatePolygonArea(layer);
-    } else if (measureItem === "measurePolyline") {
-        console.log(`線段總長度: ${ length.toFixed(2) } 公里`);
-        updatePolylineLength(layer);
-    }
-});
+    $('#showTotal').on('click', function () {
+        totalVisible = !totalVisible;
+        if (totalVisible) {
+            $('.measureTotal').removeClass('hidden');
+        } else {
+            $('.measureTotal').addClass('hidden');
+        }
+    });
 }
 
 function initMeasure() {
@@ -146,28 +170,34 @@ function initMeasure() {
 
     $indexMap.pm.removeControls();
 
-    $('.mBtn').click(function (event) {
+    $('.mBtn').on('click', function() {
         if (selectTool) {
             selectTool.removeClass('active');
             $indexMap.pm.disableDraw();
         }
-
         selectTool = $(this);
-        const measureItem = selectTool.attr('id');
+        measureItem = selectTool.attr('id');
         if (measureItem === "measurePolygon") {
             console.log("measurePolygon click");
+            $(this).addClass('active');
             initPolygon();
         } else if (measureItem === "measurePolyline") {
             console.log("measurePolyline click");
+            $(this).addClass('active');
             initPolyline();
-        } else {
+        } else if (measureItem === "measureEraser") {
             clearAll();
         }
-        $(this).addClass('active');
     });
 }
 
-function updateLineLength(start, end, lengthMarkers) {
+// 點擊新增active
+// 再點關閉active
+// 關閉時
+
+function updateLineLength() {
+    const start = latlngs[latlngs.length - 2];
+    const end = latlngs[latlngs.length - 1];
     const segmentLength = $indexMap.distance(start, end); // 使用 Leaflet 計算兩點之間的距離
 
     // 計算線段的中點
@@ -176,13 +206,13 @@ function updateLineLength(start, end, lengthMarkers) {
 
     // 創建長度標籤
     const segmentLabel = L.divIcon({
-        className: 'measureLabel', // 自訂樣式
-        html: `${ segmentLength.toFixed(2) } m`,
+        className: `measureLine ${lineVisible ? null : 'hidden'}`, // 自訂樣式
+        html: `${segmentLength.toFixed(2)} m`,
         iconSize: [200, 50]
     });
 
     const marker = L.marker([middleLat, middleLng], { icon: segmentLabel }).addTo($indexMap);
-    lengthMarkers.push(marker); // 保存標籤以便後續刪除
+    labelLengths.push(marker); // 保存標籤以便後續刪除
 }
 
 function updatePolygonArea(layer) {
@@ -191,20 +221,20 @@ function updatePolygonArea(layer) {
     const centroid = turf.centroid(geojson); // 計算多邊形的質心
 
     const centroidCoords = centroid.geometry.coordinates; // 質心經緯度
-    const areaText = `${ area.toFixed(2)} m²`; // 格式化面積
+    const areaText = `${area.toFixed(2)} m²`; // 格式化面積
 
     // 創建面積標籤
     const areaLabel = L.divIcon({
-        className: 'measureLabel', // 自訂樣式類
+        className: `measureTotal ${totalVisible ? null : 'hidden'}`, // 自訂樣式類
         html: areaText,
         iconSize: [200, 50]
     });
 
     // 將面積標籤添加到多邊形中
-    const labelMarker = L.marker([centroidCoords[1], centroidCoords[0]], {
+    const marker = L.marker([centroidCoords[1], centroidCoords[0]], {
         icon: areaLabel
     }).addTo($indexMap);
-    layer.labelMarker = labelMarker;
+    layer.labelMarker = marker;
 }
 
 function updatePolylineLength(layer) {
@@ -220,8 +250,8 @@ function updatePolylineLength(layer) {
 
     // 創建總長度標籤
     const totalLengthLabel = L.divIcon({
-        className: 'measureLabel',
-        html: `總長度: ${(totalLength / 1000).toFixed(2)} km`,
+        className: `measureTotal ${totalVisible ? null : 'hidden'}`,
+        html: `${(totalLength / 1000).toFixed(2)} km`,
         iconSize: [200, 50]
     });
     const marker = L.marker(lastLatlng, { icon: totalLengthLabel }).addTo($indexMap);
@@ -241,12 +271,12 @@ function clearAll() {
         if (layer.labelMarker) {
             $indexMap.removeLayer(layer.labelMarker); // 確實刪除標籤
         }
-        if (layer.lengthMarkers) {
-            layer.lengthMarkers.forEach((lengthMarker) => {
-                $indexMap.removeLayer(lengthMarker);
+        if (layer.labelLengths) {
+            layer.labelLengths.forEach((labelLength) => {
+                $indexMap.removeLayer(labelLength);
             });
         }
     });
     drawnItems.clearLayers(); // 清除圖層
     console.log('所有繪圖和標籤已清除');
-}
+} 

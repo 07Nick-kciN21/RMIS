@@ -21,15 +21,11 @@
     background-color:gray;
 }
 
-#measureTool .active {
-    background-color: gray;
-}
-
 .leaflet-pm-tooltip {
     display: none !important;
 }
 
-.measureLabel {
+.measureTotal {
     text-align: center; /* 多行文字居中 */
     font-size: 24px; /* 讓文字更大 */
     font-weight: bold; /* 加粗字體 */
@@ -38,7 +34,7 @@
     line-height: 1.2; /* 調整行距，確保文字填滿 */
 }
 
-.lengthLabel {
+.measureLine {
     text-align: center; /* 多行文字居中 */
     color: red;
     font-size: 12px; /* 讓文字更大 */
@@ -46,9 +42,4 @@
     overflow: hidden; /* 防止文字溢出 */
     word-wrap: break-word; /* 避免文字超出寬度 */
     line-height: 1.2; /* 調整行距，確保文字填滿 */
-}
-
-.rotatedLabel {
-    transform-origin: center; /* 使旋轉以標籤中心為基準 */
-    white-space: nowrap; /* 防止文字換行，確保標籤一致性 */
 }
