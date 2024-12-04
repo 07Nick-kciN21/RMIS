@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Folder Include="Logs\" />
+    <Folder Include="wwwroot\svg\measure\" />
     <Folder Include="測試資料\" />
     <Folder Include="wwwroot\js\index\ctrlSidebar\" />
   </ItemGroup>

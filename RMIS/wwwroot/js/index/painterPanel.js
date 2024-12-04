@@ -8,10 +8,7 @@ let drawControl;
 let drawnItems;
 let layerCount = 0;
 let itemMap = {};
-// 操作堆疊
-let operationStack = [];
-// 取消堆疊
-let cancelStack = [];
+
 let importJsonData = null;
 export function initPainterPanel() {
     $indexMap = getIndexMap();
@@ -79,6 +76,7 @@ export function initPainterPanel() {
                 break;
             default:
                 tooltipMessage = '開始繪製';
+                break;
         }
 
         const tooltip = L.tooltip({
@@ -134,7 +132,7 @@ function initDraw() {
     $indexMap.addLayer(drawnItems);
 
     // 使用 jQuery 手動啟用多邊形繪製
-    $('.dtPan').click(function (event) {
+    $('.dtBtn').click(function (event) {
         if (selectTool) {
             selectTool.removeClass('active');
         }
@@ -523,8 +521,8 @@ function initClear() {
         });
     });
 
-    // 點擊其他 ".dtPan" 元素時退出橡皮擦模式
-    $('.dtPan').not('#drawClear').on('click', exitEraserMode);
+    // 點擊其他 ".dtBtn" 元素時退出橡皮擦模式
+    $('.dtBtn').not('#drawClear').on('click', exitEraserMode);
 }
 
 // 退出橡皮擦模式的函數
@@ -539,8 +537,8 @@ function exitEraserMode() {
         $(layer).off('click');
     });
 
-    // 移除 ".dtPan" 的事件監聽器
-    $('.dtPan').off('click', exitEraserMode);
+    // 移除 ".dtBtn" 的事件監聽器
+    $('.dtBtn').off('click', exitEraserMode);
 }
 
 function initEdit() {
@@ -1067,6 +1065,11 @@ function removeLayer(layerId, layer) {
     $(`#${layerId}`).remove();
 }
 
+// 操作堆疊
+let operationStack = [];
+// 取消堆疊
+let cancelStack = [];
+
 // 保存操作到操作堆疊並清空取消堆疊
 function saveOperation(state) {
     operationStack.push(state);
@@ -1075,8 +1078,6 @@ function saveOperation(state) {
 
 // 撤銷操作
 function undo() {
-    console.log("operationStack：", operationStack);
-    console.log("cancelStack：", cancelStack);
     if (operationStack.length > 0) {
         const state = operationStack.pop();
         excuteUndoOP(state);
@@ -1089,8 +1090,6 @@ function undo() {
 
 // 取消撤銷
 function redo() {
-    console.log("operationStack：", operationStack);
-    console.log("cancelStack：", cancelStack);
     if (cancelStack.length > 0) {
         const state = cancelStack.pop();
         excuteRedoOP(state);

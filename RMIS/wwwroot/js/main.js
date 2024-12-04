@@ -7,7 +7,7 @@ import { initPainterPanel } from './index/painterPanel.js'
 import { initPhoto } from './index/photo.js'
 import { initSearchPropPanel } from './index/propPanel/searchPropPanel.js'
 import { initModal } from './index/modal.js';
-import { initMeasure } from './index/measure.js';
+import { initMeasurePanel } from './index/measure.js';
 $(document).ready(function () {
     // 初始化地图
     initMap("indexMap");
@@ -20,11 +20,12 @@ $(document).ready(function () {
     initPanel("searchPanel2");
     initPanel("painterPanel");
     initPanel("searchPropPanel");
+    initPanel("measurePanel");
     initSearchPanel();
     initPainterPanel();
     initPhoto();
     initSearchPropPanel();
-    initMeasure();
+    initMeasurePanel();
 
     bindMenuEvents();
 });

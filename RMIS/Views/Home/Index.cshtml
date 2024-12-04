@@ -135,7 +135,7 @@
         <span id="tb-searchPanel" title="道路快搜"></span>
         <span id="tb-painterPanel" title="繪圖板"></span>
         <span id="tb-searchPropPanel" title="屬性搜尋"></span>
-        @* <span id="tb-measure" title="測量"></span> *@
+        <span id="tb-measurePanel" title="測量"></span>
     </div>
 </div>
 
@@ -166,18 +166,18 @@
         <button class="closeButton">&times;</button>
     </div>
     <div id="drawTool" style="display:flex">
-        <div id="drawClear" class="drawMenu dtPan" title="橡皮擦"></div>
+        <div id="drawClear" class="drawMenu dtBtn" title="橡皮擦"></div>
         <div id="drawUndo" class="drawMenu" title="復原"></div>
         <div id="drawRedo" class="drawMenu" title="取消復原"></div>
-        <div id="drawEdit" class="drawMenu dtPan" title="編輯"></div>
-        <div id="drawPolyline" class="drawMenu dtPan" title="繪製線段"></div>
-        <div id="drawPolygon" class="drawMenu dtPan" title="繪製多邊形"></div>
-        <div id="drawRectangle" class="drawMenu dtPan" title="繪製矩形"></div>
-        <div id="drawCircle" class="drawMenu dtPan" title="繪製圓形"></div>
-        <div id="drawCircleMarker" class="drawMenu dtPan" title="繪製圓形標記"></div>
-        <div id="drawMarker" class="drawMenu dtPan" title="繪製標記"></div>
-        <div id="drawText" class="drawMenu dtPan" title="繪製文字"></div>
-        <div id="drawIO" class="drawMenu dtPan finalTool" title="匯入/匯出">
+        <div id="drawEdit" class="drawMenu dtBtn" title="編輯"></div>
+        <div id="drawPolyline" class="drawMenu dtBtn" title="繪製線段"></div>
+        <div id="drawPolygon" class="drawMenu dtBtn" title="繪製多邊形"></div>
+        <div id="drawRectangle" class="drawMenu dtBtn" title="繪製矩形"></div>
+        <div id="drawCircle" class="drawMenu dtBtn" title="繪製圓形"></div>
+        <div id="drawCircleMarker" class="drawMenu dtBtn" title="繪製圓形標記"></div>
+        <div id="drawMarker" class="drawMenu dtBtn" title="繪製標記"></div>
+        <div id="drawText" class="drawMenu dtBtn" title="繪製文字"></div>
+        <div id="drawIO" class="drawMenu dtBtn finalTool" title="匯入/匯出">
             <ul id="ptbInOut">
                 <li id="ptbIO_0" aria-expanded="true">匯入Json</li>
                 <li id="ptbIO_1">匯出Json</li>
@@ -369,9 +369,25 @@
     </div>
 </div>
 
-<div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
+<div id="measurePanel" class="panel hide">
+    <div class="panelHeading">
+        <span>
+            測量
+        </span>
+        <button class="closeButton">&times;</button>
+    </div>
+    <div id="measureTool" class="panelFooter" style="display:flex">
+        <div id="measurePolyline" class="drawMenu mBtn" title="路線測量">
+        </div>
+        <div id="measurePolygon" class="drawMenu mBtn" title="面積測量">
+        </div>
+        <div id="measureEraser" class="drawMenu mBtn finalTool" title="清除全部">
+        </div>
+    </div>
+</div>
 
-@* <div id="measuretip" class="tip" style="display: none;"></div> *@
+<div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
+<div id="measureTip" class="tip" style="display: none;"></div>
 
 <div id="customModal" class="modal-overlay hidden">
     <div class="modal-content">

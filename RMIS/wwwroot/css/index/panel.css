@@ -21,6 +21,10 @@
     height:100px;
 }
 
+#measurePanel {
+    width: 130px;
+    height: 100px;
+}
 
 .panel {
     z-index: 1051;
