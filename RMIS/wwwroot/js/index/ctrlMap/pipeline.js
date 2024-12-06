@@ -1,4 +1,4 @@
-﻿import { addLayer2Map, removeLayer2Map } from './layers.js';
+﻿import { removeLayer2Map } from './layers.js';
 
 export function addPipeline(id) {
     return new Promise((resolve, reject) => {
@@ -15,26 +15,6 @@ export function addPipeline(id) {
             }
         });
     });
-}
-
-// 
-export function createNewLayer(result) {
-    var newLayer = L.layerGroup();
-    console.log(result.type);
-    result.areas.forEach(function (area) {
-        let points = area.points.map(function (point) {
-            return [point.latitude, point.longitude];
-        });
-        console.log(points);
-        if (result.type === "point") {
-            addMarkersToLayer(points, area, newLayer, result.svg);
-        } else if (result.type === "line") {
-            addLineToLayer(points, area, newLayer);
-        } else if (result.type === "polygon") {
-            addPolygonToLayer(points, area, newLayer);
-        }
-    });
-    return newLayer;
 }
 
 // 

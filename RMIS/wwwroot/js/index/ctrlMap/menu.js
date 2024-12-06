@@ -103,21 +103,20 @@ export function bindMenuEvents() {
         var id = $(this).attr('id');
         var name = $(this).children('span').text();
         var $switch = $(this).children('.switch');
-        if (!layerList[id]) {
-            addPipeline(id).then(result => {
-                layerList[id] = true;
-                add2List(id, name, result);
-                addLayer2Map(id, result);
-                $switch.removeClass('switch-off');
-                $switch.addClass('switch-on');
-            });
-        } else {
+        // 如果為switch-on，則移除圖層；否則新增圖層
+        if ($switch.hasClass('switch-on')) {
             removePipeline(id).then(result => {
                 layerList[id] = false;
                 console.log("Remove from List");
                 remove2List(id);
-                $switch.removeClass('switch-on');
-                $switch.addClass('switch-off');
+                $switch.removeClass('switch-on').addClass('switch-off');
+            });
+        } else {
+            addPipeline(id).then(result => {
+                layerList[id] = true;
+                add2List(id, name, result);
+                addLayer2Map(id, result);
+                $switch.removeClass('switch-off').addClass('switch-on');
             });
         }
     });

@@ -5,6 +5,8 @@ export let layerProps = {};
 export let layers = {};
 let indexMap;
 let pipelineId;
+
+// 將圖層加入地圖
 export function addLayer2Map(id ,LayerData) {
     indexMap = getIndexMap();
     if (!indexMap) {
@@ -44,7 +46,8 @@ export function addLayer2Map(id ,LayerData) {
     });
 }
 
-export function createNewLayer(result) {
+// 建立新物件的圖層
+function createNewLayer(result) {
     var newLayer = L.layerGroup();
     if (!indexMap) {
         console.error('indexMap is not initialized.');

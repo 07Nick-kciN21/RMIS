@@ -13,8 +13,10 @@ let lineVisible = true;
 let totalVisible = true;
 export function initMeasurePanel() {
     $indexMap = getIndexMap();
-    initMeasure();
+    
 
+    initMeasure();
+    
     // 設定中文語言
     //$indexMap.pm.setLang('zh', {
     //    tooltips: false,
@@ -51,9 +53,8 @@ export function initMeasurePanel() {
     // 切換到中文
     // $indexMap.pm.setLang('zh');
     $indexMap.pm.setGlobalOptions({ tooltips: false });
-
-    $indexMap.pm.enableGlobalRemovalMode();
-
+    $indexMap.pm.disableDraw();
+    
     dynamicMarker = null; // 儲存動態更新的 Marker
 
     // 繪圖開始事件
@@ -191,10 +192,6 @@ function initMeasure() {
     });
 }
 
-// 點擊新增active
-// 再點關閉active
-// 關閉時
-
 function updateLineLength() {
     const start = latlngs[latlngs.length - 2];
     const end = latlngs[latlngs.length - 1];
@@ -251,7 +248,7 @@ function updatePolylineLength(layer) {
     // 創建總長度標籤
     const totalLengthLabel = L.divIcon({
         className: `measureTotal ${totalVisible ? null : 'hidden'}`,
-        html: `${(totalLength / 1000).toFixed(2)} km`,
+        html: `${totalLength.toFixed(2)} m`,
         iconSize: [200, 50]
     });
     const marker = L.marker(lastLatlng, { icon: totalLengthLabel }).addTo($indexMap);

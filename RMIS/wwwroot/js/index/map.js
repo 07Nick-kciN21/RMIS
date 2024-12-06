@@ -1,18 +1,13 @@
 ﻿let indexMap;
-let currentLayer;
+
 // 初始化地图
 export function initMap(mapId) {
     indexMap = L.map(mapId, { zoomControl: false, doubleClickZoom: false }).setView([24.957276277371435, 121.21903318892302], 15);
-    createBaseLayers();
     
+    createBaseLayers();
+
     var $offcanvasElement = $('#layerListBlock');
     var $indexMapElement = $('#indexMap');
-
-    L.control.scale({
-        position: 'bottomleft',
-        metric: true, 
-        imperial: false 
-    }).addTo(indexMap);
 
     // 當 offcanvas 開啟時壓縮地圖
     $offcanvasElement.on('shown.bs.offcanvas', function () {
@@ -46,13 +41,64 @@ export function initMap(mapId) {
     // 綁定自訂縮放按鈕
     $('#tb-zoomIn').on('click', function () {
         indexMap.zoomIn(); // 放大地圖
+        // 取得縮放等級
     });
 
     $('#tb-zoomOut').on('click', function () {
         indexMap.zoomOut(); // 縮小地圖
     });
 
+    $('#zoom-level').on('input', function () {
+        const zoomlevel = parseInt($(this).val(), 10);
+        console.log(zoomlevel);
+        if (zoomlevel >= 1 && zoomlevel <= 18) {
+            indexMap.setZoom(zoomlevel);
+        }
+    })
+
+    // 監聽地圖的縮放和移動事件，更新比例尺
+    indexMap.on('zoomend moveend', updateCustomScale);
+
+    indexMap.on('zoom', function () {
+        // 切換回縮放等級
+        $('#zoom-level').val(-1);
+    });
+    // 初始化比例尺顯示
+    updateCustomScale();
+
+    indexMap.on('mousemove', function (e) {
+        const latlng = e.latlng; // 使用 e.latlng 取得滑鼠位置的經緯度
+        const lat = latlng.lat.toFixed(6); // 取得緯度，保留小數點後 6 位
+        const lng = latlng.lng.toFixed(6); // 取得經度，保留小數點後 6 位
+
+        // 更新 HTML 顯示滑鼠位置的座標
+        $("#map-Coordinate").html(`經度: ${lng} , 緯度: ${lat}`);
+    });
+
     return indexMap;
+}
+
+// 計算自定義比例尺
+function updateCustomScale() {
+    // 假設 1 公分 = 37.8 像素 (96 DPI 的標準顯示器)
+    var cmInPixels = 37.8;
+
+    // 獲取地圖的中心點
+    var center = indexMap.getCenter();
+
+    // 獲取中心點右側偏移 1 公分距離的地理位置
+    var point2 = indexMap.containerPointToLatLng([indexMap.getSize().x / 2 + cmInPixels, indexMap.getSize().y / 2]);
+
+    // 計算地理距離 (米)
+    var distance = indexMap.distance(center, point2);
+    const zoomlevel = indexMap.getZoom();
+    if (distance < 1000) {
+        $("#scale-control").html(`(${zoomlevel}) 1cm : ${distance.toFixed(0)}m`);
+    }
+    else {
+        distance /= 1000;
+        $("#scale-control").html(`(${zoomlevel}) 1cm : ${distance.toFixed(1)}km`);
+    }
 }
 
 function createBaseLayers() {

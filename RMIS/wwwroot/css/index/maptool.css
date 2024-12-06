@@ -25,6 +25,62 @@
             background-color: #91c54d;
         }
 
+.map-footer {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    width: 40%;
+    background-color: #4a5d23; /* 深綠色背景 */
+    padding: 10px 20px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 10px 10px 10px 10px;
+    z-index: 1000;
+    align-items: center;
+    justify-content: space-between;
+    color: white; /* 設置文字顏色為白色 */
+    font-size: 18px;
+}
+
+    .map-footer > div {
+        display: flex;
+        align-items: center;
+        margin-right: 20px;
+        border: 1px;
+        white-space: nowrap; /* 防止文字換行 */
+    }
+
+.title-divider {
+    display: inline-block; /* 改為 inline-block 使其可以擁有寬度和高度 */
+    height: 20px; /* 設置分隔線的高度，使其與其他元素對齊 */
+    border-left: 1px solid #f8f8f8; /* 設置左側邊框作為分隔線 */
+}
+
+#map-Coordinate {
+    width: 300px; /* 設置固定寬度，確保寬度不變 */
+    overflow: hidden; /* 隱藏溢出的內容 */
+    text-overflow: ellipsis; /* 當內容超出寬度時顯示省略號 */
+}
+
+#map-Zoomleve{
+    width:80px;
+}
+
+#scale-control {
+    width: 100px;
+}
+
+#zoom-level {
+    color: white; /* 改變選中框的文字顏色 */
+    background-color: transparent; /* 保持背景透明 */
+    border:none;
+}
+
+    #zoom-level > option {
+        background-color: #4a5d23; /* 深綠色背景 */
+        color: white; /* 改變選中框的文字顏色 */
+        border: none;
+    }
+
 #tb-zoomIn {
     background-image: url('/svg/tiptool/add.svg');
     background-position: center;

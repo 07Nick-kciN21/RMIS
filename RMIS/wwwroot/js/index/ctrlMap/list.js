@@ -1,6 +1,7 @@
 ﻿import { layerList } from './menu.js';
 import { removePipeline, addPipeline } from './pipeline.js';
-import { addLayer2Map } from './layers.js';
+import { addLayer2Map, layers } from './layers.js';
+import { getIndexMap } from '../map.js';
 
 
 // 圖資清單控制
@@ -25,13 +26,88 @@ export function add2List(id, name, datas) {
                 <div id="sections_${id}">
                     ${sections}
                 </div>
-                
+            </div>
+            <div class="more more-off" id="more_${id}">
+                <ul class="moreMenu" >
+                    <li id="more_action1_${id}">縮放至</li>
+                    <li id="more_action2_${id}">編輯圖徽</li>
+                    <li id="more_action3_${id}">檢視詮釋資料</li>
+                    <li id="more_action4_${id}">編輯圖徽</li>
+                </ul>
             </div>
             <div class="eye eyeOpen" id="eye_${id}"></div>
             <div class="layerRemove" id="layerRemove_${id}"></div>
         </div>
     `;
     $('#layerBarContainer').append(layerItem);
+    
+    $(`#more_action1_${id}`).on('click', function (e) {
+        console.log("Zoom to");
+        var $indexMap = getIndexMap();
+        // 把地圖縮放至縮放等級15
+        $indexMap.setZoom(18);
+    });
+
+    $(`#more_action2_${id}`).on('click', function () {
+        // 選擇繪製樣式
+        // 填滿、外框、大小
+        $(".editSymbol-Title").html(`編輯圖徽<br>${name}`);
+        $('#layerBarContainer').addClass('hidden');
+        $('#editSymbol-Step1').removeClass('hidden');
+    });
+
+    $('.symbolClass').on('click', function () {
+        $(this).addClass('selected');
+        // 其他的symbolClass 移除selected
+        $(this).siblings().removeClass('selected');
+        console.log($(this).data('symclass'));
+    });
+
+    $("#editNext").on('click', function () {
+        // 從.symbolClass下找到.selected的data-symclass
+        var symClass = $('.symbolClass.selected').data('symclass');
+        // 把選中的symbolProp+symClass移除hidden
+        $(`#symbolProp-${symClass}`).removeClass('hidden');
+        $('#editSymbol-Step1').addClass('hidden');
+        $('#editSymbol-Step2').removeClass('hidden');
+    });
+
+    $(".editComplete").on('click', function () {
+        // if 父元素為symbolProp-0
+        if($(this).parent().parent().attr('id') == 'symbolProp-0'){
+            // 取得symbolProp-0下的所有input
+            var inputs = $('#symbolProp-0').find('input');
+            // 取得symbolProp-0下的所有select
+            console.log(inputs);
+        };
+        
+        
+
+        $('.symbolProp').each(function () {
+            $(this).addClass('hidden');
+        });
+        $('#editSymbol-Step2').addClass('hidden');
+        $('#layerBarContainer').removeClass('hidden');
+    });
+
+
+    $(".editCancel").on('click', function (e) {
+        $('.symbolProp').each(function () {
+            $(this).addClass('hidden');
+        });
+        $('#editSymbol-Step1').addClass('hidden');
+        $('#editSymbol-Step2').addClass('hidden');
+        $('#layerBarContainer').removeClass('hidden');
+    });
+    
+
+    $(`#more_${id}`).on('click', function (e) {
+        $(this).find('.moreMenu').toggle();
+        // .moreMenu顯示在class="more"的下方
+        const offset = $(this).offset();
+        const height = $(this).outerHeight();
+        $(this).find('.moreMenu').css('top', offset.top + height);
+    });
 
     $(`#eye_${id}`).on('click', function (e) {
         if ($(this).hasClass('eyeOpen')) {
@@ -69,17 +145,20 @@ export function add2List(id, name, datas) {
     console.log("Add List Success");
 }
 
+// 從清單中移除圖層bar
 export function remove2List(id) {
     let $layerList = $(".layerList");
     $layerList.find('#layerBar_' + id).remove();
-    layerList[id] = false;
+    delete layerList[id];
 }
 
+// 不顯示圖層
 export function closeLayer(id) {
     removePipeline(id);
     layerList[id] = false;
 }
 
+// 顯示圖層
 export function displayLayer(id) {
     addPipeline(id).then(result => {
         layerList[id] = true;

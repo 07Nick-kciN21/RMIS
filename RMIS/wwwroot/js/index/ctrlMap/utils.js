@@ -1,10 +1,10 @@
-﻿import { Rectangle } from '../../../lib/leaflet/leaflet-src.esm.js';
-import { getIndexMap } from '../map.js'; 
+﻿import { getIndexMap } from '../map.js'; 
 
 
 let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null;
 export function addMarkersToLayer(points, newLayer, svg, name) {
+
     var $indexMap = getIndexMap();
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
@@ -13,7 +13,6 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
         popupAnchor: [0, -15]
     });
     points.forEach(function (point) {
-
         let marker = L.marker(point[0], {
             icon: icon,
         }).addTo(newLayer);
@@ -140,4 +139,3 @@ function popUpForm(prop) {
         </div>
     `;
 }
-
