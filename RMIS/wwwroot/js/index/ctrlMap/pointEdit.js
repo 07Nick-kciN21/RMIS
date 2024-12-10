@@ -161,16 +161,17 @@ var pointStep2_2 = `<div id="symbolProp-2" class="symbolProp">
 
 // 預先定義各 value 對應的漸層顏色組合
 var gradientColorsMap = {
-    purples: ["#f2f0f7","#cbc9e2","#9e9ac8","#756bb1","#54278f"],
-    reds: ["#fee5d9","#fcae91","#fb6a4a","#de2d26","#a50f15"],
-    ylrd: ["#ffffb2","#fed976","#feb24c","#fd8d3c","#f03b20","#bd0026"],
-    rdpu: ["#fde0dd","#fa9fb5","#f768a1","#dd3497","#ae017e","#7a0177"],
-    ylbr: ["#ffffe5","#fff7bc","#fee391","#fec44f","#fe9929","#ec7014","#cc4c02","#993404","#662506"],
-    greens: ["#f7fcf5","#e5f5e0","#c7e9c0","#a1d99b","#74c476","#41ab5d","#238b45","#006d2c","#00441b"],
-    ylgnbu: ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"],
-    gnbu: ["#f0f9e8","#bae4bc","#7bccc4","#43a2ca","#0868ac"],
-    greys: ["#f7f7f7","#cccccc","#969696","#636363","#252525"]
+    purples:["#f2f0f7", "#dadadb", "#bcbcdb", "#adabd1", "#9e9ac8", "#8f8bc1", "#807dba", "#6a51a3", "#4a1486"],
+    reds:   ["#fee5d9", "#fcbbb7", "#fc9272", "#fb7e5e", "#fb6a4a", "#f5523b", "#ef3b2c", "#cb181d", "#99000d"],
+    ylrd:   ["#ffffb2", "#fed976", "#feb24c", "#fd9f44", "#fd8d3c", "#fc6d33", "#fc4e2a", "#e31a1c", "#b10026"],
+    rdpu:   ["#feece2", "#fcc5c0", "#fa9fb5", "#f883ab", "#f768a1", "#ea4e9c", "#dd3497", "#ae017e", "#7a0177"],
+    ylbr:   ["#ffffd4", "#fee391", "#fec44f", "#feae3c", "#fe9929", "#f5841e", "#ec7014", "#cc4c02", "#8c2d04"],
+    greens: ["#edf8e9", "#c7e9c0", "#a1d99b", "#8ace88", "#74c476", "#5ab769", "#41ab5d", "#238b45", "#005a32"],
+    ylgnbu: ["#ffffcc", "#c7e9b4", "#7fcdbb", "#60c1bf", "#41b6c4", "#2fa3c2", "#1d91c0", "#225ea8", "#0c2c84"],
+    gnbu:   ["#f0f9e8", "#cce5c5", "#a8ddb5", "#91d4bc", "#7bccc4", "#64bfcb", "#4eb3d3", "#2b8cbf", "#08589e"],
+    greys:  ["#f7f7f7", "#d9d9d9", "#bdbdbd", "#a9a9a9", "#969696", "#848484", "#737373", "#525252", "#252525"]
 };
+
 
 // 繪製漸層圖函式：傳入顏色陣列，回傳對應的 DataURL
 function createGradientDataURL(colors){
@@ -212,7 +213,9 @@ function pointEditStep2(id){
         $('#editSymbol-Step2').html(pointStep2_1);
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function (field) {
-            $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            if(field == "孔蓋種類" || field == "尺寸單位" || field == "蓋部寬度" || field == "蓋部長度" || field == "地盤高" || field == "孔深" || field == "孔蓋型態" || field == "使用狀態" || field == "資料狀態"){
+                $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            };
         });
 
         // 2. 初始化 Select2，並使用 templateResult
@@ -339,10 +342,10 @@ function pointEditStep2(id){
         };
 
         // 選擇依分級
-        if($(this).parent().parent().attr('id') == 'symbolProp-1'){
+        if ($(this).parent().parent().attr('id') == 'symbolProp-1') {
             var inputs = $('#symbolProp-1').find('input');
             var selects = $('#symbolProp-1').find('select');
-
+        
             let formData = {};
             inputs.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
@@ -350,12 +353,16 @@ function pointEditStep2(id){
             selects.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
             });
-            if(formData.field == 'none'){
+        
+            if (formData.field == 'none') {
                 alert("請選擇欄位");
                 return;
             }
-            // 取得所有的popupData
-            let layerDataList = [];
+        
+            // 找到數值範圍（第一遍遍歷）
+            let minValue = Infinity;
+            let maxValue = -Infinity;
+        
             idList.forEach(function (id) {
                 if (layers[id]) {
                     layers[id].eachLayer(function (layer) {
@@ -365,33 +372,94 @@ function pointEditStep2(id){
                             var parser = new DOMParser();
                             var doc = parser.parseFromString(content, 'text/html');
                             var popupData = doc.querySelector('.popupData');
-                            var jsonData = popupData.textContent.replace(/NaN/g, 'null');
-                            layerDataList.push({
-                                layer: layer,
-                                jsonData: JSON.parse(jsonData)
-                            });
+                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
+                            const value = jsonData[formData.field];
+                            if (value < minValue) minValue = value;
+                            if (value > maxValue) maxValue = value;
                         }
                     });
                 }
             });
+        
+            if (minValue === maxValue) {
+                alert("數值範圍過於集中，無法進行有效分層");
+                return;
+            }
+        
+            // 計算分層區間大小
+            let levels = parseInt(formData.level);
+            let rangeSize = (maxValue - minValue) / levels;
 
-            // 依照formData.field欄位進行排序
-            jsonDatas.sort(function(a, b){
-                return a[formData.field] - b[formData.field];
+            // 確保顏色頭尾一致，均勻映射到層級
+            const gradientColors = gradientColorsMap[formData.fillcolor];
+            let colorSet = [];
+            if (levels === gradientColors.length) {
+                colorSet = gradientColors; // 層級數等於顏色數，直接使用
+            } else {
+                // 均勻分配顏色
+                for (let i = 0; i < levels; i++) {
+                    const index = Math.round(i * (gradientColors.length - 1) / (levels - 1));
+                    colorSet.push(gradientColors[index]);
+                }
+            }
+        
+            // 賦予顏色和樣式（第二遍遍歷）
+            idList.forEach(function (id) {
+                if (layers[id]) {
+                    layers[id].eachLayer(function (layer) {
+                        var popup = layer.getPopup();
+                        if (popup) {
+                            var content = popup.getContent();
+                            var parser = new DOMParser();
+                            var doc = parser.parseFromString(content, 'text/html');
+                            var popupData = doc.querySelector('.popupData');
+                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
+                            const value = jsonData[formData.field];
+
+                            // 計算層級索引
+                            let levelIndex = Math.floor((value - minValue) / rangeSize);
+                            if (levelIndex >= levels) levelIndex = levels - 1;
+
+                            const fillColor = colorSet[levelIndex];
+                            const diameter = parseInt(formData.size);
+                            const strokeWidth = parseInt(formData.thickness) * 2;
+                            const radius = diameter / 2;
+
+                            // 建立 SVG 圖示
+                            const svgHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
+                                <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
+                                    fill="${fillColor}" 
+                                    stroke="${formData.frameColor}" 
+                                    stroke-width="${strokeWidth}"/>
+                            </svg>
+                            `;
+                            const svgDivIcon = L.divIcon({
+                                className: '',
+                                html: svgHTML,
+                                iconAnchor: [radius, radius],
+                                popupAnchor: [0, -radius]
+                            });
+
+                            // 更新圖層圖標
+                            layer.setIcon(svgDivIcon);
+                        }
+                    });
+                }
             });
-            // 再把排序後的layer分成formData.level個等級
-            var levels = parseInt(formData.level);
-            var chunkSize = Math.ceil(jsonDatas.length / levels);
-            var colorSet = gradientColorsMap[formData.fillcolor];
-
-            jsonDatas.forEach(function (data, index) {
-                var levelIndex = Math.floor(index / chunkSize);
-                var fillColor = colorSet[levelIndex];
-                var diameter = parseInt(formData.size);
-                var strokeWidth = parseInt(formData.thickness) * 2;
-                var radius = diameter / 2;
-
-                var svgHTML = `
+        
+            // 建立階層對應圖示
+            $(`#sections_${id}`).empty(); // 清除舊的階層圖示
+            for (let i = 0; i < levels; i++) {
+                let rangeMin = minValue + i * rangeSize;
+                let rangeMax = minValue + (i + 1) * rangeSize;
+        
+                const diameter = parseInt(formData.size);
+                const strokeWidth = parseInt(formData.thickness) * 2;
+                const radius = diameter / 2;
+        
+                const fillColor = colorSet[i];
+                const svgHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
                     <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
                         fill="${fillColor}" 
@@ -399,36 +467,23 @@ function pointEditStep2(id){
                         stroke-width="${strokeWidth}"/>
                 </svg>
                 `;
-
-                var svgDivIcon = L.divIcon({
-                    className: '',
-                    html: svgHTML,
-                    iconAnchor: [radius, radius],
-                    popupAnchor: [0, -radius]
-                });
-
-                idList.forEach(function (id) {
-                    if (layers[id]) {
-                        layers[id].eachLayer(function (layer) {
-                            var popup = layer.getPopup();
-                            if (popup) {
-                                var content = popup.getContent();
-                                var parser = new DOMParser();
-                                var doc = parser.parseFromString(content, 'text/html');
-                                var popupData = doc.querySelector('.popupData');
-                                var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                                if (jsonData[formData.field] === data[formData.field]) {
-                                    layer.setIcon(svgDivIcon);
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-
+        
+                const encodedSVG = encodeURIComponent(svgHTML);
+        
+                const section = `
+                <div class="section" id="section_${i}">
+                    <span class="edit_icon" style="background-image: url('data:image/svg+xml;utf8,${encodedSVG}');"></span>
+                    <span class="range_label">範圍: ${rangeMin.toFixed(1)} - ${rangeMax.toFixed(1)}</span>
+                </div>
+                `;
+        
+                $(`#sections_${id}`).append(section); // 將階層對應圖示插入到 overview 中
+            }
+            // 清空表單步驟
             $('#editSymbol-Step1').empty();
             $('#editSymbol-Step2').empty();
-        };
+        }
+        
 
         // 選擇依類型
         if($(this).parent().parent().attr('id') == 'symbolProp-2'){
