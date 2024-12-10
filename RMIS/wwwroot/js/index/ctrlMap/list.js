@@ -1,13 +1,15 @@
 ﻿import { layerList } from './menu.js';
 import { removePipeline, addPipeline } from './pipeline.js';
-import { addLayer2Map, layers } from './layers.js';
+import { addLayer2Map } from './layers.js';
 import { getIndexMap } from '../map.js';
-
+import { pointEdit } from './pointEdit.js';
 
 // 圖資清單控制
 export function add2List(id, name, datas) {
     let sections = "";
+    let layersId = [];
     datas.forEach(function (data) {
+        layersId.push(data.id);
         var section = `
             <div class="section" id="section_${data.id}">
                 <span class="section_icon" style="background-image: url('/img/${data.svg}');"></span>
@@ -32,7 +34,7 @@ export function add2List(id, name, datas) {
                     <li id="more_action1_${id}">縮放至</li>
                     <li id="more_action2_${id}">編輯圖徽</li>
                     <li id="more_action3_${id}">檢視詮釋資料</li>
-                    <li id="more_action4_${id}">編輯圖徽</li>
+                    <li id="more_action4_${id}">透明度</li>
                 </ul>
             </div>
             <div class="eye eyeOpen" id="eye_${id}"></div>
@@ -41,6 +43,7 @@ export function add2List(id, name, datas) {
     `;
     $('#layerBarContainer').append(layerItem);
     
+    // 縮放至
     $(`#more_action1_${id}`).on('click', function (e) {
         console.log("Zoom to");
         var $indexMap = getIndexMap();
@@ -48,60 +51,13 @@ export function add2List(id, name, datas) {
         $indexMap.setZoom(18);
     });
 
+    // 編輯圖徽
     $(`#more_action2_${id}`).on('click', function () {
-        // 選擇繪製樣式
-        // 填滿、外框、大小
-        $(".editSymbol-Title").html(`編輯圖徽<br>${name}`);
-        $('#layerBarContainer').addClass('hidden');
-        $('#editSymbol-Step1').removeClass('hidden');
+        // 如果type是點
+        pointEdit(id, name, layersId);
     });
 
-    $('.symbolClass').on('click', function () {
-        $(this).addClass('selected');
-        // 其他的symbolClass 移除selected
-        $(this).siblings().removeClass('selected');
-        console.log($(this).data('symclass'));
-    });
-
-    $("#editNext").on('click', function () {
-        // 從.symbolClass下找到.selected的data-symclass
-        var symClass = $('.symbolClass.selected').data('symclass');
-        // 把選中的symbolProp+symClass移除hidden
-        $(`#symbolProp-${symClass}`).removeClass('hidden');
-        $('#editSymbol-Step1').addClass('hidden');
-        $('#editSymbol-Step2').removeClass('hidden');
-    });
-
-    $(".editComplete").on('click', function () {
-        // if 父元素為symbolProp-0
-        if($(this).parent().parent().attr('id') == 'symbolProp-0'){
-            // 取得symbolProp-0下的所有input
-            var inputs = $('#symbolProp-0').find('input');
-            // 取得symbolProp-0下的所有select
-            console.log(inputs);
-        };
-        
-        
-
-        $('.symbolProp').each(function () {
-            $(this).addClass('hidden');
-        });
-        $('#editSymbol-Step2').addClass('hidden');
-        $('#layerBarContainer').removeClass('hidden');
-    });
-
-
-    $(".editCancel").on('click', function (e) {
-        $('.symbolProp').each(function () {
-            $(this).addClass('hidden');
-        });
-        $('#editSymbol-Step1').addClass('hidden');
-        $('#editSymbol-Step2').addClass('hidden');
-        $('#layerBarContainer').removeClass('hidden');
-    });
-    
-
-    $(`#more_${id}`).on('click', function (e) {
+    $(`#more_${id}`).on('click', function () {
         $(this).find('.moreMenu').toggle();
         // .moreMenu顯示在class="more"的下方
         const offset = $(this).offset();
@@ -109,7 +65,7 @@ export function add2List(id, name, datas) {
         $(this).find('.moreMenu').css('top', offset.top + height);
     });
 
-    $(`#eye_${id}`).on('click', function (e) {
+    $(`#eye_${id}`).on('click', function () {
         if ($(this).hasClass('eyeOpen')) {
             closeLayer(id);
             $(this).removeClass('eyeOpen');
@@ -121,7 +77,7 @@ export function add2List(id, name, datas) {
         }
     });
 
-    $(`#layerLegend_${id}`).on('click', function (e) {
+    $(`#layerLegend_${id}`).on('click', function () {
         if ($(this).hasClass('menu-open')) {
             $(this).removeClass('menu-open');
             $(this).addClass('menu-close');
@@ -132,7 +88,7 @@ export function add2List(id, name, datas) {
             $(`#sections_${id}`).css('display', 'block');
         }
     });
-    $(`#layerRemove_${id}`).on('click', function (e) {
+    $(`#layerRemove_${id}`).on('click', function () {
         removePipeline(id).then(result => {
             layerList[id] = false;
             console.log("Remove click");

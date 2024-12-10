@@ -69,6 +69,14 @@
     display: block; /* Ensure the element is displayed */
 }
 
+.edit_icon{
+    width: 16px; /* or any appropriate size */
+    height: 16px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    display: block; /* Ensure the element is displayed */
+}
+
 .offcanvas-title{
     flex-grow: 1;
     padding: 1rem 1rem;

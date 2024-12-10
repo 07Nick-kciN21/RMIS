@@ -177,15 +177,15 @@
     border-bottom: 1px solid #ccc;
 }
 
-.select2-container {
-    width: 45px !important;
+.panelInput .select2-container {
+    width: 40px !important;
 }
 
-.select2-container--open {
+.panelInput .select2-container--open {
     z-index: 9999 !important; /* 提高 z-index */
 }
 
-.select2-selection {
+.panelInput .select2-selection {
     border: 1px solid #000000 !important;
     border-radius: 0 !important;
 }
