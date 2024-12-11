@@ -2,32 +2,32 @@ import {layers, layerProps} from './layers.js';
 
 var pointStep1 = `<h5 class="offcanvas-title editSymbol-Title"></h5>
         <div id="editStep1">
-            <div class="symbolClass" data-symclass="0">            
-                <div>點符號</div>
+            <div class="symbolClass pSymbol0" data-symclass="0">
+                <div class="symbolText">點符號</div>
             </div>
-            <div class="symbolClass" data-symclass="1">            
-                <div>依分級</div>
+            <div class="symbolClass pSymbol1" data-symclass="1">
+                <div class="symbolText">依分級</div>
             </div>
-            <div class="symbolClass" data-symclass="2">            
-                <div>依類型</div>
+            <div class="symbolClass pSymbol2" data-symclass="2">       
+                <div class="symbolText">依類型</div>
             </div>
         </div>
         <div class="form-group" style="clear:both;">
             <button class="btn js-modal-toggle editCancel">取消</button>
             <button class="btn js-modal-toggle" id="editNext">下一步</button>
         </div>`;
-let idList 
+let idList; 
 
 // 每一種點開都有三種選擇
 // 符號、分級、類型
 export function pointEdit(id, name, layersId) {
-    id=id;
     idList = layersId;
-    console.log("pointEdit", id, idList);
-    $(".editSymbol-Title").html(`編輯圖徽<br>${name}`);
+    console.log("pointEdit", id, idList, `編輯圖徽<br>${name}`);
+    
     $('#layerBarContainer').addClass('hidden');
     $('#editSymbol-Step1').removeClass('hidden');
     $('#editSymbol-Step1').html(pointStep1);
+    $(".editSymbol-Title").append(`編輯圖徽<br>${name}`);
     $('#editNext').click(function () {
         pointEditStep2(id);
     });

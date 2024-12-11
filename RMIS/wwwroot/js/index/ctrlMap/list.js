@@ -3,6 +3,8 @@ import { removePipeline, addPipeline } from './pipeline.js';
 import { addLayer2Map } from './layers.js';
 import { getIndexMap } from '../map.js';
 import { pointEdit } from './pointEdit.js';
+import { opacityLayer } from './opacityCtrl.js';
+
 
 // 圖資清單控制
 export function add2List(id, name, datas) {
@@ -34,7 +36,10 @@ export function add2List(id, name, datas) {
                     <li id="more_action1_${id}">縮放至</li>
                     <li id="more_action2_${id}">編輯圖徽</li>
                     <li id="more_action3_${id}">檢視詮釋資料</li>
-                    <li id="more_action4_${id}">透明度</li>
+                    <li id="more_action4_${id}">
+                        透明度
+                        <input class="layerOpacity" type="text" value="100" placeholder="100">
+                    </li>
                 </ul>
             </div>
             <div class="eye eyeOpen" id="eye_${id}"></div>
@@ -43,6 +48,14 @@ export function add2List(id, name, datas) {
     `;
     $('#layerBarContainer').append(layerItem);
     
+    $(`#more_${id}`).on('click', function () {
+        $(this).find('.moreMenu').toggle();
+        // .moreMenu顯示在class="more"的下方
+        const offset = $(this).offset();
+        const height = $(this).outerHeight();
+        $(this).find('.moreMenu').css('top', offset.top + height);
+    });
+
     // 縮放至
     $(`#more_action1_${id}`).on('click', function (e) {
         console.log("Zoom to");
@@ -56,13 +69,17 @@ export function add2List(id, name, datas) {
         // 如果type是點
         pointEdit(id, name, layersId);
     });
+    // 使用透明度不要关闭
+    $('.layerOpacity').on('click', function (e) {
+        e.stopPropagation(); // 阻止冒泡，防止关闭菜单
+    });
 
-    $(`#more_${id}`).on('click', function () {
-        $(this).find('.moreMenu').toggle();
-        // .moreMenu顯示在class="more"的下方
-        const offset = $(this).offset();
-        const height = $(this).outerHeight();
-        $(this).find('.moreMenu').css('top', offset.top + height);
+    // 输入透明度
+    $('.layerOpacity').on('blur', function () {        
+        const opacity = $(this).val();
+        console.log("layerOpacity", opacity);
+        // 从 layersId 中找到图层，修改透明度
+        opacityLayer(opacity, layersId);
     });
 
     $(`#eye_${id}`).on('click', function () {

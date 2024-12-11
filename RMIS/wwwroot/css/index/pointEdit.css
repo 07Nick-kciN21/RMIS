@@ -1,0 +1,40 @@
+.pSymbol0{
+    background-image: url('/img/layerEdit/pSymbol0.png');
+}
+
+.pSymbol1{
+    background-image: url('/img/layerEdit/pSymbol1.png');
+}
+
+.pSymbol2{
+    background-image: url('/img/layerEdit/pSymbol2.png');
+}
+
+.layerOpacity{
+    width: 38px;
+}
+
+#editSymbol-Step1 .symbolText{
+    width: 35%;
+    height: 100%;
+    line-height: 64px;
+    text-align: center;
+    background: rgba(169, 169, 169, 0.7);
+    float: right;
+    color: white;
+}
+
+#editSymbol-Step1 .symbolClass{
+    border: 1px solid #cccccc;
+    width: 100%;
+    height: 64px;
+    background-size: 65%;
+    background-repeat: no-repeat;
+    background-position: left;
+    margin: 0.65rem 0;
+    cursor: pointer;
+}
+
+#editSymbol-Step1 .symbolClass.selected .symbolText{
+    background-color: gray;
+}
