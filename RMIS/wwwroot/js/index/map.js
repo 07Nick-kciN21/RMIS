@@ -1,5 +1,5 @@
-﻿let indexMap;
-
+﻿export let popupEnabled = false;
+let indexMap;
 // 初始化地图
 export function initMap(mapId) {
     indexMap = L.map(mapId, { zoomControl: false, doubleClickZoom: false }).setView([24.957276277371435, 121.21903318892302], 15);
@@ -9,6 +9,7 @@ export function initMap(mapId) {
     var $offcanvasElement = $('#layerListBlock');
     var $indexMapElement = $('#indexMap');
 
+    
     // 當 offcanvas 開啟時壓縮地圖
     $offcanvasElement.on('shown.bs.offcanvas', function () {
         var offcanvasWidth = $offcanvasElement.outerWidth();
@@ -55,6 +56,8 @@ export function initMap(mapId) {
             indexMap.setZoom(zoomlevel);
         }
     })
+    
+    $indexMapElement.css('cursor', 'default');
 
     // 監聽地圖的縮放和移動事件，更新比例尺
     indexMap.on('zoomend moveend', updateCustomScale);
@@ -73,6 +76,15 @@ export function initMap(mapId) {
 
         // 更新 HTML 顯示滑鼠位置的座標
         $("#map-Coordinate").html(`經度: ${lng} , 緯度: ${lat}`);
+    });
+
+    $('#tb-propEnabled').on('click', function () {
+        popupEnabled = !popupEnabled;
+        if (popupEnabled) {
+            $('#tb-propEnabled').addClass('active');
+        } else {
+            $('#tb-propEnabled').removeClass('active');
+        }
     });
 
     return indexMap;
@@ -113,32 +125,40 @@ function createBaseLayers() {
 
     //google街景
     var GoogleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
+        maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     }).addTo(indexMap);
     //google衛星
     var GoogleSatellite = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
+        maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     });
     //google地形
     var GoogleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
+        maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     });
 
     //google混和
     var GoogleHybrid = L.tileLayer('http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
+        maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     });
 
     //openstreet
     var OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 22,
+        attribution: '&copy; OpenStreetMap contributors',
+        pane: 'basePane'
+    });
+
+    //SP2006NC_3857
+    var SP2006NC_3857 = L.tileLayer('https://data.csrsr.ncu.edu.tw/SP/SP2006NC_3857/{z}/{x}/{y}.png', {
+        maxZoom: 22,
         attribution: '&copy; OpenStreetMap contributors',
         pane: 'basePane'
     });
@@ -150,6 +170,7 @@ function createBaseLayers() {
         "Google 衛星地圖": GoogleSatellite,
         "Google 地形圖"  : GoogleTerrain,
         "Google 混和地圖": GoogleHybrid,
+        "SP2006NC_3857": SP2006NC_3857,
     };
 
     // 疊加圖層 (多選)
@@ -167,7 +188,8 @@ function createBaseLayers() {
                     transparent: true,
                     opacity: source.type === 'basePane' ? 1 : 0.5,
                     attribution: source.attribution,
-                    pane: source.type
+                    pane: source.type,
+                    maxZoom: 22
                 });
                 if (source.type === 'basePane') {
                     baseMaps[source.name] = layer;

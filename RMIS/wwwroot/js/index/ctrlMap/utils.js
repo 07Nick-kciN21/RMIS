@@ -1,11 +1,16 @@
-﻿import { getIndexMap } from '../map.js'; 
+﻿import { getIndexMap, popupEnabled } from '../map.js'; 
 
 
 let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null;
+
+
+// 將標記加入圖層
 export function addMarkersToLayer(points, newLayer, svg, name) {
 
     var $indexMap = getIndexMap();
+    var zoom = $indexMap.getZoom();
+
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
@@ -15,8 +20,13 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
     points.forEach(function (point) {
         let marker = L.marker(point[0], {
             icon: icon,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -15]
         }).addTo(newLayer);
+
         let prop = point[1];
+        
         marker.bindPopup(`
             <div class="popupData" style="display: none;">
             ${prop}
@@ -29,29 +39,41 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             maxHeight: 450
         });
         marker.on('click', function (e) {
-            const latLng = e.latlng;
-            $indexMap.setView(latLng, $indexMap.getZoom());
+            if(popupEnabled){
+                const latLng = e.latlng;
+                $indexMap.setView(latLng, $indexMap.getZoom());
 
-            if (currentRectangle) {
-                newLayer.removeLayer(currentRectangle);
+                if (currentRectangle) {
+                    newLayer.removeLayer(currentRectangle);
+                }
+
+                const bounds = [[
+                    latLng.lat - 0.00002, latLng.lng - 0.00002
+                ], [
+                    latLng.lat + 0.00002, latLng.lng + 0.00002
+                ]];
+                currentRectangle = L.rectangle(bounds, {
+                    color: "#ff7800",
+                    weight: 1,
+                    fillOpacity: 0.3,
+                }).addTo(newLayer);
             }
-
-            const bounds = [[
-                latLng.lat - 0.00002, latLng.lng - 0.00002
-            ], [
-                latLng.lat + 0.00002, latLng.lng + 0.00002
-            ]];
-            currentRectangle = L.rectangle(bounds, {
-                color: "#ff7800",
-                weight: 1,
-                fillOpacity: 0.3,
-            }).addTo(newLayer);
+            else{ 
+                // popupEnabled為false時，不顯示popup
+                e.target.closePopup();
+            }
         });
-        $indexMap.on('click', function (e) {
+        if(zoom > 15){
+            marker.setOpacity(1);
+        }
+        else{
+            marker.setOpacity(0);
+        }
+        $indexMap.on('click', function () {
             if (currentRectangle) {
                 newLayer.removeLayer(currentRectangle);
+                console.log("click");
             }
-           
         });
         point[2].Instance = marker;
     });

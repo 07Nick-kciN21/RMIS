@@ -76,15 +76,19 @@ function createNewLayer(result) {
         var currentZoom = indexMap.getZoom();
 
         // 圖層在縮放層級小於 15 時變得不可見，在縮放層級大於等於 15 時顯示
-        if (currentZoom >= 15) {
+        if (currentZoom > 15) {
             newLayer.eachLayer(function (layer) {
                 if (layer.setOpacity) {
-                    layer.setOpacity(1); // 設置圖層為全可見
+                    const opacity = layer._originalOpacity || 1;
+                    // 根據layer
+                    layer.setOpacity(opacity); // 設置圖層為全可見
                 }
             });
         } else {
             newLayer.eachLayer(function (layer) {
                 if (layer.setOpacity) {
+                    // 取得圖層透明度
+                    layer._originalOpacity = layer.options.opacity;
                     layer.setOpacity(0); // 設置圖層為不可見
                 }
             });

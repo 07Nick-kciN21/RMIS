@@ -25,6 +25,12 @@
             background-color: #91c54d;
         }
 
+        .map-controls span.active {
+            background-color: #91c54d;
+
+        }
+
+
 .map-footer {
     display: flex;
     position: fixed;
@@ -114,4 +120,10 @@
     background-image: url('/svg/tiptool/measure.svg');
     background-size: 80%;
     background-position: right;
+}
+
+#tb-propEnabled{
+    background-image: url('/svg/tiptool/propEnabled.svg');
+    background-size: 80%;
+    background-position: center;
 }

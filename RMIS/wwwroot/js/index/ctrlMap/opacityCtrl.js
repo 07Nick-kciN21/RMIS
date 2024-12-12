@@ -1,7 +1,8 @@
 import { layers } from './layers.js';
-
+import { getIndexMap } from '../map.js';
 // opacity: 0~100
 export function opacityLayer(opacity, layersId) {
+    var $indexMap = getIndexMap();
     opacity = opacity/100;
     console.log("opacityLayer", opacity, layersId);
 
@@ -11,19 +12,20 @@ export function opacityLayer(opacity, layersId) {
     idList.forEach(function (id) {
         if (layers[id]) {
             console.log(layers[id]);
-            layers[id].eachLayer(function (layer) {
-                // 检查是否为 Marker
-                if (layer instanceof L.Marker) {
-                    // 如果是 Marker，修改其 DOM 元素透明度
-                    const markerElement = layer.getElement();
-                    if (markerElement) {
-                        markerElement.style.opacity = opacity;
-                    }
-                } else if (layer.setOpacity) {
-                    // 如果是其他支持 setOpacity 的图层，直接调用 setOpacity 方法
+            // 如果縮放等級大於15，則顯示圖層
+            if($indexMap.getZoom() > 15){
+                layers[id].eachLayer(function (layer) {
+                    layer._originalOpacity = opacity;
                     layer.setOpacity(opacity);
-                }
-            });
+                });
+            }
+            else{
+                layers[id].eachLayer(function (layer) {
+                    layer._originalOpacity = opacity;
+                    layer.setOpacity(0);
+                });
+            }
+            
         }
     });
 }

@@ -574,14 +574,12 @@ function pointEditStep2(id){
                             const radius = diameter / 2;
 
                             // 建立 SVG 圖示
-                            const svgHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
-                                <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
-                                    fill="${fillColor}" 
-                                    stroke="${formData.frameColor}" 
-                                    stroke-width="${strokeWidth}"/>
-                            </svg>
-                            `;
+                            const svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
+                                                <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
+                                                fill="${fillColor}" 
+                                                stroke="${formData.frameColor}" 
+                                                stroke-width="${strokeWidth}"/>
+                                            </svg>`;
                             const svgDivIcon = L.divIcon({
                                 className: '',
                                 html: svgHTML,
