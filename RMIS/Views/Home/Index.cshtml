@@ -51,7 +51,7 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
+<script src="~/lib/proj4.js"></script>
 
 @section HomeHeaderToolBar{
     <div class="nav-item dropdown">
@@ -147,10 +147,10 @@
         <span id="tb-propEnabled" title="屬性資料"></span>
     </div>
     <div class="map-footer">
-        <div id="scale-control" style="display: inline-block; margin-left: 20px;"></div>
+        <div id="scale-control" class="footer-tip" style="display: inline-block; margin-left: 20px;"></div>
         <span class="title-divider"></span>
         <div id="map-Zoomlevel">
-            <select id="zoom-level" style="background-color:transparent">
+            <select id="zoom-level" class="footer-tip" style="background-color:transparent">
                 <option value="-1" disabled selected>縮放等級</option>
                 <option value="3">3</option>
                 <option value="6">6</option>
@@ -161,8 +161,16 @@
             </select>
         </div>
         <span class="title-divider"></span>
-        <div id="map-Coordinate">
-            經度: 0 , 緯度: 0
+        <div id="map-Coordinate" class="footer-tip">
+            <span id="map-coord">經度: 0 , 緯度: 0</span>
+            <ul id="coordinateSelect" class="hide">
+                <li id="twd97" class="coordinate-item" data-type="0" title="臺灣大地基準">
+                    <span>二度分帶座標(TWD97)</span>
+                </li>
+                <li id="latlng" class="coordinate-item" data-type="1" title="經緯度座標系統">
+                    <span>經緯度座標(WGS84)</span>
+                </li>
+            </ul>
         </div>
     </div>
 </div>
@@ -236,7 +244,7 @@
         <div>
             <button class="closeButton">&times;</button>
         </div>
-        
+
     </div>
     <ul class="panelInput" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
         <li style="width: 25%">

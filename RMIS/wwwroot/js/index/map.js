@@ -8,7 +8,7 @@ export function initMap(mapId) {
 
     var $offcanvasElement = $('#layerListBlock');
     var $indexMapElement = $('#indexMap');
-
+    let coordinateSwitch = 0;
     
     // 當 offcanvas 開啟時壓縮地圖
     $offcanvasElement.on('shown.bs.offcanvas', function () {
@@ -57,6 +57,21 @@ export function initMap(mapId) {
         }
     })
     
+    $('#map-Coordinate').on('click', function () {
+        $('#coordinateSelect').toggleClass('hide');
+    });
+    
+    $('#coordinateSelect').on('click', '.coordinate-item', function (e) {
+        const id = $(this).data('type');
+        coordinateSwitch = id;
+        if(id == 0){
+            $("#map-coord").html(`X: 0, Y: 0`);
+        }
+        else if(id == 1){
+            $("#map-coord").html(`緯度: 0, 經度: 0`);
+        }
+    });
+
     $indexMapElement.css('cursor', 'default');
 
     // 監聽地圖的縮放和移動事件，更新比例尺
@@ -69,13 +84,34 @@ export function initMap(mapId) {
     // 初始化比例尺顯示
     updateCustomScale();
 
-    indexMap.on('mousemove', function (e) {
-        const latlng = e.latlng; // 使用 e.latlng 取得滑鼠位置的經緯度
-        const lat = latlng.lat.toFixed(6); // 取得緯度，保留小數點後 6 位
-        const lng = latlng.lng.toFixed(6); // 取得經度，保留小數點後 6 位
+    // 定義 WGS84 和 TWD97 座標系統
+    proj4.defs([
+        ["EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs"], // WGS84
+        ["EPSG:3826", "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +datum=WGS84 +units=m +no_defs"] // TWD97
+    ]);
 
-        // 更新 HTML 顯示滑鼠位置的座標
-        $("#map-Coordinate").html(`經度: ${lng} , 緯度: ${lat}`);
+    indexMap.on('mousemove', function (e) {
+        const latlng = e.latlng; // WGS84 經緯度
+        const lat = parseFloat(latlng.lat); // 確保為數字
+        const lng = parseFloat(latlng.lng);
+
+        if (isNaN(lat) || isNaN(lng)) {
+            console.error("Invalid coordinates:", lat, lng);
+            return; // 跳過轉換，避免錯誤
+        }
+        // 為TWD97 
+        if(coordinateSwitch == 0){
+            // 將 WGS84 經緯度轉換為 TWD97
+            const [x, y] = proj4("EPSG:4326", "EPSG:3826", [lng, lat]);
+
+            // 更新 HTML 顯示滑鼠位置的 TWD97 座標
+            $("#map-coord").html(`X: ${x.toFixed(3)} , Y: ${y.toFixed(3)}`);
+        }
+        // 為WGS84
+        else if(coordinateSwitch == 1){
+            $("#map-coord").html(`緯度: ${lat.toFixed(6)} , 經度: ${lng.toFixed(6)}`);
+        }
+        
     });
 
     $('#tb-propEnabled').on('click', function () {

@@ -27,7 +27,6 @@
 
         .map-controls span.active {
             background-color: #91c54d;
-
         }
 
 
@@ -54,6 +53,26 @@
         border: 1px;
         white-space: nowrap; /* 防止文字換行 */
     }
+
+#coordinateSelect{
+    position: absolute;
+    z-index: 1050;
+    background-color: #4a5d23; /* 深綠色背景 */
+    border: 1px solid #ccc;
+    list-style: none;
+    padding: 10px;
+    width: 300px;
+    top: -76px;
+}
+    
+#coordinateSelect > li:hover {
+    background-color: #91c54d;
+}
+
+#coordinateSelect > li > span{
+    min-width: 60px; /* 確保對齊的寬度一致 */
+    text-align: right; /* 右對齊文字 */
+}
 
 .title-divider {
     display: inline-block; /* 改為 inline-block 使其可以擁有寬度和高度 */

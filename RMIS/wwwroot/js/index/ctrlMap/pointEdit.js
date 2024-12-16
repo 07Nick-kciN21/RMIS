@@ -1,6 +1,7 @@
 import {layers, layerProps} from './layers.js';
 
-var pointStep1 = `<h5 class="offcanvas-title editSymbol-Title"></h5>
+var pointStep1 = `
+        <h5 id="editSymbol-Title0" class="offcanvas-title"></h5>
         <div id="editStep1">
             <div class="symbolClass pSymbol0" data-symclass="0">
                 <div class="symbolText">點符號</div>
@@ -17,17 +18,19 @@ var pointStep1 = `<h5 class="offcanvas-title editSymbol-Title"></h5>
             <button class="btn js-modal-toggle" id="editNext">下一步</button>
         </div>`;
 let idList; 
-
+let name;
 // 每一種點開都有三種選擇
 // 符號、分級、類型
-export function pointEdit(id, name, layersId) {
+export function pointEdit(id, pipeName, layersId) {
     idList = layersId;
-    console.log("pointEdit", id, idList, `編輯圖徽<br>${name}`);
+    name = pipeName;
+    console.log("pointEdit", id, idList, `編輯圖徽 - ${name}`);
     
     $('#layerBarContainer').addClass('hidden');
     $('#editSymbol-Step1').removeClass('hidden');
     $('#editSymbol-Step1').html(pointStep1);
-    $(".editSymbol-Title").append(`編輯圖徽<br>${name}`);
+    $("#editSymbol-Title0").append(`編輯圖徽 - ${name} <br> 選擇編輯類型`);
+    
     $('#editNext').click(function () {
         pointEditStep2(id);
     });
@@ -49,9 +52,10 @@ export function pointEdit(id, name, layersId) {
     });
 }
 
-// 符號
-var pointStep2_0 = `<div id="symbolProp-0" class="symbolProp">            
-        <div>點符號選擇</div>
+// 點符號選擇
+var pointStep2_0 = `
+    <div id="symbolProp-0" class="symbolProp">     
+        <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
         <!-- 填滿 -->
         <span>填滿</span>
         <input class="color-box" type="color" name="fillColor" value="#ff0000">
@@ -80,10 +84,10 @@ var pointStep2_0 = `<div id="symbolProp-0" class="symbolProp">
         </div>                
             </div>`;
 
-// 分級
+// 依分級選擇
 var pointStep2_1 = `
         <div id="symbolProp-1" class="symbolProp">  
-            <div>依分級選擇</div>
+            <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
             <!-- 欄位 -->
             <span>欄位</span>
             <select class="select2" name="field">
@@ -142,10 +146,10 @@ var pointStep2_1 = `
             </div>
         </div>`;
 
-// 類型
+// 依類型選擇
 var pointStep2_2 = `
-            <div id="symbolProp-2" class="symbolProp">     
-                <div>依類型選擇</div>
+            <div id="symbolProp-2" class="symbolProp">    
+                <h5 id="editSymbol-Title1" class="offcanvas-title"></h5> 
                 <!-- 欄位 -->
                 <span>欄位</span>
                 <select class="select2" name="field">
@@ -308,10 +312,12 @@ function pointEditStep2(id){
     if(symClass == 0){
         console.log("pointStep2_0");
         $('#editSymbol-Step2').html(pointStep2_0);
+        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 點符號選擇`);
     }
     if(symClass == 1){
         console.log("pointStep2_1");
         $('#editSymbol-Step2').html(pointStep2_1);
+        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 選擇依分級`);
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function (field) {
             if(field == "孔蓋種類" || field == "尺寸單位" || field == "蓋部寬度" || field == "蓋部長度" || field == "地盤高" || field == "孔深" || field == "孔蓋型態" || field == "使用狀態" || field == "資料狀態"){
@@ -364,6 +370,7 @@ function pointEditStep2(id){
     if(symClass == 2){
         console.log("pointStep2_2");
         $('#editSymbol-Step2').html(pointStep2_2);
+        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 選擇依類型`);
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function (field) {
             // 不等於座標、備註、OBJECTID、內容物、Instance
