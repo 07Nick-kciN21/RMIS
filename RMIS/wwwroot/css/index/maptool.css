@@ -34,7 +34,7 @@
     display: flex;
     position: fixed;
     bottom: 0;
-    width: 40%;
+    width: 900px;
     background-color: #4a5d23; /* 深綠色背景 */
     padding: 10px 20px;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
@@ -49,49 +49,65 @@
     .map-footer > div {
         display: flex;
         align-items: center;
-        margin-right: 20px;
         border: 1px;
         white-space: nowrap; /* 防止文字換行 */
     }
 
-#coordinateSelect{
+
+.title-divider {
+    display: inline-block; /* 讓分隔線具有寬度和高度 */
+    height: 20px; /* 設定高度 */
+    border-left: 1px solid #f8f8f8; /* 左邊顯示分隔線 */
+    margin: 0 5px; /* 左右外間距10px */
+}
+
+.footerSelect{
     position: absolute;
     z-index: 1050;
     background-color: #4a5d23; /* 深綠色背景 */
-    border: 1px solid #ccc;
+    border-radius: 10px 10px 0px 0px;
     list-style: none;
     padding: 10px;
-    width: 300px;
-    top: -76px;
+}
+
+#mapSelect{
+    width: 250px;
+    top: -410px;
+}
+
+#coordinateSelect{
+    width: 250px;
+    top: -70px;
 }
     
-#coordinateSelect > li:hover {
+
+.coordinate-item:hover {
     background-color: #91c54d;
+    border-radius: 5px 5px 5px 5px;
 }
 
-#coordinateSelect > li > span{
+.coordinate-item > span{
     min-width: 60px; /* 確保對齊的寬度一致 */
     text-align: right; /* 右對齊文字 */
-}
-
-.title-divider {
-    display: inline-block; /* 改為 inline-block 使其可以擁有寬度和高度 */
-    height: 20px; /* 設置分隔線的高度，使其與其他元素對齊 */
-    border-left: 1px solid #f8f8f8; /* 設置左側邊框作為分隔線 */
+    padding-left: 5px; /* 設置左側內邊距，使文字與分隔線有間距 */
 }
 
 #map-Coordinate {
-    width: 300px; /* 設置固定寬度，確保寬度不變 */
+    width: 290px; /* 設置固定寬度，確保寬度不變 */
     overflow: hidden; /* 隱藏溢出的內容 */
     text-overflow: ellipsis; /* 當內容超出寬度時顯示省略號 */
 }
 
 #map-Zoomleve{
-    width:80px;
+    width:100px;
 }
 
 #scale-control {
-    width: 100px;
+    width: 150px;
+}
+
+#map-basemapCtrl{
+    width: 250px;
 }
 
 #zoom-level {
@@ -143,6 +159,18 @@
 
 #tb-propEnabled{
     background-image: url('/svg/tiptool/propEnabled.svg');
+    background-size: 80%;
+    background-position: center;
+}
+
+#tb-streetView{
+    background-image: url('/svg/tiptool/streetView.svg');
+    background-size: 80%;
+    background-position: center;
+}
+
+#tb-location{
+    background-image: url('/svg/tiptool/location.svg');
     background-size: 80%;
     background-position: center;
 }

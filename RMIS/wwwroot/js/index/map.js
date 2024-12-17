@@ -1,4 +1,5 @@
 ﻿export let popupEnabled = false;
+let dtreetViewEnabled = false;
 let indexMap;
 // 初始化地图
 export function initMap(mapId) {
@@ -39,6 +40,14 @@ export function initMap(mapId) {
         });
     });
 
+    $('.map-controls').on('click', function (e) {
+        e.stopPropagation();
+    });
+
+    $('.map-footer').on('click', function (e) {
+        e.stopPropagation();
+    });
+
     // 綁定自訂縮放按鈕
     $('#tb-zoomIn').on('click', function () {
         indexMap.zoomIn(); // 放大地圖
@@ -47,6 +56,65 @@ export function initMap(mapId) {
 
     $('#tb-zoomOut').on('click', function () {
         indexMap.zoomOut(); // 縮小地圖
+    });
+
+    // google街景功能，與屬性資料互斥
+    $('#tb-streetView').on('click', function (e) {
+        
+        // 如果另一個功能開啟，先關閉它
+        if (popupEnabled) {
+            popupEnabled = false;
+            $('#tb-propEnabled').removeClass('active');
+        }
+        
+        // 切換街景功能
+        dtreetViewEnabled = !dtreetViewEnabled;
+        $indexMapElement.css('cursor', dtreetViewEnabled ? 'pointer' : 'default');
+        
+        if (dtreetViewEnabled) {
+            $('#tb-streetView').addClass('active');
+        } else {
+            $('#tb-streetView').removeClass('active');
+        }
+    });
+    // 屬性資料功能，與google街景互斥
+    $('#tb-propEnabled').on('click', function () {
+        // 如果另一個功能開啟，先關閉它
+        if (dtreetViewEnabled) {
+            dtreetViewEnabled = false;
+            $('#tb-streetView').removeClass('active');
+            $indexMapElement.css('cursor', 'default'); // 恢復鼠標樣式
+        }
+        
+        // 切換屬性功能
+        popupEnabled = !popupEnabled;
+        
+        if (popupEnabled) {
+            $('#tb-propEnabled').addClass('active');
+        } else {
+            $('#tb-propEnabled').removeClass('active');
+        }
+    });
+    
+    // 目前位置
+    $('#tb-location').on('click', function () {
+        // 取得使用者的位置，並將地圖移至該位置，直接縮放為22
+        indexMap.locate({ setView: false, maxZoom: 22 });
+    });
+    
+    // 當定位成功時進一步設置縮放級別
+    indexMap.on('locationfound', function (e) {
+        indexMap.setView(e.latlng, 22); // 強制設置縮放級別為 22
+        L.marker(e.latlng).addTo(indexMap) // 添加標記顯示當前位置
+    });
+
+    indexMap.on('click', function (e) {
+        // streetviewenabled
+        if(dtreetViewEnabled){
+            const latlng = e.latlng; // WGS84 經緯度
+            // 開啟街景
+            window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${latlng.lat},${latlng.lng}`);
+        }
     });
 
     $('#zoom-level').on('input', function () {
@@ -61,6 +129,7 @@ export function initMap(mapId) {
         $('#coordinateSelect').toggleClass('hide');
     });
     
+    
     $('#coordinateSelect').on('click', '.coordinate-item', function (e) {
         const id = $(this).data('type');
         coordinateSwitch = id;
@@ -70,6 +139,10 @@ export function initMap(mapId) {
         else if(id == 1){
             $("#map-coord").html(`緯度: 0, 經度: 0`);
         }
+    });
+
+    $('#map-basemapCtrl').on('click', function () {
+        $('#mapSelect').toggleClass('hide');   
     });
 
     $indexMapElement.css('cursor', 'default');
@@ -84,12 +157,6 @@ export function initMap(mapId) {
     // 初始化比例尺顯示
     updateCustomScale();
 
-    // 定義 WGS84 和 TWD97 座標系統
-    proj4.defs([
-        ["EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs"], // WGS84
-        ["EPSG:3826", "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +datum=WGS84 +units=m +no_defs"] // TWD97
-    ]);
-
     indexMap.on('mousemove', function (e) {
         const latlng = e.latlng; // WGS84 經緯度
         const lat = parseFloat(latlng.lat); // 確保為數字
@@ -102,7 +169,7 @@ export function initMap(mapId) {
         // 為TWD97 
         if(coordinateSwitch == 0){
             // 將 WGS84 經緯度轉換為 TWD97
-            const [x, y] = proj4("EPSG:4326", "EPSG:3826", [lng, lat]);
+            const {x, y} = convertWgs84ToTwd97(lat, lng);
 
             // 更新 HTML 顯示滑鼠位置的 TWD97 座標
             $("#map-coord").html(`X: ${x.toFixed(3)} , Y: ${y.toFixed(3)}`);
@@ -114,16 +181,54 @@ export function initMap(mapId) {
         
     });
 
-    $('#tb-propEnabled').on('click', function () {
-        popupEnabled = !popupEnabled;
-        if (popupEnabled) {
-            $('#tb-propEnabled').addClass('active');
-        } else {
-            $('#tb-propEnabled').removeClass('active');
-        }
+
+    indexMap.on('contextmenu', function (e) {
+        const latlng = e.latlng; // WGS84 經緯度
+        const lat = parseFloat(latlng.lat); // 確保為數字
+        const lng = parseFloat(latlng.lng);
+        const {x, y} = convertWgs84ToTwd97(lat, lng);
+        const popupContent = `
+            <h1>座標資訊</h1>
+            <div style="background: rgba(255, 255, 255, 0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <tr>
+                        <td style="padding: 5px;">WGS84：</td>
+                        <td style="padding: 5px;">${lat.toFixed(6)} , ${lng.toFixed(6)}</td>
+                        <td style="padding: 5px;"><span class="darkBtn" data-clipboard-target="#twd97Pt">複製</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;">TWD97：</td>
+                        <td style="padding: 5px;">${x.toFixed(3)} , ${y.toFixed(3)}</td>
+                        <td style="padding: 5px;"><span class="darkBtn" data-clipboard-target="#twd97Pt">複製</span></td>
+                    </tr>
+                </table>
+            </div>
+        `;
+        L.popup({
+                maxWidth: 300, // 最大寬度
+                minWidth: 200, // 最小寬度
+                maxHeight: 200, // 最大高度
+            })
+            .setLatLng(e.latlng)
+            .setContent(popupContent)
+            .openOn(indexMap);
     });
 
     return indexMap;
+}
+
+// 轉換wgs84成twd97
+function convertWgs84ToTwd97(lat, lng) {
+    // 定義 WGS84 和 TWD97 座標系統
+    proj4.defs([
+        ["EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs"], // WGS84
+        ["EPSG:3826", "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +datum=WGS84 +units=m +no_defs"] // TWD97
+    ]);
+
+    // 將 WGS84 經緯度轉換為 TWD97
+    const [x, y] = proj4("EPSG:4326", "EPSG:3826", [lng, lat]);
+
+    return { x, y };
 }
 
 // 計算自定義比例尺
@@ -160,26 +265,26 @@ function createBaseLayers() {
     indexMap.getPane('photoPane').style.zIndex = 3;
 
     //google街景
-    var GoogleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
+    var GoogleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}&hl=zh_TW', {
         maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     }).addTo(indexMap);
     //google衛星
-    var GoogleSatellite = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}', {
+    var GoogleSatellite = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}&hl=zh_TW', {
         maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     });
     //google地形
-    var GoogleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', {
+    var GoogleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}&hl=zh_TW', {
         maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
     });
 
     //google混和
-    var GoogleHybrid = L.tileLayer('http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}', {
+    var GoogleHybrid = L.tileLayer('http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}&hl=zh_TW', {
         maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
@@ -209,6 +314,10 @@ function createBaseLayers() {
         "SP2006NC_3857": SP2006NC_3857,
     };
 
+    // 把基本圖層加入#baseMapSelect
+    for(let name in baseMaps){
+        $('#baseMapSelect').append(`<option class="coordinate-item" value="${name}"><span>${name}</span></option>`);
+    };
     // 疊加圖層 (多選)
     var overlayMaps = {};
 
@@ -249,6 +358,10 @@ function createBaseLayers() {
 
             // 將疊加圖層作為可複選圖層加入地圖控制
             L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(indexMap);
+            
+            for(let name in overlayMaps){
+                $('#overlayMapSelect').append(`<option class="coordinate-item" value="${name}">${name}</option>`);
+            }
         },
         error: function (error) {
             console.error('Error fetching map sources:', error);

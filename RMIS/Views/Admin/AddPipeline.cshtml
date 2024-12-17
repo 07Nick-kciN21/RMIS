@@ -22,9 +22,19 @@
         <label asp-for="Name">管線名稱</label>
         <input asp-for="Name" class="form-control" />
         <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="KindGroup">種類</label>
+        <select id="KindGroup" asp-for="Kind" class="form-control" onchange="getGeometryTypes()">
+            @foreach (var kind in Model.KindGroup)
+            {
+                <option value="@kind.Value">@kind.Text</option>
+            }
+        </select>
+    </div>
     <div class="form-group">
         <label asp-for="GeometryTypes">圖層</label>
-            <select asp-for="selectedGeometryTypes" asp-items="@Model.GeometryTypes" class="form-control" multiple>
+            <select asp-for="GeometryTypes" asp-items="@Model.GeometryTypes" class="form-control" multiple>
         </select>
     </div>
     <div class="form-group">
@@ -37,3 +47,16 @@
         <input type="submit" value="Submit" class="btn btn-primary" />
     </div>
 </form>
+
+<script>
+    function getGeometryTypes(kind) {
+        $('#KindGroup').on('change', function () {
+            const kind = $(this).val();
+            console.log(kind);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        getGeometryTypes();
+    });
+</script>

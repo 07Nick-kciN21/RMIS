@@ -107,19 +107,25 @@ export function addLineToLayer(points, newLayer, color, name) {
         });
 
         segment.on('click', function (e) {
-            if (currentLine) {
-                $indexMap.removeLayer(currentLine);
+            if(popupEnabled){
+                if (currentLine) {
+                    $indexMap.removeLayer(currentLine);
+                }
+    
+                // 將當前點擊的線段設置為白色並增加線段寬度
+                currentLine = L.polyline(e.target.getLatLngs(), {
+                    color: 'white',
+                    opacity: 0.8
+                }).addTo(newLayer);
+    
+                // 移動地圖中央到點擊的點
+                const latLng = e.latlng; // 取得點擊事件中的座標
+                $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
             }
-
-            // 將當前點擊的線段設置為白色並增加線段寬度
-            currentLine = L.polyline(e.target.getLatLngs(), {
-                color: 'white',
-                opacity: 0.8
-            }).addTo(newLayer);
-
-            // 移動地圖中央到點擊的點
-            const latLng = e.latlng; // 取得點擊事件中的座標
-            $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
+            else{ 
+                // popupEnabled為false時，不顯示popup
+                e.target.closePopup();
+            }
         });
         $indexMap.on('click', function (e) {
             if (currentLine) {
@@ -130,12 +136,63 @@ export function addLineToLayer(points, newLayer, color, name) {
         points[i][2].Instance = segment;
     }
 }
-export function addPolygonToLayer(points, newLayer,  color, name) {
-    console.log("Create Polygon");
-    let marker = L.polygon(points, { color: color }).addTo(newLayer);
-    marker.bindPopup(`<b>${name}</b>`);
-}
 
+
+export function addPolygonToLayer(points, newLayer, color, name, autoCenter = true) {
+    var $indexMap = getIndexMap();
+    var pointGroup = [];
+    var prop = "";
+    // 把points的所有[0]取出集合
+    for (var i = 0; i < points.length; i++) {
+        if (points[i] && points[i][0]) {
+            pointGroup.push(points[i][0]); // 提取座標點
+            if (points[i][1]) prop = points[i][1]; // 提取屬性 (僅取最後一個有效值)
+        }
+    }
+
+    // 創建 Leaflet Polygon
+    let polygon = L.polygon(pointGroup, {
+        color: "#000000",        // 邊框顏色
+        fillColor: color,    // 填充顏色
+        fillOpacity: 0.5     // 填充透明度
+    }).addTo(newLayer);
+    polygon.bindPopup(`
+            <div class="popupData" style="display: none;">
+                ${prop}
+            </div>
+            <div>
+                <h4>圖層：${name}</h4><br>
+                ${popUpForm(prop)}
+            </div>`, {
+        maxWidth: 300,
+        maxHeight: 450
+    });
+
+    // 點擊多邊形設為相反色
+    polygon.on('click', function () {
+        if(popupEnabled){
+            const inverseColor = getInverseColor(color);
+            polygon.setStyle({ fillColor: inverseColor });
+        }
+        else{ 
+            // popupEnabled為false時，不顯示popup
+            polygon.closePopup();
+        }
+    });
+    $indexMap.on('click', function (e) {
+        polygon.setStyle({ fillColor: color });
+    });
+    console.log("Polygon 已繪製完成");
+}
+function getInverseColor(color) {
+    if (!color.startsWith("#")) return "#FFFFFF"; // 預設為白色
+
+    const hex = color.replace("#", "");
+    const r = 255 - parseInt(hex.substring(0, 2), 16);
+    const g = 255 - parseInt(hex.substring(2, 4), 16);
+    const b = 255 - parseInt(hex.substring(4, 6), 16);
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
+}
 function popUpForm(prop) {
     if (typeof prop === 'string') {
         prop = prop.replace(/NaN/g, 'null');

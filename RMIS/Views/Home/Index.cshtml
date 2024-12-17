@@ -144,6 +144,8 @@
         <span id="tb-painterPanel" title="繪圖板"></span>
         <span id="tb-searchPropPanel" title="屬性搜尋"></span>
         <span id="tb-measurePanel" title="測量"></span>
+        <span id="tb-location" title="目前位置"></span>
+        <span id="tb-streetView" title="google街景"></span>
         <span id="tb-propEnabled" title="屬性資料"></span>
     </div>
     <div class="map-footer">
@@ -163,14 +165,26 @@
         <span class="title-divider"></span>
         <div id="map-Coordinate" class="footer-tip">
             <span id="map-coord">經度: 0 , 緯度: 0</span>
-            <ul id="coordinateSelect" class="hide">
-                <li id="twd97" class="coordinate-item" data-type="0" title="臺灣大地基準">
-                    <span>二度分帶座標(TWD97)</span>
+            <ul id="coordinateSelect" class="footerSelect hide">
+                <li id="latlng" class="coordinate-item" data-type="1">
+                    <span>(WGS84) 經緯度座標</span>
                 </li>
-                <li id="latlng" class="coordinate-item" data-type="1" title="經緯度座標系統">
-                    <span>經緯度座標(WGS84)</span>
+                <li id="twd97" class="coordinate-item" data-type="0">
+                    <span>(TWD97) 二度分帶座標</span>
                 </li>
             </ul>
+        </div>
+        <span class="title-divider"></span>
+        <div id="map-basemapCtrl" class="footer-tip">
+            <span id="map-basemap">google街景地圖</span>
+            <div id="mapSelect" class="footerSelect hide">
+                @* 基本圖層 (單選) *@
+                <ul id="baseMapSelect" style="padding-left: 5px;">
+                </ul>
+                @* 疊加圖層 (多選) *@
+                <ul id="overlayMapSelect" style="padding-left: 5px;">
+                </ul>
+            </div>
         </div>
     </div>
 </div>

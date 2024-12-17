@@ -77,6 +77,7 @@ function setupSelectChangeHandlers() {
         updatePropQuery(props);
     });
 
+    // 依圖形塗層選擇
     $('#gFeatSelect').on('change', function () {
         gselectedId = $(this).val();
         if (gselectedId == -1) {
@@ -85,8 +86,10 @@ function setupSelectChangeHandlers() {
             $('#shapeGroup').addClass('hide');
             return;
         }
+        // 選擇後顯示圖形選項
         props = layerProps[gselectedId];
         $('#shapeGroup').removeClass('hide');
+        // 開始繪圖
         handleDrawShape($indexMap, gselectedId);
     });
 }
@@ -309,6 +312,8 @@ function renderTableHeaders(pageData) {
 }
 
 let currentRow;
+
+// 生成結果表格
 function renderTableBody(pageData) {
     const $propTbody = $('#propTbody');
     $propTbody.empty();
@@ -317,7 +322,7 @@ function renderTableBody(pageData) {
     pageData.forEach(item => {
         const tableRow = $('<tr></tr>');
         const button = $('<button>目標</button>').on('click', function () {
-            highlightMapFeature(item, $indexMap);
+            highlightMapFeature(item);
             if (currentRow) {
                 currentRow.removeClass('selectRow');
             }

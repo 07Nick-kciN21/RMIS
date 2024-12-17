@@ -258,5 +258,33 @@ namespace RMIS.Controllers
             // 清除PipeLine底下的所有資料
             return Ok("Data cleared successfully.");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetGeoKindByPipeId(Guid pipelineId)
+        {
+            // 先取得 layer
+            var layer = await _mapDBContext.Layers
+                .Where(l => l.PipelineId == pipelineId)
+                .Select(l => new { l.GeometryTypeId }) // 只查詢需要的欄位
+                .FirstOrDefaultAsync();
+
+            // 檢查 layer 是否為 null
+            if (layer == null)
+            {
+                return NotFound("PipelineId 未找到對應的 Layer 資料。");
+            }
+
+            // 透過 GeometryTypeId 取得 GeometryType
+            var geometryKind = await _mapDBContext.GeometryTypes
+                .Select(gt => new { gt.Id, gt.Kind })
+                .FirstOrDefaultAsync(gt => gt.Id == layer.GeometryTypeId);
+
+            if (geometryKind == null)
+            {
+                return NotFound("未找到對應的 GeometryType 資料。");
+            }
+
+            return Ok(geometryKind);
+        }
     }
 }

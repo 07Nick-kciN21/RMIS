@@ -67,7 +67,7 @@ function createNewLayer(result) {
             addMarkersToLayer(points, newLayer, result.svg, result.name);
         } else if (result.type === "line") {
             addLineToLayer(points, newLayer, result.color, result.name);
-        } else if (result.type === "polygon") {
+        } else if (result.type === "plane") {
             addPolygonToLayer(points, newLayer, result.color, result.name);
         }
     });

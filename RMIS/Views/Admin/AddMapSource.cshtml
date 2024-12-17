@@ -57,22 +57,20 @@
     <button type="submit" class="btn btn-primary">Add Map Source</button>
 </form>
 
-@section Scripts {
-    <script>
-        function toggleImageFormat() {
-            var tileType = document.getElementById("TileType").value;
-            var imageFormatGroup = document.getElementById("imageFormatGroup");
+<script>
+    function toggleImageFormat() {
+        var tileType = document.getElementById("TileType").value;
+        var imageFormatGroup = document.getElementById("imageFormatGroup");
 
-            if (tileType === "WMTS") {
-                imageFormatGroup.style.display = "none";
-            } else {
-                imageFormatGroup.style.display = "block";
-            }
+        if (tileType === "WMTS") {
+            imageFormatGroup.style.display = "none";
+        } else {
+            imageFormatGroup.style.display = "block";
         }
+    }
 
-        // Ensure the correct initial state
-        document.addEventListener("DOMContentLoaded", function () {
-            toggleImageFormat();
-        });
-    </script>
-}
+    // Ensure the correct initial state
+    document.addEventListener("DOMContentLoaded", function () {
+        toggleImageFormat();
+    });
+</script>

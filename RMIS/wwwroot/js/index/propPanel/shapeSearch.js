@@ -9,7 +9,7 @@ export function handleDrawShape($indexMap) {
         $indexMap.editTools = new L.Editable($indexMap);
     }
 
-    // 繪圖期間的事件
+    // 繪圖完成事件
     $indexMap.on('editable:drawing:end', function (e) {
         if (!drawingActive || !currentShape) {
             return;
@@ -20,7 +20,7 @@ export function handleDrawShape($indexMap) {
         setTimeout(() => shapeLayer.disableEdit(), 0);
     });
 
-    // 開始繪圖事件
+    // 繪圖開始事件
     $('#propGeoCustom > button').on('click', function () {
         if (currentShape) {
             $indexMap.removeLayer(currentShape);
@@ -46,15 +46,17 @@ export function getShape() {
     return condition;
 }
 
+// 根據圖形篩選
 export async function filterPropsByShape(gselectedId) {
     if (!shapeLayer) {
         return null;
     }
     try {
+        // 正方形和多邊形的事件
         if (shapeLayer instanceof L.Rectangle || shapeLayer instanceof L.Polygon) {
             const ret = await getObjectsInBounds(shapeLayer.getBounds(), gselectedId);
             return ret;
-        } else {
+        } else { // 圓形的事件
             const ret = await getObjectsInCircle(shapeLayer, gselectedId);
             return ret;
         }
@@ -64,6 +66,7 @@ export async function filterPropsByShape(gselectedId) {
     }
 }
 
+// 取得邊界內所有彈出視窗元素
 function getObjectsInBounds(bounds, gselectedId) {
     let count = 0;
     let filteredProps = [];
@@ -93,6 +96,7 @@ function getObjectsInBounds(bounds, gselectedId) {
     }
 
     return new Promise((resolve, reject) => {
+        // 取得管線下所有圖層的資料
         $.ajax({
             url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${gselectedId}`,
             method: 'POST',
@@ -102,10 +106,17 @@ function getObjectsInBounds(bounds, gselectedId) {
                         let layer = layers[id];
                         if (layer instanceof L.LayerGroup) {
                             layer.eachLayer(function (subLayer) {
-                                if (subLayer instanceof L.Marker && bounds.contains(subLayer.getLatLng())) {
+                                if (subLayer instanceof L.Polygon && bounds.intersects(subLayer.getBounds())) {
+                                    console.log("get polygon");
+                                    count++;
+                                    processPopupContent(subLayer);
+                                }
+                                else if (subLayer instanceof L.Marker && bounds.contains(subLayer.getLatLng())) {
+                                    console.log("get Marker");
                                     count++;
                                     processPopupContent(subLayer);
                                 } else if (subLayer instanceof L.Polyline && bounds.intersects(subLayer.getBounds())) {
+                                    console.log("get Polyline");
                                     count++;
                                     processPopupContent(subLayer);
                                 }

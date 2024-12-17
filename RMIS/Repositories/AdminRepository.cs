@@ -13,6 +13,7 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Security.Cryptography;
 
 
 namespace RMIS.Repositories
@@ -32,15 +33,43 @@ namespace RMIS.Repositories
         {
             var _Categories = await _mapDBContext.Categories.ToListAsync();
             var _GeometryTypes = await _mapDBContext.GeometryTypes.OrderBy(gt => gt.OrderId).ToListAsync();
+
+            // 英文 Kind 對應到 中文 Key
+            var kindMapping = new Dictionary<string, string>
+            {
+                { "point", "點" },
+                { "line", "線" },
+                { "plane", "面" }
+            };
+
+            // 建立 SelectListGroup 字典
+            var groupDictionary = new Dictionary<string, SelectListGroup>{
+                { "point", new SelectListGroup { Name = "點" } },
+                { "line", new SelectListGroup { Name = "線" } },
+                { "plane", new SelectListGroup { Name = "面" } }
+            };
             var input = new AddPipelineInput
             {
                 Category = BuildCategorySelectList(_Categories, null),
-                GeometryTypes = _GeometryTypes.Select(g => new SelectListItem
+                GeometryTypes = _GeometryTypes.Select(g =>
                 {
-                    Text = g.Name,
-                    Value = g.Id.ToString()
-                })
+                    return new SelectListItem
+                    {
+                        Text = g.Name,                 // 顯示項目名稱
+                        Value = g.Kind,                // 保留英文作為 Value
+                        Group = groupDictionary[g.Kind] // 群組名稱是中文
+                    };
+                }).ToList(),
+
+                // 將 Keys 轉換成 SelectListItem
+                KindGroup = kindMapping
+                    .Select(kind => new SelectListItem
+                    {
+                        Text = kind.Value,
+                        Value = kind.Key
+                    }).ToList()
             };
+            // KindGroup依照點線面
             return input;
         }
 
@@ -78,6 +107,7 @@ namespace RMIS.Repositories
                 ManagementUnit = pipelineInput.ManagementUnit,
                 Color = pipelineInput.Color,
                 CategoryId = Guid.Parse(pipelineInput.CategoryId),
+                Kind = pipelineInput.Kind
             };
 
             // 將新管線添加到資料庫
@@ -453,7 +483,9 @@ namespace RMIS.Repositories
                             Id = pipelineId,
                             Name = item["名稱"].ToString(),
                             ManagementUnit = item["管理單位"].ToString(),
+                            Kind = item["種類"].ToString(),
                             Color = item["顏色"].ToString(),
+                            
                             CategoryId = parentId
                         };
                         pipelines.Add(newPipeline);

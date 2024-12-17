@@ -1,4 +1,4 @@
-import {layers, layerProps} from './layers.js';
+import {layers, layerProps} from '../layers.js';
 
 var pointStep1 = `
         <h5 id="editSymbol-Title0" class="offcanvas-title"></h5>

@@ -2,11 +2,12 @@
 import { removePipeline, addPipeline } from './pipeline.js';
 import { addLayer2Map } from './layers.js';
 import { getIndexMap } from '../map.js';
-import { pointEdit } from './pointEdit.js';
+import { pointEdit } from './layerEdit/pointEdit.js';
 import { opacityLayer } from './opacityCtrl.js';
 
 
-// 圖資清單控制
+// 圖資清單控制.
+
 export function add2List(id, name, datas) {
     let sections = "";
     let layersId = [];
@@ -66,6 +67,8 @@ export function add2List(id, name, datas) {
 
     // 編輯圖徽
     $(`#more_action2_${id}`).on('click', function () {
+        var GeometryType = fetch(`/api/MapAPI/GetGeometryType?pipelineId=${id}`);
+        console.log("GeometryType", GeometryType);
         // 如果type是點
         pointEdit(id, name, layersId);
     });
