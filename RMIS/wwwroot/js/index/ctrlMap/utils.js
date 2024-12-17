@@ -141,12 +141,11 @@ export function addLineToLayer(points, newLayer, color, name) {
 export function addPolygonToLayer(points, newLayer, color, name, autoCenter = true) {
     var $indexMap = getIndexMap();
     var pointGroup = [];
-    var prop = "";
+    var prop = points[0][1];
     // 把points的所有[0]取出集合
     for (var i = 0; i < points.length; i++) {
         if (points[i] && points[i][0]) {
             pointGroup.push(points[i][0]); // 提取座標點
-            if (points[i][1]) prop = points[i][1]; // 提取屬性 (僅取最後一個有效值)
         }
     }
 

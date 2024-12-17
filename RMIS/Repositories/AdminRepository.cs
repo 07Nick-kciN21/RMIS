@@ -287,7 +287,7 @@ namespace RMIS.Repositories
                             Latitude = data.pile_lat,
                             Longitude = data.pile_lon,
                             AreaId = roadId2AreaId[$"{data.road_id}_{data.pile_dir}"],
-                            Property = data.pile_prop
+                            Property = !string.IsNullOrWhiteSpace(data.pile_prop) ? data.pile_prop : null
                         };
                         points.Add(point);
                     }

@@ -57,7 +57,7 @@ function createNewLayer(result) {
     result.areas.forEach(function (area) {
         let points = area.points.map(function (point) {
             var item = { "座標": [point.latitude, point.longitude] };
-            var item2 = JSON.parse(point.prop.replace(/NaN/g, 'null'));
+            var item2 = point.prop != null ? JSON.parse(point.prop.replace(/NaN/g, 'null')) : null;
             const merged = { ...item, ...item2 } 
             layerProps[pipelineId].push(merged);
             return [[point.latitude, point.longitude], point.prop, merged, null];

@@ -85,7 +85,22 @@ function getObjectsInBounds(bounds, gselectedId) {
             try {
                 var item = JSON.parse(jsonData);
                 item['Instance'] = subLayer;
-                item['座標'] = subLayer instanceof L.Marker ? subLayer.getLatLng() : subLayer.getLatLngs()[0];
+
+                if (subLayer instanceof L.Marker) {
+                    // 如果是 Marker，取得座標
+                    item['座標'] = subLayer.getLatLng();
+                } else if (subLayer instanceof L.Polygon) {
+                    // 計算多邊形的質心 (內心)
+                    item['座標'] = calculatePolygonCentroid(subLayer.getLatLngs()[0]);
+                    console.log("Polygon LatLng", subLayer.getLatLngs()[0]);
+                } else if (subLayer instanceof L.Polyline) {
+                    // Polyline 使用 getBounds().getCenter() 為近似中心
+                    item['座標'] = subLayer.getBounds().getCenter();
+                } else {
+                    // 預設情況，取第一個座標
+                    item['座標'] = subLayer.getLatLngs()[0];
+                }
+
                 filteredProps.push(item);
             } catch (err) {
                 console.error('無法解析 JSON', err);
@@ -136,6 +151,31 @@ function getObjectsInBounds(bounds, gselectedId) {
             }
         });
     });
+}
+// 計算多邊形質心的函式
+function calculatePolygonCentroid(latlngs) {
+    var x = 0, y = 0, signedArea = 0, a = 0;
+
+    for (var i = 0; i < latlngs.length; i++) {
+        var lat1 = latlngs[i].lat;
+        var lng1 = latlngs[i].lng;
+        var lat2 = latlngs[(i + 1) % latlngs.length].lat;
+        var lng2 = latlngs[(i + 1) % latlngs.length].lng;
+
+        // 計算三角形面積
+        a = (lng1 * lat2 - lng2 * lat1);
+        signedArea += a;
+
+        // 累加坐標值
+        x += (lng1 + lng2) * a;
+        y += (lat1 + lat2) * a;
+    }
+
+    signedArea *= 0.5;
+    x = x / (6 * signedArea);
+    y = y / (6 * signedArea);
+
+    return L.latLng(y, x); // 返回質心
 }
 async function getObjectsInCircle(circle, gselectedId) {
     // circle 是 L.Circle 的實例
