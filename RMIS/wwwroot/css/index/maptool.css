@@ -85,6 +85,7 @@
     list-style-type: none;
     background-color: #f8f8f8;
 }
+
 #mapSelect{
     width: 250px;
     top: -450px;
@@ -96,7 +97,9 @@
     top: -85px;
 }
     
-
+#overlayMapSelector > .selected{
+    background-color: #91c54d;
+}
 .coordinate-item:hover {
     background-color: #91c54d;
     border-radius: 5px 5px 5px 5px;

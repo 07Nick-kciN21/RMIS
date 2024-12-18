@@ -314,6 +314,8 @@ function createBaseLayers() {
         "SP2006NC_3857": SP2006NC_3857,
     };
 
+    let currentTileLayer = OpenStreet;
+
     // 把基本圖層加入#baseMapSelect
     for(let name in baseMaps){
         $('#baseMapSelector').append(`<li class="coordinate-item" value="${name}"><span>${name}</span></li>`);
@@ -362,11 +364,48 @@ function createBaseLayers() {
             for(let name in overlayMaps){
                 $('#overlayMapSelector').append(`<li class="coordinate-item" value="${name}">${name}</li>`);
             }
+
         },
         error: function (error) {
             console.error('Error fetching map sources:', error);
         }
     });
+
+    // 基本圖層切換
+    $('#baseMapSelector').on('click', '.coordinate-item', function () {
+        const name = $(this).text().trim(); // 獲取點擊的底圖名稱
+
+        // 確保底圖存在於 baseMaps
+        if (baseMaps[name]) {
+            $('#map-basemap').text(name); // 更新 UI 顯示當前底圖名稱
+
+            // 移除目前的底圖
+            indexMap.removeLayer(currentTileLayer);
+
+            // 添加新的底圖
+            currentTileLayer = baseMaps[name];
+            currentTileLayer.addTo(indexMap);
+        } else {
+            console.warn(`未找到名為 "${name}" 的底圖`);
+        }
+    });
+
+    // 疊加圖層複選
+    $('#overlayMapSelector').on('click', '.coordinate-item', function () {
+        const name = $(this).text().trim(); // 獲取圖層名稱
+    
+        if ($(this).hasClass('selected')) {
+            // 如果已經選中，移除圖層並取消選中
+            $(this).removeClass('selected');
+            indexMap.removeLayer(overlayMaps[name]);
+        } else {
+            // 如果未選中，添加圖層並設為選中
+            $(this).addClass('selected');
+            overlayMaps[name].addTo(indexMap);
+        }
+    });
+    
+
 }
 
 export function getIndexMap() {
