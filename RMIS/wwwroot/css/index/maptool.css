@@ -49,6 +49,7 @@
     .map-footer > div {
         display: flex;
         align-items: center;
+        justify-content: center;
         border: 1px;
         white-space: nowrap; /* 防止文字換行 */
     }

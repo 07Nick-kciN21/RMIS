@@ -4,7 +4,7 @@ var pointStep1 = `
         <h5 id="editSymbol-Title0" class="offcanvas-title"></h5>
         <div id="editStep1">
             <div class="symbolClass pSymbol0" data-symclass="0">
-                <div class="symbolText">點符號</div>
+                <div class="symbolText">線符號</div>
             </div>
             <div class="symbolClass pSymbol1" data-symclass="1">
                 <div class="symbolText">依分級</div>
@@ -19,9 +19,9 @@ var pointStep1 = `
         </div>`;
 let idList; 
 let name;
-// 每一種點開都有三種選擇
-// 符號、分級、類型
-export function pointEdit(id, pipeName, layersId) {
+
+export function lineEdit(id, pipeName, layersId){
+    console.log("lineEdit");
     idList = layersId;
     name = pipeName;
     console.log("pointEdit", id, idList, `編輯圖徽 - ${name}`);
@@ -32,7 +32,7 @@ export function pointEdit(id, pipeName, layersId) {
     $("#editSymbol-Title0").append(`編輯圖徽 - ${name} <br> 選擇編輯類型`);
     
     $('#editNext').click(function () {
-        pointEditStep2(id);
+        lineEditStep2(id);
     });
 
     // 編輯圖徽第一步
@@ -52,14 +52,10 @@ export function pointEdit(id, pipeName, layersId) {
     });
 }
 
-// 點符號選擇
+// 線符號選擇
 var pointStep2_0 = `
     <div id="symbolProp-0" class="symbolProp">     
         <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
-        <!-- 填滿 -->
-        <span>填滿</span>
-        <input class="color-box" type="color" name="fillColor" value="#ff0000">
-        <br>
         <!-- 外框 -->
         <span>外框</span>
         <input class="color-box" type="color" name="frameColor" value="#ff0000"> 
@@ -69,131 +65,100 @@ var pointStep2_0 = `
             <option value="3">3</option>
         </select>   
         <br>            
-        <!-- 大小1-10 -->
-        <span>大小</span>
-        <select class="select2" name="size">
-            <option value="12">12</option>
-            <option value="14">14</option>
-            <option value="16">16</option>
-            <option value="18">18</option>
-            <option value="20">20</option>
-        </select>
         <div class="form-group" style="clear:both;">
             <button class="btn js-modal-toggle editBack">上一步</button>
             <button class="btn js-modal-toggle editComplete">完成</button>
         </div>                
-            </div>`;
+    </div>`;
 
-// 依分級選擇
+    // 依分級選擇
 var pointStep2_1 = `
-        <div id="symbolProp-1" class="symbolProp">  
-            <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
-            <!-- 欄位 -->
-            <span>欄位</span>
-            <select class="select2" name="field">
-                <option value="none">請選擇欄位</option>
-            </select>
-            <br>
-            <!-- 填滿 -->
-            <span>填滿</span>
-            <select id="gradientColorsMap" name="fillcolor" style="width:200px; height:40px">
-                <option value="purples"></option>
-                <option value="reds"></option>
-                <option value="ylrd"></option>
-                <option value="rdpu"></option>
-                <option value="ylbr"></option>
-                <option value="greens"></option>
-                <option value="ylgnbu"></option>
-                <option value="gnbu"></option>
-                <option value="greys"></option>
-            </select>
-            <canvas id="gradientColor" width="200" height="50" style="display:none;"></canvas>
-            <br>
-            <!-- 等級 -->
-            <span>等級</span>
-            <select class="select2" name="level">
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-            </select>
-            <br>
-            <!-- 外框 -->
-            <span>外框</span>
-            <input class="color-box" type="color" name="frameColor" value="#ff0000"> 
-            <select class="select2" name="thickness">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-            </select>
-            <br>
-            <!-- 大小 -->
-            <span>大小</span>
-            <select class="select2" name="size">
-                <option value="12">12</option>
-                <option value="14">14</option>
-                <option value="16">16</option>
-                <option value="18">18</option>
-                <option value="20">20</option>
-            </select>
-            <br>
-            <div class="form-group" style="clear:both;">
-                <button class="btn js-modal-toggle editBack">上一步</button>
-                <button class="btn js-modal-toggle editComplete">完成</button>
-            </div>
-        </div>`;
+    <div id="symbolProp-1" class="symbolProp">  
+        <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
+        <!-- 欄位 -->
+        <span>欄位</span>
+        <select class="select2" name="field">
+            <option value="none">請選擇欄位</option>
+        </select>
+        <br>
+        <!-- 外框 -->
+        <span>外框</span>
+        <select id="gradientColorsMap" name="fillcolor" style="width:200px; height:40px">
+            <option value="purples"></option>
+            <option value="reds"></option>
+            <option value="ylrd"></option>
+            <option value="rdpu"></option>
+            <option value="ylbr"></option>
+            <option value="greens"></option>
+            <option value="ylgnbu"></option>
+            <option value="gnbu"></option>
+            <option value="greys"></option>
+        </select>
+        <canvas id="gradientColor" width="200" height="50" style="display:none;"></canvas>
+        <br>
+        <!-- 粗細 -->
+        <span>粗細</span>
+        <select class="select2" name="thickness">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <br>
+        <!-- 等級 -->
+        <span>等級</span>
+        <select class="select2" name="level">
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+        </select>
+        <br>
+        <div class="form-group" style="clear:both;">
+            <button class="btn js-modal-toggle editBack">上一步</button>
+            <button class="btn js-modal-toggle editComplete">完成</button>
+        </div>
+    </div>`;
 
 // 依類型選擇
 var pointStep2_2 = `
-            <div id="symbolProp-2" class="symbolProp">    
-                <h5 id="editSymbol-Title1" class="offcanvas-title"></h5> 
-                <!-- 欄位 -->
-                <span>欄位</span>
-                <select class="select2" name="field">
-                    <option value="none">請選擇欄位</option>
-                </select>
-                <br>
-                <!-- 填滿 -->
-                <span>填滿</span>
-                <select id="groupColorsMap" name="fillcolor" style="width:200px; height:40px">
-                    <option value="type1"></option>
-                    <option value="type2"></option>
-                    <option value="type3"></option>
-                    <option value="type4"></option>
-                    <option value="type5"></option>
-                    <option value="type6"></option>
-                    <option value="type7"></option>
-                    <option value="type8"></option>
-                </select>
-                <canvas id="groupColor" width="200" height="50" style="display:none;"></canvas>
-                <br>
-                <!-- 外框 -->
-                <span>外框</span>
-                <input class="color-box" type="color" name="frameColor" value="#ff0000"> 
-                <select class="select2" name="thickness">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                </select>
-                <br>
-                <!-- 大小 -->
-                <span>大小</span>
-                <select class="select2" name="size">
-                    <option value="12">12</option>
-                    <option value="14">14</option>
-                    <option value="16">16</option>
-                    <option value="18">18</option>
-                    <option value="20">20</option>
-                </select>
-                <br>
-                <div class="form-group" style="clear:both;">
-                    <button class="btn js-modal-toggle editBack">上一步</button>
-                    <button class="btn js-modal-toggle editComplete">完成</button>
-                </div>
-            </div>`;
+    <div id="symbolProp-2" class="symbolProp">    
+        <h5 id="editSymbol-Title1" class="offcanvas-title"></h5> 
+        <!-- 欄位 -->
+        <span>欄位</span>
+        <select class="select2" name="field">
+            <option value="none">請選擇欄位</option>
+        </select>
+        <br>
+        <!-- 填滿 -->
+        <span>填滿</span>
+        <select id="groupColorsMap" name="fillcolor" style="width:200px; height:40px">
+            <option value="type1"></option>
+            <option value="type2"></option>
+            <option value="type3"></option>
+            <option value="type4"></option>
+            <option value="type5"></option>
+            <option value="type6"></option>
+            <option value="type7"></option>
+            <option value="type8"></option>
+        </select>
+        <canvas id="groupColor" width="200" height="50" style="display:none;"></canvas>
+        <br>
+        <!-- 粗細 -->
+        <span>粗細</span>
+        <select class="select2" name="thickness">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <br>
+        <div class="form-group" style="clear:both;">
+            <button class="btn js-modal-toggle editBack">上一步</button>
+            <button class="btn js-modal-toggle editComplete">完成</button>
+        </div>
+    </div>`;
 
 // 漸層顏色組合
 var gradientColorsMap = {
@@ -296,8 +261,7 @@ function adjustDuplicateColors(colorSet) {
     return colorSet;
 }
 
-// 編輯圖徽第二步
-function pointEditStep2(id){
+function lineEditStep2(id){
     console.log("pointEditStep2");
     // 從.symbolClass下找到.selected的data-symclass
     var symClass = $('.symbolClass.selected').data('symclass');
@@ -308,22 +272,20 @@ function pointEditStep2(id){
     }
     $('#editSymbol-Step1').addClass('hidden');
     $('#editSymbol-Step2').removeClass('hidden');
-    
+
     // 依照選擇的類型，載入對應的HTML
     if(symClass == 0){
         console.log("pointStep2_0");
         $('#editSymbol-Step2').html(pointStep2_0);
-        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 點符號選擇`);
+        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 線符號選擇`);
     }
     if(symClass == 1){
         console.log("pointStep2_1");
         $('#editSymbol-Step2').html(pointStep2_1);
-        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 選擇依分級`);
+        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 依分級選擇`);
         var fields = Object.keys(layerProps[id][0]);
-        fields.forEach(function (field) {
-            if(field == "孔蓋種類" || field == "尺寸單位" || field == "蓋部寬度" || field == "蓋部長度" || field == "地盤高" || field == "孔深" || field == "孔蓋型態" || field == "使用狀態" || field == "資料狀態"){
-                $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
-            };
+        fields.forEach(function(field){
+            $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
         });
 
         // 2. 初始化 Select2，並使用 templateResult
@@ -417,17 +379,15 @@ function pointEditStep2(id){
             minimumResultsForSearch: Infinity, // 隱藏搜索框
         });
     }
-
     $(".editBack").on('click', function () {
         $('#editSymbol-Step2').addClass('hidden');
         $('#editSymbol-Step1').removeClass('hidden');
     });
 
-    // 編輯完成
     $(".editComplete").on('click', function () {
         var symbolProp = $(this).parent().parent().attr('id');
-        // 選擇依符號
-        if(symbolProp == 'symbolProp-0'){
+        if(symbolProp == "symbolProp-0"){
+            console.log("線符號選擇完成");
             // 取得symbolProp-0下的所有input與select
             var inputs = $('#symbolProp-0').find('input');
             var selects = $('#symbolProp-0').find('select');
@@ -439,43 +399,32 @@ function pointEditStep2(id){
             selects.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
             });
-            console.log(formData);
+            var color = formData.frameColor;
+            var thickness = formData.thickness;
+            console.log("formData", formData);
             // formData = {
-            //     "fillColor": "#ff0000", 填滿顏色
             //     "frameColor": "#ff0000", 外框顏色
             //     "thickness": "1", 外框厚度
-            //     "size": "1"  大小
             // }
-            var diameter = parseInt(formData.size);
-            var strokeWidth = parseInt(formData.thickness)*2;
-            var radius = diameter / 2; // 半徑
-
-            var svgHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
-                <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth/2}"
-                    fill="${formData.fillColor}" 
-                    stroke="${formData.frameColor}" 
-                    stroke-width="${strokeWidth}"/>
-            </svg>
-            `;
-            // 建立新的 DivIcon
-            var svgDivIcon = L.divIcon({
-                className: '', 
-                html: svgHTML,
-                iconAnchor: [radius, radius],
-                popupAnchor: [0, -radius]
-            });
-            // 把layers[id]中的圖形改成circleMarker
-            idList.forEach(function (id) {
+            // 改變線段的顏色與粗細
+            idList.forEach(function(id){
                 if(layers[id]){
-                    layers[id].eachLayer(function (layer) {
-                        layer.setIcon(svgDivIcon);
+                    layers[id].eachLayer(function(layer){
+                        layer.setStyle({
+                            color: color,
+                            weight: thickness*thickness
+                        });
                     });
                 }
             });
-
             // 清除sections_{id}下的所有section
             $(`#sections_${id}`).empty();
+            
+            // 新增一個svg，為該顏色的橫條線段
+            var svgHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="20">
+                <line x1="0" y1="10" x2="100" y2="10" style="stroke:${color};stroke-width:${thickness}"></line>
+            </svg>`;
 
             // 新增 SVG 內容以 encodeURIComponent 包起來
             var encodedSVG = encodeURIComponent(svgHTML);
@@ -490,10 +439,9 @@ function pointEditStep2(id){
             $('#editSymbol-Step2').empty();
             // 將 section 插入到對應的元素中
             $(`#sections_${id}`).append(section);
-        };
+        }
 
-        // 選擇依分級
-        if (symbolProp == 'symbolProp-1') {
+        if(symbolProp == "symbolProp-1"){
             var inputs = $('#symbolProp-1').find('input');
             var selects = $('#symbolProp-1').find('select');
         
@@ -509,7 +457,7 @@ function pointEditStep2(id){
                 alert("請選擇欄位");
                 return;
             }
-        
+
             // 找到數值範圍（第一遍遍歷）
             let minValue = Infinity;
             let maxValue = -Infinity;
@@ -531,12 +479,12 @@ function pointEditStep2(id){
                     });
                 }
             });
-        
+
             if (minValue === maxValue) {
                 alert("數值範圍過於集中，無法進行有效分層");
                 return;
             }
-        
+
             // 計算分層區間大小
             let levels = parseInt(formData.level);
             let rangeSize = (maxValue - minValue) / levels;
@@ -553,8 +501,8 @@ function pointEditStep2(id){
                     colorSet.push(gradientColors[index]);
                 }
             }
-        
-            // 賦予顏色和樣式（第二遍遍歷）
+            
+            console.log(colorSet);
             idList.forEach(function (id) {
                 if (layers[id]) {
                     layers[id].eachLayer(function (layer) {
@@ -565,76 +513,54 @@ function pointEditStep2(id){
                             var doc = parser.parseFromString(content, 'text/html');
                             var popupData = doc.querySelector('.popupData');
                             var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
+                            
                             const value = jsonData[formData.field];
-
-                            // 計算層級索引
-                            let levelIndex = Math.floor((value - minValue) / rangeSize);
-                            if (levelIndex >= levels) levelIndex = levels - 1;
-
-                            const fillColor = colorSet[levelIndex];
-                            const diameter = parseInt(formData.size);
-                            const strokeWidth = parseInt(formData.thickness) * 2;
-                            const radius = diameter / 2;
-
-                            // 建立 SVG 圖示
-                            const svgHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
-                                                <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
-                                                fill="${fillColor}" 
-                                                stroke="${formData.frameColor}" 
-                                                stroke-width="${strokeWidth}"/>
-                                            </svg>`;
-                            const svgDivIcon = L.divIcon({
-                                className: '',
-                                html: svgHTML,
-                                iconAnchor: [radius, radius],
-                                popupAnchor: [0, -radius]
+                            let colorIndex = Math.floor((value - minValue) / rangeSize);
+                            if (colorIndex >= levels) colorIndex = levels - 1;
+                            const color = colorSet[colorIndex];
+                            if(jsonData[formData.field] == undefined){
+                            }
+                            
+                            console.log(`field: ${jsonData[formData.field]}, color: ${color}, colorIndex: ${colorIndex}, formData.thickness:${formData.thickness}`);
+                            layer.setStyle({
+                                color: color,
+                                weight: formData.thickness*formData.thickness
                             });
-
-                            // 更新圖層圖標
-                            layer.setIcon(svgDivIcon);
                         }
                     });
                 }
             });
-        
-            // 建立階層對應圖示
-            $(`#sections_${id}`).empty(); // 清除舊的階層圖示
+
+            $(`#sections_${id}`).empty();
             for (let i = 0; i < levels; i++) {
                 let rangeMin = minValue + i * rangeSize;
                 let rangeMax = minValue + (i + 1) * rangeSize;
-        
-                const diameter = parseInt(formData.size);
-                const strokeWidth = parseInt(formData.thickness) * 2;
-                const radius = diameter / 2;
-        
-                const fillColor = colorSet[i];
-                const svgHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
-                    <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
-                        fill="${fillColor}" 
-                        stroke="${formData.frameColor}" 
-                        stroke-width="${strokeWidth}"/>
-                </svg>
-                `;
-        
-                const encodedSVG = encodeURIComponent(svgHTML);
-        
-                const section = `
-                <div class="section" id="section_${i}">
+
+                // 建立一個 SVG 橫條
+                var svgHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="20">
+                    <line x1="0" y1="10" x2="100" y2="10" style="stroke:${colorSet[i]};stroke-width:${formData.thickness}"></line>
+                </svg>`;
+
+                // 新增 SVG 內容以 encodeURIComponent 包起來
+                var encodedSVG = encodeURIComponent(svgHTML);
+
+                // 使用模板字串插入資料
+                var section = `
+                <div class="section" id="section_${id}">
                     <span class="edit_icon" style="background-image: url('data:image/svg+xml;utf8,${encodedSVG}');"></span>
                     <span class="range_label" style="margin-left:5px">${rangeMin.toFixed(1)} - ${rangeMax.toFixed(1)}</span>
                 </div>
                 `;
-        
-                $(`#sections_${id}`).append(section); // 將階層對應圖示插入到 overview 中
+                // 將 section 插入到對應的元素中
+                $(`#sections_${id}`).append(section);
             }
             // 清空表單步驟
             $('#editSymbol-Step1').empty();
             $('#editSymbol-Step2').empty();
         }
-    
-        // 選擇依類型
-        if(symbolProp == 'symbolProp-2'){
+
+        if(symbolProp == "symbolProp-2"){
             var inputs = $('#symbolProp-2').find('input');
             var selects = $('#symbolProp-2').find('select');
 
@@ -695,9 +621,8 @@ function pointEditStep2(id){
             });
             colorSet = adjustDuplicateColors(colorSet);
             console.log(colorSet);
-            // 賦予顏色和樣式（第二遍遍歷）
             idList.forEach(function (id) {
-                if (layers[id]) {
+                if(layers[id]){
                     layers[id].eachLayer(function (layer) {
                         var popup = layer.getPopup();
                         if (popup) {
@@ -710,57 +635,36 @@ function pointEditStep2(id){
                             const index = fields.indexOf(value);
                             if (index === -1) return;
                             const fillColor = colorSet[index];
-                            const diameter = parseInt(formData.size);
-                            const strokeWidth = parseInt(formData.thickness) * 2;
-                            const radius = diameter / 2;
-                            const svgHTML = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
-                                <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
-                                    fill="${fillColor}" 
-                                    stroke="${formData.frameColor}" 
-                                    stroke-width="${strokeWidth}"/>
-                            </svg>
-                            `;
-                            const svgDivIcon = L.divIcon({
-                                className: '',
-                                html: svgHTML,
-                                iconAnchor: [radius, radius],
-                                popupAnchor: [0, -radius]
+                            layer.setStyle({
+                                color: fillColor,
+                                weight: formData.thickness*formData.thickness,
                             });
-                            layer.setIcon(svgDivIcon);
                         }
                     });
                 }
             });
-            // 建立階層對應圖示
-            $(`#sections_${id}`).empty(); // 清除舊的階層圖示
+            $(`#sections_${id}`).empty();
             for (let i = 0; i < colorSet.length; i++) {
-                const diameter = parseInt(formData.size);
-                const strokeWidth = parseInt(formData.thickness) * 2;
-                const radius = diameter / 2;
-        
-                const fillColor = colorSet[i];
-                const svgHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="${diameter}" height="${diameter}">
-                    <circle cx="${radius}" cy="${radius}" r="${radius - strokeWidth / 2}"
-                        fill="${fillColor}" 
-                        stroke="${formData.frameColor}" 
-                        stroke-width="${strokeWidth}"/>
-                </svg>
-                `;
-        
-                const encodedSVG = encodeURIComponent(svgHTML);
-        
-                const section = `
-                <div class="section" id="section_${i}">
+                // 建立一個 SVG 橫條
+                var svgHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="20">
+                    <rect x="0" y="0" width="100" height="20" fill="${colorSet[i]}"></rect>
+                </svg>`;
+
+                // 新增 SVG 內容以 encodeURIComponent 包起來
+                var encodedSVG = encodeURIComponent(svgHTML);
+
+                // 使用模板字串插入資料
+                var section = `
+                <div class="section" id="section_${id}">
                     <span class="edit_icon" style="background-image: url('data:image/svg+xml;utf8,${encodedSVG}');"></span>
                     <span class="range_label" style="margin-left:5px">${fields[i]}</span>
                 </div>
                 `;
-        
-                $(`#sections_${id}`).append(section); // 將階層對應圖示插入到 overview 中
+                // 將 section 插入到對應的元素中
+                $(`#sections_${id}`).append(section);
             }
-        };
+        }
         $('.symbolProp').each(function () {
             $(this).addClass('hidden');
         });
@@ -768,4 +672,3 @@ function pointEditStep2(id){
         $('#layerBarContainer').removeClass('hidden');
     });
 }
-

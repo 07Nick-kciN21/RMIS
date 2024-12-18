@@ -9,6 +9,7 @@ export function updatePropQuery(props) {
         lang: getQueryBuilderLang()
     });
 }
+
 // 分類屬性資料
 function buildPropsDict(props) {
     function formatTimestamp(timestamp) {

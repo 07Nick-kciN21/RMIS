@@ -1,8 +1,8 @@
 ﻿import { layerList } from './menu.js';
 import { removePipeline, addPipeline } from './pipeline.js';
-import { addLayer2Map } from './layers.js';
+import { addLayer2Map, layers } from './layers.js';
 import { getIndexMap } from '../map.js';
-import { pointEdit } from './layerEdit/pointEdit.js';
+import { layerEditor } from './layerEdit/layerEditor.js';
 import { opacityLayer } from './opacityCtrl.js';
 
 
@@ -67,10 +67,8 @@ export function add2List(id, name, datas) {
 
     // 編輯圖徽
     $(`#more_action2_${id}`).on('click', function () {
-        var GeometryType = fetch(`/api/MapAPI/GetGeometryType?pipelineId=${id}`);
-        console.log("GeometryType", GeometryType);
         // 如果type是點
-        pointEdit(id, name, layersId);
+        layerEditor(id, name, layersId);
     });
     // 使用透明度不要关闭
     $('.layerOpacity').on('click', function (e) {
@@ -87,11 +85,11 @@ export function add2List(id, name, datas) {
 
     $(`#eye_${id}`).on('click', function () {
         if ($(this).hasClass('eyeOpen')) {
-            closeLayer(id);
+            closeLayer(id, layersId);
             $(this).removeClass('eyeOpen');
             $(this).addClass('eyeClosed');
         } else {
-            displayLayer(id);
+            displayLayer(id, layersId);
             $(this).removeClass('eyeClosed');
             $(this).addClass('eyeOpen');
         }
@@ -129,15 +127,48 @@ export function remove2List(id) {
 }
 
 // 不顯示圖層
-export function closeLayer(id) {
-    removePipeline(id);
+function closeLayer(id, layersId) {
+    // removePipeline(id);
+    layersId.forEach(function (id) {
+        layers[id].eachLayer(function (layer) {
+            layer._isVisible = false;
+            if (layer instanceof L.Marker) {
+                layer.setOpacity(0); // 設置不可見
+            } else if (layer instanceof L.Polygon) {
+                layer.setStyle({
+                    opacity: 0,       // 邊框透明度
+                    fillOpacity: 0    // 填充透明度同步
+                });
+            } else if (layer instanceof L.Polyline) {
+                layer.setStyle({ opacity: 0 }); // 設置不可見
+            }
+        });
+    });
     layerList[id] = false;
 }
 
 // 顯示圖層
-export function displayLayer(id) {
-    addPipeline(id).then(result => {
-        layerList[id] = true;
-        addLayer2Map(id, result);
+function displayLayer(id, layersId) {
+    // addPipeline(id).then(result => {
+    //     layerList[id] = true;
+    //     addLayer2Map(id, result);
+    // });
+    layersId.forEach(function (id) {
+        layers[id].eachLayer(function (layer) {
+            var opacity = layer._originalOpacity || 1;
+            layer._isVisible = true;
+            if (layer instanceof L.Marker) {
+                layer.setOpacity(opacity); // 恢復透明度
+            } else if (layer instanceof L.Polygon) {
+                layer.setStyle({
+                    opacity: opacity, // 邊框透明度
+                    fillOpacity: opacity // 填充透明度同步
+                });
+            } else if (layer instanceof L.Polyline) {
+                layer.setStyle({ opacity: opacity }); // 恢復透明度
+            }
+            console.log("layer", layer);
+        });
     });
+    layerList[id] = true;
 }

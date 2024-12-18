@@ -74,6 +74,7 @@
     justify-content: space-between; /* 使內部元素左右對齊 */
     align-items: center; /* 垂直方向上居中對齊 */
     padding: 0 10px 10px;
+    border-radius: 10px;
 }
 
 .panelFooter {

@@ -82,6 +82,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
 
 export function addLineToLayer(points, newLayer, color, name) {
     var $indexMap = getIndexMap();
+    var zoom = $indexMap.getZoom();
     console.log("Create Line");
     for (var i = 0; i < points.length - 1; i++) {
         var startPoint = points[i][0];
@@ -127,6 +128,17 @@ export function addLineToLayer(points, newLayer, color, name) {
                 e.target.closePopup();
             }
         });
+
+        if(zoom > 15){
+            segment.setStyle({
+                opacity: 1,
+            });
+        }
+        else{
+            segment.setStyle({
+                opacity: 0,
+            });
+        }
         $indexMap.on('click', function (e) {
             if (currentLine) {
                 newLayer.removeLayer(currentLine);
@@ -140,8 +152,10 @@ export function addLineToLayer(points, newLayer, color, name) {
 
 export function addPolygonToLayer(points, newLayer, color, name, autoCenter = true) {
     var $indexMap = getIndexMap();
+    var zoom = $indexMap.getZoom();
     var pointGroup = [];
     var prop = points[0][1];
+    
     // 把points的所有[0]取出集合
     for (var i = 0; i < points.length; i++) {
         if (points[i] && points[i][0]) {
@@ -152,8 +166,9 @@ export function addPolygonToLayer(points, newLayer, color, name, autoCenter = tr
     // 創建 Leaflet Polygon
     let polygon = L.polygon(pointGroup, {
         color: "#000000",        // 邊框顏色
+        opacity: 0,             // 邊框透明度
         fillColor: color,    // 填充顏色
-        fillOpacity: 0.5     // 填充透明度
+        fillOpacity: 0     // 填充透明度
     }).addTo(newLayer);
     polygon.bindPopup(`
             <div class="popupData" style="display: none;">
@@ -166,7 +181,7 @@ export function addPolygonToLayer(points, newLayer, color, name, autoCenter = tr
         maxWidth: 300,
         maxHeight: 450
     });
-
+    points = points[0][2].Instance = polygon;
     // 點擊多邊形設為相反色
     polygon.on('click', function () {
         if(popupEnabled){
@@ -178,6 +193,18 @@ export function addPolygonToLayer(points, newLayer, color, name, autoCenter = tr
             polygon.closePopup();
         }
     });
+    if(zoom > 15){
+        polygon.setStyle({
+            opacity: 0,      // 邊框透明度
+            fillOpacity: 0   // 填充透明度
+        });
+    }
+    else{
+        polygon.setStyle({
+            opacity: 1,      // 邊框透明度
+            fillOpacity: 1   // 填充透明度
+        });
+    }
     $indexMap.on('click', function (e) {
         polygon.setStyle({ fillColor: color });
     });

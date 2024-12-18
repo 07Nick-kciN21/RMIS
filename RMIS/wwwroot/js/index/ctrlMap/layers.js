@@ -74,26 +74,41 @@ function createNewLayer(result) {
     // 添加縮放事件來控制圖層顯示
     indexMap.on('zoomend', function () {
         var currentZoom = indexMap.getZoom();
-
-        // 圖層在縮放層級小於 15 時變得不可見，在縮放層級大於等於 15 時顯示
+    
+        // 縮放層級大於 15，設置圖層可見；否則設置為不可見
         if (currentZoom > 15) {
             newLayer.eachLayer(function (layer) {
-                if (layer.setOpacity) {
-                    const opacity = layer._originalOpacity || 1;
-                    // 根據layer
-                    layer.setOpacity(opacity); // 設置圖層為全可見
+                if(!layer._isVisible){
+                    return;
+                }
+                layer._isVisible = true;
+                const opacity = layer._originalOpacity || 1;
+                if (layer instanceof L.Marker) {
+                    layer.setOpacity(opacity); // 設置 Marker 為全可見
+                }
+                else if (layer instanceof L.Polygon) {
+                    layer.setStyle({ opacity: opacity, fillOpacity: opacity });
+                } else if (layer instanceof L.Polyline) {
+                    layer.setStyle({ opacity: opacity });
                 }
             });
         } else {
             newLayer.eachLayer(function (layer) {
-                if (layer.setOpacity) {
-                    // 取得圖層透明度
-                    layer._originalOpacity = layer.options.opacity;
-                    layer.setOpacity(0); // 設置圖層為不可見
+                if(!layer._isVisible){
+                    return;
+                }
+                if (layer instanceof L.Marker) {
+                    layer.setOpacity(0); // 設置 Marker 為不可見
+                } else if (layer instanceof L.Polygon) {
+                    layer.setStyle({ opacity: 0, fillOpacity: 0 }); // 邊框與填充透明度相同，設置為不可見
+                } else if (layer instanceof L.Polyline) {
+                    layer.setStyle({ opacity: 0 }); // 設置 Polyline 為不可見
                 }
             });
         }
     });
+    
+    
     return newLayer;
 }
 

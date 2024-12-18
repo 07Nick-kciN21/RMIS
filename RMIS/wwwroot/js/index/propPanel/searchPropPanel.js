@@ -103,8 +103,11 @@ function setupFilterAndClearHandlers() {
             console.error("No valid rules found.");
             return;
         }
+        
         filteredProps = filterPropsByRules(props, result);
+        console.log(props, result);
         if (filteredProps.length == 0) {
+            
             alert("沒有符合條件的結果");
             return;
         }
@@ -114,7 +117,6 @@ function setupFilterAndClearHandlers() {
         var resultLayer = $('#pFeatSelect').find('option:selected').text();
         $('#propResultLayer').text(resultLayer);
         $('#analysisResultLayer').text(resultLayer);
-
        
         var condition = parseRules(result);
         $('#propResultCond').text(condition);
@@ -191,7 +193,11 @@ function updateSelect(featSelect) {
     $propSelect.trigger('change');
 }
 
-const countableTypes = ["作業區分", "設施長度", "孔蓋種類", "尺寸單位", "蓋部寬度", "蓋部長度", "地盤高", "孔深", "孔蓋型態", "設施寬度", "設施高度", "設施型態", "使用狀態", "使用資料", "QualityLV"]
+const countablePoint = ["作業區分", "設施長度", "孔蓋種類", "尺寸單位", "蓋部寬度", "蓋部長度", "地盤高", "孔深", "孔蓋型態", "設施寬度", "設施高度", "設施型態", "使用狀態", "使用資料", "QualityLV"];
+const countableLine = [ "管徑寬度", "管徑高度", "涵管條數", "管線長度", "管線型態", "使用狀態", " 資料狀態", "起點埋設深度", "終點埋設深度", "前一次Status_XY"];
+const countablePlane = ["段號", "地號", "子地號", "開闢年度", "公園面積", "地籍面積", "Shape.STArea()", "Shape.STLength()"];
+// 合併 三個陣列
+const countableTypes = countablePoint.concat(countableLine, countablePlane);
 
 // 統計頁面設定
 function updateAnalysisList() {
@@ -203,6 +209,7 @@ function updateAnalysisList() {
         if (countableTypes.includes(key)) {
             $anaFieldList.append($('<li class="panelResult anaField"></li>').text(key));
         }
+        // $anaFieldList.append($('<li class="panelResult anaField"></li>').text(key));
     });
     $anaFieldList.off('click', '.anaField').on('click', '.anaField', function () {
         $anaSelList.append($('<li class="panelResult anaSelect"></li>').text($(this).text()));
@@ -358,14 +365,19 @@ function highlightMapFeature(item) {
     try {
         if (item['Instance'] instanceof L.Marker) {
             markerHighlight(item['Instance']);
-        } else if (item['Instance'] instanceof L.Polyline) {
+        }
+        else if (item['Instance'] instanceof L.Polygon){
+            polygonHighlight(item['Instance']);
+        } 
+        else if (item['Instance'] instanceof L.Polyline) {
             lineHighlight(item['Instance']);
         }
+        
     } catch (e) {
         console.log("error:", e);
     } finally {
-        $indexMap.setView(item["座標"], 30);
-        item['Instance'].openPopup();
+        $indexMap.setView(item["座標"], 17);
+        // item['Instance'].openPopup();
     }
 }
 
@@ -395,6 +407,33 @@ function lineHighlight(polyline) {
         weight: polyline.options.weight + 2,
         opacity: 0.8
     }).addTo($indexMap);
+}
+
+function polygonHighlight(polygon) {
+    console.log('click Polygon');
+    if (highlightRectangle) {
+        $indexMap.removeLayer(highlightRectangle);
+    }
+    // 從原本的顏色取得反色
+    const color = polygon.options.fillColor;
+    const inverseColor = getInverseColor(color);
+    // 高亮多邊形
+    highlightRectangle = L.polygon(polygon.getLatLngs(), {
+        color: inverseColor,
+        weight: 2,
+        fillColor: inverseColor,
+        fillOpacity: 0.5
+    }).addTo($indexMap);
+}
+
+function getInverseColor(color) {
+    if (!color.startsWith("#")) return "#FFFFFF"; // 預設為白色
+
+    const hex = color.replace("#", "");
+    const r = 255 - parseInt(hex.substring(0, 2), 16);
+    const g = 255 - parseInt(hex.substring(2, 4), 16);
+    const b = 255 - parseInt(hex.substring(4, 6), 16);
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
 }
 
 // 設定地圖點擊事件處理，取消顯示

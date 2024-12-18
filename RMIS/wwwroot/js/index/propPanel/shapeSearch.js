@@ -1,4 +1,4 @@
-﻿import { layers } from '../ctrlMap/layers.js';
+import { layers } from '../ctrlMap/layers.js';
 
 let currentShape;
 let drawingActive = false; // Track if drawing is currently active
@@ -193,14 +193,28 @@ async function getObjectsInCircle(circle, gselectedId) {
         var parser = new DOMParser();
         var doc = parser.parseFromString(content, 'text/html');
 
-        // Get .popupData content
+        // 取得 .popupData 元素的內容
         var popupDataDiv = doc.querySelector('.popupData');
         if (popupDataDiv) {
             var jsonData = popupDataDiv.textContent.replace(/NaN/g, 'null');
             try {
                 var item = JSON.parse(jsonData);
                 item['Instance'] = subLayer;
-                item["座標"] = subLayer instanceof L.Marker ? subLayer.getLatLng() : subLayer.getLatLngs()[0];
+                if (subLayer instanceof L.Marker) {
+                    // 如果是 Marker，取得座標
+                    item['座標'] = subLayer.getLatLng();
+                } else if (subLayer instanceof L.Polygon) {
+                    // 計算多邊形的質心 (內心)
+                    item['座標'] = calculatePolygonCentroid(subLayer.getLatLngs()[0]);
+                    console.log("Polygon LatLng", subLayer.getLatLngs()[0]);
+                } else if (subLayer instanceof L.Polyline) {
+                    // Polyline 使用 getBounds().getCenter() 為近似中心
+                    item['座標'] = subLayer.getBounds().getCenter();
+                } else {
+                    // 預設情況，取第一個座標
+                    item['座標'] = subLayer.getLatLngs()[0];
+                }
+
                 filteredProps.push(item);
             } catch (err) {
                 console.error('無法解析 JSON', err);
@@ -221,9 +235,37 @@ async function getObjectsInCircle(circle, gselectedId) {
                         let layer = layers[id];
                         if (layer instanceof L.LayerGroup) {
                             layer.eachLayer(function (subLayer) {
-                                if (subLayer instanceof L.Marker) {
+                                if(subLayer instanceof L.Polygon){
+                                     // 檢查圓與多邊形的邊界是否相交
+                                    if (circle.getBounds().intersects(subLayer.getBounds())) {
+                                        const latlngs = subLayer.getLatLngs().flat(); // 獲取多邊形所有頂點
+
+                                        let isIntersecting = false;
+
+                                        // 檢查多邊形的任何一個頂點是否在圓內
+                                        for (const latlng of latlngs) {
+                                            if (circle.getLatLng().distanceTo(latlng) <= circle.getRadius()) {
+                                                isIntersecting = true;
+                                                break;
+                                            }
+                                        }
+
+                                        // 檢查圓心是否在多邊形內部
+                                        if (!isIntersecting && subLayer.getBounds().contains(circle.getLatLng())) {
+                                            isIntersecting = true;
+                                        }
+
+                                        if (isIntersecting) {
+                                            console.log("get polygon");
+                                            processPopupContent(subLayer, filteredProps);
+                                            count++;
+                                        }
+                                    }
+                                }
+                                else if (subLayer instanceof L.Marker) {
                                     const distance = center.distanceTo(subLayer.getLatLng());
                                     if (distance <= radius) {
+                                        console.log("get Marker");
                                         processPopupContent(subLayer, filteredProps);
                                         count++;
                                     }
@@ -233,6 +275,7 @@ async function getObjectsInCircle(circle, gselectedId) {
                                         if (!found) {
                                             const distance = center.distanceTo(point);
                                             if (distance <= radius) {
+                                                console.log("get Polyline");
                                                 processPopupContent(subLayer, filteredProps);
                                                 count++;
                                                 found = true; // 找到一個符合的點後停止檢查這條線
