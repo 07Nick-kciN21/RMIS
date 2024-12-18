@@ -62,23 +62,38 @@
     margin: 0 5px; /* 左右外間距10px */
 }
 
+/* 粗體字 */
+.selectTitle{
+    font-weight: bold;
+}
+
 .footerSelect{
     position: absolute;
     z-index: 1050;
     background-color: #4a5d23; /* 深綠色背景 */
     border-radius: 10px 10px 0px 0px;
+    color: black; /* 設置文字顏色為白色 */
     list-style: none;
     padding: 10px;
 }
 
+.footerSelect > ul {
+    padding-left: 5px;
+}
+
+.footerSelect > ul > li {
+    list-style-type: none;
+    background-color: #f8f8f8;
+}
 #mapSelect{
     width: 250px;
-    top: -410px;
+    top: -450px;
 }
+
 
 #coordinateSelect{
     width: 250px;
-    top: -70px;
+    top: -85px;
 }
     
 

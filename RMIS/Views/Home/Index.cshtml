@@ -165,24 +165,28 @@
         <span class="title-divider"></span>
         <div id="map-Coordinate" class="footer-tip">
             <span id="map-coord">經度: 0 , 緯度: 0</span>
-            <ul id="coordinateSelect" class="footerSelect hide">
-                <li id="latlng" class="coordinate-item" data-type="1">
-                    <span>(WGS84) 經緯度座標</span>
-                </li>
-                <li id="twd97" class="coordinate-item" data-type="0">
-                    <span>(TWD97) 二度分帶座標</span>
-                </li>
-            </ul>
+            <div id="coordinateSelect" class="footerSelect hide">
+                <ul id="coordinateSelector">
+                    <li id="latlng" class="coordinate-item" data-type="1">
+                        <span>(WGS84) 經緯度座標</span>
+                    </li>
+                    <li id="twd97" class="coordinate-item" data-type="0">
+                        <span>(TWD97) 二度分帶座標</span>
+                    </li>
+                </ul>
+            </div>
         </div>
         <span class="title-divider"></span>
         <div id="map-basemapCtrl" class="footer-tip">
             <span id="map-basemap">google街景地圖</span>
             <div id="mapSelect" class="footerSelect hide">
                 @* 基本圖層 (單選) *@
-                <ul id="baseMapSelect" style="padding-left: 5px;">
+                <span class="selectTitle">基本圖層</span>
+                <ul id="baseMapSelector" style="padding-left: 5px;">
                 </ul>
                 @* 疊加圖層 (多選) *@
-                <ul id="overlayMapSelect" style="padding-left: 5px;">
+                <span class="selectTitle">疊加圖層</span>
+                <ul id="overlayMapSelector" style="padding-left: 5px;">
                 </ul>
             </div>
         </div>

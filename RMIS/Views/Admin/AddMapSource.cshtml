@@ -34,7 +34,7 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="TileType"></label>
+        <label asp-for="TileType">瓦片類型</label>
         <select class="form-control" asp-for="TileType" onchange="toggleImageFormat()">
             <option value="WMS">WMS</option>
             <option value="WMTS">WMTS</option>
@@ -43,18 +43,18 @@
     </div>
 
     <div class="form-group" id="imageFormatGroup">
-        <label asp-for="ImageFormat"></label>
+        <label asp-for="ImageFormat">圖磚格式</label>
         <input type="text" class="form-control" asp-for="ImageFormat" placeholder="e.g., image/png, image/jpeg" />
         <span asp-validation-for="ImageFormat" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label asp-for="Attribution"></label>
+        <label asp-for="Attribution">歸屬</label>
         <input type="text" class="form-control" asp-for="Attribution" placeholder="© OpenStreetMap contributors" required />
         <span asp-validation-for="Attribution" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Add Map Source</button>
+    <button type="submit" class="btn btn-primary">新增圖源</button>
 </form>
 
 <script>

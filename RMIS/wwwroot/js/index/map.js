@@ -316,7 +316,7 @@ function createBaseLayers() {
 
     // 把基本圖層加入#baseMapSelect
     for(let name in baseMaps){
-        $('#baseMapSelect').append(`<option class="coordinate-item" value="${name}"><span>${name}</span></option>`);
+        $('#baseMapSelector').append(`<li class="coordinate-item" value="${name}"><span>${name}</span></li>`);
     };
     // 疊加圖層 (多選)
     var overlayMaps = {};
@@ -360,7 +360,7 @@ function createBaseLayers() {
             L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(indexMap);
             
             for(let name in overlayMaps){
-                $('#overlayMapSelect').append(`<option class="coordinate-item" value="${name}">${name}</option>`);
+                $('#overlayMapSelector').append(`<li class="coordinate-item" value="${name}">${name}</li>`);
             }
         },
         error: function (error) {
