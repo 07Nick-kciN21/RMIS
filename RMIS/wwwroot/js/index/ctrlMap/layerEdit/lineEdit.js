@@ -3,13 +3,13 @@ import {layers, layerProps} from '../layers.js';
 var pointStep1 = `
         <h5 id="editSymbol-Title0" class="offcanvas-title"></h5>
         <div id="editStep1">
-            <div class="symbolClass pSymbol0" data-symclass="0">
+            <div id="lineEdit0" class="symbolClass pSymbol0" data-symclass="0">
                 <div class="symbolText">線符號</div>
             </div>
-            <div class="symbolClass pSymbol1" data-symclass="1">
+            <div id="lineEdit1" class="symbolClass pSymbol1" data-symclass="1">
                 <div class="symbolText">依分級</div>
             </div>
-            <div class="symbolClass pSymbol2" data-symclass="2">       
+            <div id="lineEdit2" class="symbolClass pSymbol2" data-symclass="2">       
                 <div class="symbolText">依類型</div>
             </div>
         </div>
@@ -285,8 +285,7 @@ function lineEditStep2(id){
         $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 依分級選擇`);
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function(field){
-            // 不等於座標、備註、OBJECTID、內容物、Instance
-            if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance"){
+            if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance" && field != "類別碼" && field != "識別碼" && field != "起點編號" && field != "終點編號" && field != "管理單位" && field != "管線編號" && field != "設置日期" && field != "管線材料"){
                 $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
             };
         });

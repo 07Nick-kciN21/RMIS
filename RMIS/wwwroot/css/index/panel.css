@@ -26,6 +26,16 @@
     height: 150px;
 }
 
+#flagPanel {
+    width: 450px;
+    height: 500px;
+}
+
+#focusPanel {
+    width: 450px;
+    height: 600px;
+}
+
 .panel {
     z-index: 1051;
     position: absolute;

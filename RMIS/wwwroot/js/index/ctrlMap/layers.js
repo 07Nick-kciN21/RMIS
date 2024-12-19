@@ -74,38 +74,21 @@ function createNewLayer(result) {
     });
     // 添加縮放事件來控制圖層顯示
     indexMap.on('zoomend', function () {
-        var currentZoom = indexMap.getZoom();
     
-        // 縮放層級大於 15，設置圖層可見；否則設置為不可見
-        if (currentZoom > 15) {
-            newLayer.eachLayer(function (layer) {
-                if(!layer._isVisible){
-                    return;
-                }
-                const opacity = layer._originalOpacity || 1;
-                if (layer instanceof L.Marker) {
-                    layer.setOpacity(opacity); // 設置 Marker 為全可見
-                }
-                else if (layer instanceof L.Polygon) {
-                    layer.setStyle({ opacity: opacity, fillOpacity: opacity });
-                } else if (layer instanceof L.Polyline) {
-                    layer.setStyle({ opacity: opacity });
-                }
-            });
-        } else {
-            newLayer.eachLayer(function (layer) {
-                if(!layer._isVisible){
-                    return;
-                }
-                if (layer instanceof L.Marker) {
-                    layer.setOpacity(0); // 設置 Marker 為不可見
-                } else if (layer instanceof L.Polygon) {
-                    layer.setStyle({ opacity: 0, fillOpacity: 0 }); // 邊框與填充透明度相同，設置為不可見
-                } else if (layer instanceof L.Polyline) {
-                    layer.setStyle({ opacity: 0 }); // 設置 Polyline 為不可見
-                }
-            });
-        }
+        newLayer.eachLayer(function (layer) {
+            if(!layer._isVisible){
+                return;
+            }
+            const opacity = layer._originalOpacity || 1;
+            if (layer instanceof L.Marker) {
+                layer.setOpacity(opacity); // 設置 Marker 為全可見
+            }
+            else if (layer instanceof L.Polygon) {
+                layer.setStyle({ opacity: opacity, fillOpacity: opacity });
+            } else if (layer instanceof L.Polyline) {
+                layer.setStyle({ opacity: opacity });
+            }
+        });
     });
     
     

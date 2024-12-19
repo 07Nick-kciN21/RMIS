@@ -3,13 +3,13 @@ import {layers, layerProps} from '../layers.js';
 var pointStep1 = `
         <h5 id="editSymbol-Title0" class="offcanvas-title"></h5>
         <div id="editStep1">
-            <div class="symbolClass pSymbol0" data-symclass="0">
+            <div id="pointEdit0" class="symbolClass pSymbol0" data-symclass="0">
                 <div class="symbolText">點符號</div>
             </div>
-            <div class="symbolClass pSymbol1" data-symclass="1">
+            <div id="pointEdit1" class="symbolClass pSymbol1" data-symclass="1">
                 <div class="symbolText">依分級</div>
             </div>
-            <div class="symbolClass pSymbol2" data-symclass="2">       
+            <div id="pointEdit2" class="symbolClass pSymbol2" data-symclass="2">       
                 <div class="symbolText">依類型</div>
             </div>
         </div>
@@ -710,10 +710,17 @@ function pointEditStep2(id){
                             var doc = parser.parseFromString(content, 'text/html');
                             var popupData = doc.querySelector('.popupData');
                             var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
+                            // 如果值為 NaN，則levelIndex為最大值
                             const value = jsonData[formData.field];
-                            const index = fields.indexOf(value);
-                            if (index === -1) return;
-                            const fillColor = colorSet[index];
+                            var levelIndex = -1;
+                            if (isNaN(value)) {
+                                levelIndex = levels - 1;
+                            } else {
+                                // 計算層級索引
+                                levelIndex = fields.indexOf(value);
+                            }
+                            if (levelIndex === -1) return;
+                            const fillColor = colorSet[levelIndex];
                             const diameter = parseInt(formData.size);
                             const strokeWidth = parseInt(formData.thickness) * 2;
                             const radius = diameter / 2;

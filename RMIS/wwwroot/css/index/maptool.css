@@ -87,6 +87,7 @@
     background-color: #f8f8f8;
 }
 
+
 #mapSelect{
     width: 250px;
     top: -450px;
@@ -101,6 +102,7 @@
 #overlayMapSelector > .selected{
     background-color: #91c54d;
 }
+
 .coordinate-item:hover {
     background-color: #91c54d;
     border-radius: 5px 5px 5px 5px;
@@ -141,6 +143,12 @@
         color: white; /* 改變選中框的文字顏色 */
         border: none;
     }
+
+#tb-sidebar {
+    background-image: url('/svg/tiptool/sidebar.svg');
+    background-size: 80%;
+    background-position: center;
+}
 
 #tb-zoomIn {
     background-image: url('/svg/tiptool/add.svg');
@@ -191,6 +199,18 @@
 
 #tb-location{
     background-image: url('/svg/tiptool/location.svg');
+    background-size: 80%;
+    background-position: center;
+}
+
+#tb-focusPanel{
+    background-image: url('/svg/tiptool/focus.svg');
+    background-size: 90%;
+    background-position: center;
+}
+
+#tb-flagPanel{
+    background-image: url('/svg/tiptool/flag.svg');
     background-size: 80%;
     background-position: center;
 }

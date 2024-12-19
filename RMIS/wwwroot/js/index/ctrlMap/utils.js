@@ -31,11 +31,11 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             <div class="popupData" style="display: none;">
             ${prop}
             </div>
-            <div>
+            <div style="font-size: 18px;">
             <h4>圖層：${name}</h4><br>
             ${popUpForm(prop)}
             </div>`, {
-            maxWidth: 300,
+            maxWidth: 350,
             maxHeight: 450
         });
         marker.on('click', function (e) {
@@ -63,12 +63,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                 e.target.closePopup();
             }
         });
-        if(zoom > 15){
-            marker.setOpacity(1);
-        }
-        else{
-            marker.setOpacity(0);
-        }
+
         $indexMap.on('click', function () {
             if (currentRectangle) {
                 newLayer.removeLayer(currentRectangle);
@@ -100,11 +95,11 @@ export function addLineToLayer(points, newLayer, color, name) {
             <div class="popupData" style="display: none;">
                 ${prop}
             </div>
-            <div>
+            <div style="font-size: 18px;">
                 <h4>圖層：${name}</h4><br>
                 ${popUpForm(prop)}
             </div>`, {
-            maxWidth: 300,
+            maxWidth: 350,
             maxHeight: 450
         });
 
@@ -129,17 +124,6 @@ export function addLineToLayer(points, newLayer, color, name) {
                 e.target.closePopup();
             }
         });
-
-        if(zoom > 15){
-            segment.setStyle({
-                opacity: 1,
-            });
-        }
-        else{
-            segment.setStyle({
-                opacity: 0,
-            });
-        }
         $indexMap.on('click', function (e) {
             if (currentLine) {
                 newLayer.removeLayer(currentLine);
@@ -175,11 +159,11 @@ export function addPolygonToLayer(points, newLayer, color, name, autoCenter = tr
             <div class="popupData" style="display: none;">
                 ${prop}
             </div>
-            <div>
+            <div style="font-size: 18px;">
                 <h4>圖層：${name}</h4><br>
                 ${popUpForm(prop)}
             </div>`, {
-        maxWidth: 300,
+        maxWidth: 350,
         maxHeight: 450
     });
     points = points[0][2].Instance = polygon;
@@ -194,18 +178,6 @@ export function addPolygonToLayer(points, newLayer, color, name, autoCenter = tr
             polygon.closePopup();
         }
     });
-    if(zoom > 15){
-        polygon.setStyle({
-            opacity: 0,      // 邊框透明度
-            fillOpacity: 0   // 填充透明度
-        });
-    }
-    else{
-        polygon.setStyle({
-            opacity: 1,      // 邊框透明度
-            fillOpacity: 1   // 填充透明度
-        });
-    }
     $indexMap.on('click', function (e) {
         polygon.setStyle({ fillColor: color });
     });

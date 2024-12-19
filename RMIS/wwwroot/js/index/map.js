@@ -188,18 +188,24 @@ export function initMap(mapId) {
         const lng = parseFloat(latlng.lng);
         const {x, y} = convertWgs84ToTwd97(lat, lng);
         const popupContent = `
-            <h1>座標資訊</h1>
+            <h2>座標資訊</h2>
             <div style="background: rgba(255, 255, 255, 0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                    <tr>
-                        <td style="padding: 5px;">WGS84：</td>
-                        <td style="padding: 5px;">${lat.toFixed(6)} , ${lng.toFixed(6)}</td>
-                        <td style="padding: 5px;"><span class="darkBtn" data-clipboard-target="#twd97Pt">複製</span></td>
-                    </tr>
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-weight: bold; font-size: 13px;">
                     <tr>
                         <td style="padding: 5px;">TWD97：</td>
-                        <td style="padding: 5px;">${x.toFixed(3)} , ${y.toFixed(3)}</td>
-                        <td style="padding: 5px;"><span class="darkBtn" data-clipboard-target="#twd97Pt">複製</span></td>
+                        <td style="padding: 5px;">${x.toFixed(2)}, </td>
+                        <td style="padding: 5px;">${y.toFixed(2)}</td>
+                        <td style="padding: 5px; background-color: lightgreen;">
+                            <span class="coordInfoBtn" data-clipTarget="twd97" data-coordInfo="${x.toFixed(2)}, ${y.toFixed(2)}">複製</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;">WGS84：</td>
+                        <td style="padding: 5px;">${lat.toFixed(6)}, </td>
+                        <td style="padding: 5px;">${lng.toFixed(6)}</td>
+                        <td style="padding: 5px; background-color: lightgreen;">
+                            <span class="coordInfoBtn" data-clipTarget="wgs84" data-coordInfo="${lat.toFixed(6)}, ${lng.toFixed(6)}">複製</span>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -207,11 +213,19 @@ export function initMap(mapId) {
         L.popup({
                 maxWidth: 300, // 最大寬度
                 minWidth: 200, // 最小寬度
-                maxHeight: 200, // 最大高度
+                maxHeight: 150, // 最大高度
             })
             .setLatLng(e.latlng)
             .setContent(popupContent)
             .openOn(indexMap);
+    });
+
+    $(document).on('click', '.coordInfoBtn', function () {
+        const coordInfo = $(this).attr('data-coordInfo'); // 使用 attr() 獲取值
+
+        alert(`${coordInfo} 已複製到剪貼簿`);
+        // 複製座標資訊到剪貼簿
+        navigator.clipboard.writeText(coordInfo);
     });
 
     return indexMap;
@@ -357,9 +371,6 @@ function createBaseLayers() {
                     overlayMaps[source.name] = layer;
                 }
             });
-
-            // 將疊加圖層作為可複選圖層加入地圖控制
-            L.control.layers(baseMaps, overlayMaps, { position: 'bottomright' }).addTo(indexMap);
             
             for(let name in overlayMaps){
                 $('#overlayMapSelector').append(`<li class="coordinate-item" value="${name}">${name}</li>`);

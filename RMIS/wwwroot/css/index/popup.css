@@ -13,7 +13,7 @@
 
 .popup-table {
     height: 300px;
-    width: 250px;
+    width: 300px;
     overflow-y: auto;
     border: 1px solid #ccc;
 }

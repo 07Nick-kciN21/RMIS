@@ -1,13 +1,37 @@
-.pSymbol0{
+#editStep1 > #pointEdit0{
     background-image: url('/img/layerEdit/pSymbol0.png');
 }
 
-.pSymbol1{
+#editStep1 > #pointEdit1{
     background-image: url('/img/layerEdit/pSymbol1.png');
 }
 
-.pSymbol2{
+#editStep1 > #pointEdit2{
     background-image: url('/img/layerEdit/pSymbol2.png');
+}
+
+#editStep1 > #lineEdit0{
+    background-image: url('/img/layerEdit/pSymbol_line0.png');
+}
+
+#editStep1 > #lineEdit1{
+    background-image: url('/img/layerEdit/pSymbol_line1.png');
+}
+
+#editStep1 > #lineEdit2{
+    background-image: url('/img/layerEdit/pSymbol_line2.png');
+}
+
+#editStep1 > #planeEdit0{
+    background-image: url('/img/layerEdit/pSymbol_plane0.png');
+}
+
+#editStep1 > #planeEdit1{
+    background-image: url('/img/layerEdit/pSymbol_plane1.png');
+}
+
+#editStep1 > #planeEdit2{
+    background-image: url('/img/layerEdit/pSymbol_plane2.png');
 }
 
 .layerOpacity{
