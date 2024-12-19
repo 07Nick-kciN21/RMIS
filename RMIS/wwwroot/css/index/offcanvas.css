@@ -96,7 +96,18 @@
 
 .custom-offcanvas-width {
     width: 300px;
+    margin-top: 10px;
 }
+
+.symbolProp > .offcanvas-title {
+    margin-bottom: 10px;
+}
+
+.symbolProp select {
+    height: 28px;
+    max-width: 200px;
+}
+
 
 @media (max-width: 768px){
     .custom-offcanvas-width {

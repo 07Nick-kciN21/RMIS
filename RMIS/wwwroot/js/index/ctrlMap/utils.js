@@ -75,6 +75,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                 console.log("click");
             }
         });
+        marker._isVisible = true;
         point[2].Instance = marker;
     });
     console.log("Create Maker");
@@ -144,7 +145,7 @@ export function addLineToLayer(points, newLayer, color, name) {
                 newLayer.removeLayer(currentLine);
             }
         });
-
+        segment._isVisible = true;
         points[i][2].Instance = segment;
     }
 }
@@ -208,6 +209,7 @@ export function addPolygonToLayer(points, newLayer, color, name, autoCenter = tr
     $indexMap.on('click', function (e) {
         polygon.setStyle({ fillColor: color });
     });
+    polygon._isVisible = true;
     console.log("Polygon 已繪製完成");
 }
 function getInverseColor(color) {

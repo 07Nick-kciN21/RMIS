@@ -285,7 +285,10 @@ function lineEditStep2(id){
         $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 依分級選擇`);
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function(field){
-            $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            // 不等於座標、備註、OBJECTID、內容物、Instance
+            if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance"){
+                $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            };
         });
 
         // 2. 初始化 Select2，並使用 templateResult
@@ -520,8 +523,6 @@ function lineEditStep2(id){
                             const color = colorSet[colorIndex];
                             if(jsonData[formData.field] == undefined){
                             }
-                            
-                            console.log(`field: ${jsonData[formData.field]}, color: ${color}, colorIndex: ${colorIndex}, formData.thickness:${formData.thickness}`);
                             layer.setStyle({
                                 color: color,
                                 weight: formData.thickness*formData.thickness

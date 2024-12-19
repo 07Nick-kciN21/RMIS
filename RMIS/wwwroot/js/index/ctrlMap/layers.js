@@ -2,6 +2,7 @@
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer } from './utils.js';
 
 export let layerProps = {};
+// pipeline下的各種圖層
 export let layers = {};
 let indexMap;
 let pipelineId;
@@ -81,7 +82,6 @@ function createNewLayer(result) {
                 if(!layer._isVisible){
                     return;
                 }
-                layer._isVisible = true;
                 const opacity = layer._originalOpacity || 1;
                 if (layer instanceof L.Marker) {
                     layer.setOpacity(opacity); // 設置 Marker 為全可見

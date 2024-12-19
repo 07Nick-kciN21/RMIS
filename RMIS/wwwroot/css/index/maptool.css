@@ -65,6 +65,7 @@
 /* 粗體字 */
 .selectTitle{
     font-weight: bold;
+    color:white
 }
 
 .footerSelect{

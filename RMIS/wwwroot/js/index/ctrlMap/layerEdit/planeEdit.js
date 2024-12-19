@@ -289,10 +289,9 @@ function planeEditStep2(id){
         $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 依分級選擇`);
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function (field) {
-            // if(field == "孔蓋種類" || field == "尺寸單位" || field == "蓋部寬度" || field == "蓋部長度" || field == "地盤高" || field == "孔深" || field == "孔蓋型態" || field == "使用狀態" || field == "資料狀態"){
-            //     $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
-            // };
-            $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance"){
+                $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            };
         });
         // 2. 初始化 Select2，並使用 templateResult
         $('#gradientColorsMap').select2({
@@ -342,10 +341,9 @@ function planeEditStep2(id){
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function (field) {
             // 不等於座標、備註、OBJECTID、內容物、Instance
-            // if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance"){
-            //     $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
-            // };
-            $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance"){
+                $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            };
         });
         $('#groupColorsMap').select2({
             // 使用groupColorsMap的顏色但不要漸層

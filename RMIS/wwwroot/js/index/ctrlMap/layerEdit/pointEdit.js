@@ -566,10 +566,14 @@ function pointEditStep2(id){
                             var popupData = doc.querySelector('.popupData');
                             var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
                             const value = jsonData[formData.field];
-
-                            // 計算層級索引
-                            let levelIndex = Math.floor((value - minValue) / rangeSize);
-                            if (levelIndex >= levels) levelIndex = levels - 1;
+                            // 如果值為 NaN，則levelIndex為最大值
+                            if (isNaN(value)) {
+                                var levelIndex = levels - 1;
+                            } else {
+                                // 計算層級索引
+                                var levelIndex = Math.floor((value - minValue) / rangeSize);
+                                if (levelIndex >= levels) levelIndex = levels - 1;
+                            }
 
                             const fillColor = colorSet[levelIndex];
                             const diameter = parseInt(formData.size);
