@@ -461,8 +461,6 @@
         </div>
     </div>
 </div>
-
-<select id="locOccTown" class="select-full" name="fhTown"></select>
 @* 權管土地 *@
 <div id="flagPanel" class="panel hide">
     <div class="panelHeading">
@@ -473,7 +471,7 @@
     </div>
     @* 滾動條 *@
     <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
-        <div class="panelBody" style="display: block;">
+        <div class="panelBody">
             @* 行政區 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>行政區</label>
@@ -536,13 +534,23 @@
             @* 地號 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>地號</label>
-                <div class="listBox">
-                    <div class="listHeader">
-                        <input id="locOccLandNo" type="text" disabled="" required="" placeholder="搜尋地號">
-                        <div class="doc-icon toolTip" title="可直接輸入完整8碼(如：00070001)，或輸入7-1由系統自動轉換"></div>
+                <div class="boxList">
+                    <div class="boxHeader">
+                        <input type="text" id="landNo" class="form-control" style="flex-grow: 1;border-radius:0;" placeholder="搜尋地號">
                     </div>
-                    <div class="listResult">
-                        <ul id="locOccList" class="multipleSelect"></ul>
+                    <div class="boxBody">
+                        <ul id="locOccList">
+                            <li class="panelResult">1001</li>
+                            <li class="panelResult">1002</li>
+                            <li class="panelResult">1003</li>
+                            <li class="panelResult">1004</li>
+                            <li class="panelResult">1005</li>
+                            <li class="panelResult">1006</li>
+                            <li class="panelResult">1007</li>
+                            <li class="panelResult">1008</li>
+                            <li class="panelResult">1009</li>
+                            <li class="panelResult">1010</li>
+                        </ul>
                     </div>
                 </div>
             </div>
