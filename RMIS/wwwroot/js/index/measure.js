@@ -13,7 +13,6 @@ let lineVisible = true;
 let totalVisible = true;
 export function initMeasurePanel() {
     $indexMap = getIndexMap();
-    
 
     initMeasure();
     

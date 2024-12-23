@@ -1,6 +1,4 @@
-﻿import { getIndexMap } from './map.js';
-
-export function initPanel(panelId) {
+﻿export function initPanel(panelId) {
     const $container = $("#indexMap");
     const $tb = $(`#tb-${panelId}`);
     const $panel = $(`#${panelId}`);

@@ -10,7 +10,6 @@
     border: 1px solid gray;
     border-radius: 0px;
     margin: 15px;
-    padding-top: 10px;
 }
 
 #flagPanel .boxList{
@@ -22,6 +21,7 @@
 
 #flagPanel .boxList > .boxHeader{
     margin-left: 10px;
+    margin-bottom: 5px;
     width: 80%;
 }
 
@@ -50,4 +50,11 @@
 
 #flagPanel .form-group select, #flagPanel .form-group div{
     width: 70%;
+}
+
+#flagResultDiv {
+    max-height: 250px;
+    scrollbar-width: thin;
+    overflow-y: auto;
+    overflow-x: auto;
 }

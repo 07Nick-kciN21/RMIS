@@ -476,20 +476,20 @@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>行政區</label>
                 <select id="adminSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇</option>
-                    <option value="01">桃園區</option>
-                    <option value="02">大溪區</option>
-                    <option value="03">中壢區</option>
-                    <option value="04">楊梅區</option>
-                    <option value="05">蘆竹區</option>
-                    <option value="06">大園區</option>
-                    <option value="07">龜山區</option>
-                    <option value="08">八德區</option>
-                    <option value="09">龍潭區</option>
-                    <option value="10">平鎮區</option>
-                    <option value="11">新屋區</option>
-                    <option value="12">觀音區</option>
-                    <option value="13">復興區</option>
+                    <option value="請選擇">請選擇</option>
+                    <option value="桃園區">桃園區</option>
+                    <option value="大溪區">大溪區</option>
+                    <option value="中壢區">中壢區</option>
+                    <option value="楊梅區">楊梅區</option>
+                    <option value="蘆竹區">蘆竹區</option>
+                    <option value="大園區">大園區</option>
+                    <option value="龜山區">龜山區</option>
+                    <option value="八德區">八德區</option>
+                    <option value="龍潭區">龍潭區</option>
+                    <option value="平鎮區">平鎮區</option>
+                    <option value="新屋區">新屋區</option>
+                    <option value="觀音區">觀音區</option>
+                    <option value="復興區">復興區</option>
                 </select>
             </div>
             <br>
@@ -506,13 +506,13 @@
                 <label>疑似占用</label>
                 <div class="fieldset-radio" style="width: 70%;">
                     <label class="inline-block">
-                        <input type="radio" name="locOcc" value="是" checked="">占用
+                        <input type="radio" name="locOcc" value="1" checked="">占用
                     </label>
                     <label class="inline-block">
-                        <input type="radio" name="locOcc" value="否">未占用
+                        <input type="radio" name="locOcc" value="0">未占用
                     </label>
                     <label class="inline-block">
-                        <input type="radio" name="locOcc" value="全部">全部
+                        <input type="radio" name="locOcc" value="2">全部
                     </label>
                 </div>
             </div>
@@ -528,6 +528,7 @@
                 <label>地段</label>
                 <select id="landSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
                     <option value="-1">請選擇地段</option>
+                    <option value="龍壽段">龍壽段</option>
                 </select>
             </div>
             <br>
@@ -584,7 +585,22 @@
             <span class="totalCount"></span>
             <a class="exportExcel" style="float:right">匯出Excel</a>
         </div>
-        <div class="panelList" style="max-height: 250px; scrollbar-width: thin; overflow-y: auto;">
+        <div id="flagResultDiv" class="panelList">
+            <table id="flagTable" class="propTable">
+                <thead id="flagThead">
+                    <tr id="Occdr" role="row">
+                        <th style="width:100px"></th>
+                        <th style="width:100px">案號</th>
+                        <th style="width:120px">清查年度</th>
+                        <th style="width:120px">疑似占用</th>
+                        <th style="width:100px">勘查表</th>
+                        <th style="width:120px">案件狀態</th>
+                        <th style="width:100px">備註</th>
+                        <th style="width:65px">附件</th>
+                    </tr>
+                </thead>
+                <tbody id="flagTbody"></tbody>
+            </table>
         </div>
     </div>
 </div>
