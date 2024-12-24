@@ -5,7 +5,6 @@ export let layerProps = {};
 // pipeline下的各種圖層
 export let layers = {};
 let indexMap;
-let pipelineId;
 
 // 將圖層加入地圖
 export function addLayer2Map(id ,LayerData) {
@@ -14,15 +13,15 @@ export function addLayer2Map(id ,LayerData) {
         console.error('indexMap is not initialized.');
         return;
     }
-    pipelineId = id;
-
+    const pipelineId = id;
+    console.log(`pipelineId：${pipelineId} addLayer2Map`);
     if (layerProps[pipelineId] == null) {
         layerProps[pipelineId] = [];
+        console.log(`layerProps[${pipelineId}]： is null`);
     }
     layerProps[pipelineId].length = 0;
-    
-    LayerData.forEach(function (Ldata) {
-        $.ajax({
+    const ajaxCalls = LayerData.map(function (Ldata) {
+        return $.ajax({
             url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
             method: 'POST',
             success: function (result) {
@@ -30,7 +29,7 @@ export function addLayer2Map(id ,LayerData) {
                 try {
                     var areas = result.areas;
                     if (areas != null) {
-                        var newLayer = createNewLayer(result);
+                        var newLayer = createNewLayer(result, pipelineId);
                         indexMap.addLayer(newLayer);
                         layers[result.id] = newLayer;
                     }
@@ -48,7 +47,7 @@ export function addLayer2Map(id ,LayerData) {
 }
 
 // 建立新物件的圖層
-function createNewLayer(result) {
+function createNewLayer(result, pipelineId) {
     var newLayer = L.layerGroup();
     if (!indexMap) {
         console.error('indexMap is not initialized.');
@@ -74,7 +73,6 @@ function createNewLayer(result) {
     });
     // 添加縮放事件來控制圖層顯示
     indexMap.on('zoomend', function () {
-    
         newLayer.eachLayer(function (layer) {
             if(!layer._isVisible){
                 return;
@@ -90,8 +88,6 @@ function createNewLayer(result) {
             }
         });
     });
-    
-    
     return newLayer;
 }
 

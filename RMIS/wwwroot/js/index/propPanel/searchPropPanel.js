@@ -174,7 +174,7 @@ function setupFilterAndClearHandlers() {
 }
 // 設置分頁顯示資料
 function setupPaginationHandlers() {
-    $('#pageSize').on('change', function () {
+    $('#propPageSize').on('change', function () {
         pageSize = parseInt($(this).find('option:selected').text(), 10);
         currentPage = 1;
         updatePropTable();
@@ -294,10 +294,15 @@ function calculate(field, statist) {
 
     return parseFloat(ret.toFixed(3));
 }
+
+// 更新屬性表格
 function updatePropTable() {
+    // 更新總頁數
     const totalPages = Math.ceil(filteredProps.length / pageSize);
+    // 當前頁數索引範圍
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = Math.min(startIndex + pageSize, filteredProps.length);
+    // 取得當前頁數的範圍資料
     const pageData = filteredProps.slice(startIndex, endIndex);
 
     renderTableHeaders(pageData);

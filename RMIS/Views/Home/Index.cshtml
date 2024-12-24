@@ -344,16 +344,16 @@
                 <tbody id="propTbody"></tbody>
             </table>
         </div>
-        <div class="propPage">
+        <div class="tablePage">
             <span style="float:left">每頁最多</span>
-            <select id="pageSize" style="float:left">
+            <select id="propPageSize" style="float:left">
                 <option value="10">10</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
                 <option value="200">200</option>
             </select>
             <span style="float:left"> 筆</span>
-            <span id="propPages" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
+            <span id="propPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
             </span>
         </div>
     </div>
@@ -476,20 +476,20 @@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>行政區</label>
                 <select id="adminSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="請選擇">請選擇</option>
-                    <option value="桃園區">桃園區</option>
-                    <option value="大溪區">大溪區</option>
-                    <option value="中壢區">中壢區</option>
-                    <option value="楊梅區">楊梅區</option>
-                    <option value="蘆竹區">蘆竹區</option>
-                    <option value="大園區">大園區</option>
-                    <option value="龜山區">龜山區</option>
-                    <option value="八德區">八德區</option>
-                    <option value="龍潭區">龍潭區</option>
-                    <option value="平鎮區">平鎮區</option>
-                    <option value="新屋區">新屋區</option>
-                    <option value="觀音區">觀音區</option>
-                    <option value="復興區">復興區</option>
+                    <option value="-1">請選擇</option>
+                    <option value="0">桃園區</option>
+                    <option value="1">大溪區</option>
+                    <option value="2">中壢區</option>
+                    <option value="3">楊梅區</option>
+                    <option value="4">蘆竹區</option>
+                    <option value="5">大園區</option>
+                    <option value="6">龜山區</option>
+                    <option value="7">八德區</option>
+                    <option value="8">龍潭區</option>
+                    <option value="9">平鎮區</option>
+                    <option value="10">新屋區</option>
+                    <option value="11">觀音區</option>
+                    <option value="12">復興區</option>
                 </select>
             </div>
             <br>
@@ -512,7 +512,7 @@
                         <input type="radio" name="locOcc" value="0">未占用
                     </label>
                     <label class="inline-block">
-                        <input type="radio" name="locOcc" value="2">全部
+                        <input type="radio" name="locOcc" value="-1">全部
                     </label>
                 </div>
             </div>
@@ -529,6 +529,7 @@
                 <select id="landSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
                     <option value="-1">請選擇地段</option>
                     <option value="龍壽段">龍壽段</option>
+                    <option value="雙龍段">雙龍段</option>
                 </select>
             </div>
             <br>
@@ -559,14 +560,14 @@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>年度</label>
                 <select id="yearSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇年度</option>
+                    <option value="-1">全部</option>
                 </select>
             </div>
             @* 使用分區 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>使用分區</label>
                 <select id="useSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇使用分區</option>
+                    <option value="-1">全部</option>
                 </select>
             </div>
             @* 案件狀況 *@
@@ -574,15 +575,21 @@
                 <label>案件狀況</label>
                 <select id="caseSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
                     <option value="-1">請選擇案件狀況</option>
+                    @* 發文通知 *@
+                    <option value="1">發文通知</option>
+                    @* 未處理 *@
+                    <option value="2">未處理</option>
+                    @* 已處理 *@
+                    <option value="3">已處理</option>
                 </select>
             </div>
         </div>
-        <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center;">
-            <button class="btn js-modal-toggle" id="flagGoResult">顯示結果</button>
+        <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+            <button id="flagGoResult" class="btn js-modal-toggle">顯示結果</button>
         </div>
         <div style="margin: 0% 15px;">
             <span style="margin-top:4px">結果列表</span>
-            <span class="totalCount"></span>
+            <span id="flagCount" class="totalCount"></span>
             <a class="exportExcel" style="float:right">匯出Excel</a>
         </div>
         <div id="flagResultDiv" class="panelList">
@@ -601,6 +608,18 @@
                 </thead>
                 <tbody id="flagTbody"></tbody>
             </table>
+        </div>
+        <div class="tablePage" style="margin: 15px;">
+            <span style="float:left">每頁最多</span>
+            <select id="flagPageSize" style="float:left">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select>
+            <span style="float:left"> 筆</span>
+            <span id="flagPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
+            </span>
         </div>
     </div>
 </div>

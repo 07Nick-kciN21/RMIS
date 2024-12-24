@@ -47,16 +47,29 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                     newLayer.removeLayer(currentRectangle);
                 }
 
-                const bounds = [[
-                    latLng.lat - 0.00002, latLng.lng - 0.00002
-                ], [
-                    latLng.lat + 0.00002, latLng.lng + 0.00002
-                ]];
-                currentRectangle = L.rectangle(bounds, {
-                    color: "#ff7800",
-                    weight: 1,
-                    fillOpacity: 0.3,
-                }).addTo(newLayer);
+                const squareIcon = L.divIcon({
+                    html: `<svg width="24" height="24">
+                            <rect 
+                            x="0" 
+                            y="0" 
+                            width="24" 
+                            height="24" 
+                            fill="none" 
+                            stroke="#0066CC" 
+                            stroke-width="3"
+                            />
+                        </svg>`,
+                    className: 'square-marker',  // 避免 Leaflet 默認樣式
+                    iconSize: [24, 24],         // 圖標大小
+                    iconAnchor: [12, 12]        // 錨點在正方形中心
+                });
+
+                currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
+                // currentRectangle = L.rectangle(bounds, {
+                //     color: "#ff7800",
+                //     weight: 1,
+                //     fillOpacity: 0.3,
+                // }).addTo(newLayer);
             }
             else{ 
                 // popupEnabled為false時，不顯示popup

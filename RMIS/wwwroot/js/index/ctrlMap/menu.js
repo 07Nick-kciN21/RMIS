@@ -103,6 +103,7 @@ export function bindMenuEvents() {
         var id = $(this).attr('id');
         var name = $(this).children('span').text();
         var $switch = $(this).children('.switch');
+        console.log(`click menu-layer ${id}`);
         // 如果為switch-on，則移除圖層；否則新增圖層
         if ($switch.hasClass('switch-on')) {
             removePipeline(id).then(result => {

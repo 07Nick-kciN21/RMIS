@@ -26,7 +26,7 @@
     background-color: gray;
 }
 
-#propPages a {
+.pageList a {
     width: 20px;
     color: blue;
     text-align: center;
@@ -34,11 +34,11 @@
     display: inline-block;
 }
 
-#propPages a:hover {
+.pageList a:hover {
     background-color:gray;
 }
 
-#propPages .select {
+.pageList .select {
     background-color: #9ac43e;
 }
 
