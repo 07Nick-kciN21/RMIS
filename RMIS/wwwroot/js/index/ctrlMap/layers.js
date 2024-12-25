@@ -1,5 +1,5 @@
 ﻿import { getIndexMap } from '../map.js';
-import { addMarkersToLayer, addLineToLayer, addPolygonToLayer } from './utils.js';
+import { addMarkersToLayer, addLineToLayer, addPolygonToLayer, addArrowlineToLayer } from './utils.js';
 
 export let layerProps = {};
 // pipeline下的各種圖層
@@ -69,6 +69,8 @@ function createNewLayer(result, pipelineId) {
             addLineToLayer(points, newLayer, result.color, result.name);
         } else if (result.type === "plane") {
             addPolygonToLayer(points, newLayer, result.color, result.name);
+        } else if(result.type === "arrowline"){
+            addArrowlineToLayer(points, newLayer, result.color, result.name);
         }
     });
     // 添加縮放事件來控制圖層顯示

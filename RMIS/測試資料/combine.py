@@ -14,7 +14,7 @@ def merge_and_transform_csv(road_csv_path, pile_csv_path, output_csv_path):
 
 # Example usage:
 road_csv_path = 'road.csv'  # Replace with the correct path to your road.csv
-pile_csv_path = 'pile_with_prop_管線.csv'  # Replace with the correct path to your pile_with_prop_人手孔.csv
-output_csv_path = '測試資料3.csv'  # Replace with the desired output path
+pile_csv_path = 'pile_with_prop_臨時道路.csv'  # Replace with the correct path to your pile_with_prop_人手孔.csv
+output_csv_path = '測試資料_臨時道路.csv'  # Replace with the desired output path
 
 merge_and_transform_csv(road_csv_path, pile_csv_path, output_csv_path)

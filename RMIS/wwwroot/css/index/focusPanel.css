@@ -21,3 +21,8 @@
 #focusPanel .form-group label {
     width: 30%;
 }
+
+#focusPanel .form-group select, 
+#focusPanel .form-group div {
+    width: 70%;
+}

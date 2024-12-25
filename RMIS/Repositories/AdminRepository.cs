@@ -39,14 +39,16 @@ namespace RMIS.Repositories
             {
                 { "point", "點" },
                 { "line", "線" },
-                { "plane", "面" }
+                { "plane", "面" },
+                { "arrowline", "箭頭" }
             };
 
             // 建立 SelectListGroup 字典
             var groupDictionary = new Dictionary<string, SelectListGroup>{
                 { "point", new SelectListGroup { Name = "點" } },
                 { "line", new SelectListGroup { Name = "線" } },
-                { "plane", new SelectListGroup { Name = "面" } }
+                { "plane", new SelectListGroup { Name = "面" } },
+                { "arrowline", new SelectListGroup { Name = "箭頭" } }
             };
             var input = new AddPipelineInput
             {
@@ -105,7 +107,7 @@ namespace RMIS.Repositories
                 Id = pipelineId,
                 Name = pipelineInput.Name,
                 ManagementUnit = pipelineInput.ManagementUnit,
-                Color = pipelineInput.Color,
+                // Color = pipelineInput.Color,
                 CategoryId = Guid.Parse(pipelineInput.CategoryId),
                 Kind = pipelineInput.Kind
             };
@@ -484,7 +486,7 @@ namespace RMIS.Repositories
                             Name = item["名稱"].ToString(),
                             ManagementUnit = item["管理單位"].ToString(),
                             Kind = item["種類"].ToString(),
-                            Color = item["顏色"].ToString(),
+                            // Color = item["顏色"].ToString(),
                             
                             CategoryId = parentId
                         };
@@ -492,15 +494,20 @@ namespace RMIS.Repositories
 
                         _logger.LogInformation("Added Pipeline: {Name}, ParentId: {ParentId}", newPipeline.Name, parentId);
 
-                        // 新增Pipeline的Layers
-                        foreach (var prop in item["屬性"])
+                        //  "屬性": {
+                        //     "租借日期(一個月內)" : "箭頭(棕)",
+                        //     "租借日期(一周內)" : "箭頭(棕黃)"
+                        //     }
+                        foreach (var prop in item["屬性"].ToObject<JObject>())
                         {
-                            var propName = prop.ToString();
-                            var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propName)
-                                ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propName);
+                            var propName = prop.Key;
+                            var propValue = prop.Value.ToString();
+                            var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propValue)
+                                ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propValue);
 
                             Guid geometryTypeId;
 
+                            // 如果GeometryType不存在
                             if (existingGeometryType == null)
                             {
                                 // 新增GeometryType
@@ -508,7 +515,7 @@ namespace RMIS.Repositories
                                 var newGeometryType = new GeometryType
                                 {
                                     Id = geometryTypeId,
-                                    Name = propName,
+                                    Name = propValue,
                                     Svg = "",
                                     OrderId = geometryTypes.Count + 1,
                                     Kind = "point"

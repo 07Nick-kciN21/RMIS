@@ -1,4 +1,4 @@
-import {layers, layerProps} from './ctrlMap/layers.js';
+import {layerProps} from './ctrlMap/layers.js';
 import { getIndexMap } from './map.js';
 
 
@@ -18,6 +18,14 @@ const adminDists = [
     "復興區"   // value: 13
 ];
 
+const locOccs = ["否", "是"];
+
+const manages = ["桃園市政府養護工程處", "公園綠地科", "道路行政科", "秘書室"];
+
+const caseStatus = ["發文通知", "未處理", "已處理"];
+
+const suspectTypes = ["第一類-荒廢未管理之地", "第二類-民眾種植有價作物", "第三類-鐵皮、柵欄或其他可移動式之臨時設施", "第四類-永久建築物"];
+
 let filterFlags = [];
 
 export function initflagPanel(){
@@ -34,15 +42,32 @@ export function initflagPanel(){
     });
 
     $('#flagGoResult').on('click', function(){
-        // 當需要取得選定的單選按鈕值時
-        const i = $('input[name="locOcc"]:checked').val();
+        // 疑似占用
+        const locOccVal = $('input[name="locOcc"]:checked').val();
+        // 地段
         const landSelect = $('#landSelect').val();
-        const adminVal = parseInt($('#adminSelect').val(), 10); // 獲取選中的值並轉為數字
-        console.log(i, landSelect, adminVal);
+        // 鄉鎮市區
+        const adminVal = parseInt($('#adminSelect').val(), 10); 
+        // 疑似占用類型
+        const suspectVal = $('#suspectTypeSelect').val(); 
+        // 管理單位
+        const manageVal = $('#manageSelect').val();
+        // 案件狀況
+        const caseStatusVal = $('#caseSelect').val();
+        // 年度
+        const yearVal = $('#yearSelect').val();
+
+        console.log(locOccVal, landSelect, adminVal, suspectVal, manageVal, caseStatusVal, yearVal);
+        console.log(locOccs[locOccVal], adminDists[adminVal], suspectTypes[suspectVal], manages[manageVal], caseStatus[caseStatusVal], yearVal);
         const flagProps = layerProps['4a38a83d-0518-4c26-b538-22c7a755a9f0'];
-        // 過濾出"疑似占用類型" == 1 且 地段 == landSelect 的資料
         filterFlags = flagProps.filter(function(item){
-            return (i == -1 || item['疑似占用類型'] == i) && (landSelect == -1 || item['地段-名'] == landSelect) && (adminVal == -1 || item['鄉鎮市區'] == adminDists[adminVal]);
+            return (locOccVal == -1 || item['疑似占用'] == locOccs[locOccVal]) && 
+                   (landSelect == -1 || item['地段-名'] == landSelect) && 
+                   (adminVal == -1 || item['鄉鎮市區'] == adminDists[adminVal]) && 
+                   (suspectVal == -1 || item['疑似占用類型'] == suspectTypes[suspectVal]) &&
+                   (manageVal == -1 || item['管理單位'] == manages[manageVal]) &&
+                   (caseStatusVal == -1 || item['案件狀態'] == caseStatus[caseStatusVal]) &&
+                   (yearVal == -1 || item['清查年度'] == yearVal);
         });
         $("#flagCount").text(`(總數：${filterFlags.length})`);
         updateFlagTable();
@@ -52,6 +77,21 @@ export function initflagPanel(){
         pageSize = parseInt($(this).find('option:selected').text(), 10);
         currentPage = 1;
         updateFlagTable();
+    });
+
+    $('#flagExcel').on('click', function () {
+        const data = filterFlags.map(function (item) {
+            return {
+                '案號': item['勘查表編號'],
+                '清查年度': item['清查年度'],
+                '疑似占用': item['疑似占用'],
+                '勘查表': `https://oram-integ.tycg.gov.tw/TYMaintain/Doc/Land${item['案件狀態']}.pdf`,
+            };
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+        XLSX.writeFile(wb, '權管土地.xlsx');
     });
 }
 

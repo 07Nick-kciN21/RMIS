@@ -7,6 +7,7 @@ namespace RMIS.Models.sql
         public string Svg { get; set; } // svg名稱
         public int OrderId { get; set; } // 排序
         public string Kind { get; set; } // 點、線、面
+        public string? Color { get; set; } // 顏色
         public ICollection<Layer> Layers { get; set; }
     }
 }

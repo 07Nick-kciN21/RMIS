@@ -92,6 +92,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
 export function addLineToLayer(points, newLayer, color, name) {
     var $indexMap = getIndexMap();
     var zoom = $indexMap.getZoom();
+    let segment = null;
     console.log("Create Line");
     for (var i = 0; i < points.length - 1; i++) {
         var startPoint = points[i][0];
@@ -99,7 +100,7 @@ export function addLineToLayer(points, newLayer, color, name) {
         var prop = points[i][1];
 
         // 創建線段
-        var segment = L.polyline([startPoint, endPoint], {
+        segment = L.polyline([startPoint, endPoint], {
             color: color
         }).addTo(newLayer);
 
@@ -146,7 +147,6 @@ export function addLineToLayer(points, newLayer, color, name) {
         points[i][2].Instance = segment;
     }
 }
-
 
 export function addPolygonToLayer(points, newLayer, color, name, autoCenter = true) {
     var $indexMap = getIndexMap();
@@ -197,6 +197,52 @@ export function addPolygonToLayer(points, newLayer, color, name, autoCenter = tr
     polygon._isVisible = true;
     console.log("Polygon 已繪製完成");
 }
+
+// 添加箭頭線段
+export function addArrowlineToLayer(points, newLayer, color, name) {
+    function addArrowToLine(line, color) {
+        var arrow = L.polylineDecorator(line, {
+            patterns: [
+                {   
+                    offset: '101%',
+                    repeat: 0,      // 不重複，僅在尾端顯示箭頭
+                    symbol: L.Symbol.arrowHead({
+                        pixelSize: 25,
+                        pathOptions: {
+                            fillOpacity: 1,
+                            weight: 0,
+                            color: color
+                        }
+                    })
+                }
+            ]
+        }).addTo(newLayer);
+    }
+    // 把所有points的[0]取出集合
+    let pointGroup = [];
+    for (let i = 0; i < points.length; i++) {
+        if (points[i] && points[i][0]) {
+            pointGroup.push(points[i][0]); // 提取座標點
+        }
+    }
+    // 建立polyline
+    let polyline = L.polyline(pointGroup, { color: color }).addTo(newLayer);
+    // 在線段加上popup
+    polyline.bindPopup(`
+        <div class="popupData" style="display: none;">
+            ${points[0][1]}
+        </div>
+        <div style="font-size: 18px;">
+            <h4>圖層：${name}</h4><br>
+            ${popUpForm(points[0][1])}
+        </div>`, {
+        maxWidth: 350,
+        maxHeight: 450
+    });
+    // 在尾端添加箭頭
+    addArrowToLine(polyline, color);
+}
+
 function getInverseColor(color) {
     if (!color.startsWith("#")) return "#FFFFFF"; // 預設為白色
 

@@ -77,7 +77,7 @@ namespace RMIS.Controllers
                 {
                     id = layer.Id.ToString(),
                     name = layer.Name,
-                    color = layer.Pipeline.Color,
+                    color = layer.GeometryType.Color,
                     svg = layer.GeometryType.Svg,
                     type = layer.GeometryType.Kind,
                     areas = areas.Select(a => new AreaDto

@@ -402,7 +402,8 @@ function createBaseLayers() {
     });
 
     // 疊加圖層複選
-    $('#overlayMapSelector').on('click', '.coordinate-item', function () {
+    $('#overlayMapSelector').on('click', '.coordinate-item', function (e) {
+        e.stopPropagation();
         const name = $(this).text().trim(); // 獲取圖層名稱
     
         if ($(this).hasClass('selected')) {

@@ -76,10 +76,11 @@
     color: black; /* 設置文字顏色為白色 */
     list-style: none;
     padding: 10px;
+    padding-bottom: 0;
 }
 
 .footerSelect > ul {
-    padding-left: 5px;
+    padding-left: 0px;
 }
 
 .footerSelect > ul > li {
@@ -90,13 +91,13 @@
 
 #mapSelect{
     width: 250px;
-    top: -450px;
+    top: -430px;
 }
 
 
 #coordinateSelect{
     width: 250px;
-    top: -85px;
+    top: -65px;
 }
     
 #overlayMapSelector > .selected{

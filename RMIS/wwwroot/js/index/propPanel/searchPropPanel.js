@@ -172,6 +172,7 @@ function setupFilterAndClearHandlers() {
         XLSX.writeFile(workbook, `${name}屬性篩選(${cond}).xlsx`);
     });
 }
+
 // 設置分頁顯示資料
 function setupPaginationHandlers() {
     $('#propPageSize').on('change', function () {
