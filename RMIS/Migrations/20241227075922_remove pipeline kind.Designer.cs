@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMIS.Data;
 
@@ -11,9 +12,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20241227075922_remove pipeline kind")]
+    partial class removepipelinekind
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -268,9 +271,6 @@ namespace RMIS.Migrations
                     b.Property<int>("LandAcquisitionBudget")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("PlannedExpansionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("PlannedExpansionRange")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -309,9 +309,6 @@ namespace RMIS.Migrations
                     b.Property<string>("StartPoint")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("StreetViewId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("StreetViewPhotos")
                         .IsRequired()

@@ -215,3 +215,9 @@
     background-size: 80%;
     background-position: center;
 }
+
+#tb-projectPanel{
+    background-image: url('/svg/tiptool/roadproject.svg');
+    background-size: 70%;
+    background-position: center;
+}

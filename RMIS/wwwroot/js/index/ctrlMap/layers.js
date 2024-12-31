@@ -55,14 +55,17 @@ function createNewLayer(result, pipelineId) {
     }
     console.log(result.name);
     result.areas.forEach(function (area) {
+        // item1: 該點座標
+        // item2: 點的屬性資料，如果為plane或arrowline，則只有第一個點有屬性資料需要儲存
         let points = area.points.map(function (point) {
             var item = { "座標": [point.latitude, point.longitude] };
             var item2 = point.prop != null ? JSON.parse(point.prop.replace(/NaN/g, 'null')) : null;
             const merged = { ...item, ...item2 } 
-            layerProps[pipelineId].push(merged);
+            if(item2 != null){
+                layerProps[pipelineId].push(merged);
+            }
             return [[point.latitude, point.longitude], point.prop, merged, null];
         });
-        
         if (result.type === "point") {
             addMarkersToLayer(points, newLayer, result.svg, result.name);
         } else if (result.type === "line") {

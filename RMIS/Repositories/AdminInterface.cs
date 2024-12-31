@@ -1,8 +1,9 @@
 ﻿using Newtonsoft.Json.Linq;
 using RMIS.Models.Admin;
+using RMIS.Models.API;
+using RMIS.Models.sql;
 namespace RMIS.Repositories
 {
-
     public interface AdminInterface
     {
         Task<AddPipelineInput> getPipelineInput();
@@ -16,6 +17,12 @@ namespace RMIS.Repositories
         Task<int> AddMapSourceAsync(AddMapSourceInput mapsourceInput);
         Task<(int categoryCount, int pipelineCount)> AddCategoryByJsonAsync(JObject jObject);
         Task<int> DeletePipelineAsync(Guid? pipelineId);
+        Task<int> DeleteLayerDataAsync(Guid? layerId);
         Task<int> DeleteCategoryAsync(Guid? categoryId);
+        Task<List<string>> GetFlaggedPipelinesAsync();
+        Task<List<string>> GetFocusedPipelinesAsync(int selectType);
+        Task<int> AddRoadRrojectByCSVAsync(IFormFile file);
+        Task<List<RoadProject>> GetProjectByAsync(getRoadProjectInput data);
+        Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId);
     }
 }

@@ -1,4 +1,4 @@
-import {layerProps} from './ctrlMap/layers.js';
+import { layerProps } from './ctrlMap/layers.js';
 import { getIndexMap } from './map.js';
 
 
@@ -28,17 +28,23 @@ const suspectTypes = ["第一類-荒廢未管理之地", "第二類-民眾種植
 
 let filterFlags = [];
 
-export function initflagPanel(){
+export function initFlagPanel(){
+    let flagProps;
     $('#tb-flagPanel').on('click', function(){
-        if( !$('#switch-f0679c23-c520-48c1-b2cc-43dd70d5a194' ).hasClass('switch-on')) {
-            // pipelineId = f0679c23-c520-48c1-b2cc-43dd70d5a194
-            $('#f0679c23-c520-48c1-b2cc-43dd70d5a194').trigger('click');
-        }
-        // 如果switch-7abd9458-39f1-436d-af8d-a3526e06ccf0 有 switch-on 類別，則不觸發 click 事件
-        if( !$('#switch-4a38a83d-0518-4c26-b538-22c7a755a9f0' ).hasClass('switch-on')) {
-            // pipelineId = 4a38a83d-0518-4c26-b538-22c7a755a9f0
-            $('#4a38a83d-0518-4c26-b538-22c7a755a9f0').trigger('click');
-        };
+        fetch('/api/AdminAPI/getFlaggedPipelines', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            console.log(data['pipelines']);
+            for(let i=0; i<data['pipelines'].length; i++){
+                const pipeline = data['pipelines'][i].toLowerCase();
+                if($(`#switch-${pipeline}`).hasClass('switch-off')){
+                    $(`#${pipeline}`).click();
+                    // console.log(`#${pipeline} click`);
+                }
+                console.log(`#${pipeline} click`);
+            };
+            flagProps = layerProps[data['pipelines'][0]];
+        });
     });
 
     $('#flagGoResult').on('click', function(){
@@ -59,7 +65,7 @@ export function initflagPanel(){
 
         console.log(locOccVal, landSelect, adminVal, suspectVal, manageVal, caseStatusVal, yearVal);
         console.log(locOccs[locOccVal], adminDists[adminVal], suspectTypes[suspectVal], manages[manageVal], caseStatus[caseStatusVal], yearVal);
-        const flagProps = layerProps['4a38a83d-0518-4c26-b538-22c7a755a9f0'];
+        const flagProps = layerProps['827acad2-6e1d-4343-bc1c-82b68f87a65b'];
         filterFlags = flagProps.filter(function(item){
             return (locOccVal == -1 || item['疑似占用'] == locOccs[locOccVal]) && 
                    (landSelect == -1 || item['地段-名'] == landSelect) && 

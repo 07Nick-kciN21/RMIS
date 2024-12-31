@@ -8,7 +8,10 @@ import { initPhoto } from './index/photo.js'
 import { initSearchPropPanel } from './index/propPanel/searchPropPanel.js'
 import { initModal } from './index/modal.js';
 import { initMeasurePanel } from './index/measure.js';
-import { initflagPanel } from './index/flagPanel.js'
+import { initFlagPanel } from './index/flagPanel.js';
+import { initFocusPanel } from './index/focusPanel.js';
+import { initProjectPanel } from './index/projectPanel.js';
+
 $(document).ready(function () {
     // 初始化地图
     initMap("indexMap");
@@ -24,12 +27,15 @@ $(document).ready(function () {
     initPanel("measurePanel");
     initPanel("flagPanel");
     initPanel("focusPanel");
+    initPanel("projectPanel");
     initSearchPanel();
     initPainterPanel();
     initPhoto();
     initSearchPropPanel();
     initMeasurePanel();
-    initflagPanel();
-
+    initFlagPanel();
+    initFocusPanel();
+    initProjectPanel();
+    
     bindMenuEvents();
 });

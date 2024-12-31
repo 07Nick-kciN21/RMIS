@@ -36,6 +36,11 @@
     height: 600px;
 }
 
+#projectPanel {
+    width: 450px;
+    height: 500px;
+}
+
 .panel {
     z-index: 1051;
     position: absolute;

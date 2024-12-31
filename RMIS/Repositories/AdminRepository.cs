@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CsvHelper;
 using System.Globalization;
@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System;
 using RMIS.Data;
 using RMIS.Models.Admin;
+using RMIS.Models.API;
 using RMIS.Models.sql;
 using System.Formats.Asn1;
 using System.Globalization;
@@ -14,6 +15,7 @@ using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
+
 
 
 namespace RMIS.Repositories
@@ -109,7 +111,7 @@ namespace RMIS.Repositories
                 ManagementUnit = pipelineInput.ManagementUnit,
                 // Color = pipelineInput.Color,
                 CategoryId = Guid.Parse(pipelineInput.CategoryId),
-                Kind = pipelineInput.Kind
+                // Kind = pipelineInput.Kind
             };
 
             // 將新管線添加到資料庫
@@ -230,7 +232,7 @@ namespace RMIS.Repositories
         {
             if (roadByCSVInput.road_with_pile_Csv == null)
             {
-                _logger.LogWarning("No CSV file provided.");
+                _logger.LogWarning("請提供有效的 CSV 文件。");
                 return 0;
             }
 
@@ -485,7 +487,7 @@ namespace RMIS.Repositories
                             Id = pipelineId,
                             Name = item["名稱"].ToString(),
                             ManagementUnit = item["管理單位"].ToString(),
-                            Kind = item["種類"].ToString(),
+                            // Kind = item["種類"].ToString(),
                             // Color = item["顏色"].ToString(),
                             
                             CategoryId = parentId
@@ -624,6 +626,33 @@ namespace RMIS.Repositories
                 throw;
             }
         }
+        public async Task<int> DeleteLayerDataAsync(Guid? layerId)
+        {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                int rowsAffected = 0;
+                if(layerId.HasValue){
+                    // 取得Layer的Areas
+                    var areasToDelete = await getAreasToDeleteAsync(layerId.Value);
+                    foreach (var area in areasToDelete)
+                    {
+                        // 取得Area的Points
+                        var pointsToDelete = await getPointsToDeleteAsync(area.Id);
+                        _mapDBContext.Points.RemoveRange(pointsToDelete);
+                    }
+                    _mapDBContext.Areas.RemoveRange(areasToDelete);
+                    rowsAffected = await _mapDBContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                return rowsAffected;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
 
         private async Task DeleteCategoryRecursiveAsync(Guid parentId)
         {
@@ -697,5 +726,379 @@ namespace RMIS.Repositories
             var categoriesToDelete = await _mapDBContext.Categories.Where(c => c.ParentId == parentId).ToListAsync();
             return categoriesToDelete;
         }
+
+        public async Task<List<string>> GetFlaggedPipelinesAsync()
+        {
+            var flaggedPipelines = await _mapDBContext.Pipelines
+                .Where(p => p.Name.Contains("權管土地"))
+                .Select(p => p.Id.ToString())
+                .ToListAsync();
+            return flaggedPipelines;
+        }
+
+        public async Task<List<string>> GetFocusedPipelinesAsync(int selectType)
+        {
+            // 0: 臨時道路借用申請(路線)、臨時道路借用申請(借用範團)
+            // 1: 臨時道路借用申請(路線)
+            // 2: 臨時道路借用申請(借用範圍)
+            var focusedPipelines = new List<string>();
+            if (selectType == 0)
+            {
+                focusedPipelines = await _mapDBContext.Pipelines
+                    .Where(p => p.Name.Contains("臨時道路借用申請(路線)") || p.Name.Contains("臨時道路借用申請(借用範團)"))
+                    .Select(p => p.Id.ToString())
+                    .ToListAsync();
+            }
+            else if (selectType == 1)
+            {
+                focusedPipelines = await _mapDBContext.Pipelines
+                    .Where(p => p.Name.Contains("臨時道路借用申請(借用範團)"))
+                    .Select(p => p.Id.ToString())
+                    .ToListAsync();
+            }
+            else if (selectType == 2)
+            {
+                focusedPipelines = await _mapDBContext.Pipelines
+                    .Where(p => p.Name.Contains("臨時道路借用申請(路線)"))
+                    .Select(p => p.Id.ToString())
+                    .ToListAsync();
+            }
+            return focusedPipelines;
+        }
+
+        public async Task<int> AddRoadRrojectByCSVAsync(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new Exception("請提供有效的 CSV 文件。");
+            }
+
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                using (var reader = new StreamReader(file.OpenReadStream()))
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                {
+                    csv.Context.RegisterClassMap<RoadProjectMap>();
+                    var roadProjects = csv.GetRecords<RoadProject>().ToList();
+                    var projectAreas = new List<Area>();
+                    var projectPoints = new List<Point>();
+                    for(int i = 0; i < roadProjects.Count; i++)
+                    {
+                        roadProjects[i].Id = Guid.NewGuid();
+                        // 將roadProjects[i]轉成json字串
+                        var projectProp = JsonConvert.SerializeObject(roadProjects[i]);
+                        // 新增起訖位置-預拓範圍和起訖位置-街景照片的area
+                        var startEndLocation = roadProjects[i].StartEndLocation;
+                        var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == roadProjects[i].AdministrativeDistrict)?.Id;
+                        var rangeId = Guid.NewGuid();
+                        var rangeArea = new Area
+                        {
+                            Id = rangeId,
+                            Name = $"{startEndLocation} - 預拓範圍",
+                            ConstructionUnit = "工務局",
+                            AdminDistId = adminDistId ?? Guid.Empty,
+                            LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
+                        };
+                        var rangeList = JsonConvert.DeserializeObject<List<string>>(roadProjects[i].PlannedExpansionRange);
+                        var rangePoints = await addRangePointsAsync(rangeId, rangeList, projectProp);
+                        projectPoints.AddRange(rangePoints);
+                        projectAreas.Add(rangeArea);
+
+                        var photoId = Guid.NewGuid();
+                        var photoArea = new Area
+                        {
+                            Id = photoId,
+                            Name = $"{startEndLocation} - 街景照片",
+                            ConstructionUnit = "工務局",
+                            AdminDistId = adminDistId ?? Guid.Empty,
+                            LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
+                        };
+                        var photoDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(roadProjects[i].StreetViewPhotos);
+                        var photoPoints = await addPhotoPointsAsync(photoId, photoDict);
+                        projectPoints.AddRange(photoPoints);
+                        projectAreas.Add(photoArea);
+
+                        roadProjects[i].PlannedExpansionId = rangeId;
+                        roadProjects[i].StreetViewId = photoId;
+                    };
+                    await _mapDBContext.AddRangeAsync(projectAreas);
+                    await _mapDBContext.SaveChangesAsync();
+                    await _mapDBContext.AddRangeAsync(projectPoints);
+                    await _mapDBContext.SaveChangesAsync();
+                    await _mapDBContext.AddRangeAsync(roadProjects);
+                    int rowsAffected = await _mapDBContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return rowsAffected;
+                }            
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "An error occurred while adding road projects by CSV.");
+                throw;
+            }
+        }
+
+        // rangePoints: ["24.949975, 121.225981", "24.949483, 121.226059", "24.949483, 121.226059", "24.950167, 121.226609"]
+        private async Task<List<Point>> addRangePointsAsync(Guid areaId, List<string> rangePoints, string projectProp)
+        {
+            var points = new List<Point>();
+            for (int i = 0; i < rangePoints.Count; i++)
+            {
+                var point = rangePoints[i].Split(",");
+                var newPoint = new Point
+                {
+                    Id = Guid.NewGuid(),
+                    Index = i,
+                    Latitude = double.Parse(point[0]),
+                    Longitude = double.Parse(point[1]),
+                    AreaId = areaId
+                };
+                points.Add(newPoint);
+            }
+            points[0].Property = projectProp;
+            return points;
+        }
+        // RoadProject資料映射
+        
+        // photoPoints: {"01.png":"24.950000, 121.225928","02.png":"24.950170, 121.226626"}
+        private async Task<List<Point>> addPhotoPointsAsync(Guid layerId, Dictionary<string, string> photoPoints)
+        {
+            var points = new List<Point>();
+            var i = 0;
+            foreach (var photoPoint in photoPoints)
+            {
+                var coordinate = photoPoint.Value.Split(",");
+                var point = new Point
+                {
+                    Id = Guid.NewGuid(),
+                    Index = i,
+                    Latitude = double.Parse(coordinate[0]),
+                    Longitude = double.Parse(coordinate[1]),
+                    AreaId = layerId,
+                    Property = photoPoint.Key
+                };
+                points.Add(point);
+                i += 1;
+            }
+            return points;
+        }
+
+        public async Task<List<RoadProject>> GetProjectByAsync(getRoadProjectInput data)
+        {
+
+            //var roadProjects = await _mapDBContext.RoadProjects
+            //    .Where(rp => rp.AdministrativeDistrict == adminDist && rp.TotalBudget >= startBudget && rp.TotalBudget <= endBudget)
+            //    .ToListAsync();
+
+            var query = _mapDBContext.RoadProjects.AsQueryable();
+            // 行政區
+            if (!string.IsNullOrEmpty(data.AdminDistrict))
+            {
+                query = query.Where(rp => rp.AdministrativeDistrict == data.AdminDistrict);
+            }
+
+            // 起點(模糊搜尋)
+            if (!string.IsNullOrEmpty(data.StartPoint))
+            {
+                query = query.Where(rp => rp.StartPoint.Contains(data.StartPoint));
+            }
+            
+            // 終點(模糊搜尋)
+            if (!string.IsNullOrEmpty(data.EndPoint))
+            {
+                query = query.Where(rp => rp.EndPoint.Contains(data.EndPoint));
+            }
+  
+            // 現況路寬(開頭查詢)
+            if (data.CurrentRoadWidth != null)
+            {
+                var roadWidth = data.CurrentRoadWidth.ToString();
+                query = query.Where(rp => rp.CurrentRoadWidth.StartsWith(roadWidth));
+            }
+
+            // 道路長度
+            if (data.RoadLength != null)
+            {
+                var roadLength = data.RoadLength.Value;
+                query = query.Where(rp => rp.RoadLength == roadLength);
+            }
+
+            // 工程經費
+            if (data.Budgets?.ProjectBudget?.Value != null)
+            {
+                var projectBudget = data.Budgets.ProjectBudget.Value * 10000;
+                switch (data.Budgets.ProjectBudget.Option)
+                {
+                    case "1": // 大於
+                        query = query.Where(rp => rp.ConstructionBudget > projectBudget);
+                        break;
+                    case "2": // 小於
+                        query = query.Where(rp => rp.ConstructionBudget < projectBudget);
+                        break;
+                    case "3": // 等於
+                        query = query.Where(rp => rp.ConstructionBudget == projectBudget);
+                        break;
+                }
+            }
+
+            // 用地經費
+            if (data.Budgets?.LandBudget?.Value != null)
+            {
+                var landBudget = data.Budgets.LandBudget.Value * 10000;
+                switch (data.Budgets.LandBudget.Option)
+                {
+                    case "1": // 大於
+                        query = query.Where(rp => rp.LandAcquisitionBudget > landBudget);
+                        break;
+                    case "2": // 小於
+                        query = query.Where(rp => rp.LandAcquisitionBudget < landBudget);
+                        break;
+                    case "3": // 等於
+                        query = query.Where(rp => rp.LandAcquisitionBudget == landBudget);
+                        break;
+                }
+            }
+
+            // 補償經費
+            if (data.Budgets?.CompensationBudget?.Value != null)
+            {
+                var compensationBudget = data.Budgets.CompensationBudget.Value * 10000;
+                switch (data.Budgets.CompensationBudget.Option)
+                {
+                    case "1": // 大於
+                        query = query.Where(rp => rp.CompensationBudget > compensationBudget);
+                        break;
+                    case "2": // 小於
+                        query = query.Where(rp => rp.CompensationBudget < compensationBudget);
+                        break;
+                    case "3": // 等於
+                        query = query.Where(rp => rp.CompensationBudget == compensationBudget);
+                        break;
+                }
+            }
+
+            // 合計經費(範圍在start與end之間)
+            if (data.Budgets?.TotalBudgetRange?.Start != null && data.Budgets.TotalBudgetRange.End != null)
+            {
+                var startBudget = data.Budgets.TotalBudgetRange.Start * 10000;
+                var endBudget = data.Budgets.TotalBudgetRange.End * 10000;
+                query = query.Where(rp => rp.TotalBudget >= startBudget && rp.TotalBudget <= endBudget);
+            }
+
+            return await query.Select(rp => new RoadProject
+            {
+                Id = rp.Id,
+                ProjectId = rp.ProjectId,
+                Proposer = rp.Proposer,
+                AdministrativeDistrict = rp.AdministrativeDistrict,
+                StartPoint = rp.StartPoint,
+                EndPoint = rp.EndPoint,
+                StartEndLocation = rp.StartEndLocation,
+                RoadLength = rp.RoadLength,
+                CurrentRoadWidth = rp.CurrentRoadWidth,
+                PlannedRoadWidth = rp.PlannedRoadWidth,
+                PublicLand = rp.PublicLand,
+                PrivateLand = rp.PrivateLand,
+                PublicPrivateLand = rp.PublicPrivateLand,
+                ConstructionBudget = rp.ConstructionBudget,
+                LandAcquisitionBudget = rp.LandAcquisitionBudget,
+                CompensationBudget = rp.CompensationBudget,
+                TotalBudget = rp.TotalBudget,
+                PlannedExpansionRange = rp.PlannedExpansionRange,
+                StreetViewPhotos = rp.StreetViewPhotos,
+                Remarks = rp.Remarks,
+                PlannedExpansionId = rp.PlannedExpansionId,
+                StreetViewId = rp.StreetViewId
+            }).OrderBy(rp => rp.ProjectId).ToListAsync();
+        }
+
+        public class RoadProjectMap : ClassMap<RoadProject>
+        {
+            public RoadProjectMap()
+            {
+                Map(m => m.ProjectId).Name("專案代號");
+                Map(m => m.Proposer).Name("提案人");
+                Map(m => m.AdministrativeDistrict).Name("行政區");
+                Map(m => m.StartPoint).Name("起點");
+                Map(m => m.EndPoint).Name("終點");
+                Map(m => m.StartEndLocation).Name("起訖位置");
+                Map(m => m.RoadLength).Name("道路長度").Convert(row => ParseLength(row.Row["道路長度"]));
+                Map(m => m.CurrentRoadWidth).Name("現況路寬");
+                Map(m => m.PlannedRoadWidth).Name("計畫路寬");
+                Map(m => m.PublicLand).Name("公有土地");
+                Map(m => m.PrivateLand).Name("私有土地");
+                Map(m => m.PublicPrivateLand).Name("公私土地");
+                Map(m => m.ConstructionBudget).Name("工程經費").Convert(row => ParseCurrency(row.Row["工程經費"]));
+                Map(m => m.LandAcquisitionBudget).Name("用地經費").Convert(row => ParseCurrency(row.Row["用地經費"]));
+                Map(m => m.CompensationBudget).Name("補償經費").Convert(row => ParseCurrency(row.Row["補償經費"]));
+                Map(m => m.TotalBudget).Name("合計經費").Convert(row => ParseCurrency(row.Row["合計經費"]));
+                Map(m => m.PlannedExpansionRange).Name("預拓範圍");
+                Map(m => m.StreetViewPhotos).Name("街景照片");
+                Map(m => m.Remarks).Name("備註");
+            }
+
+            private static int ParseLength(string value)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    return 0; // 空值或空白直接返回 0
+
+                value = value.Replace("公尺", "").Trim(); // 移除單位並去除前後空格
+
+                // 嘗試解析為整數
+                if (int.TryParse(value, out var result))
+                {
+                    return result;
+                }
+
+                return 0; // 如果解析失敗，返回 0
+            }
+
+            private static int ParseCurrency(string value)
+            {
+                if (string.IsNullOrWhiteSpace(value)) return 0;
+                value = value.Replace("萬", "").Trim();
+                if (int.TryParse(value, out var result))
+                {
+                    return result * 10000; // 將萬元轉換為元
+                }
+                return 0;
+            }
+        }
+
+        public async Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId)
+        {   // 取得PlannedExpansionId與StreetViewId
+            var project = await _mapDBContext.RoadProjects
+                .Where(rp => rp.Id == projectId)
+                .FirstOrDefaultAsync();
+            // 取得PlannedExpansionId與StreetViewId的Points
+            var rangePoints = await _mapDBContext.Points
+                .Where(p => p.AreaId == project.PlannedExpansionId)
+                .Select(p => new rangeCoordinate
+                {
+                    Index = p.Index,
+                    Latitude = p.Latitude,
+                    Longitude = p.Longitude,
+                    Prop = p.Property
+                }).OrderBy(p => p.Index).ToListAsync();
+
+            var photoPoints = await _mapDBContext.Points
+                .Where(p => p.AreaId == project.StreetViewId)
+                .Select(p => new photoCoordinate
+                {
+                    Latitude = p.Latitude,
+                    Longitude = p.Longitude,
+                    url = p.Property
+                }).ToListAsync();
+
+            var result = new PointsByProjectId
+            {
+                rangePoints = rangePoints,
+                photoPoints = photoPoints
+            };
+            return result;
+        }
+
     }
 }

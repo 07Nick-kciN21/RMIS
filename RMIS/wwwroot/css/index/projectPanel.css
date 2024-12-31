@@ -1,0 +1,36 @@
+#projectPanel .panelBody {
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px;
+    padding-top: 10px;
+    display: block;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+#projectPanel .form-group label {
+    width: 30%;
+}
+
+#projectPanel .form-group {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+#projectPanel .panelList {
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px;
+}
+
+#projectResultDiv{
+    max-height: 250px;
+    scrollbar-width: thin;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+#budgetDiv select{
+    width: 10%;
+}

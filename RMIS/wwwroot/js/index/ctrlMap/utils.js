@@ -148,19 +148,15 @@ export function addLineToLayer(points, newLayer, color, name) {
     }
 }
 
-export function addPolygonToLayer(points, newLayer, color, name, autoCenter = true) {
+export function addPolygonToLayer(points, newLayer, color, name) {
     var $indexMap = getIndexMap();
-    var zoom = $indexMap.getZoom();
     var pointGroup = [];
     var prop = points[0][1];
     
     // 把points的所有[0]取出集合
     for (var i = 0; i < points.length; i++) {
-        if (points[i] && points[i][0]) {
-            pointGroup.push(points[i][0]); // 提取座標點
-        }
+        pointGroup.push(points[i][0]);
     }
-
     // 創建 Leaflet Polygon
     let polygon = L.polygon(pointGroup, {
         color: "#000000",        // 邊框顏色
@@ -204,7 +200,7 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
         var arrow = L.polylineDecorator(line, {
             patterns: [
                 {   
-                    offset: '101%',
+                    offset: '100%',
                     repeat: 0,      // 不重複，僅在尾端顯示箭頭
                     symbol: L.Symbol.arrowHead({
                         pixelSize: 25,
