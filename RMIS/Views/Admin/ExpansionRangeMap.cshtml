@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            margin: 0;
+            height: 100vh;
+        }
+
+        #sidebar {
+            background-color: #f4f4f4;
+            padding: 10px;
+            overflow-y: auto;
+            width: 30%;
+        }
+
+        #map {
+            flex-grow: 1;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .content-wrapper {
+            flex-direction: row;
+            width: 100%;
+        }
+    </style>
+    <script>
+        let map;
+        let markerGroup;
+        const coordinates = [];
+
+        function initMap() {
+            map = L.map('map').setView([25.033, 121.565], 13); // 預設為台北
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            markerGroup = L.layerGroup().addTo(map);
+
+            // 地圖點擊事件
+            map.on('click', function (e) {
+                addCoordinate(e.latlng.lat, e.latlng.lng);
+            });
+        }
+
+        function addCoordinate(lat, lng) {
+            const $list = $('#coordinate-list');
+
+            // 新增座標到列表
+            coordinates.push({ lat, lng });
+            const $listItem = $('<li>').text(`Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`);
+            $list.append($listItem);
+
+            // 新增座標到地圖
+            const marker = L.marker([lat, lng]);
+            marker.addTo(markerGroup);
+        }
+
+        function submitCoordinates() {
+            // 傳送座標資料至主頁面
+            window.opener.postMessage(
+                JSON.stringify({ type: "range" , data: coordinates}), 
+                window.location.origin
+            );
+
+            // 關閉視窗
+            window.close();
+        }
+
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
+    <title>表單視窗</title>
+</head>
+<body>
+    <div id="sidebar">
+        <h3>街景照片</h3>
+        <ul id="coordinate-list"></ul>
+        <button onclick="submitCoordinates()">提交座標</button>
+    </div>
+    <div id="map"></div>
+</body>
+
+    
+</html>

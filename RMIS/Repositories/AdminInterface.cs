@@ -24,5 +24,6 @@ namespace RMIS.Repositories
         Task<int> AddRoadRrojectByCSVAsync(IFormFile file);
         Task<List<RoadProject>> GetProjectByAsync(getRoadProjectInput data);
         Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId);
+        Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput);
     }
 }

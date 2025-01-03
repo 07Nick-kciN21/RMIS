@@ -201,5 +201,6 @@ namespace RMIS.Controllers
                 return StatusCode(500, new { success = false, message = "An error occurred while fetching points.", error = ex.Message });
             }
         }
+
     }
 }

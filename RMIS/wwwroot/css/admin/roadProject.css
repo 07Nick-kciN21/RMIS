@@ -1,0 +1,13 @@
+#addRoadProjectForm div input {
+    margin: auto;
+    width: 90%;
+}
+
+
+#addRoadProjectForm #expansionRangeDiv div {
+    display: flex;
+}
+
+#addRoadProjectForm #expansionRangeDiv input {
+    width: 50%;
+}

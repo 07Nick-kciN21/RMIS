@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using RMIS.Models.Admin;
 using RMIS.Models.sql;
 using RMIS.Repositories;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RMIS.Controllers
 {
@@ -222,6 +224,35 @@ namespace RMIS.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = "An error occurred while adding records.", error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ExpansionRangeMap()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult StreetViewPhotoMap()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddRoadProject([FromForm] AddRoadProjectInput input)
+        {
+            int rowsAffected =  _adminInterface.AddRoadProjectAsync(input);
+
+            if (rowsAffected > 0)
+            {
+                _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
+                return Ok($"已新增 {rowsAffected} 筆專案資料到資料庫");
+            }
+            else
+            {
+                _logger.LogInformation("未對資料庫進行任何變更");
+                return BadRequest("未對資料庫進行任何變更");
             }
         }
     }

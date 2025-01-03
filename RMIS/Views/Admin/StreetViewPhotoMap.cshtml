@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                display: flex;
+                flex-direction: row;
+                margin: 0;
+                height: 100vh;
+            }
+
+            #sidebar {
+                background-color: #f4f4f4;
+                padding: 10px;
+                overflow-y: auto;
+                width: 30%;
+            }
+
+            #map {
+                flex-grow: 1;
+            }
+
+            ul {
+                list-style: none;
+                padding: 0;
+            }
+
+            li {
+                padding: 5px 0;
+                border-bottom: 1px solid #ccc;
+            }
+
+            .content-wrapper {
+                flex-direction: row;
+                width: 100%;
+            }
+        </style>
+        <script>
+            let map;
+            let markerGroup;
+            const coordinates = [];
+
+            function initMap() {
+                map = L.map('map').setView([25.033, 121.565], 13); // 預設為台北
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                markerGroup = L.layerGroup().addTo(map);
+
+                // 地圖點擊事件
+                map.on('click', function (e) {
+                    addCoordinate(e.latlng.lat, e.latlng.lng);
+                });
+            }
+            
+            // 座標和照片會回傳
+            function addCoordinate(lat, lng) {
+                const $list = $('#coordinate-list');
+
+                // 添加座標到數據列表
+                const coordinate = { lat, lng, photo: null, photoName: null };
+                coordinates.push(coordinate);
+
+                // 動態更新座標列表
+                const $listItem = $('<li></li>');
+                $listItem.html(`
+                    <div>Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}</div>
+                    <input type="file" accept="image/*" onchange="attachPhoto(${coordinates.length - 1}, event)">
+                `);
+                $list.append($listItem);
+
+                // 新增座標到地圖
+                const marker = L.marker([lat, lng]);
+                marker.addTo(markerGroup);
+            }
+
+            
+            function attachPhoto(index, event) {
+                const photo = event.target.files[0];
+                if (photo) {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        const base64String = event.target.result; // 取得 Base64 字串
+                        coordinates[index].photo = base64String;
+                        coordinates[index].photoName = photo.name;
+                    };
+                    reader.readAsDataURL(photo); // 將檔案讀取為 Base64
+                }
+            }
+
+            function submitCoordinates() {
+                // 傳送座標資料至主頁面
+                window.opener.postMessage(
+                    JSON.stringify({ type: "photo" , data: coordinates}), 
+                    window.location.origin,
+                    );
+                // 關閉視窗
+                window.close();
+            }
+
+            document.addEventListener('DOMContentLoaded', initMap);
+        </script>
+        <title>表單視窗</title>
+    </head>
+    <body>
+        <div id="sidebar">
+            <h3>經緯度列表</h3>
+            <ul id="coordinate-list"></ul>
+            <button onclick="submitCoordinates()">提交座標</button>
+        </div>
+        <div id="map"></div>
+    </body>
+</html>

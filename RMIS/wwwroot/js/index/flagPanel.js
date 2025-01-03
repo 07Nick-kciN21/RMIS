@@ -3,19 +3,19 @@ import { getIndexMap } from './map.js';
 
 
 const adminDists = [
-    "桃園區",  // value: 1
-    "大溪區",  // value: 2
-    "中壢區",  // value: 3
-    "楊梅區",  // value: 4
-    "蘆竹區",  // value: 5
-    "大園區",  // value: 6
-    "龜山區",  // value: 7
-    "八德區",  // value: 8
-    "龍潭區",  // value: 9
-    "平鎮區",  // value: 10
-    "新屋區",  // value: 11
-    "觀音區",  // value: 12
-    "復興區"   // value: 13
+    "桃園區",  
+    "大溪區",
+    "中壢區", 
+    "楊梅區",
+    "蘆竹區",
+    "大園區", 
+    "龜山區", 
+    "八德區", 
+    "龍潭區",
+    "平鎮區", 
+    "新屋區", 
+    "觀音區", 
+    "復興區"
 ];
 
 const locOccs = ["否", "是"];

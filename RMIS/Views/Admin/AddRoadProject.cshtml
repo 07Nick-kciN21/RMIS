@@ -8,111 +8,233 @@
     Layout = null; // 禁用 _Layout.cshtml 加载
 }
 
-<form asp-action="SaveRoadProject" method="post" style="max-height: 70vh; overflow-y: auto;">
+<form id="addRoadProjectForm" method="post" style="max-height: 70vh; overflow-y: auto;">
     <div>
         <label>行政區:</label>
-        <input asp-for="AdminDistrict" class="form-control" />
+        <select id="adminSelect" class="form-select" style="margin: auto; width: 90%;">
+            <option value="-1">請選擇</option>
+            <option value="0">桃園區</option>
+            <option value="1">大溪區</option>
+            <option value="2">中壢區</option>
+            <option value="3">楊梅區</option>
+            <option value="4">蘆竹區</option>
+            <option value="5">大園區</option>
+            <option value="6">龜山區</option>
+            <option value="7">八德區</option>
+            <option value="8">龍潭區</option>
+            <option value="9">平鎮區</option>
+            <option value="10">新屋區</option>
+            <option value="11">觀音區</option>
+            <option value="12">復興區</option>
+        </select>
     </div>
     <div>
         <label>起點:</label>
-        <input asp-for="StartPoint" class="form-control" />
+        <input id="StartPoint" class="form-control" />
     </div>
     <div>
         <label>終點:</label>
-        <input asp-for="EndPoint" class="form-control" />
+        <input id="EndPoint" class="form-control" />
     </div>
     <div>
         <label>道路長度:</label>
-        <input asp-for="RoadLength" type="text" class="form-control" />
+        <input id="RoadLength" type="text" class="form-control" />
     </div>
     <div>
         <label>現況路寬:</label>
-        <input asp-for="CurrentRoadWidth" type="text" class="form-control" />
+        <input id="CurrentRoadWidth" type="text" class="form-control" />
     </div>
     <div>
         <label>現況類別:</label>
-        <input asp-for="CurrentRoadType" class="form-control" />
+        <input id="CurrentRoadType" class="form-control" />
     </div>
     <div>
         <label>計畫路寬:</label>
-        <input asp-for="PlannedRoadWidth" type="text" class="form-control" />
+        <input id="PlannedRoadWidth" type="text" class="form-control" />
     </div>
     <div>
         <label>計畫類別:</label>
-        <input asp-for="PlannedRoadType" class="form-control" />
+        <input id="PlannedRoadType" class="form-control" />
     </div>
     <div>
-        <label>經費資料:</label>
-        <input asp-for="ProjectBudget" type="text" class="form-control" />
+        <label>公有土地:</label>
+        <input id="PublicLand" type="text" class="form-control" />
+    </div>
+    <div>
+        <label>私有土地:</label>
+        <input id="PrivateLand" type="text" class="form-control" />
+    </div>
+    <div>
+        <label>公私土地:</label>
+        <input id="PublicPrivateLand" type="text" class="form-control" />
+    </div>
+    <div>
+        <label>工程經費:</label>
+        <input id="ConstructionBudget" type="text" class="form-control" />
     </div>
     <div>
         <label>用地經費:</label>
-        <input asp-for="LandBudget" type="text" class="form-control" />
+        <input id="LandBudget" type="text" class="form-control" />
     </div>
     <div>
         <label>補償經費:</label>
-        <input asp-for="CompensationBudget" type="text" class="form-control" />
+        <input id="CompensationBudget" type="text" class="form-control" />
     </div>
     <div>
         <label>合計經費範圍:</label>
-        <input asp-for="TotalBudgetRange" type="text" class="form-control" />
+        <input id="TotalBudget" type="text" class="form-control" />
     </div>
-
-    <div id="expansion-range-container">
+    @* 備註 *@
+    <div>
+        <label>備註:</label>
+        <textarea id="Remark" class="form-control"></textarea>
+    </div>
+    <div id="expansionRangeDiv" style="width: 90%; margin: auto;">
         <div style="display:flex">
             <h4>欲拓範圍</h4>
-            <button type="button" id="add-expansion-range-btn" title="新增欲拓範圍">+</button>
+            <div id=""></div>
+            <button type="button" id="addRangeBtn" title="新增欲拓範圍">+</button>
         </div>
-        <div class="expansion-range">
-            <input type="text" name="ExpansionRange[0].Latitude" step="0.000001" placeholder="緯度" class="form-control" />
-            <input type="text" name="ExpansionRange[0].Longitude" step="0.000001" placeholder="經度" class="form-control" />
-        </div>
+        <table id="rangeTable" class="propTable">
+            <thead>
+                <tr>
+                    <th>順序</th>
+                    <th>緯度</th>
+                    <th>經度</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
     </div>
     
-
-    <div id="street-view-photo-container">
+    <div id="streetViewPhotoDiv" style="width: 90%; margin: auto;">
         <div style="display:flex">
             <h4>街景照片</h4>
-            <button type="button" id="add-street-view-photo-btn" title="新增街景照片">+</button>
+            <button type="button" id="addPhotoBtn" title="新增街景照片">+</button>
         </div>
-        <div class="street-view-photo">
-            <input type="file" name="StreetViewPhoto[0].StreetView" placeholder="圖檔名稱" class="form-control" />
-            <input type="text" name="StreetViewPhoto[0].Latitude" step="0.000001" placeholder="緯度" class="form-control" />
-            <input type="text" name="StreetViewPhoto[0].Longitude" step="0.000001" placeholder="經度" class="form-control" />
-        </div>
+        <table id="photoTable" class="propTable">
+            <thead>
+                <tr>
+                    <th>順序</th>
+                    <th>檔案</th>
+                    <th>緯度</th>
+                    <th>經度</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
     </div>
-    
-
-    <button type="submit" class="btn btn-primary">提交</button>
+    <button id="submit">提交</button>
 </form>
 
 <script>
-    let expansionRangeIndex = 1;
-    let streetViewPhotoIndex = 1;
-
-    document.getElementById('add-expansion-range-btn').addEventListener('click', function () {
-        const container = document.getElementById('expansion-range-container');
-        const newInputGroup = document.createElement('div');
-        newInputGroup.classList.add('expansion-range');
-        newInputGroup.innerHTML = `
-            <input type="text" name="ExpansionRange[${expansionRangeIndex}].Latitude" step="0.000001" placeholder="緯度" class="form-control" />
-            <input type="text" name="ExpansionRange[${expansionRangeIndex}].Longitude" step="0.000001" placeholder="經度" class="form-control" />
-        `;
-        container.appendChild(newInputGroup);
-        expansionRangeIndex++;
+    let expansionRangeIndex = 0;
+    let streetViewPhotoIndex = 0;
+    let rangeList = [];
+    let photoList = [];
+    const adminDists = [
+        "桃園區",  
+        "大溪區",
+        "中壢區", 
+        "楊梅區",
+        "蘆竹區",
+        "大園區", 
+        "龜山區", 
+        "八德區", 
+        "龍潭區",
+        "平鎮區", 
+        "新屋區", 
+        "觀音區", 
+        "復興區"
+    ];
+    let newWindow;
+    $("#submit").on('click', function () {
+        const input = new FormData();
+        input.append("AdminDistrict", adminDists[$("#adminSelect").val()]);
+        input.append("StartPoint", $("#StartPoint").val());
+        input.append("EndPoint", $("#EndPoint").val());
+        input.append("RoadLength", $("#RoadLength").val());
+        input.append("CurrentRoadWidth", $("#CurrentRoadWidth").val());
+        input.append("CurrentRoadType", $("#CurrentRoadType").val());
+        input.append("PlannedRoadWidth", $("#PlannedRoadWidth").val());
+        input.append("PlannedRoadType", $("#PlannedRoadType").val());
+        input.append("PublicLand", $("#PublicLand").val());
+        input.append("PrivateLand", $("#PrivateLand").val());
+        input.append("PublicPrivateLand", $("#PublicPrivateLand").val());
+        input.append("ConstructionBudget", $("#ConstructionBudget").val());
+        input.append("LandBudget", $("#LandBudget").val());
+        input.append("CompensationBudget", $("#CompensationBudget").val());
+        input.append("TotalBudget", $("#TotalBudget").val());
+        input.append("Remark", $("#Remark").val());
+        rangeList.forEach((item, index) => {
+            input.append(`ExpansionRange[${index}].Id`, item.Id);
+            input.append(`ExpansionRange[${index}].Latitude`, item.Latitude);
+            input.append(`ExpansionRange[${index}].Longitude`, item.Longitude);
+        });
+        photoList.forEach((item, index) => {
+            input.append(`StreetViewPhoto[${index}].Id`, item.Id);
+            input.append(`StreetViewPhoto[${index}].Latitude`, item.Latitude);
+            input.append(`StreetViewPhoto[${index}].Longitude`, item.Longitude);
+            input.append(`StreetViewPhoto[${index}].Photo`, item.Photo);
+            input.append(`StreetViewPhoto[${index}].PhotoName`, item.PhotoName);
+        });
+        console.log(...input.entries()); // 检查 FormData 内容
+        fetch('/Admin/AddRoadProject', {
+            method: 'POST',
+            body: input
+        });
     });
 
-    document.getElementById('add-street-view-photo-btn').addEventListener('click', function () {
-        const container = document.getElementById('street-view-photo-container');
-        const newInputGroup = document.createElement('div');
-        newInputGroup.classList.add('street-view-photo');
-        newInputGroup.innerHTML = `
-            <input type="file" name="StreetViewPhoto[${streetViewPhotoIndex}].StreetView" placeholder="圖檔名稱" class="form-control" />
-            <input type="text" name="StreetViewPhoto[${streetViewPhotoIndex}].Latitude" step="0.000001" placeholder="緯度" class="form-control" />
-            <input type="text" name="StreetViewPhoto[${streetViewPhotoIndex}].Longitude" step="0.000001" placeholder="經度" class="form-control" />
-        `;
-        container.appendChild(newInputGroup);
-        streetViewPhotoIndex++;
+    $('#addRangeBtn').on('click', function () {
+        newWindow = window.open('/Admin/ExpansionRangeMap', 'newWindow', 'width=600,height=400');
+    });
+
+    //#addPhotoBtn 按鈕被點擊時，開啟新視窗
+    $('#addPhotoBtn').on('click', function () {
+        newWindow = window.open('/Admin/StreetViewPhotoMap', 'newWindow', 'width=600,height=400');
+    });
+
+    // 接收新視窗的訊息
+    window.addEventListener('message', function(event) {
+        if (event.origin !== window.location.origin) return; // 安全性驗證
+        const message = JSON.parse(event.data);
+        const data = message.data;
+        if(message.type == "range"){
+            const rangeTable = $('#rangeTable');
+            rangeTable.find('tbody').empty();
+            rangeList.length = 0;
+            for(let i = 0; i < data.length; i++) {
+                rangeItem = { Id:i, Latitude: data[i].lat, Longitude: data[i].lng };
+
+                rangeList.push(rangeItem);
+                // 在 rangeTable 中新增一個新的 td
+                var newRow = rangeTable.find('tbody').append('<tr></tr>');
+                newRow.append(`<td>${expansionRangeIndex}</td>`);
+                newRow.append(`<td>${data[i].lat}</td>`);
+                newRow.append(`<td>${data[i].lng}</td>`);
+                expansionRangeIndex++;
+            };
+        };
+        if(message.type == "photo"){
+            const photoTable = $('#photoTable');
+            photoTable.find('tbody').empty();
+            photoList.length = 0;
+            for(let i = 0; i < data.length; i++) {
+                photoItem = { Id:i, Latitude: data[i].lat, Longitude: data[i].lng, Photo: data[i].photo, PhotoName: data[i].photoName };
+                photoList.push(photoItem);
+                var newRow = photoTable.find('tbody').append('<tr></tr>');
+                newRow.append(`<td>${streetViewPhotoIndex}</td>`);
+                // 取得data[i].file的檔名
+                newRow.append(`<td>${data[i].photoName}</td>`);
+                newRow.append(`<td>${data[i].lat}</td>`);
+                newRow.append(`<td>${data[i].lng}</td>`);
+                
+                streetViewPhotoIndex++;
+            }
+            console.log("streetViewPhoto：", photoList);
+        }
     });
 </script>
 
