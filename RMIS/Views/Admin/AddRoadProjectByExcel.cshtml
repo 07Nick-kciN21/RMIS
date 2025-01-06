@@ -1,0 +1,22 @@
+﻿@model RMIS.Models.Admin.AddRoadProjectByExcelInput;
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "新增道路專案";
+    Layout = null; // 禁用 _Layout.cshtml 加载
+}
+
+<form asp-controller="Admin" asp-action="AddRoadProjectByCSV" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label asp-for="projectFile" class="control-label">請上傳EXCEL檔案：</label> <br />
+        <input asp-for="projectFile" type="file" class="form-control-file" accept=".xlsx" />
+        <span asp-validation-for="projectFile" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="projectPhoto" class="control-label">請上傳圖檔：</label> <br />
+        <input asp-for="projectPhoto" type="file" class="form-control-file" multiple accept="image/*" />
+        <span asp-validation-for="projectPhoto" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">上傳資料</button>
+</form>

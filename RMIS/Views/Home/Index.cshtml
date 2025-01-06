@@ -109,7 +109,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadProjectByCSV">
+                                <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadProjectByExcel">
                                     <h4>上傳道路專案</h4>
                                 </a>
                             </li>
@@ -731,35 +731,35 @@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 終點 *@
             <label>起點</label>
-            <input type="text" id="StartPoint" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectStartPoint" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
         </div>
 
         @* 終點 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 終點 *@
             <label>終點</label>
-            <input type="text" id="EndPoint" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">  
+            <input type="text" id="projectEndPoint" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">  
         </div>
 
         @* 道路長度 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 道路長度 *@
             <label>道路長度</label>
-            <input type="text" id="RoadLength" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectRoadLength" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
         </div>
 
         @* 現況路寬 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 現況路寬 *@
             <label>現況路寬</label>
-            <input type="text" id="CurrentRoadWidth" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectCurrentRoadWidth" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
         </div>
 
         @* 計畫路寬 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 計畫路寬 *@
             <label>計畫路寬</label>
-            <input type="text" id="PlannedRoadWidth" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectPlannedRoadWidth" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
         </div>
 
         @* 工程經費(比較單一值) *@
@@ -767,7 +767,7 @@
             <div class="form-group">
                 <label>工程經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                <select id="projectBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;"></select>
                 <option value="-1">請選擇</option>
                 <option value="1">大於</option>
                 <option value="2">小於</option>
@@ -780,7 +780,7 @@
             <div class="form-group">
                 <label>用地經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectLandBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                <select id="projectLandBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;"></select>
                 <option value="-1">請選擇</option>
                 <option value="1">大於</option>
                 <option value="2">小於</option>
@@ -793,7 +793,7 @@
             <div class="form-group">
                 <label>補償經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectCompensationBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                <select id="projectCompensationBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;"></select>
                 <option value="-1">請選擇</option>
                 <option value="1">大於</option>
                 <option value="2">小於</option>

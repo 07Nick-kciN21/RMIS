@@ -1,7 +1,8 @@
 ﻿namespace RMIS.Models.Admin
 {
-    public class AddRoadProjectByCSVInput
+    public class AddRoadProjectByExcelInput
     {
-        public IFormFile projectCSV { get; set; }
+        public IFormFile projectFile { get; set; }
+        public List<IFormFile> projectPhoto { get; set; }
     }
 }

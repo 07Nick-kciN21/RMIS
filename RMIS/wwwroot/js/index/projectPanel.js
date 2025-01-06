@@ -35,34 +35,34 @@ export function initProjectPanel() {
     $('#projectGoResult').click(function () {
         const formData = {
             adminDistrict: adminDists[$('#projectAdmin').val()], // 行政區
-            startPoint: convertInputValue($('#StartPoint').val()), // 起點
-            endPoint: convertInputValue($('#EndPoint').val()), // 終點
-            roadLength: convertInputValue($('#RoadLength').val()), // 道路長度
-            currentRoadWidth: convertInputValue($('#CurrentRoadWidth').val()), // 現況路寬
-            plannedRoadWidth: convertInputValue($('#PlannedRoadWidth').val()), // 計畫路寬
+            startPoint: convertInputValue($('#projectStartPoint').val()), // 起點
+            endPoint: convertInputValue($('#projectEndPoint').val()), // 終點
+            roadLength: convertInputValue($('#projectRoadLength').val()), // 道路長度
+            currentRoadWidth: convertInputValue($('#projectCurrentRoadWidth').val()), // 現況路寬
+            plannedRoadWidth: convertInputValue($('#projectPlannedRoadWidth').val()), // 計畫路寬
             budgets: { // 經費資料
-                projectBudget: {
-                    option: convertSelectValue($('#projectBudgetOption').val()),
-                    value: convertInputValue($('#projectBudgetEnd').val())
-                },
-                landBudget: {
-                    option: convertSelectValue($('#projectLandBudgetOption').val()),
-                    value: convertInputValue($('#projectLandBudgetEnd').val())
-                },
-                compensationBudget: {
-                    option: convertSelectValue($('#projectCompensationBudgetOption').val()),
-                    value: convertInputValue($('#projectCompensationBudgetEnd').val())
-                },
-                totalBudgetRange: {
-                    start: convertInputValue($('#projectBudget').val()),
-                    end: convertInputValue($('#projectBudgetEnd').val())
-                }
+            projectBudget: {
+                option: convertSelectValue($('#projectBudgetOption').val()),
+                value: convertInputValue($('#projectBudgetEnd').val())
+            },
+            landBudget: {
+                option: convertSelectValue($('#projectLandBudgetOption').val()),
+                value: convertInputValue($('#projectLandBudgetEnd').val())
+            },
+            compensationBudget: {
+                option: convertSelectValue($('#projectCompensationBudgetOption').val()),
+                value: convertInputValue($('#projectCompensationBudgetEnd').val())
+            },
+            totalBudgetRange: {
+                start: convertInputValue($('#projectBudget').val()),
+                end: convertInputValue($('#projectBudgetEnd').val())
+            }
             }
         };
         console.log(formData);
         $('#projectTbody').empty();
         // console.log(adminDists[admimVal], projectMoney, projectMoneyEnd);
-        fetch(`/api/AdminAPI/getRoadProjectByBudget`, {
+        fetch(`/api/AdminAPI/getRoadProject`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -120,6 +120,7 @@ function addLayerToMap(projectId) {
         var {latitude, longitude} = data['points']['rangePoints'][0];
 
         $indexMap.setView([latitude, longitude], 18);
+        console.log(data['points']['photoPoints']);
         // photoPoints:在地圖上添加marker
         data['points']['photoPoints'].forEach(point => {
             // 添加marker

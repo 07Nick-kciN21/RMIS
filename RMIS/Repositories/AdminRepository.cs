@@ -4,18 +4,22 @@ using CsvHelper;
 using System.Globalization;
 using System.IO;
 using System.Collections.Generic;
+using System.Formats.Asn1;
+using System.Globalization;
 using System;
 using RMIS.Data;
 using RMIS.Models.Admin;
 using RMIS.Models.API;
 using RMIS.Models.sql;
-using System.Formats.Asn1;
-using System.Globalization;
+using OfficeOpenXml;
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+
 
 
 
@@ -767,71 +771,107 @@ namespace RMIS.Repositories
             return focusedPipelines;
         }
 
-        public async Task<int> AddRoadRrojectByCSVAsync(IFormFile file)
+        public async Task<int> AddRoadRrojectByExcelAsync(AddRoadProjectByExcelInput input)
         {
+            var file = input.projectFile;
+            var photoFile = input.projectPhoto;
             if (file == null || file.Length == 0)
             {
-                throw new Exception("請提供有效的 CSV 文件。");
+                throw new Exception("請提供有效的 xlsx 文件。");
             }
-
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
-                using (var reader = new StreamReader(file.OpenReadStream()))
-                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                int rowsAffected = 0;
+                using (var stream = new MemoryStream())
                 {
-                    csv.Context.RegisterClassMap<RoadProjectMap>();
-                    var roadProjects = csv.GetRecords<RoadProject>().ToList();
-                    var projectAreas = new List<Area>();
-                    var projectPoints = new List<Point>();
-                    for(int i = 0; i < roadProjects.Count; i++)
+                    await file.CopyToAsync(stream);
+                    using (var package = new ExcelPackage(stream))
                     {
-                        roadProjects[i].Id = Guid.NewGuid();
-                        // 將roadProjects[i]轉成json字串
-                        var projectProp = JsonConvert.SerializeObject(roadProjects[i]);
-                        // 新增起訖位置-預拓範圍和起訖位置-街景照片的area
-                        var startEndLocation = roadProjects[i].StartEndLocation;
-                        var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == roadProjects[i].AdministrativeDistrict)?.Id;
-                        var rangeId = Guid.NewGuid();
-                        var rangeArea = new Area
-                        {
-                            Id = rangeId,
-                            Name = $"{startEndLocation} - 預拓範圍",
-                            ConstructionUnit = "工務局",
-                            AdminDistId = adminDistId ?? Guid.Empty,
-                            LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
-                        };
-                        var rangeList = JsonConvert.DeserializeObject<List<string>>(roadProjects[i].PlannedExpansionRange);
-                        var rangePoints = await addRangePointsAsync(rangeId, rangeList, projectProp);
-                        projectPoints.AddRange(rangePoints);
-                        projectAreas.Add(rangeArea);
+                        var roadProjectSheet = package.Workbook.Worksheets[0];
+                        var roadProjects = ParseRoadProjectExcel(roadProjectSheet);
 
-                        var photoId = Guid.NewGuid();
-                        var photoArea = new Area
+                        var projectAreas = new List<Area>();
+                        var projectPoints = new List<Point>();
+                        for(int i=0; i<roadProjects.Count; i++)
                         {
-                            Id = photoId,
-                            Name = $"{startEndLocation} - 街景照片",
-                            ConstructionUnit = "工務局",
-                            AdminDistId = adminDistId ?? Guid.Empty,
-                            LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
-                        };
-                        var photoDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(roadProjects[i].StreetViewPhotos);
-                        var photoPoints = await addPhotoPointsAsync(photoId, photoDict);
-                        projectPoints.AddRange(photoPoints);
-                        projectAreas.Add(photoArea);
 
-                        roadProjects[i].PlannedExpansionId = rangeId;
-                        roadProjects[i].StreetViewId = photoId;
-                    };
-                    await _mapDBContext.AddRangeAsync(projectAreas);
-                    await _mapDBContext.SaveChangesAsync();
-                    await _mapDBContext.AddRangeAsync(projectPoints);
-                    await _mapDBContext.SaveChangesAsync();
-                    await _mapDBContext.AddRangeAsync(roadProjects);
-                    int rowsAffected = await _mapDBContext.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                    return rowsAffected;
-                }            
+                            roadProjects[i].Id = Guid.NewGuid();
+                            // 將roadProjects[i]轉成json字串
+                            var projectProp = JsonConvert.SerializeObject(roadProjects[i]);
+                            // 新增起訖位置-預拓範圍和起訖位置-街景照片的area
+                            var startEndLocation = roadProjects[i].StartEndLocation;
+                            var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == roadProjects[i].AdministrativeDistrict)?.Id;
+                            var rangeId = Guid.NewGuid();
+                            var rangeArea = new Area
+                            {
+                                Id = rangeId,
+                                Name = $"{startEndLocation} - 預拓範圍",
+                                ConstructionUnit = "工務局",
+                                AdminDistId = adminDistId ?? Guid.Empty,
+                                LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
+                            };
+                            var rangeList = JsonConvert.DeserializeObject<List<string>>(roadProjects[i].PlannedExpansionRange);
+                            var rangePoints = await addRangePointsAsync(rangeId, rangeList, projectProp);
+                            projectPoints.AddRange(rangePoints);
+                            projectAreas.Add(rangeArea);
+
+                            var photoId = Guid.NewGuid();
+                            var photoArea = new Area
+                            {
+                                Id = photoId,
+                                Name = $"{startEndLocation} - 街景照片",
+                                ConstructionUnit = "工務局",
+                                AdminDistId = adminDistId ?? Guid.Empty,
+                                LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
+                            };
+                            var photoDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(roadProjects[i].StreetViewPhotos);
+                            var photoPoints = await addPhotoPointsAsync(photoId, photoDict);
+                            projectPoints.AddRange(photoPoints);
+                            projectAreas.Add(photoArea);
+
+                            roadProjects[i].PlannedExpansionId = rangeId;
+                            roadProjects[i].StreetViewId = photoId;
+                        };
+                        // roadProjects轉換成RoadProject型態
+                        var roadProjectList = roadProjects.Select(rp => new RoadProject
+                        {
+                            Id = rp.Id,
+                            Proposer = rp.Proposer,
+                            AdministrativeDistrict = rp.AdministrativeDistrict,
+                            StartPoint = rp.StartPoint,
+                            EndPoint = rp.EndPoint,
+                            StartEndLocation = rp.StartEndLocation,
+                            RoadLength = rp.RoadLength,
+                            CurrentRoadWidth = rp.CurrentRoadWidth,
+                            PlannedRoadWidth = rp.PlannedRoadWidth,
+                            PublicLand = rp.PublicLand,
+                            PrivateLand = rp.PrivateLand,
+                            PublicPrivateLand = rp.PublicPrivateLand,
+                            ConstructionBudget = rp.ConstructionBudget,
+                            LandAcquisitionBudget = rp.LandAcquisitionBudget,
+                            CompensationBudget = rp.CompensationBudget,
+                            TotalBudget = rp.TotalBudget,
+                            Remarks = rp.Remarks,
+                            PlannedExpansionId = rp.PlannedExpansionId,
+                            StreetViewId = rp.StreetViewId
+                        }).ToList();
+
+                        await _mapDBContext.AddRangeAsync(projectAreas);
+                        await _mapDBContext.SaveChangesAsync();
+                        await _mapDBContext.AddRangeAsync(projectPoints);
+                        await _mapDBContext.SaveChangesAsync();
+                        await _mapDBContext.AddRangeAsync(roadProjectList);
+                        rowsAffected = await _mapDBContext.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                    }
+                }
+
+                for(int i = 0; i < photoFile.Count; i++)
+                {
+                    await savePhotoFileAsync(photoFile[i]);
+                }
+                return rowsAffected;
             }
             catch (Exception ex)
             {
@@ -884,6 +924,100 @@ namespace RMIS.Repositories
                 i += 1;
             }
             return points;
+        }
+
+        public async Task<Boolean> savePhotoFileAsync(IFormFile photo)
+        {
+            try
+            {
+                // 儲存路徑（伺服器上的某個目錄）
+                var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject");
+                if (!Directory.Exists(savePath))
+                {
+                    Directory.CreateDirectory(savePath);
+                }
+
+                string photoPath = Path.Combine(savePath, photo.FileName);
+
+                using (var stream = new FileStream(photoPath, FileMode.Create))
+                {
+                    await photo.CopyToAsync(stream);
+                }
+                _logger.LogInformation(photo.FileName, "Upload Photo success");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(photo.FileName, "Upload Photo failed");
+                return false;
+            }
+        }
+        public static List<RoadProjectCSVFormat> ParseRoadProjectExcel(ExcelWorksheet worksheet)
+        {
+            var result = new List<RoadProjectCSVFormat>();
+            var rowCount = worksheet.Dimension.Rows;
+
+            // 獲取標題行 (假設第一行為標題)
+            var headers = new Dictionary<string, int>();
+            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
+            {
+                headers[worksheet.Cells[1, col].Text.Trim()] = col;
+            }
+
+            for (int row = 2; row <= rowCount; row++) // 從第2行開始讀取數據
+            {
+                var project = new RoadProjectCSVFormat
+                {
+                    Id = Guid.NewGuid(),
+                    ProjectId = ParseInt(worksheet.Cells[row, headers["專案代號"]].Text),
+                    Proposer = worksheet.Cells[row, headers["提案人"]].Text,
+                    AdministrativeDistrict = worksheet.Cells[row, headers["行政區"]].Text,
+                    StartPoint = worksheet.Cells[row, headers["起點"]].Text,
+                    EndPoint = worksheet.Cells[row, headers["終點"]].Text,
+                    StartEndLocation = worksheet.Cells[row, headers["起訖位置"]].Text,
+                    RoadLength = ParseFloat(worksheet.Cells[row, headers["道路長度"]].Text),
+                    CurrentRoadWidth = worksheet.Cells[row, headers["現況路寬"]].Text,
+                    PlannedRoadWidth = worksheet.Cells[row, headers["計畫路寬"]].Text,
+                    PublicLand = ParseInt(worksheet.Cells[row, headers["公有土地"]].Text),
+                    PrivateLand = ParseInt(worksheet.Cells[row, headers["私有土地"]].Text),
+                    PublicPrivateLand = ParseInt(worksheet.Cells[row, headers["公私土地"]].Text),
+                    ConstructionBudget = ParseCurrency(worksheet.Cells[row, headers["工程經費"]].Text),
+                    LandAcquisitionBudget = ParseCurrency(worksheet.Cells[row, headers["用地經費"]].Text),
+                    CompensationBudget = ParseCurrency(worksheet.Cells[row, headers["補償經費"]].Text),
+                    TotalBudget = ParseCurrency(worksheet.Cells[row, headers["合計經費"]].Text),
+                    PlannedExpansionRange = worksheet.Cells[row, headers["預拓範圍"]].Text,
+                    StreetViewPhotos = worksheet.Cells[row, headers["街景照片"]].Text,
+                    Remarks = worksheet.Cells[row, headers["備註"]].Text,
+                    PlannedExpansionId = Guid.NewGuid(),
+                    StreetViewId = Guid.NewGuid()
+                };
+
+                result.Add(project);
+            }
+
+            return result;
+        }
+
+        // 解析整數
+        private static int ParseInt(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return 0;
+            return int.TryParse(value, out var result) ? result : 0;
+        }
+
+        // 解析浮點數
+        private static float ParseFloat(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return 0;
+            return float.TryParse(value, out var result) ? result : 0;
+        }
+
+        // 解析金額（處理"萬元"單位）
+        private static int ParseCurrency(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return 0;
+            value = value.Replace("萬", "").Trim();
+            return int.TryParse(value, out var result) ? result * 10000 : 0; // 萬元轉元
         }
 
         public async Task<List<RoadProject>> GetProjectByAsync(getRoadProjectInput data)
@@ -1007,65 +1141,10 @@ namespace RMIS.Repositories
                 LandAcquisitionBudget = rp.LandAcquisitionBudget,
                 CompensationBudget = rp.CompensationBudget,
                 TotalBudget = rp.TotalBudget,
-                PlannedExpansionRange = rp.PlannedExpansionRange,
-                StreetViewPhotos = rp.StreetViewPhotos,
                 Remarks = rp.Remarks,
                 PlannedExpansionId = rp.PlannedExpansionId,
                 StreetViewId = rp.StreetViewId
             }).OrderBy(rp => rp.ProjectId).ToListAsync();
-        }
-
-        public class RoadProjectMap : ClassMap<RoadProject>
-        {
-            public RoadProjectMap()
-            {
-                Map(m => m.ProjectId).Name("專案代號");
-                Map(m => m.Proposer).Name("提案人");
-                Map(m => m.AdministrativeDistrict).Name("行政區");
-                Map(m => m.StartPoint).Name("起點");
-                Map(m => m.EndPoint).Name("終點");
-                Map(m => m.StartEndLocation).Name("起訖位置");
-                Map(m => m.RoadLength).Name("道路長度").Convert(row => ParseLength(row.Row["道路長度"]));
-                Map(m => m.CurrentRoadWidth).Name("現況路寬");
-                Map(m => m.PlannedRoadWidth).Name("計畫路寬");
-                Map(m => m.PublicLand).Name("公有土地");
-                Map(m => m.PrivateLand).Name("私有土地");
-                Map(m => m.PublicPrivateLand).Name("公私土地");
-                Map(m => m.ConstructionBudget).Name("工程經費").Convert(row => ParseCurrency(row.Row["工程經費"]));
-                Map(m => m.LandAcquisitionBudget).Name("用地經費").Convert(row => ParseCurrency(row.Row["用地經費"]));
-                Map(m => m.CompensationBudget).Name("補償經費").Convert(row => ParseCurrency(row.Row["補償經費"]));
-                Map(m => m.TotalBudget).Name("合計經費").Convert(row => ParseCurrency(row.Row["合計經費"]));
-                Map(m => m.PlannedExpansionRange).Name("預拓範圍");
-                Map(m => m.StreetViewPhotos).Name("街景照片");
-                Map(m => m.Remarks).Name("備註");
-            }
-
-            private static int ParseLength(string value)
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                    return 0; // 空值或空白直接返回 0
-
-                value = value.Replace("公尺", "").Trim(); // 移除單位並去除前後空格
-
-                // 嘗試解析為整數
-                if (int.TryParse(value, out var result))
-                {
-                    return result;
-                }
-
-                return 0; // 如果解析失敗，返回 0
-            }
-
-            private static int ParseCurrency(string value)
-            {
-                if (string.IsNullOrWhiteSpace(value)) return 0;
-                value = value.Replace("萬", "").Trim();
-                if (int.TryParse(value, out var result))
-                {
-                    return result * 10000; // 將萬元轉換為元
-                }
-                return 0;
-            }
         }
 
         public async Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId)
@@ -1103,7 +1182,8 @@ namespace RMIS.Repositories
 
         public async Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput)
         {
-            using var transaction = _mapDBContext.Database.BeginTransaction();
+            Console.WriteLine("AddRoadProjectAsync");
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
                 var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == roadProjectInput.AdminDistrict)?.Id;
@@ -1130,7 +1210,7 @@ namespace RMIS.Repositories
                     LandAcquisitionBudget = roadProjectInput.LandBudget * 10000,
                     CompensationBudget = roadProjectInput.CompensationBudget * 10000,
                     TotalBudget = roadProjectInput.TotalBudget * 10000,
-                    Remarks = roadProjectInput.Remark
+                    Remarks = roadProjectInput.Remark == null ? "無" : roadProjectInput.Remark
                 };
 
                 var expansionId = Guid.NewGuid();
@@ -1147,9 +1227,7 @@ namespace RMIS.Repositories
                 };
                 //新增photo area
                 var rangeList = roadProjectInput.ExpansionRange;
-                Console.WriteLine("Before addExpansion: {ExpansionRange}", JsonConvert.SerializeObject(roadProjectInput.ExpansionRange));
                 var expansionPoints = await addExpansion(expansionId, roadProjectInput.ExpansionRange, projectProp);
-                Console.WriteLine("After addExpansion: {ExpansionRange}", JsonConvert.SerializeObject(roadProjectInput.ExpansionRange));
                 var photoId = Guid.NewGuid();
                 var photoArea = new Area
                 {
@@ -1162,92 +1240,119 @@ namespace RMIS.Repositories
 
                 var photoPoints = addPhoto(photoId, roadProjectInput.StreetViewPhoto);
 
-                 _mapDBContext.Areas.Add(expansionArea);
-                 _mapDBContext.SaveChanges();
-                 _mapDBContext.AddRange(expansionPoints);
-                 _mapDBContext.SaveChanges();
+                _mapDBContext.Areas.Add(expansionArea);
+                var expansionA = await _mapDBContext.SaveChangesAsync();
+                _mapDBContext.AddRange(expansionPoints);
+                var expansionP = await _mapDBContext.SaveChangesAsync();
 
-                 _mapDBContext.Areas.Add(photoArea);
-                 _mapDBContext.SaveChanges();
-                 _mapDBContext.AddRange(photoPoints);
-                 _mapDBContext.SaveChanges();
+                _mapDBContext.Areas.Add(photoArea);
+                var photoA = await _mapDBContext.SaveChangesAsync();
+                _mapDBContext.AddRange(photoPoints);
+                var photoP = await _mapDBContext.SaveChangesAsync();
 
                 roadProject.PlannedExpansionId = expansionId;
                 roadProject.StreetViewId = photoId;
-                 _mapDBContext.RoadProjects.AddAsync(roadProject);
-                var rowsAffected = _mapDBContext.SaveChanges();
-                transaction.Commit();
+                await _mapDBContext.RoadProjects.AddAsync(roadProject);
+                var rowsAffected = await _mapDBContext.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return rowsAffected;
             }
             catch (Exception ex)
             {
-                 transaction.RollbackAsync();
+                await transaction.RollbackAsync();
                 _logger.LogError(ex, "An error occurred while adding road projects by CSV.");
                 throw;
             }
-
         }
 
         private async Task<List<Point>> addExpansion(Guid areaId, List<range> rangeList, string projectProp)
         {
-            var points = new List<Point>();
-            for (int i = 0; i < rangeList.Count; i++)
+            Console.WriteLine("addExpansion");
+            try
             {
-                var newPoint = new Point
+                var points = new List<Point>();
+                for (int i = 0; i < rangeList.Count; i++)
                 {
-                    Id = Guid.NewGuid(),
-                    Index = i,
-                    Latitude = rangeList[i].Latitude,
-                    Longitude = rangeList[i].Longitude,
-                    AreaId = areaId,
-                };
-                points.Add(newPoint);
+                    var newPoint = new Point
+                    {
+                        Id = Guid.NewGuid(),
+                        Index = i,
+                        Latitude = rangeList[i].Latitude,
+                        Longitude = rangeList[i].Longitude,
+                        AreaId = areaId,
+                    };
+                    points.Add(newPoint);
+                }
+                points[0].Property = projectProp;
+                return points;
             }
-            points[0].Property = projectProp;
-            return points;
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return null;
+            }
         }
 
         private List<Point> addPhoto(Guid areaId, List<photo> photoList)
         {
-            var points = new List<Point>();
-            for (var i = 0; i < photoList.Count; i++)
+            Console.WriteLine("addPhoto");
+            try
             {
-                savePhoto(photoList[i].Photo, photoList[i].PhotoName);
-                var newPoint = new Point
+                var points = new List<Point>();
+                for (var i = 0; i < photoList.Count; i++)
                 {
-                    Id = Guid.NewGuid(),
-                    Index = i,
-                    Latitude = photoList[i].Latitude,
-                    Longitude = photoList[i].Longitude,
-                    AreaId = areaId,
-                    Property = photoList[i].PhotoName
+                    var photoName = photoList[i].PhotoName;
+                    savePhoto(photoList[i].Photo, photoName);
+                    var newPoint = new Point
+                    {
+                        Id = Guid.NewGuid(),
+                        Index = i,
+                        Latitude = photoList[i].Latitude,
+                        Longitude = photoList[i].Longitude,
+                        AreaId = areaId,
+                        Property = photoList[i].PhotoName
+                    };
+                    points.Add(newPoint);
                 };
-            };
-            return points;
+                return points;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return null;
+            }
+            
         }
 
         private void savePhoto(string photo, string photoName)
         {
-            
-            // 提取 Base64 字串（移除開頭的 data:image/png;base64, 部分）
-            var base64Data = Regex.Replace(photo, @"^data:image/\w+;base64,", string.Empty);
-
-            // 將 Base64 字串轉換為 byte[]
-            var imageBytes = Convert.FromBase64String(base64Data);
-
-            // 儲存路徑（伺服器上的某個目錄）
-            var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img");
-            if (!Directory.Exists(savePath))
+            Console.WriteLine("savePhoto");
+            try
             {
-                Directory.CreateDirectory(savePath);
+                // 提取 Base64 字串（移除開頭的 data:image/png;base64, 部分）
+                var base64Data = Regex.Replace(photo, @"^data:image/\w+;base64,", string.Empty);
+
+                // 將 Base64 字串轉換為 byte[]
+                var imageBytes = Convert.FromBase64String(base64Data);
+
+                // 儲存路徑（伺服器上的某個目錄）
+                var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject");
+                if (!Directory.Exists(savePath))
+                {
+                    Directory.CreateDirectory(savePath);
+                }
+
+                // 儲存檔案名稱
+                var fileName = $"{photoName}";
+                var filePath = Path.Combine(savePath, fileName);
+
+                // 將 byte[] 寫入檔案
+                System.IO.File.WriteAllBytes(filePath, imageBytes);
             }
-
-            // 儲存檔案名稱
-            var fileName = $"{photoName}";
-            var filePath = Path.Combine(savePath, fileName);
-
-            // 將 byte[] 寫入檔案
-            System.IO.File.WriteAllBytes(filePath, imageBytes);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
     }
 }

@@ -136,30 +136,30 @@ namespace RMIS.Controllers
             }
         }
 
-        [HttpPost("addProjectByCSV")]
-        public async Task<IActionResult> AddRoadByCSV([FromForm] IFormFile file)
-        {
-            try
-            {
-                var rowsAffected = await _adminInterface.AddRoadRrojectByCSVAsync(file);
+        //[HttpPost("addRoadProjectByExcel")]
+        //public async Task<IActionResult> AddRoadProjectByExcel([FromForm] IFormFile file)
+        //{
+        //    try
+        //    {
+        //        var rowsAffected = await _adminInterface.AddRoadRrojectByExcelAsync(file);
 
-                if (rowsAffected > 0)
-                {
-                    return Ok(new { success = true, message = "Added successfully", rowsAffected });
-                }
-                else
-                {
-                    return BadRequest(new { success = false, message = "No records added" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = "An error occurred while adding records.", error = ex.Message });
-            }
-        }
+        //        if (rowsAffected > 0)
+        //        {
+        //            return Ok(new { success = true, message = "Added successfully", rowsAffected });
+        //        }
+        //        else
+        //        {
+        //            return BadRequest(new { success = false, message = "No records added" });
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { success = false, message = "An error occurred while adding records.", error = ex.Message });
+        //    }
+        //}
 
-        [HttpPost("getRoadProjectByBudget")]
-        public async Task<IActionResult> GetRoadProjectByBudget([FromBody] getRoadProjectInput data)
+        [HttpPost("getRoadProject")]
+        public async Task<IActionResult> GetRoadProject([FromBody] getRoadProjectInput data)
         {
             try
             {

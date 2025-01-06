@@ -1,7 +1,6 @@
-using CsvHelper.Configuration;
-namespace RMIS.Models.sql
+﻿namespace RMIS.Models.Admin
 {
-    public class RoadProject
+    public class RoadProjectCSVFormat
     {
         public Guid Id { get; set; }
         // 專案Id
@@ -36,6 +35,10 @@ namespace RMIS.Models.sql
         public int CompensationBudget { get; set; }
         /// 合計經費（單位：萬元）
         public int TotalBudget { get; set; }
+        /// 預拓範圍（經緯度陣列，格式：["緯度,經度", ...]）
+        public string PlannedExpansionRange { get; set; }
+        /// 街景照片（JSON 格式，鍵為檔名，值為經緯度）
+        public string StreetViewPhotos { get; set; }
         /// 備註
         public string Remarks { get; set; }
         // 預拓範圍的AreaId

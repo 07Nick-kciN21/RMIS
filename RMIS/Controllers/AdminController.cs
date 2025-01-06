@@ -198,33 +198,9 @@ namespace RMIS.Controllers
         }
 
         [HttpGet]
-        public IActionResult AddRoadProjectByCSV()
+        public IActionResult AddRoadProjectByExcel()
         {
             return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AddRoadProjectByCSV(AddRoadProjectByCSVInput roadProjectByCSV)
-        {
-            try
-            {
-                var rowsAffected = await _adminInterface.AddRoadRrojectByCSVAsync(roadProjectByCSV.projectCSV);
-
-                if (rowsAffected > 0)
-                {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
-                    return Ok($"已新增 {rowsAffected} 筆專案資料到資料庫");
-                }
-                else
-                {
-                    _logger.LogInformation("未對資料庫進行任何變更");
-                    return BadRequest("未對資料庫進行任何變更");
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = "An error occurred while adding records.", error = ex.Message });
-            }
         }
 
         [HttpGet]
@@ -242,7 +218,7 @@ namespace RMIS.Controllers
         [HttpPost]
         public async Task<IActionResult> AddRoadProject([FromForm] AddRoadProjectInput input)
         {
-            int rowsAffected =  _adminInterface.AddRoadProjectAsync(input);
+            var rowsAffected = await _adminInterface.AddRoadProjectAsync(input);
 
             if (rowsAffected > 0)
             {
@@ -253,6 +229,30 @@ namespace RMIS.Controllers
             {
                 _logger.LogInformation("未對資料庫進行任何變更");
                 return BadRequest("未對資料庫進行任何變更");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddRoadProjectByExcel(AddRoadProjectByExcelInput roadProjectByExcel)
+        {
+            try
+            {
+                var rowsAffected = await _adminInterface.AddRoadRrojectByExcelAsync(roadProjectByExcel);
+
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
+                    return Ok($"已新增 {rowsAffected} 筆專案資料到資料庫");
+                }
+                else
+                {
+                    _logger.LogInformation("未對資料庫進行任何變更");
+                    return BadRequest("未對資料庫進行任何變更");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while adding records.", error = ex.Message });
             }
         }
     }
