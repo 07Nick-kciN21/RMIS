@@ -104,13 +104,21 @@ $(document).ready(function () {
         });
     });
     
+    const popupWidth = 600;
+    const popupHeight = 400;
+    // 獲取螢幕的寬高
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    // 計算彈出視窗的位置
+    const left = 0 - (screenWidth + popupWidth) / 2;
+    const top = (screenHeight - popupHeight) / 2;
     $('#addRangeBtn').on('click', function () {
-        newWindow = window.open('/Admin/ExpansionRangeMap', 'newWindow', 'width=600,height=400');
+        newWindow = window.open('/Admin/ExpansionRangeMap', 'newWindow', `width=${popupWidth},height=${popupHeight}, top=${top}, left=${left}`);
     });
     
     //#addPhotoBtn 按鈕被點擊時，開啟新視窗
     $('#addPhotoBtn').on('click', function () {
-        newWindow = window.open('/Admin/StreetViewPhotoMap', 'newWindow', 'width=600,height=400');
+        newWindow = window.open('/Admin/StreetViewPhotoMap', 'newWindow', `width=${popupWidth},height=${popupHeight}, top=${top}, left=${left}`);
     });
     
     // 接收新視窗的訊息

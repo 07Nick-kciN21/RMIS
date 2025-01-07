@@ -44,6 +44,7 @@
 
 .selectRow {
     background-color: green !important;
+    color: white;
 }
 
 div#propQuery_group_0 {

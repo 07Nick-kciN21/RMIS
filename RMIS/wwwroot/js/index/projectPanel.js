@@ -70,11 +70,10 @@ export function initProjectPanel() {
             body: JSON.stringify(formData),
         }).then(response => response.json())
         .then(data => {
-            console.log(data);
             data['roadProjects'].forEach(project => {
                 console.log(project);
                 const tableRow = $('<tr></tr>');
-                const button = $('<button>目標</button>').on('click', function () {
+                const targetBtn = $('<button>目標</button>').on('click', function () {
                     if (currentRow) {
                         currentRow.removeClass('selectRow');
                     }
@@ -83,13 +82,161 @@ export function initProjectPanel() {
                     addLayerToMap(project['id']);
                     console.log(project['plannedExpansionId'], project['streetViewId']);
                 });
+                // 預設儲存按鈕不顯示
+                // 編輯與儲存交替顯示
+                const editBtn = $('<button>編輯</button>').on('click', function () {
+                    if (currentRow) {
+                        currentRow.removeClass('selectRow');
+                    }
+                    currentRow = $(this).closest('tr');
+                    currentRow.addClass('selectRow');
+                    // 將td內容轉換成input
+                    const tds = $(this).closest('tr').find('td');
+                    tds.each(function (index) {
+                        if (index < 2) return;
+                        const text = $(this).text();
+                        // 行政區改成select，預設值為原本的行政區
+                        if (index === 3) {
+                            $(this).html(`<select>
+                                ${adminDists.map((district, index) => 
+                                    `<option value="${index + 1}" ${district === text ? 'selected' : ''}>
+                                        ${district}
+                                    </option>`).join('')}
+                            </select>`);
+                            return;
+                        }
+
+                        // 起訖位置改成兩個input，一個起點，一個終點
+                        if (index === 4) {
+                            var input = text.split('至');
+                            $(this).html(`<input type="text" value="${input[0]}"> 至 <input type="text" value="${input[1]}">`);
+                            return;
+                        }
+                        // 目前路寬	計畫路寬改成兩個input，一個是路寬數值(數字)，一個是類別(文字)，ex: 8公尺 | 都計道路 或著 0公尺、未開闢
+                        if (index === 6 || index === 7) {
+                            var input = text.split('|');
+                            console.log(input);
+                            $(this).html(`<input type="text" value="${input[0].replace('公尺', '').trim()}">公尺 | <input type="text" value="${input[1].trim()}">`);
+                            return;
+                        }
+                        // 工程經費	用地經費 補償經費 總經費，去掉萬，輸入數字即可
+                        if (index === 11 || index === 12 || index === 13 || index === 14) {
+                            $(this).html(`<input type="text" value="${text.replace('萬', '')}">`);
+                            return;
+                        }
+                        if (index === 15) {
+                            // 備註欄改成textarea
+                            $(this).html(`<textarea>${text}</textarea>`);
+                            return;
+                        }
+                        $(this).html(`<input type="text" value="${text}">`);
+                    });
+                    $(this).hide();
+                    $(this).siblings('button:contains("儲存")').show();
+                });
+                
+                const saveBtn = $('<button>儲存</button>').on('click', function () {
+                    // 將input內容轉換成td
+                    const tds = $(this).closest('tr').find('td');
+                    var updateForm = new FormData();
+                    updateForm.append('Id', project['id']);
+                    tds.each(function (index) { 
+                        if (index < 2) return;
+                        // 把所有欄位都變回text，並且儲存修改過的值，不管是select、input、textarea
+                        const input = $(this).find('input, select, textarea');
+                        const text = input.val();
+                        if (index === 2) {
+                            $(this).text(text);
+                            updateForm.append('Proposer', text);
+                            return;
+                        }
+                        if (index === 3) {
+                            $(this).text(adminDists[text - 1]);
+                            updateForm.append('AdministrativeDistrict', adminDists[text - 1]);
+                            return;
+                        }
+                        if (index === 4) {
+                            $(this).text(`${input[0].value}至${input[1].value}`);
+                            updateForm.append('StartPoint', input[0].value);
+                            updateForm.append('EndPoint', input[1].value);
+                            updateForm.append('StartEndLocation', `${input[0].value}至${input[1].value}`);
+                            return;
+                        }
+                        if(index === 5) {
+                            $(this).text(text);
+                            updateForm.append('RoadLength', text);
+                            return;
+                        }
+                        if (index === 6 || index === 7) {
+                            $(this).text(`${input[0].value}公尺|${input[1].value}`);
+                            if(index === 6) {
+                                updateForm.append('CurrentRoadWidth', JSON.stringify({路寬: input[0].value, 路況: input[1].value}));
+                            }
+                            if(index === 7) {
+                                updateForm.append('PlannedRoadWidth', JSON.stringify({路寬: input[0].value, 路況: input[1].value}));
+                            }
+                            return;
+                        }
+                        if(index === 8 || index === 9 || index === 10) {
+                            $(this).text(text);
+                            if(index === 8) {
+                                updateForm.append('PublicLand', text);
+                            }
+                            if(index === 9) {
+                                updateForm.append('PrivateLand', text);
+                            }
+                            if(index === 10) {
+                                updateForm.append('PublicPrivateLand', text);
+                            }
+                            return;
+                        }
+                        if (index === 11 || index === 12 || index === 13 || index === 14) {
+                            $(this).text(`${text}萬`);
+                            if(index === 11) {
+                                updateForm.append('ConstructionBudget', text * 10000);
+                            }
+                            if(index === 12) {
+                                updateForm.append('LandAcquisitionBudget', text * 10000);
+                            }
+                            if(index === 13) {
+                                updateForm.append('CompensationBudget', text * 10000);
+                            }
+                            if(index === 14) {
+                                updateForm.append('TotalBudget', text * 10000);
+                            }
+                            return;
+                        }
+                        if(index === 15) {
+                            $(this).text(text);
+                            updateForm.append('Remarks', text);
+                            return;
+                        }
+                    });
+                    // 取得更新後的所有值
+                    // 透過/api/AdminAPI/UpdateRoadProject更新資料
+                    fetch(`/api/AdminAPI/UpdateProjectData`, {  
+                        method: 'POST',
+                        body: updateForm
+                    })
+                    .then(res =>{ 
+                        res.json();
+                        console.log(res)
+                    });
+                    $(this).hide();
+                    $(this).siblings('button:contains("編輯")').show();
+                }).hide();
+                // 轉換project['currentRoadWidth']
+                const parsedValue = JSON.parse(project['currentRoadWidth']);
+                const currentRoadWidth = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
+                const parsedValue2 = JSON.parse(project['plannedRoadWidth']);
+                const plannedRoadWidth = `${parsedValue2["路寬"]} | ${parsedValue2["路況"]}`;
                 var projectRow = `
                         <td>${project['proposer']}</td>
                         <td>${project['administrativeDistrict']}</td>
                         <td>${project['startEndLocation']}</td>
                         <td>${project['roadLength']}</td>
-                        <td>${project['currentRoadWidth']}</td>
-                        <td>${project['plannedRoadWidth']}</td>
+                        <td>${currentRoadWidth}</td>
+                        <td>${plannedRoadWidth}</td>
                         <td>${project['publicLand']}</td>
                         <td>${project['privateLand']}</td>
                         <td>${project['publicPrivateLand']}</td>
@@ -99,7 +246,8 @@ export function initProjectPanel() {
                         <td>${project['totalBudget'] === 0 ? project['totalBudget'] : project['totalBudget']/10000 + '萬'}</td>
                         <td>${project['remarks']}</td>
                         `
-                tableRow.append($('<td></td>').append(button));
+                tableRow.append($('<td></td>').append(targetBtn));
+                tableRow.append($('<td></td>').append(editBtn, saveBtn));
                 tableRow.append(projectRow);
                 $('#projectTbody').append(tableRow);
             });
@@ -162,7 +310,7 @@ function popUpForm(prop) {
             return "無效的 JSON 資料";
         }
     }
-
+    console.log(prop);
     let table = '<table class="popup-table-content"  cellpadding="5" cellspacing="0">';
     
     const propMap = {
@@ -184,47 +332,34 @@ function popUpForm(prop) {
     
     Object.keys(prop).forEach(key => {
         // 如果key不存在於propMap中，則不顯示
-        if (!propMap[key]) return;
-        var value = prop[key];
-        // 如果是PublicPrivateLand、ConstructionBudget、LandAcquisitionBudget、CompensationBudget、TotalBudget，則轉換成萬元，否則直接顯示
-        value = ["ConstructionBudget", "LandAcquisitionBudget", "CompensationBudget", "TotalBudget"].includes(key) ? prop[key] === 0 ? prop[key] : prop[key] / 10000 + '萬' : prop[key];
-        value = ["PublicLand", "PrivateLand ", "PublicPrivateLand"].includes(key) ? value + "筆" : value;
-        table += `<tr><th>${propMap[key]}</th><td>${value}</td></tr>`;
+        // if (!propMap[key]) return;
+        let value = prop[key];
+    
+        // 如果是CurrentRoadWidth、PlannedRoadWidth，轉換成json格式，並顯示路寬與路況
+        if (["CurrentRoadWidth", "PlannedRoadWidth"].includes(key)) {
+            const parsedValue = JSON.parse(value);
+            value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
+        }
+    
+        // 如果是ConstructionBudget等，則轉換成萬元
+        if (["ConstructionBudget", "LandAcquisitionBudget", "CompensationBudget", "TotalBudget"].includes(key)) {
+            value = value === 0 ? value : value / 10000 + '萬';
+        }
+    
+        // 如果是PublicPrivateLand等，則顯示筆數
+        if (["PublicLand", "PrivateLand", "PublicPrivateLand"].includes(key)) {
+            value += "筆";
+        }
+    
+        console.log(value);
+        table += `<tr><th style="width: 30%;">${propMap[key]}</th><td style="width: 70%;">${value}</td></tr>`;
     });
+    
     table += '</table>';
 
     return `
         <div class="popup-table">
             ${table}
-        </div>
-    `;
-}
-
-function add2List(){
-    let layerItem = `
-        <div class="layerBar featureLayer-Bg" id="layerBar_${id}">
-            <div class="layerTitle" style="border-top">
-                <div style="display: flex; border-bottom: solid 1px green;"> 
-                    <span class="menu-icon menu-open" id="layerLegend_${id}"></span>
-                    <div class="layerName">道路專案</div>
-                </div>
-                <div id="sections_${id}">
-                    ${sections}
-                </div>
-            </div>
-            <div class="more more-off" id="more_${id}">
-                <ul class="moreMenu" >
-                    <li id="more_action1_${id}">縮放至</li>
-                    <li id="more_action2_${id}">編輯圖徽</li>
-                    <li id="more_action3_${id}">檢視詮釋資料</li>
-                    <li id="more_action4_${id}">
-                        透明度
-                        <input class="layerOpacity" type="text" value="100" placeholder="100">
-                    </li>
-                </ul>
-            </div>
-            <div class="eye eyeOpen" id="eye_${id}"></div>
-            <div class="layerRemove" id="layerRemove_${id}"></div>
         </div>
     `;
 }

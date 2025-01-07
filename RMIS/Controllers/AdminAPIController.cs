@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RMIS.Models.sql;
 using RMIS.Repositories;
 using RMIS.Models.Admin;
+using RMIS.Models.API;
 
 namespace RMIS.Controllers
 {
@@ -159,7 +160,7 @@ namespace RMIS.Controllers
         //}
 
         [HttpPost("getRoadProject")]
-        public async Task<IActionResult> GetRoadProject([FromBody] getRoadProjectInput data)
+        public async Task<IActionResult> GetRoadProject([FromBody] GetRoadProjectInput data)
         {
             try
             {
@@ -199,6 +200,29 @@ namespace RMIS.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = "An error occurred while fetching points.", error = ex.Message });
+            }
+        }
+
+
+        [HttpPost("UpdateProjectData")]
+        public async Task<IActionResult> UpdateProjectData([FromForm] UpdateProjectInput projectData)
+        {
+            try
+            {
+                var updated = await _adminInterface.UpdateProjectDataAsync(projectData);
+                if (updated)
+                {
+                    return Ok(new { success = true, message = "資料已更新" });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "資料未更新" });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
 

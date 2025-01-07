@@ -1,6 +1,6 @@
 ﻿namespace RMIS.Models.Admin
 {
-    public class RoadProjectCSVFormat
+    public class RoadProjectExcelFormat
     {
         public Guid Id { get; set; }
         // 專案Id

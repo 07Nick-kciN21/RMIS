@@ -1,6 +1,6 @@
 namespace RMIS.Models.Admin
 {
-    public class getRoadProjectInput
+    public class GetRoadProjectInput
     {
         // ¦æ¬F°Ï
         public string? AdminDistrict { get; set; }

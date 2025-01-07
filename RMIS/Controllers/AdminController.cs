@@ -242,17 +242,18 @@ namespace RMIS.Controllers
                 if (rowsAffected > 0)
                 {
                     _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
-                    return Ok($"已新增 {rowsAffected} 筆專案資料到資料庫");
+                    return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆專案資料到資料庫" });
                 }
                 else
                 {
                     _logger.LogInformation("未對資料庫進行任何變更");
-                    return BadRequest("未對資料庫進行任何變更");
+                    return BadRequest(new { success = false, message = "未對資料庫進行任何變更" });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "An error occurred while adding records.", error = ex.Message });
+                Console.WriteLine("An error occurred while adding records." + ex.Message);
+                return StatusCode(500, new { success = false, message = "An error occurred while adding records." + ex.Message });
             }
         }
     }
