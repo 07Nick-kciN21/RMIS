@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using System.Text.Json;
 
 
 
@@ -981,7 +982,7 @@ namespace RMIS.Repositories
                 return false;
             }
         }
-        public static List<RoadProjectExcelFormat> ParseRoadProjectExcel(ExcelWorksheet worksheet)
+        public List<RoadProjectExcelFormat> ParseRoadProjectExcel(ExcelWorksheet worksheet)
         {
             var result = new List<RoadProjectExcelFormat>();
             var rowCount = worksheet.Dimension.Rows;
@@ -992,13 +993,13 @@ namespace RMIS.Repositories
             {
                 headers[worksheet.Cells[1, col].Text.Trim()] = col;
             }
-
+            
             for (int row = 2; row <= rowCount; row++) // 從第2行開始讀取數據
             {
                 var project = new RoadProjectExcelFormat
                 {
                     Id = Guid.NewGuid(),
-                    ProjectId = ParseInt(worksheet.Cells[row, headers["專案代號"]].Text),
+                    ProjectId = _mapDBContext.RoadProjects.Count() + row - 1,
                     Proposer = worksheet.Cells[row, headers["提案人"]].Text,
                     AdministrativeDistrict = worksheet.Cells[row, headers["行政區"]].Text,
                     StartPoint = worksheet.Cells[row, headers["起點"]].Text,
@@ -1209,8 +1210,8 @@ namespace RMIS.Repositories
                     EndPoint = roadProjectInput.EndPoint,
                     StartEndLocation = startEndLocation,
                     RoadLength = roadProjectInput.RoadLength,
-                    CurrentRoadWidth = $"{roadProjectInput.CurrentRoadWidth} | {roadProjectInput.CurrentRoadType}",
-                    PlannedRoadWidth = $"{roadProjectInput.PlannedRoadWidth} | {roadProjectInput.PlannedRoadType}",
+                    CurrentRoadWidth = parseJsonRoadWidth(roadProjectInput.CurrentRoadWidth, roadProjectInput.CurrentRoadType),
+                    PlannedRoadWidth = parseJsonRoadWidth(roadProjectInput.PlannedRoadWidth, roadProjectInput.PlannedRoadType),
                     PublicLand = roadProjectInput.PublicLand,
                     PrivateLand = roadProjectInput.PrivateLand,
                     PublicPrivateLand = roadProjectInput.PublicPrivateLand,
@@ -1223,7 +1224,7 @@ namespace RMIS.Repositories
 
                 var expansionId = Guid.NewGuid();
                 // roadProject 轉換成json
-                var projectProp = JsonConvert.SerializeObject(roadProject);
+                var projectProp = JsonConvert.SerializeObject(MapperHelper.A2B<AddRoadProjectInput, RoadProjectProp>(roadProjectInput));
                 //新增expansionArea area
                 var expansionArea = new Area
                 {
@@ -1246,7 +1247,7 @@ namespace RMIS.Repositories
                     LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
                 };
 
-                var photoPoints = addPhoto(photoId, roadProjectInput.StreetViewPhoto);
+                var photoPoints = addPhoto(photoId, roadProjectInput.StreetViewPhoto, roadProject.ProjectId);
 
                 _mapDBContext.Areas.Add(expansionArea);
                 var expansionA = await _mapDBContext.SaveChangesAsync();
@@ -1273,6 +1274,17 @@ namespace RMIS.Repositories
             }
         }
 
+        
+        private string parseJsonRoadWidth(int? roadWidth, string roadType)
+        {
+            var roadData = new
+            {
+                路寬 = roadWidth.ToString() + "公尺", // 添加单位
+                路況 = roadType           // 路况信息
+            };
+            return JsonConvert.SerializeObject(roadData);
+            //return {"路寬": roadWidth + 公尺, "路況": roadType}
+        }
         private async Task<List<Point>> addExpansion(Guid areaId, List<range> rangeList, string projectProp)
         {
             Console.WriteLine("addExpansion");
@@ -1301,7 +1313,7 @@ namespace RMIS.Repositories
             }
         }
 
-        private List<Point> addPhoto(Guid areaId, List<photo> photoList)
+        private List<Point> addPhoto(Guid areaId, List<photo> photoList, int roadProjectDic)
         {
             Console.WriteLine("addPhoto");
             try
@@ -1310,7 +1322,7 @@ namespace RMIS.Repositories
                 for (var i = 0; i < photoList.Count; i++)
                 {
                     var photoName = photoList[i].PhotoName;
-                    savePhoto(photoList[i].Photo, photoName);
+                    savePhoto(photoList[i].Photo, photoName, roadProjectDic.ToString());
                     var newPoint = new Point
                     {
                         Id = Guid.NewGuid(),
@@ -1318,7 +1330,7 @@ namespace RMIS.Repositories
                         Latitude = photoList[i].Latitude,
                         Longitude = photoList[i].Longitude,
                         AreaId = areaId,
-                        Property = photoList[i].PhotoName
+                        Property = $"{roadProjectDic}/{photoList[i].PhotoName}"
                     };
                     points.Add(newPoint);
                 };
@@ -1332,7 +1344,7 @@ namespace RMIS.Repositories
             
         }
 
-        private void savePhoto(string photo, string photoName)
+        private void savePhoto(string photo, string photoName, string roadProjectDic)
         {
             Console.WriteLine("savePhoto");
             try
@@ -1344,14 +1356,14 @@ namespace RMIS.Repositories
                 var imageBytes = Convert.FromBase64String(base64Data);
 
                 // 儲存路徑（伺服器上的某個目錄）
-                var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject");
+                var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject", roadProjectDic);
                 if (!Directory.Exists(savePath))
                 {
                     Directory.CreateDirectory(savePath);
                 }
 
                 // 儲存檔案名稱
-                var fileName = $"{photoName}";
+                var fileName = $"{roadProjectDic}/{photoName}";
                 var filePath = Path.Combine(savePath, fileName);
 
                 // 將 byte[] 寫入檔案
@@ -1371,6 +1383,7 @@ namespace RMIS.Repositories
             {
                 return false;
             }
+
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.CreateMap<UpdateProjectInput, RoadProject>();
@@ -1378,25 +1391,70 @@ namespace RMIS.Repositories
 
             var mapper = config.CreateMapper();
             mapper.Map(projectInput, roadProject);
+            await _mapDBContext.SaveChangesAsync();
 
-            //roadProject.Proposer = projectInput.Proposer;
-            //roadProject.AdministrativeDistrict = projectInput.AdministrativeDistrict;
-            //roadProject.StartPoint = projectInput.StartPoint;
-            //roadProject.EndPoint = projectInput.EndPoint;
-            //roadProject.StartEndLocation = projectInput.StartEndLocation;
-            //roadProject.RoadLength = projectInput.RoadLength;
-            //roadProject.CurrentRoadWidth = projectInput.CurrentRoadWidth;
-            //roadProject.PlannedRoadWidth = projectInput.PlannedRoadWidth;
-            //roadProject.PublicLand = projectInput.PublicLand;
-            //roadProject.PrivateLand = projectInput.PrivateLand;
-            //roadProject.PublicPrivateLand = projectInput.PublicPrivateLand;
-            //roadProject.ConstructionBudget = projectInput.ConstructionBudget;
-            //roadProject.LandAcquisitionBudget = projectInput.LandAcquisitionBudget;
-            //roadProject.CompensationBudget = projectInput.CompensationBudget;
-            //roadProject.TotalBudget = projectInput.TotalBudget;
-            //roadProject.Remarks = projectInput.Remarks == null ? "無" : projectInput.Remarks;
+            // roadProjectPropItem: 存放預拓範圍屬性的point
+            var roadProjectPropItem = await _mapDBContext.Points
+                .Where(p => p.AreaId == roadProject.PlannedExpansionId)
+                .OrderBy(p => p.Index)
+                .FirstOrDefaultAsync();
+            if(roadProjectPropItem == null)
+            {
+                _logger.LogError($"Id {projectInput.Id} 不存在預拓範圍資訊");
+                return false;
+            }
+            var newProp = MapperHelper.A2B<UpdateProjectInput, RoadProjectProp>(projectInput);
+            roadProjectPropItem.Property = JsonConvert.SerializeObject(newProp);
             await _mapDBContext.SaveChangesAsync();
             return true;
+        }
+
+        //public class UpdateProjectPhotoInput
+        //{
+        //    public IFormFile Photo { get; set; }
+        //    public string PhotoName { get; set; }
+        //}
+        public async Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput)
+        {
+            // 更新圖片
+            // 將/img/roadProject/PhotoName 的圖片更新
+            // 1. 先刪除原本的圖片
+            // 2. 新增新的圖片
+            try
+            {
+                var photoName = projectPhotoInput.PhotoName; // 文件名，如 "6_02.png"
+                var photo = projectPhotoInput.Photo; // 上傳的圖片文件
+                var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject");
+
+                // 確保目標目錄存在
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                // 構造完整的文件路徑
+                var filePath = Path.Combine(directoryPath, photoName);
+
+                // 如果文件已存在，先刪除
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                // 使用 FileStream 保存新文件
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    Console.WriteLine("更新圖片");
+                    await photo.CopyToAsync(stream); // 使用 IFormFile 的 CopyToAsync 方法
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "更新圖片失敗.");
+                return false;
+            }
         }
     }
 }

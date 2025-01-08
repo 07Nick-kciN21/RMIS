@@ -1,10 +1,10 @@
 using CsvHelper.Configuration;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace RMIS.Models.sql
 {
     public class RoadProject
     {
         public Guid Id { get; set; }
-        // 專案Id
         public int ProjectId { get; set; }
         /// 提案人
         public string Proposer { get; set; }

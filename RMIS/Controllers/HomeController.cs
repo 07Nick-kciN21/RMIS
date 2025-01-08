@@ -31,6 +31,12 @@ namespace RMIS.Controllers
                 id = p.Id
             }).ToList();
             _logger.LogInformation("Index page loaded");
+
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTime.UtcNow.AddHours(1)
+            };
+            Response.Cookies.Append("UserRole", "Admin", cookieOptions);
             return View();
         }
 

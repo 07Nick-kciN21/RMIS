@@ -203,8 +203,7 @@ namespace RMIS.Controllers
             }
         }
 
-
-        [HttpPost("UpdateProjectData")]
+        [HttpPost("updateProjectData")]
         public async Task<IActionResult> UpdateProjectData([FromForm] UpdateProjectInput projectData)
         {
             try
@@ -226,5 +225,25 @@ namespace RMIS.Controllers
             }
         }
 
+        [HttpPost("updateProjectPhoto")]
+        public async Task<IActionResult> UpdateProjectPhoto([FromForm] UpdateProjectPhotoInput projectPhoto)
+        {
+            try
+            {
+                var updated = await _adminInterface.UpdateProjectPhotoAsync(projectPhoto);
+                if (updated)
+                {
+                    return Ok(new { success = true, message = "照片已更新" });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "照片更新失敗" });
+                }
+            }
+            catch
+            {
+                return StatusCode(500, new { success = false, message = "照片未更新" });
+            }
+        }
     }
 }

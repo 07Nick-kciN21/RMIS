@@ -18,7 +18,8 @@
         $('#customModal').fadeIn();
         var url = $(this).data('action');
         var modalTitle = $(this).text();
-
+        // l = 500px
+        // xl = 800px
         $('#customModal').fadeIn();
         $('#modalTitle').text(modalTitle);
         $('.modal-body').html('<p>正在加载...</p>');
@@ -74,26 +75,12 @@
     });
 
     // 提交modal表單時阻止頁面跳轉，用ajax提交
-    $('.modal-form').on('submit', function (e) {
-        e.preventDefault(); // 阻止默認行為
-        var url = $(this).attr('action');
-        var method = $(this).attr('method');
-        var formData = $(this).serialize();
-        alert(formData, url);
-        //$.ajax({
-        //    url: url,
-        //    type: method,
-        //    data: formData,
-        //    success: function (response) {
-        //        // 處理成功回應
-        //        alert('表單提交成功，影響行數: ' + response);
-        //    },
-        //    error: function (xhr, status, error) {
-        //        // 處理錯誤回應
-        //        alert(`Error ${status}. 表單提交失敗: {${xhr.responseText}}` );
-        //    }
-        //});
-    });
+    // $('.modal-form').on('submit', function (e) {
+    //     e.preventDefault(); // 阻止默認行為
+    //     var url = $(this).attr('action');
+    //     var formData = $(this).serialize();
+    //     alert(formData, url);
+    // });
 }
 function observeDisplayChanges(triggerElement, targetElement) {
     const observer = new MutationObserver(() => {

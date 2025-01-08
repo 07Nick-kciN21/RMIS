@@ -26,5 +26,6 @@ namespace RMIS.Repositories
         Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId);
         Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput);
         Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput);
+        Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput);
     }
 }

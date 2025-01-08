@@ -1,4 +1,5 @@
 import { getIndexMap } from './map.js'
+import { getCookie } from '../admin/UserRole.js'
 
 const adminDists = [
     "桃園區",  // value: 1
@@ -214,7 +215,7 @@ export function initProjectPanel() {
                     });
                     // 取得更新後的所有值
                     // 透過/api/AdminAPI/UpdateRoadProject更新資料
-                    fetch(`/api/AdminAPI/UpdateProjectData`, {  
+                    fetch(`/api/AdminAPI/updateProjectData`, {  
                         method: 'POST',
                         body: updateForm
                     })
@@ -271,14 +272,77 @@ function addLayerToMap(projectId) {
         console.log(data['points']['photoPoints']);
         // photoPoints:在地圖上添加marker
         data['points']['photoPoints'].forEach(point => {
-            // 添加marker
+            // 添加 marker
             let marker = L.marker([point['latitude'], point['longitude']]).addTo(projectLayer);
-            marker.bindPopup(`
-                <div>
-                    <img src="/img/roadProject/${point['url']}" style="width: 350px; height: auto;">
-                </div>`, {
-                maxWidth: 350,
-                maxHeight: 200
+        
+            // 創建 popupContent
+            let popupContent = document.createElement('div');
+            popupContent.id = 'photoPopup';
+        
+            // 添加圖片
+            let img = document.createElement('img');
+            let src = `/img/roadProject/${point['url']}`;
+            img.src = src;
+            img.style.width = '450px';
+            img.style.height = '300px';
+            popupContent.appendChild(img);
+        
+            // 編輯按鈕 => 選擇圖片 => 顯示圖片 => 儲存
+            // 如果用戶角色為 Admin，添加編輯按鈕和文件輸入框
+            if (getCookie('UserRole') === 'Admin') {
+                let editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-primary';
+                editBtn.innerText = '編輯圖片';
+                editBtn.addEventListener('click', () => {
+                    // 編輯按鈕
+                    document.getElementById(`photoEdit`).click();
+                });
+
+                let fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.id = `photoEdit`;
+                fileInput.style.display = 'none';
+                // 選擇圖片
+                fileInput.addEventListener('change', event => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        // 把img的src改成file的url
+                        img.src = URL.createObjectURL(file);
+                        editBtn.style.display = 'none';
+                        saveBtn.style.display = 'block';
+                    }
+                });
+                
+                let saveBtn = document.createElement('button');
+                saveBtn.className = 'btn btn-success';
+                saveBtn.innerText = '儲存';
+                saveBtn.style.display = 'none';
+                saveBtn.addEventListener('click', () => {
+                    if(confirm('是否修改圖片')){
+                        console.log('修改圖片');
+                        var formData = new FormData();
+                        formData.append('Photo', fileInput.files[0]);
+                        formData.append('PhotoName', point['url']);
+                        fetch(`/api/AdminAPI/updateProjectPhoto`, {
+                            method: 'POST',
+                            body: formData
+                        }).then(response => {
+                            img.src = src;
+                            saveBtn.style.display = 'none';
+                            editBtn.style.display = 'block';
+                        });
+                    }
+                });
+
+                popupContent.appendChild(editBtn);
+                popupContent.appendChild(saveBtn);
+                popupContent.appendChild(fileInput);
+            }
+        
+            // 綁定 popup
+            marker.bindPopup(popupContent, {
+                maxWidth: 450,
+                maxHeight: 350
             });
         });
         console.log(data['points']['rangePoints']);
@@ -352,7 +416,7 @@ function popUpForm(prop) {
         }
     
         console.log(value);
-        table += `<tr><th style="width: 30%;">${propMap[key]}</th><td style="width: 70%;">${value}</td></tr>`;
+        table += `<tr><th style="width: 40%;">${propMap[key]}</th><td>${value}</td></tr>`;
     });
     
     table += '</table>';
