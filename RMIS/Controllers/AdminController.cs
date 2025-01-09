@@ -223,7 +223,7 @@ namespace RMIS.Controllers
             if (rowsAffected > 0)
             {
                 _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
-                return Ok($"已新增 {rowsAffected} 筆專案資料到資料庫");
+                return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆專案資料到資料庫" });
             }
             else
             {
@@ -237,7 +237,7 @@ namespace RMIS.Controllers
         {
             try
             {
-                var rowsAffected = await _adminInterface.AddRoadRrojectByExcelAsync(roadProjectByExcel);
+                var rowsAffected = await _adminInterface.AddRoadProjectByExcelAsync(roadProjectByExcel);
 
                 if (rowsAffected > 0)
                 {

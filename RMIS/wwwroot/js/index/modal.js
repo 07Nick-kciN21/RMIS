@@ -40,7 +40,7 @@
                     contentType: false,
                     success: function (response) {
                         // 處理成功回應
-                        alert(response);
+                        alert(response.message);
                     },
                     error: function (xhr, status, error) {
                         // 處理錯誤回應

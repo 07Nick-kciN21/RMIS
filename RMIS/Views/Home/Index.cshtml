@@ -2,6 +2,9 @@
     ViewData["Title"] = "首頁";
 }
 <style>
+    label{
+        font-size: 2rem;
+    }
 
     #indexMap {
         height: 100vh;
@@ -35,7 +38,7 @@
 <link rel="stylesheet" href="~/css/index/drawtool.css" />
 <link rel="stylesheet" href="~/css/index/painterPanel.css"/>
 <link rel="stylesheet" href="~/css/index/maptool.css" />
-<link rel="stylesheet" href="~/css/index/customModal.css" />
+<link rel="stylesheet" href="~/css/index/modal.css" />
 <link rel="stylesheet" href="~/css/index/pointEdit.css" />
 <link rel="stylesheet" href="~/css/index/flagPanel.css" />
 <link rel="stylesheet" href="~/css/index/focusPanel.css" />
@@ -767,11 +770,11 @@
             <div class="form-group">
                 <label>工程經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;"></select>
-                <option value="-1">請選擇</option>
-                <option value="1">大於</option>
-                <option value="2">小於</option>
-                <option value="3">等於</option>
+                <select id="projectBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                    <option value="-1">請選擇</option>
+                    <option value="1">大於</option>
+                    <option value="2">小於</option>
+                    <option value="3">等於</option>
                 </select>
                 <input type="text" id="projectBudgetEnd" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
                 萬
@@ -780,11 +783,11 @@
             <div class="form-group">
                 <label>用地經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectLandBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;"></select>
-                <option value="-1">請選擇</option>
-                <option value="1">大於</option>
-                <option value="2">小於</option>
-                <option value="3">等於</option>
+                <select id="projectLandBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                    <option value="-1">請選擇</option>
+                    <option value="1">大於</option>
+                    <option value="2">小於</option>
+                    <option value="3">等於</option>
                 </select>
                 <input type="text" id="projectLandBudgetEnd" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
                 萬
@@ -793,11 +796,11 @@
             <div class="form-group">
                 <label>補償經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectCompensationBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;"></select>
-                <option value="-1">請選擇</option>
-                <option value="1">大於</option>
-                <option value="2">小於</option>
-                <option value="3">等於</option>
+                <select id="projectCompensationBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                    <option value="-1">請選擇</option>
+                    <option value="1">大於</option>
+                    <option value="2">小於</option>
+                    <option value="3">等於</option>
                 </select>
                 <input type="text" id="projectCompensationBudgetEnd" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
                 萬

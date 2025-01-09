@@ -281,7 +281,7 @@ function addLayerToMap(projectId) {
         
             // 添加圖片
             let img = document.createElement('img');
-            let src = `/img/roadProject/${point['url']}`;
+            let src = `/img/roadProject/${point['url']}?v=${new Date().getTime()}`;
             img.src = src;
             img.style.width = '450px';
             img.style.height = '300px';
@@ -309,7 +309,8 @@ function addLayerToMap(projectId) {
                         // 把img的src改成file的url
                         img.src = URL.createObjectURL(file);
                         editBtn.style.display = 'none';
-                        saveBtn.style.display = 'block';
+                        saveBtn.style.display = 'inline-block';
+                        cancelBtn.style.display = 'inline-block';
                     }
                 });
                 
@@ -327,15 +328,26 @@ function addLayerToMap(projectId) {
                             method: 'POST',
                             body: formData
                         }).then(response => {
-                            img.src = src;
+                            img.src = `${src}?v=${new Date().getTime()}`;
                             saveBtn.style.display = 'none';
-                            editBtn.style.display = 'block';
+                            cancelBtn.style.display = 'none';
+                            editBtn.style.display = 'inline-block';
                         });
-                    }
+                    } 
                 });
-
+                let cancelBtn = document.createElement('button');
+                cancelBtn.className = 'btn btn-secondary';
+                cancelBtn.innerText = '取消';
+                cancelBtn.style.display = 'none';
+                cancelBtn.addEventListener('click', () => {
+                    img.src = src;
+                    saveBtn.style.display = 'none';
+                    cancelBtn.style.display = 'none';
+                    editBtn.style.display = 'inline-block';
+                });
                 popupContent.appendChild(editBtn);
                 popupContent.appendChild(saveBtn);
+                popupContent.appendChild(cancelBtn);
                 popupContent.appendChild(fileInput);
             }
         

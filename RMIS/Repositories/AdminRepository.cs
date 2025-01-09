@@ -779,7 +779,7 @@ namespace RMIS.Repositories
             return focusedPipelines;
         }
 
-        public async Task<int> AddRoadRrojectByExcelAsync(AddRoadProjectByExcelInput input)
+        public async Task<int> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput input)
         {
             var file = input.projectFile;
             var photoFile = input.projectPhoto;
@@ -841,9 +841,6 @@ namespace RMIS.Repositories
                         };
                         // roadProjects轉換成RoadProject型態
                         var roadProjectList = MapperHelper.A2B<List<RoadProjectExcelFormat>, List<RoadProject>>(roadProjects);
-                        //var config = new MapperConfiguration(cfg => cfg.CreateMap<RoadProjectExcelFormat, RoadProject>());
-                        //var mapper = config.CreateMapper();
-                        //var roadProjectList = mapper.Map<List<RoadProject>>(roadProjects);
 
                         await _mapDBContext.AddRangeAsync(projectAreas);
                         await _mapDBContext.SaveChangesAsync();
@@ -857,7 +854,10 @@ namespace RMIS.Repositories
 
                 for(int i = 0; i < photoFile.Count; i++)
                 {
-                    await savePhotoFileAsync(photoFile[i]);
+                    var projectId = photoFile[i].FileName.Split("_")[0];
+                    var base64Photo = await ConvertToBase64Async(photoFile[i]);
+                    await savePhotoAsync(base64Photo, photoFile[i].FileName, projectId);
+                    // await savePhotoFileAsync(photoFile[i]);
                 }
                 return rowsAffected;
             }
@@ -868,6 +868,24 @@ namespace RMIS.Repositories
                 throw;
             }
         }
+        private async Task<string> ConvertToBase64Async(IFormFile photo)
+        {
+            try
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    await photo.CopyToAsync(memoryStream);
+                    var photoBytes = memoryStream.ToArray();
+                    return $"data:image/png;base64,{Convert.ToBase64String(photoBytes)}";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
+        }
+
 
         // rangePoints: ["24.949975, 121.225981", "24.949483, 121.226059", "24.949483, 121.226059", "24.950167, 121.226609"]
         private async Task<List<Point>> addRangePointsAsync(Guid areaId, List<string> rangePoints, RoadProjectExcelFormat projectExcel)
@@ -930,7 +948,6 @@ namespace RMIS.Repositories
             points[0].Property = JsonConvert.SerializeObject(pointProp);
             return points;
         }
-        // RoadProject資料映射
         
         // photoPoints: {"01.png":"24.950000, 121.225928","02.png":"24.950170, 121.226626"}
         private async Task<List<Point>> addPhotoPointsAsync(int Id, Guid areaId, Dictionary<string, string> photoPoints)
@@ -955,33 +972,6 @@ namespace RMIS.Repositories
             return points;
         }
 
-        public async Task<Boolean> savePhotoFileAsync(IFormFile photo)
-        {
-            try
-            {
-                var projectId = photo.FileName.Split("_")[0];
-                // 儲存路徑（伺服器上的某個目錄）
-                var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject", projectId);
-                if (!Directory.Exists(savePath))
-                {
-                    Directory.CreateDirectory(savePath);
-                }
-
-                string photoPath = Path.Combine(savePath, photo.FileName);
-
-                using (var stream = new FileStream(photoPath, FileMode.Create))
-                {
-                    await photo.CopyToAsync(stream);
-                }
-                _logger.LogInformation(photo.FileName, "Upload Photo success");
-                return true;
-            }
-            catch
-            {
-                _logger.LogError(photo.FileName, "Upload Photo failed");
-                return false;
-            }
-        }
         public List<RoadProjectExcelFormat> ParseRoadProjectExcel(ExcelWorksheet worksheet)
         {
             var result = new List<RoadProjectExcelFormat>();
@@ -999,7 +989,7 @@ namespace RMIS.Repositories
                 var project = new RoadProjectExcelFormat
                 {
                     Id = Guid.NewGuid(),
-                    ProjectId = _mapDBContext.RoadProjects.Count() + row - 1,
+                    ProjectId = ParseInt(worksheet.Cells[row, headers["專案代號"]].Text),
                     Proposer = worksheet.Cells[row, headers["提案人"]].Text,
                     AdministrativeDistrict = worksheet.Cells[row, headers["行政區"]].Text,
                     StartPoint = worksheet.Cells[row, headers["起點"]].Text,
@@ -1021,7 +1011,12 @@ namespace RMIS.Repositories
                     PlannedExpansionId = Guid.NewGuid(),
                     StreetViewId = Guid.NewGuid()
                 };
-
+                // 如果ProjectId與資料庫重疊，則回傳錯誤
+                //var existed = _mapDBContext.RoadProjects.FirstOrDefaultAsync(rp => rp.ProjectId == project.ProjectId);
+                //while (existed != null)
+                //{
+                //    project.ProjectId += 1;
+                //}
                 result.Add(project);
             }
 
@@ -1247,17 +1242,15 @@ namespace RMIS.Repositories
                     LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
                 };
 
-                var photoPoints = addPhoto(photoId, roadProjectInput.StreetViewPhoto, roadProject.ProjectId);
+                var photoPoints = await addPhoto(photoId, roadProjectInput.StreetViewPhoto, roadProject.ProjectId);
 
-                _mapDBContext.Areas.Add(expansionArea);
-                var expansionA = await _mapDBContext.SaveChangesAsync();
-                _mapDBContext.AddRange(expansionPoints);
-                var expansionP = await _mapDBContext.SaveChangesAsync();
+                await _mapDBContext.Areas.AddAsync(expansionArea);
+                await _mapDBContext.Areas.AddAsync(photoArea);
+                await _mapDBContext.SaveChangesAsync();
 
-                _mapDBContext.Areas.Add(photoArea);
-                var photoA = await _mapDBContext.SaveChangesAsync();
-                _mapDBContext.AddRange(photoPoints);
-                var photoP = await _mapDBContext.SaveChangesAsync();
+                await _mapDBContext.AddRangeAsync(expansionPoints);
+                await _mapDBContext.AddRangeAsync(photoPoints);
+                await _mapDBContext.SaveChangesAsync();
 
                 roadProject.PlannedExpansionId = expansionId;
                 roadProject.StreetViewId = photoId;
@@ -1269,7 +1262,7 @@ namespace RMIS.Repositories
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "An error occurred while adding road projects by CSV.");
+                _logger.LogError(ex, "新增專案資料失敗.");
                 throw;
             }
         }
@@ -1313,7 +1306,7 @@ namespace RMIS.Repositories
             }
         }
 
-        private List<Point> addPhoto(Guid areaId, List<photo> photoList, int roadProjectDic)
+        private async Task<List<Point>> addPhoto(Guid areaId, List<photo> photoList, int projectId)
         {
             Console.WriteLine("addPhoto");
             try
@@ -1322,7 +1315,7 @@ namespace RMIS.Repositories
                 for (var i = 0; i < photoList.Count; i++)
                 {
                     var photoName = photoList[i].PhotoName;
-                    savePhoto(photoList[i].Photo, photoName, roadProjectDic.ToString());
+                    await savePhotoAsync(photoList[i].Photo, photoName, projectId.ToString());
                     var newPoint = new Point
                     {
                         Id = Guid.NewGuid(),
@@ -1330,7 +1323,7 @@ namespace RMIS.Repositories
                         Latitude = photoList[i].Latitude,
                         Longitude = photoList[i].Longitude,
                         AreaId = areaId,
-                        Property = $"{roadProjectDic}/{photoList[i].PhotoName}"
+                        Property = $"{projectId}/{photoList[i].PhotoName}"
                     };
                     points.Add(newPoint);
                 };
@@ -1344,34 +1337,33 @@ namespace RMIS.Repositories
             
         }
 
-        private void savePhoto(string photo, string photoName, string roadProjectDic)
+        // photo: base64照片 photoName:照片名稱 roadProjectDic:專案代號(照片目錄)
+        private async Task savePhotoAsync(string photo, string photoName, string roadProjectDic)
         {
             Console.WriteLine("savePhoto");
             try
             {
-                // 提取 Base64 字串（移除開頭的 data:image/png;base64, 部分）
-                var base64Data = Regex.Replace(photo, @"^data:image/\w+;base64,", string.Empty);
+            // 提取 Base64 字串（移除開頭的 data:image/png;base64, 部分）
+            var base64Data = Regex.Replace(photo, @"^data:image/\w+;base64,", string.Empty);
 
-                // 將 Base64 字串轉換為 byte[]
-                var imageBytes = Convert.FromBase64String(base64Data);
+            // 將 Base64 字串轉換為 byte[]
+            var imageBytes = Convert.FromBase64String(base64Data);
 
-                // 儲存路徑（伺服器上的某個目錄）
-                var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject", roadProjectDic);
-                if (!Directory.Exists(savePath))
-                {
-                    Directory.CreateDirectory(savePath);
-                }
+            // 儲存路徑（伺服器上的某個目錄）
+            var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject", roadProjectDic);
+            if (!Directory.Exists(savePath))
+            {
+                Directory.CreateDirectory(savePath);
+            }
 
-                // 儲存檔案名稱
-                var fileName = $"{roadProjectDic}/{photoName}";
-                var filePath = Path.Combine(savePath, fileName);
+            var filePath = Path.Combine(savePath, photoName);
 
-                // 將 byte[] 寫入檔案
-                System.IO.File.WriteAllBytes(filePath, imageBytes);
+            // 將 byte[] 寫入檔案
+            await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+            Console.WriteLine(ex);
             }
         }
     
