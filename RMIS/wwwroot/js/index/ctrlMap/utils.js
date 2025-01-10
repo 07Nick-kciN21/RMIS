@@ -168,9 +168,13 @@ export function addPolygonToLayer(points, newLayer, color, name) {
             <div class="popupData" style="display: none;">
                 ${prop}
             </div>
-            <div style="font-size: 18px;">
-                <h4>圖層：${name}</h4><br>
-                ${popUpForm(prop)}
+            <div>
+                <text style="font-size: 25px; font-weight: bolder;">
+                    圖層：${name}
+                </text>
+                <div style="font-size: 20px;">
+                    ${popUpForm(prop)}
+                </div>
             </div>`, {
         maxWidth: 350,
         maxHeight: 450
@@ -228,9 +232,13 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
         <div class="popupData" style="display: none;">
             ${points[0][1]}
         </div>
-        <div style="font-size: 18px;">
-            <h4>圖層：${name}</h4><br>
-            ${popUpForm(points[0][1])}
+        <div>
+            <text style="font-size: 25px; font-weight: bolder;">
+                圖層：${name}
+            </text>
+            <div style="font-size: 20px;">
+                ${popUpForm(points[0][1])}
+            </div>
         </div>`, {
         maxWidth: 350,
         maxHeight: 450

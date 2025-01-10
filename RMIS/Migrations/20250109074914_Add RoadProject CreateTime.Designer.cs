@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMIS.Data;
 
@@ -11,9 +12,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250109074914_Add RoadProject CreateTime")]
+    partial class AddRoadProjectCreateTime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -258,9 +261,7 @@ namespace RMIS.Migrations
                         .HasColumnType("int");
 
                     b.Property<long>("CreateTime")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasDefaultValueSql("DATEDIFF(SECOND, '1970-01-01', GETUTCDATE())");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("CurrentRoadWidth")
                         .IsRequired()
@@ -269,9 +270,6 @@ namespace RMIS.Migrations
                     b.Property<string>("EndPoint")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Index")
-                        .HasColumnType("int");
 
                     b.Property<int>("LandAcquisitionBudget")
                         .HasColumnType("int");
@@ -285,10 +283,6 @@ namespace RMIS.Migrations
 
                     b.Property<int>("PrivateLand")
                         .HasColumnType("int");
-
-                    b.Property<string>("ProjectId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Proposer")
                         .IsRequired()

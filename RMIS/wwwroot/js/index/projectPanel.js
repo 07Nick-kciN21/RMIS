@@ -120,6 +120,10 @@ export function initProjectPanel() {
                             $(this).html(`<input type="text" value="${input[0].replace('公尺', '').trim()}">公尺 | <input type="text" value="${input[1].trim()}">`);
                             return;
                         }
+                        if(index === 8 || index === 9 || index === 10) {
+                            $(this).html(`<input type="text" value="${text.replace('筆', '')}">`);
+                            return;
+                        }
                         // 工程經費	用地經費 補償經費 總經費，去掉萬，輸入數字即可
                         if (index === 11 || index === 12 || index === 13 || index === 14) {
                             $(this).html(`<input type="text" value="${text.replace('萬', '')}">`);
@@ -127,7 +131,7 @@ export function initProjectPanel() {
                         }
                         if (index === 15) {
                             // 備註欄改成textarea
-                            $(this).html(`<textarea>${text}</textarea>`);
+                            $(this).html(`<textarea style=""weight:100%">${text}</textarea>`);
                             return;
                         }
                         $(this).html(`<input type="text" value="${text}">`);
@@ -179,15 +183,15 @@ export function initProjectPanel() {
                             return;
                         }
                         if(index === 8 || index === 9 || index === 10) {
-                            $(this).text(text);
+                            $(this).text(`${text}筆`);
                             if(index === 8) {
-                                updateForm.append('PublicLand', text);
+                                updateForm.append('PublicLand', text.replace('筆', ''));
                             }
                             if(index === 9) {
-                                updateForm.append('PrivateLand', text);
+                                updateForm.append('PrivateLand', text.replace('筆', ''));
                             }
                             if(index === 10) {
-                                updateForm.append('PublicPrivateLand', text);
+                                updateForm.append('PublicPrivateLand', text.replace('筆', ''));
                             }
                             return;
                         }
@@ -213,16 +217,25 @@ export function initProjectPanel() {
                             return;
                         }
                     });
+                    // 印出formdata的值
+                    for (var pair of updateForm.entries()) {
+                        console.log(pair[0]+ ', ' + pair[1]); 
+                    }
+
+
                     // 取得更新後的所有值
                     // 透過/api/AdminAPI/UpdateRoadProject更新資料
                     fetch(`/api/AdminAPI/updateProjectData`, {  
                         method: 'POST',
                         body: updateForm
                     })
-                    .then(res =>{ 
-                        res.json();
-                        console.log(res)
-                    });
+                    .then(res => {
+                    return res.json().then(data => ({ status: res.status, body: data }));
+                })
+                .then(({ status, body }) => {
+                    console.log(status, body);
+                });
+
                     $(this).hide();
                     $(this).siblings('button:contains("編輯")').show();
                 }).hide();
@@ -238,9 +251,9 @@ export function initProjectPanel() {
                         <td>${project['roadLength']}</td>
                         <td>${currentRoadWidth}</td>
                         <td>${plannedRoadWidth}</td>
-                        <td>${project['publicLand']}</td>
-                        <td>${project['privateLand']}</td>
-                        <td>${project['publicPrivateLand']}</td>
+                        <td>${project['publicLand']}筆</td>
+                        <td>${project['privateLand']}筆</td>
+                        <td>${project['publicPrivateLand']}筆</td>
                         <td>${project['constructionBudget'] === 0 ? project['constructionBudget'] : project['constructionBudget']/10000 + '萬'}</td>
                         <td>${project['landAcquisitionBudget'] === 0 ? project['landAcquisitionBudget'] : project['landAcquisitionBudget']/10000 + '萬'}</td>
                         <td>${project['compensationBudget'] === 0 ? project['compensationBudget'] : project['compensationBudget']/10000 + '萬'}</td>
@@ -364,10 +377,12 @@ function addLayerToMap(projectId) {
         var prop = data['points']['rangePoints'][0]['prop'];
         // prop 轉換成json
         polygon.bindPopup(`
-            <div style="font-size: 18px;">
-                <h4>圖層：道路專案</h4>
-                <div>
-                    <p>${popUpForm(prop)}</p>
+            <div>
+                <text style="font-size: 25px; font-weight: bolder;">
+                    圖層：道路專案
+                </text>
+                <div style="font-size: 20px;">
+                    ${popUpForm(prop)}
                 </div>
             </div>`, {
             maxWidth: 350,

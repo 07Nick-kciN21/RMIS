@@ -10,6 +10,7 @@
         vertical-align: middle;
         white-space: nowrap;
         overflow: hidden;
+        font-size: 18px;
     }
 
     .propTable th {

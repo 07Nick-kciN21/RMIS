@@ -1,8 +1,4 @@
-
-
 $(document).ready(function () {
-    let expansionRangeIndex = 0;
-    let streetViewPhotoIndex = 0;
     let rangeList = [];
     let photoList = [];
     const adminDists = [
@@ -104,21 +100,21 @@ $(document).ready(function () {
         });
     });
     
-    const popupWidth = 600;
-    const popupHeight = 400;
+    const windowWidth = 800;
+    const windowHeight = 600;
     // 獲取螢幕的寬高
     const screenWidth = window.screen.width;
     const screenHeight = window.screen.height;
     // 計算彈出視窗的位置
-    const left = 0 - (screenWidth + popupWidth) / 2;
-    const top = (screenHeight - popupHeight) / 2;
+    const left = 0 - (screenWidth + windowWidth) / 2;
+    const top = (screenHeight - windowHeight) / 2;
     $('#addRangeBtn').on('click', function () {
-        newWindow = window.open('/Admin/ExpansionRangeMap', 'newWindow', `width=${popupWidth},height=${popupHeight}, top=${top}, left=${left}`);
+        newWindow = window.open('/Admin/ExpansionRangeMap', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     
     //#addPhotoBtn 按鈕被點擊時，開啟新視窗
     $('#addPhotoBtn').on('click', function () {
-        newWindow = window.open('/Admin/StreetViewPhotoMap', 'newWindow', `width=${popupWidth},height=${popupHeight}, top=${top}, left=${left}`);
+        newWindow = window.open('/Admin/StreetViewPhotoMap', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     
     // 接收新視窗的訊息
@@ -130,6 +126,7 @@ $(document).ready(function () {
             const rangeTable = $('#rangeTable');
             rangeTable.find('tbody').empty();
             rangeList.length = 0;
+            let expansionRangeIndex = 0;
             for(let i = 0; i < data.length; i++) {
                 rangeItem = { Id:i, Latitude: data[i].lat, Longitude: data[i].lng };
     
@@ -146,6 +143,7 @@ $(document).ready(function () {
             const photoTable = $('#photoTable');
             photoTable.find('tbody').empty();
             photoList.length = 0;
+            let streetViewPhotoIndex = 0;
             for(let i = 0; i < data.length; i++) {
                 photoItem = { Id:i, Latitude: data[i].lat, Longitude: data[i].lng, Photo: data[i].photo, PhotoName: data[i].photoName };
                 photoList.push(photoItem);

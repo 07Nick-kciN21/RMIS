@@ -43,7 +43,6 @@
 <link rel="stylesheet" href="~/css/index/flagPanel.css" />
 <link rel="stylesheet" href="~/css/index/focusPanel.css" />
 <link rel="stylesheet" href="~/css/index/projectPanel.css" />
-<link rel="stylesheet" href="~/css/admin/roadProject.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
@@ -199,7 +198,7 @@
         </div>
         <span class="title-divider"></span>
         <div id="map-basemapCtrl" class="footer-tip">
-            <span id="map-basemap">google街景地圖</span>
+            <span id="map-basemap">Open Street地圖</span>
             <div id="mapSelect" class="footerSelect hide">
                 @* 基本圖層 (單選) *@
                 <span class="selectTitle">基本圖層</span>
@@ -712,7 +711,7 @@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 行政區 *@
             <label>行政區</label>
-            <select id="projectAdmin" class="form-select" style="width:70%; flex-grow: 1;border-radius:0;">
+            <select id="projectAdmin" class="form-select" style="">
                 <option value="-1">請選擇</option>
                 <option value="0">桃園區</option>
                 <option value="1">大溪區</option>
@@ -734,89 +733,89 @@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 終點 *@
             <label>起點</label>
-            <input type="text" id="projectStartPoint" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectStartPoint" class="form-control">
         </div>
 
         @* 終點 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 終點 *@
             <label>終點</label>
-            <input type="text" id="projectEndPoint" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">  
+            <input type="text" id="projectEndPoint" class="form-control">  
         </div>
 
         @* 道路長度 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 道路長度 *@
             <label>道路長度</label>
-            <input type="text" id="projectRoadLength" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectRoadLength" class="form-control">
         </div>
 
         @* 現況路寬 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 現況路寬 *@
             <label>現況路寬</label>
-            <input type="text" id="projectCurrentRoadWidth" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectCurrentRoadWidth" class="form-control">
         </div>
 
         @* 計畫路寬 *@
         <div class="form-group" style="display: flex; align-items: center;">
             @* 計畫路寬 *@
             <label>計畫路寬</label>
-            <input type="text" id="projectPlannedRoadWidth" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="projectPlannedRoadWidth" class="form-control">
         </div>
 
         @* 工程經費(比較單一值) *@
         <div id="budgetDiv">
             <div class="form-group">
-                <label>工程經費</label>
+                <label style="margin-right: auto;">工程經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                <select id="projectBudgetOption" class="form-select" style="width: 25%;">
                     <option value="-1">請選擇</option>
                     <option value="1">大於</option>
                     <option value="2">小於</option>
                     <option value="3">等於</option>
                 </select>
-                <input type="text" id="projectBudgetEnd" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
-                萬
+                <input type="text" id="projectBudgetEnd" class="form-control" style="width: 40%;">
+                <label style="width: 5%;">萬</label>
             </div>
             @* 用地經費 *@
             <div class="form-group">
-                <label>用地經費</label>
+                <label style="margin-right: auto;">用地經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectLandBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                <select id="projectLandBudgetOption" class="form-select" style="width: 25%;">
                     <option value="-1">請選擇</option>
                     <option value="1">大於</option>
                     <option value="2">小於</option>
                     <option value="3">等於</option>
                 </select>
-                <input type="text" id="projectLandBudgetEnd" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
-                萬
+                <input type="text" id="projectLandBudgetEnd" class="form-control" style="width: 40%;">
+                <label style="width: 5%;">萬</label>
             </div>
             @* 補償經費 *@
             <div class="form-group">
-                <label>補償經費</label>
+                <label style="margin-right: auto;">補償經費</label>
                 @* 比較運算選項(> < =) *@
-                <select id="projectCompensationBudgetOption" class="form-select" style="flex-grow: 1;border-radius:0;">
+                <select id="projectCompensationBudgetOption" class="form-select" style="width: 25%;">
                     <option value="-1">請選擇</option>
                     <option value="1">大於</option>
                     <option value="2">小於</option>
                     <option value="3">等於</option>
                 </select>
-                <input type="text" id="projectCompensationBudgetEnd" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
-                萬
+                <input type="text" id="projectCompensationBudgetEnd" class="form-control" style="width: 40%;">
+                <label style="width: 5%;">萬</label>
             </div>
             <div class="form-group">
                 @* 合計經費(範圍) *@
-                <label>經費範圍</label>
-                <input type="text" id="projectBudget" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
-                ⇔
-                <input type="text" id="projectBudgetEnd" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
-                萬
+                <label style="margin-right: auto;">經費範圍</label>
+                <input type="text" id="projectBudget" class="form-control" style="width: 30%;">
+                <label style="width: 5%;">⇔</label>
+                <input type="text" id="projectBudgetEnd" class="form-control" style="width: 30%;">
+                <label style="width: 5%;">萬</label>
             </div>
         </div>
     </div>
     <div class="form-group" style="clear: both; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-        <button id="projectGoResult" class="btn js-modal-toggle">顯示結果</button>
+        <button id="projectGoResult" class="btn js-modal-toggle" style="font-size: 20px; font-weight: bolder;">顯示結果</button>
     </div>
     <div id="projectResultDiv" class="panelList">
         <table id="projectTable" class="propTable">

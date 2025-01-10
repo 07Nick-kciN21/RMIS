@@ -43,7 +43,23 @@
     margin: auto;
 }
 
-/* 关闭按钮 */
+.modal-body form > div {
+    display: flex;
+    margin: 10px 30px;
+}
+
+.modal-body form > div > label{
+    width: 40%;
+    text-align: left;
+}
+
+.modal-body form > div > input,
+.modal-body form > div > select,
+.modal-body form > div > textarea {
+    width: 60%;
+}
+
+/* 關閉按鈕 */
 .close-modal {
     position: absolute;
     top: 10px;

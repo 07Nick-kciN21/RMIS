@@ -37,9 +37,4 @@
         // 備註
         public string Remarks { get; set; }
     }
-
-    public class projectProp
-    {
-
-    }
 }

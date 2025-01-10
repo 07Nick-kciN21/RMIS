@@ -14,8 +14,12 @@
         <input id="Proposer" class="form-control" placeholder="王小明議員"/>
     </div>
     <div>
+        <label>專案代號:</label>
+        <input id="ProjectId" class="form-control" placeholder="asd123"/>
+    </div>
+    <div>
         <label>行政區:</label>
-        <select id="adminSelect" class="form-select" style="margin: auto; width: 90%;">
+        <select id="adminSelect" class="form-select">
             <option value="-1">請選擇</option>
             <option value="0">桃園區</option>
             <option value="1">大溪區</option>
@@ -93,11 +97,10 @@
         <label>備註:</label>
         <textarea id="Remark" class="form-control"></textarea>
     </div>
-    <div id="expansionRangeDiv" style="width: 90%; margin: auto;">
-        <div style="display:flex">
-            <h4>預拓範圍</h4>
-            <div id=""></div>
-            <button type="button" id="addRangeBtn" title="新增欲拓範圍">+</button>
+    <div id="expansionRangeDiv" style="display:block">
+        <div style="display: flex;">
+            <label>拓寬範圍</label>
+            <button id="addRangeBtn" class="btn btn-secondary" type="button" title="新增拓寬範圍">+</button>
         </div>
         <table id="rangeTable" class="propTable">
             <thead>
@@ -112,10 +115,10 @@
         </table>
     </div>
     
-    <div id="streetViewPhotoDiv" style="width: 90%; margin: auto;">
-        <div style="display:flex">
-            <h4>街景照片</h4>
-            <button type="button" id="addPhotoBtn" title="新增街景照片">+</button>
+    <div id="streetViewPhotoDiv" style="display:block">
+        <div style="display: flex;">
+            <label>街景照片</label>
+            <button id="addPhotoBtn" class="btn btn-secondary" type="button" title="新增街景照片">+</button>
         </div>
         <table id="photoTable" class="propTable">
             <thead>

@@ -3,11 +3,6 @@
     height: 250px;
 }
 
-#searchPanel2 {
-    width: 200px;
-    height: 250px;
-}
-
 #painterPanel {
     width: 400px;
 }
@@ -37,8 +32,8 @@
 }
 
 #projectPanel {
-    width: 450px;
-    height: 500px;
+    width: 550px;
+    height: 550px;
 }
 
 .panel {

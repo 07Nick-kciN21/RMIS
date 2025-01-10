@@ -283,7 +283,7 @@ function createBaseLayers() {
         maxZoom: 22,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         pane: 'basePane'
-    }).addTo(indexMap);
+    });
     //google衛星
     var GoogleSatellite = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}&hl=zh_TW', {
         maxZoom: 22,
@@ -309,7 +309,7 @@ function createBaseLayers() {
         maxZoom: 22,
         attribution: '&copy; OpenStreetMap contributors',
         pane: 'basePane'
-    });
+    }).addTo(indexMap);
 
     //SP2006NC_3857
     var SP2006NC_3857 = L.tileLayer('https://data.csrsr.ncu.edu.tw/SP/SP2006NC_3857/{z}/{x}/{y}.png', {

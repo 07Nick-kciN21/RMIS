@@ -32,6 +32,10 @@ namespace RMIS.Data
                 .WithMany(c => c.Subcategories)
                 .HasForeignKey(c => c.ParentId)
                 .OnDelete(DeleteBehavior.Restrict); // Prevent cascading deletes
+
+            modelBuilder.Entity<RoadProject>()
+                .Property(r => r.CreateTime)
+                .HasDefaultValueSql("DATEDIFF(SECOND, '1970-01-01', GETUTCDATE())");
         }
     }
 }

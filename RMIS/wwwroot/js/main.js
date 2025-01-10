@@ -21,7 +21,6 @@ $(document).ready(function () {
     $('#imageData').html(menuHtml);
     initModal();
     initPanel("searchPanel");
-    initPanel("searchPanel2");
     initPanel("painterPanel");
     initPanel("searchPropPanel");
     initPanel("measurePanel");
