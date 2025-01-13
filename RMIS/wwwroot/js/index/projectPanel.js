@@ -25,12 +25,12 @@ let currentPage = 1;
 
 // Helper function: 處理 select 值
 function convertSelectValue(value) {
-    return value === "-1" ? null : value;
+    return value === "-1" || value === undefined ? null : value;
 }
 
 // Helper function: 處理 input 值
 function convertInputValue(value) {
-    return value.trim() === "" ? null : value.trim();
+    return value.trim() === "" || value === undefined ? null : value.trim();
 }
 
 export function initProjectPanel() {
@@ -98,7 +98,7 @@ function addLayerToMap(projectId) {
         // 焦點移置data['points']['rangePoints']的起點
         var {latitude, longitude} = data['points']['rangePoints'][0];
 
-        $indexMap.setView([latitude, longitude], 18);
+        $indexMap.setView([latitude, longitude], 19);
         console.log(data['points']['photoPoints']);
         // photoPoints:在地圖上添加marker
         data['points']['photoPoints'].forEach(point => {
@@ -111,7 +111,7 @@ function addLayerToMap(projectId) {
         
             // 添加圖片
             let img = document.createElement('img');
-            let src = `/img/roadProject/${point['url']}?v=${new Date().getTime()}`;
+            let src = `/roadProject/${point['url']}?v=${new Date().getTime()}`;
             img.src = src;
             img.style.width = '450px';
             img.style.height = '300px';

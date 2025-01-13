@@ -148,7 +148,7 @@ function renderTableBody(pageData){
                 [center[0] + offset, center[1] + offset]  // 右上角
             ];
             console.log(bounds);
-            $indexMap.setView(center, 22);
+            $indexMap.setView(center, 18);
             // 創建一個帶有藍色正方形的自定義圖標
             const squareIcon = L.divIcon({
                 html: `<svg width="24" height="24">

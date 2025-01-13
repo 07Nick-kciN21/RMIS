@@ -1431,7 +1431,9 @@ namespace RMIS.Repositories
             {
                 var photoName = projectPhotoInput.PhotoName; // 文件名，如 "6_02.png"
                 var photo = projectPhotoInput.Photo; // 上傳的圖片文件
-                var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", "roadProject");
+
+                var directoryPath = @"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject";
+
 
                 // 確保目標目錄存在
                 if (!Directory.Exists(directoryPath))
