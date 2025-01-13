@@ -1050,6 +1050,7 @@ namespace RMIS.Repositories
         public async Task<List<RoadProject>> GetProjectByAsync(GetRoadProjectInput data)
         {
 
+
             //var roadProjects = await _mapDBContext.RoadProjects
             //    .Where(rp => rp.AdministrativeDistrict == adminDist && rp.TotalBudget >= startBudget && rp.TotalBudget <= endBudget)
             //    .ToListAsync();
@@ -1088,10 +1089,10 @@ namespace RMIS.Repositories
             }
 
             // 工程經費
-            if (data.Budgets?.ProjectBudget?.Value != null)
+            if (data.Budgets?.ConstructionBudget?.Value != null)
             {
-                var projectBudget = data.Budgets.ProjectBudget.Value * 10000;
-                switch (data.Budgets.ProjectBudget.Option)
+                var projectBudget = data.Budgets.ConstructionBudget.Value * 10000;
+                switch (data.Budgets.ConstructionBudget.Option)
                 {
                     case "1": // 大於
                         query = query.Where(rp => rp.ConstructionBudget > projectBudget);
@@ -1106,10 +1107,10 @@ namespace RMIS.Repositories
             }
 
             // 用地經費
-            if (data.Budgets?.LandBudget?.Value != null)
+            if (data.Budgets?.LandAcquisitionBudget?.Value != null)
             {
-                var landBudget = data.Budgets.LandBudget.Value * 10000;
-                switch (data.Budgets.LandBudget.Option)
+                var landBudget = data.Budgets.LandAcquisitionBudget.Value * 10000;
+                switch (data.Budgets.LandAcquisitionBudget.Option)
                 {
                     case "1": // 大於
                         query = query.Where(rp => rp.LandAcquisitionBudget > landBudget);

@@ -44,7 +44,7 @@ function observeLayerBarChanges() {
     }
 }
 
-// 管理切換
+// 切換管理
 function setupRadioButtonHandlers() {
     $('input[name="btnradio"]').on('change', function () {
         const selectedLabel = $(this).next('label').text();

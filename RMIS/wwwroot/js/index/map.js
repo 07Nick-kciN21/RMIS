@@ -99,12 +99,12 @@ export function initMap(mapId) {
     // 目前位置
     $('#tb-location').on('click', function () {
         // 取得使用者的位置，並將地圖移至該位置，直接縮放為22
-        indexMap.locate({ setView: false, maxZoom: 22 });
+        indexMap.locate({ setView: false, maxZoom: 19 });
     });
     
     // 當定位成功時進一步設置縮放級別
     indexMap.on('locationfound', function (e) {
-        indexMap.setView(e.latlng, 22); // 強制設置縮放級別為 22
+        indexMap.setView(e.latlng, 19); // 強制設置縮放級別為 22
         L.marker(e.latlng).addTo(indexMap) // 添加標記顯示當前位置
     });
 

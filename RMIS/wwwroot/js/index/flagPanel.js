@@ -118,7 +118,9 @@ function updateFlagTable() {
     // 取得當前頁數的範圍資料
     const pageData = filterFlags.slice(startIndex, endIndex);
 
+    // 添加當前範圍內的資料
     renderTableBody(pageData);
+    // 更新分頁按鈕
     updatePagination(totalPages);
 }
 

@@ -28,10 +28,10 @@ namespace RMIS.Models.Admin
     public class BudgetInfo
     {
         // 工程經費
-        public BudgetOption? ProjectBudget { get; set; }
+        public BudgetOption? ConstructionBudget { get; set; }
 
         // 用地經費
-        public BudgetOption? LandBudget { get; set; }
+        public BudgetOption? LandAcquisitionBudget { get; set; }
 
         // 補償經費
         public BudgetOption? CompensationBudget { get; set; }

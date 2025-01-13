@@ -1,8 +1,8 @@
 #projectPanel .panelBody {
     border: 1px solid gray;
     border-radius: 0px;
-    margin: 15px;
-    height: 40%;
+    margin: 15px 15px 10px 15px;
+    height: 200px;
     padding-top: 10px;
     display: block;
     overflow-y: auto;
@@ -27,8 +27,8 @@
 #projectPanel .panelList {
     border: 1px solid gray;
     border-radius: 0px;
-    margin: 15px;
-    height: 35%;
+    margin: 10px 15px 0 15px;
+    height: 250px;
 }
 
 #projectResultDiv{

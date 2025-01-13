@@ -6,6 +6,11 @@
     display: block;
 }
 
+#flagPanel .panelBody > div > div > label{
+    font-size: 24px;
+    font-weight: bold;
+}
+
 #flagPanel .panelList{
     border: 1px solid gray;
     border-radius: 0px;
