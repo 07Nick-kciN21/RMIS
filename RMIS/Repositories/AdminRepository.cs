@@ -1,30 +1,17 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using CsvHelper;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Globalization;
-using System.IO;
-using System.Collections.Generic;
-using System.Formats.Asn1;
-using System.Globalization;
-using System;
+using System.Text.RegularExpressions;
 using RMIS.Data;
 using RMIS.Models.Admin;
 using RMIS.Models.API;
 using RMIS.Models.sql;
 using RMIS.Utils;
-using OfficeOpenXml;
-using CsvHelper.Configuration;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using System.Text.Json;
-
-
+using CsvHelper;
+using OfficeOpenXml;
 
 
 namespace RMIS.Repositories
@@ -359,19 +346,6 @@ namespace RMIS.Repositories
         public async Task<int> AddMapSourceAsync(AddMapSourceInput mapsourceInput)
         {
             var mapsource = MapperHelper.A2B<AddMapSourceInput, MapSource>(mapsourceInput);
-            //var config = new MapperConfiguration(cfg => cfg.CreateMap<AddMapSourceInput, MapSource>());
-            //var mapper = config.CreateMapper();
-            // var mapsource = mapper.Map<MapSource>(mapsourceInput);
-            // var mapsource = new MapSource
-            //{
-            //    Url = mapsourceInput.Url,
-            //    SourceId = mapsourceInput.SourceId,
-            //    Name = mapsourceInput.Name,
-            //    Type = mapsourceInput.Type,
-            //    TileType = mapsourceInput.TileType,
-            //    ImageFormat = mapsourceInput.ImageFormat,
-            //    Attribution = mapsourceInput.Attribution
-            //};
             await _mapDBContext.MapSources.AddAsync(mapsource);
             int rowsAffected = await _mapDBContext.SaveChangesAsync();
             return rowsAffected;
@@ -749,34 +723,114 @@ namespace RMIS.Repositories
             return flaggedPipelines;
         }
 
-        public async Task<List<string>> GetFocusedPipelinesAsync(int selectType)
+        public async Task<FocusedData> GetFocusDataAsync(GetFocusDataInput input)
         {
             // 0: 臨時道路借用申請(路線)、臨時道路借用申請(借用範團)
             // 1: 臨時道路借用申請(路線)
             // 2: 臨時道路借用申請(借用範圍)
             var focusedPipelines = new List<string>();
-            if (selectType == 0)
+            if (input.FocusType == 0)
             {
                 focusedPipelines = await _mapDBContext.Pipelines
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)") || p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate);
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[1]), input.FocusStartDate, input.FocusEndDate);
+                var result = new FocusedData
+                {
+                    FocusedRoad = focusedRoadPoints,
+                    FocusedRange = focusedRangePoints
+                };
+                return result;
             }
-            else if (selectType == 1)
+            else if (input.FocusType == 1)
             {
                 focusedPipelines = await _mapDBContext.Pipelines
                     .Where(p => p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate);
+                var result = new FocusedData
+                {
+                    FocusedRoad = null,
+                    FocusedRange = focusedRangePoints
+                };
+                return result;
             }
-            else if (selectType == 2)
+            else if (input.FocusType == 2)
             {
                 focusedPipelines = await _mapDBContext.Pipelines
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate);
+                var result = new FocusedData
+                {
+                    FocusedRoad = focusedRoadPoints,
+                    FocusedRange = null
+                };
+                return result;
             }
-            return focusedPipelines;
+
+            // 根據focusedPipelines的Id查找對應的資料
+            return null;
+        }
+
+        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, string FocusStartDate, string FocusEndDate)
+        {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                // 先取出各點的prop過濾出符合日期的點
+                var focusStartDate = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(FocusStartDate)).DateTime;
+                var focusEndDate = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(FocusEndDate)).DateTime;        
+                var query = await _mapDBContext.Points.Where(p => p.Area.Layer.PipelineId == FocusRoadPipelineId && p.Index == 0).ToListAsync();
+                var result = new List<focusedCase>();
+                for (int i = 0; i < query.Count; i++)
+                {
+                    var prop = query[i].Property;
+                    var propDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(prop);
+                    // 租借起始日或租借結束日其中一個在FocusStartDate與FocusEndDate之中
+                    // FocusStartDate為時間戳 ex. 1733011200000
+                    if (DateTime.TryParseExact(propDict["租借起始日"], "yyyy/MM/dd", null, System.Globalization.DateTimeStyles.None, out DateTime rentalStartDate) &&
+                        DateTime.TryParseExact(propDict["租借結束日"], "yyyy/MM/dd", null, System.Globalization.DateTimeStyles.None, out DateTime rentalEndDate))
+                    {
+                        // 檢查租借日期是否在範圍內
+                        if ((rentalStartDate >= focusStartDate && rentalStartDate <= focusEndDate) ||
+                            (rentalEndDate >= focusStartDate && rentalEndDate <= focusEndDate))
+                        {
+                            var focusedRoad = new focusedCase
+                            {
+                                date = $"{propDict["租借起始日"]}至{propDict["租借結束日"]}",
+                                location = propDict["借用路段"],
+                                points = new List<Point>()
+                            };
+
+                            var focusedRoadPoints = await _mapDBContext.Points
+                                .Where(p => p.AreaId == query[i].AreaId)
+                                .OrderBy(p => p.Index)
+                                .ToListAsync();
+
+                            focusedRoad.points.AddRange(focusedRoadPoints);
+                            result.Add(focusedRoad);
+                        }
+                    }
+                    else
+                    {
+                        // 無法解析日期的錯誤處理
+                        Console.WriteLine($"解析日期失敗：{propDict["租借起始日"]} 或 {propDict["租借結束日"]}");
+                    }
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "An error occurred while getting focus data by datetime.");
+                throw;
+            }
+            return null;
         }
 
         public async Task<int> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput input)

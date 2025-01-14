@@ -115,16 +115,16 @@ namespace RMIS.Controllers
         }
 
         // selectType：道路借用類型
-        [HttpPost("getFocusedPipelines")]
-        public async Task<IActionResult> GetFocusedPipelines(int selectType)
+        [HttpPost("getFocusData")]
+        public async Task<IActionResult> GetFocusedData([FromForm] GetFocusDataInput data)
         {
             try
             {
-                var pipelines = await _adminInterface.GetFocusedPipelinesAsync(selectType);
+                var Datas = await _adminInterface.GetFocusDataAsync(data);
 
-                if (pipelines != null)
+                if (Datas != null)
                 {
-                    return Ok(new { success = true, pipelines });
+                    return Ok(new { success = true, Datas });
                 }
                 else
                 {

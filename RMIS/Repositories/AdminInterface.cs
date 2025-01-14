@@ -20,7 +20,7 @@ namespace RMIS.Repositories
         Task<int> DeleteLayerDataAsync(Guid? layerId);
         Task<int> DeleteCategoryAsync(Guid? categoryId);
         Task<List<string>> GetFlaggedPipelinesAsync();
-        Task<List<string>> GetFocusedPipelinesAsync(int selectType);
+        Task<FocusedData> GetFocusDataAsync(GetFocusDataInput input);
         Task<int> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput roadProjectByExcel);
         Task<List<RoadProject>> GetProjectByAsync(GetRoadProjectInput data);
         Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId);

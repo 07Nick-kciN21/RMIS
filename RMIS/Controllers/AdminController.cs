@@ -41,7 +41,7 @@ namespace RMIS.Controllers
             if (rowsAffected > 0)
             {
                 _logger.LogInformation($"已新增 {rowsAffected} 筆管線資料到資料庫");
-                return Ok($"已新增 {rowsAffected} 筆管線資料到資料庫");
+                return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆管線資料到資料庫" });
             }
             else
             {
@@ -65,7 +65,7 @@ namespace RMIS.Controllers
             if (rowsAffected > 0)
             {
                 _logger.LogInformation($"已新增 {rowsAffected} 筆道路資料到資料庫");
-                return Ok($"已新增 {rowsAffected} 筆道路資料到資料庫");
+                return Ok(new { success = true, message = $"已從CSV新增 {rowsAffected} 筆道路資料到資料庫" });
             }
             else
             {
@@ -88,7 +88,7 @@ namespace RMIS.Controllers
             if (rowsAffected > 0)
             {
                 _logger.LogInformation($"已從CSV新增 {rowsAffected} 筆道路資料到資料庫");
-                return Ok($"已從CSV新增 {rowsAffected} 筆道路資料到資料庫");
+                return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆類別資料到資料庫" });
             }
             else
             {
@@ -135,7 +135,7 @@ namespace RMIS.Controllers
             if (rowsAffected > 0)
             {
                 _logger.LogInformation($"已新增 {rowsAffected} 筆地圖來源資料到資料庫");
-                return Ok($"已新增 {rowsAffected} 筆地圖來源資料到資料庫");
+                return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆地圖來源資料到資料庫" });
             }
             else
             {

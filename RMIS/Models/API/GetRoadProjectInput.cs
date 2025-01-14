@@ -1,4 +1,4 @@
-namespace RMIS.Models.Admin
+namespace RMIS.Models.API
 {
     public class GetRoadProjectInput
     {
