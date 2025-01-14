@@ -2,11 +2,8 @@
     border: 1px solid gray;
     border-radius: 0px;
     margin: 15px 15px 10px 15px;
-    height: 200px;
     padding-top: 10px;
     display: block;
-    overflow-y: auto;
-    overflow-x: auto;
 }
 
 #projectPanel .panelBody > div > label{

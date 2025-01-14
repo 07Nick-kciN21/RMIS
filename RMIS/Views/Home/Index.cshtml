@@ -227,7 +227,7 @@
         <button class="searchPanelBtn"></button>
     </div>
     <div class="panelFooter">
-        <ul id="searchList" class="panelList" style="max-height:160px">
+        <ul id="searchList" class="panelList" style="max-height:150px">
         </ul>
     </div>
 </div>
@@ -284,22 +284,22 @@
             <button class="closeButton">&times;</button>
         </div>
     </div>
-    <ul class="panelInput" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
+    <ul class="panelInput" role="group" aria-label="Basic radio toggle button group">
         <li style="width: 25%">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked />
-            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio1">依屬性</label>
+            <label class="btn btn-outline-success" for="btnradio1">依屬性</label>
         </li>
         <li style="width: 25%">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" />
-            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio2">依空間</label>
+            <label class="btn btn-outline-success" for="btnradio2">依空間</label>
         </li>
         <li style="width: 25%; visibility: hidden;">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" />
-            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio3">結果</label>
+            <label class="btn btn-outline-success" for="btnradio3">結果</label>
         </li>
         <li style="width: 25%; visibility: hidden;">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off" />
-            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="btnradio4">統計</label>
+            <label class="btn btn-outline-success" for="btnradio4">統計</label>
         </li>
     </ul>
     <div id="prop1" class="panelBody" style="display: block">
@@ -323,14 +323,14 @@
         </div>
         <div id="shapeGroup" class="hide">
             <div id="propGeoCustom" style="height:100px; max-height:100px; clear:both;">
-                <button id="propRect" type="button" style="width:90px; height:90px; float:left; margin-right:10px; background-color: #9ac43e">
-                    <img src="/img/prop/rectangle.png" style="max-width: 100%; max-height: 100%;">
+                <button id="propRect" type="button">
+                    <img src="/img/prop/rectangle.png">
                 </button>
-                <button id="propCircle" type="button" style="width:90px; height:90px; float:left; margin-right:10px; background-color: #9ac43e">
-                    <img src="/img/prop/circle.png" style="max-width: 100%; max-height: 100%;">
+                <button id="propCircle" type="button">
+                    <img src="/img/prop/circle.png">
                 </button>
-                <button id="propPolygon" type="button" style="width:90px; height:90px; float:left; margin-right:10px; background-color: #9ac43e">
-                    <img src="/img/prop/polygon.png" style="max-width: 100%; max-height: 100%;">
+                <button id="propPolygon" type="button">
+                    <img src="/img/prop/polygon.png">
                 </button>
             </div>
             <div class="form-group" style="clear:both;">
@@ -340,20 +340,20 @@
         </div>
     </div>
     <div id="prop3" class="panelBody" style="background-color: white; padding-bottom: 0.2rem; display: none;">
-        <div>
+        <div class="propResultTitle">
             <span style="width:50px; height:30px; margin:0px">圖層:</span>
             <span id="propResultLayer" style="margin:0px"></span>
         </div>
-        <div>
+        <div class="propResultTitle">
             <span style="width:50px; height:30px; margin:0px">條件:</span>
             <span id="propResultCond" style="margin:0px"></span>
         </div>
-        <div>
+        <div class="propResultTitle">
             <span style="margin-top:4px">結果列表</span>
             <span id="totalCount"></span>
             <a id="exportExcel1" class="exportExcel" style="float:right">匯出Excel</a>
         </div>
-        <div id="propResultDiv" class="panelList" style="width:100%; height:280px; max-height:280px; overflow:auto;">
+        <div class="propResultDiv" style="width:100%; height:280px; max-height:280px; overflow:auto;">
             <table id="propResult" class="propTable">
                 <thead id="propThead"></thead>
                 <tbody id="propTbody"></tbody>
@@ -372,8 +372,8 @@
             </span>
         </div>
     </div>
-    <div id="prop4" class="panelBody" style="background-color: white; padding-bottom: 0.2rem; display: none;">
-        <div style="height:30px;">
+    <div id="prop4" class="panelBody" style="background-color: white; padding-bottom: 2rem; display: none;">
+        <div class="propResultTitle" style="height:30px;">
             <span style="width:50px; height:30px; margin:0px">圖層:</span>
             <span id="analysisResultLayer" style="margin:0px"></span>
         </div>
@@ -396,7 +396,7 @@
             </div>
             <div class="form-group mb-2">
                 <label class="form-label mb-2">統計方式:</label>
-                <div class="d-flex flex-wrap">
+                <div class="d-flex flex-wrap" style="font-size: 10px;">
                     <div class="form-check me-3">
                         <input class="form-check-input anaI" type="checkbox" id="anaSum" name="anaSum" value="sum">
                         <label class="form-check-label" for="anaSum">加總</label>
@@ -420,16 +420,16 @@
                 </div>
             </div>
 
-            <div class="form-group" style="clear:both; padding:8px; width:100%; margin-left:auto; margin-right:auto; text-align:center">
-                <button class="btn js-modal-toggle" id="anaGoResult">顯示結果</button>
+            <div class="form-group" style="clear:both; width:100%; margin-left:auto; margin-right:auto; text-align:center;">
+                <button id="anaGoResult" class="goResult btn js-modal-toggle">顯示結果</button>
             </div>
 
             <div id="anaResultDiv" style="display:none">
-                <div class="form-group" style="margin: 2px 0px 2px; clear: both;">
+                <div class="form-group resultListTitle" style="margin: 2px 0px 2px; clear: both;">
                     <label style="vertical-align: text-top; margin: 0px;">數值統計結果</label>
                     <a id="exportExcel2" class="exportExcel" style="float: right;">匯出Excel</a>
                 </div>
-                <div style="max-height: 114px; overflow-y: auto;">
+                <div class="propResultDiv" style="max-height: 114px; overflow-y: auto;">
                     <table id="propAnaResult" class="propTable" style="width: 100%;">
                         <thead>
                             <tr id="anaHdr" role="row" class="propRow" style="background-color:lightgreen">
@@ -538,10 +538,10 @@
                 <label>占用類型</label>
                 <select id="suspectTypeSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
                     <option value="-1">請選擇疑似占用類型</option>
-                    <option value="0">第一類-荒廢未管理之地</option>
-                    <option value="1">第二類-民眾種植有價作物</option>
-                    <option value="2">第三類-鐵皮、柵欄或其他可移動式之臨時設施</option>
-                    <option value="3">第四類-永久建築物</option>
+                    <option value="1">第一類-荒廢未管理之地</option>
+                    <option value="2">第二類-民眾種植有價作物</option>
+                    <option value="3">第三類-鐵皮、柵欄或其他可移動式之臨時設施</option>
+                    <option value="4">第四類-永久建築物</option>
                 </select>
             </div>
             @* 地段 *@
@@ -614,7 +614,7 @@
             </div>
         </div>
         <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-            <button id="flagGoResult" class="btn js-modal-toggle" style="font-size: 20px; font-weight: bolder;">顯示結果</button>
+            <button id="flagGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
         </div>
         <div style="margin: 0% 15px;">
             <span style="margin-top:4px">結果列表</span>
@@ -814,7 +814,12 @@
             </div>
         </div>
         <div class="form-group" style="clear: both; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-            <button id="projectGoResult" class="btn js-modal-toggle" style="font-size: 20px; font-weight: bolder;">顯示結果</button>
+            <button id="projectGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
+        </div>
+        <div class="resultListTitle" style="margin: 0 15px;">
+            <span style="margin-top:4px">結果列表</span>
+            <span id="projectTotalCount"></span>
+            <a id="exportProjectExcel" class="exportExcel" style="float:right">匯出Excel</a>
         </div>
         <div id="projectResultDiv" class="panelList">
             <table id="projectTable" class="propTable">

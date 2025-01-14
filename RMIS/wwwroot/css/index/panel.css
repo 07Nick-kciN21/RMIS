@@ -1,5 +1,5 @@
 ﻿#searchPanel {
-    width: 200px;
+    width: 300px;
     height: 250px;
 }
 
@@ -146,30 +146,9 @@
         background: #444;
     }
 
-#ptbInOut {
-    display: none; /* 初始狀態下隱藏選單 */
-    position: absolute; /* 相對於 drawMenu 定位 */
-    right: -95px; /* 從圖示的右側顯示 */
-    background: #fff;
-    border: 1px solid #ccc;
-    list-style: none;
-    padding: 10px;
-    z-index: 1000;
-}
-
-    #ptbInOut li {
-        padding: 5px 10px;
-        cursor: pointer;
-    }
-
-        #ptbInOut li:hover {
-            background: #f0f0f0;
-        }
-
 .leaflet-draw-toolbar{
     transform:scale(1.2);
     transform-origin: top left;
-    
 }
 
 .closeButton {
@@ -183,4 +162,15 @@
     background-repeat: no-repeat;
     cursor: pointer;
     background-image: url('/svg/point__on_map.svg');
+}
+
+.goResult{
+    font-size: 20px; 
+    font-weight: bolder;
+}
+
+.resultListTitle label,
+.resultListTitle a{
+    font-size: 20px;
+    font-weight: bold;
 }

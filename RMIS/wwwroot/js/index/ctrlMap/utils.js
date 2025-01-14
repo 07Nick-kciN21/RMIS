@@ -1,7 +1,6 @@
 ﻿import { getIndexMap, popupEnabled } from '../map.js'; 
 
 
-let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null;
 
 
@@ -9,8 +8,7 @@ let currentLine = null;
 export function addMarkersToLayer(points, newLayer, svg, name) {
 
     var $indexMap = getIndexMap();
-    var zoom = $indexMap.getZoom();
-
+    let currentRectangle = null; // 用於保存當前的矩形
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
@@ -65,24 +63,26 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                 });
 
                 currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
-                // currentRectangle = L.rectangle(bounds, {
-                //     color: "#ff7800",
-                //     weight: 1,
-                //     fillOpacity: 0.3,
-                // }).addTo(newLayer);
+
+                const mapClickHandler = function (e) {
+                    if (currentRectangle) {
+                        newLayer.removeLayer(currentRectangle);
+                        currentRectangle = null;
+                        console.log("Removed currentRectangle");
+            
+                        // 事件執行一次後立即移除
+                        $indexMap.off('click', mapClickHandler);
+                    }
+                };
+                // 動態綁定地圖點擊事件
+                $indexMap.on('click', mapClickHandler);
             }
             else{ 
-                // popupEnabled為false時，不顯示popup
                 e.target.closePopup();
             }
         });
 
-        $indexMap.on('click', function () {
-            if (currentRectangle) {
-                newLayer.removeLayer(currentRectangle);
-                console.log("click");
-            }
-        });
+        
         marker._isVisible = true;
         point[2].Instance = marker;
     });
@@ -132,15 +132,20 @@ export function addLineToLayer(points, newLayer, color, name) {
                 // 移動地圖中央到點擊的點
                 const latLng = e.latlng; // 取得點擊事件中的座標
                 $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
+
+                const mapClickHandler = function (e) {
+                    if (currentLine) {
+                        newLayer.removeLayer(currentLine);
+                        console.log("Removed currentLine");
+                    }
+                    $indexMap.off('click', mapClickHandler);
+                };
+
+                $indexMap.on('click', mapClickHandler);
             }
             else{ 
                 // popupEnabled為false時，不顯示popup
                 e.target.closePopup();
-            }
-        });
-        $indexMap.on('click', function (e) {
-            if (currentLine) {
-                newLayer.removeLayer(currentLine);
             }
         });
         segment._isVisible = true;
@@ -185,15 +190,21 @@ export function addPolygonToLayer(points, newLayer, color, name) {
         if(popupEnabled){
             const inverseColor = getInverseColor(color);
             polygon.setStyle({ fillColor: inverseColor });
+
+            const mapClickHandler = function (e) {
+                polygon.setStyle({ fillColor: color });
+                console.log("Removed currentPolygon");
+                $indexMap.off('click', mapClickHandler);
+            };
+
+            $indexMap.on('click', mapClickHandler);
         }
         else{ 
             // popupEnabled為false時，不顯示popup
             polygon.closePopup();
         }
     });
-    $indexMap.on('click', function (e) {
-        polygon.setStyle({ fillColor: color });
-    });
+
     polygon._isVisible = true;
     console.log("Polygon 已繪製完成");
 }
@@ -256,6 +267,7 @@ function getInverseColor(color) {
     const b = 255 - parseInt(hex.substring(4, 6), 16);
     return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
 }
+
 function popUpForm(prop) {
     if (typeof prop === 'string') {
         prop = prop.replace(/NaN/g, 'null');

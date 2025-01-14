@@ -34,7 +34,6 @@ export function add2List(id, name, datas) {
             </div>
             <div class="more more-off" id="more_${id}">
                 <ul class="moreMenu" >
-                    <li id="more_action1_${id}">縮放至</li>
                     <li id="more_action2_${id}">編輯圖徽</li>
                     <li id="more_action3_${id}">檢視詮釋資料</li>
                     <li id="more_action4_${id}">
@@ -55,14 +54,6 @@ export function add2List(id, name, datas) {
         const offset = $(this).offset();
         const height = $(this).outerHeight();
         $(this).find('.moreMenu').css('top', offset.top + height);
-    });
-
-    // 縮放至
-    $(`#more_action1_${id}`).on('click', function (e) {
-        console.log("Zoom to");
-        var $indexMap = getIndexMap();
-        // 把地圖縮放至縮放等級15
-        $indexMap.setZoom(18);
     });
 
     // 編輯圖徽

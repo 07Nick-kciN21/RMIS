@@ -267,11 +267,13 @@ function initColorPicker(drawItem) {
         // 初始化所有的 select 為 select2
         $('.select2').select2({
             minimumResultsForSearch: Infinity, // 隱藏搜索框
+            dropdownParent: $('#colorPicker'),
         });
     }
 
     if (drawItem == "drawMarker") {
         $('#imageSelect').select2({
+            dropdownParent: $('#colorPicker'),
             templateResult: formatState,
             templateSelection: formatState,
             minimumResultsForSearch: Infinity, // 隱藏搜索框
