@@ -1,7 +1,7 @@
 #focusPanel .panelBody{
     border: 1px solid gray;
     border-radius: 0px;
-    margin: 0 10px;
+    margin: 0 10px 10px;
     padding-top: 10px;
 }
 
@@ -9,7 +9,12 @@
     border: 1px solid gray;
     border-radius: 0px;
     margin: 15px;
-    padding-top: 10px;
+}
+
+#focusPanel #focusTbody{
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px;
 }
 
 #focusPanel .form-group{

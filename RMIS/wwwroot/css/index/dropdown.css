@@ -1,16 +1,16 @@
-﻿.active {
-    background-color: white;
-    color: black;
-}
-
-#adminMenuContent {
+﻿#adminMenuContent {
     font-size: 1.5rem;
-    width:180px;
+    min-width:180px;
 }
 
 #imageData {
     max-height: 400px;
     min-width: 300px;
+}
+
+.active {
+    background-color: white;
+    color: black;
 }
 
 .dropdown-button {
@@ -22,6 +22,7 @@
 }
 
     .dropdown-button:hover {
+        
         background-color: white;
         color: black;
     }
@@ -57,4 +58,12 @@
 .modal-link{
     cursor: pointer;
     font-size:large
+}
+
+
+@media (max-width: 899px) {
+    .dropdown-content{
+        width: 100%;
+        left: 0px;
+    }
 }

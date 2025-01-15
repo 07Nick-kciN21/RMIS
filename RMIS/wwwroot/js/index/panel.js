@@ -50,6 +50,5 @@
         $panel.toggleClass('hide');
         $panel.css('z-index', 1053);
     });
-
 }
 

@@ -71,7 +71,6 @@ export function generateMenu(data, parent_name, index) {
     return html;
 }
 
-var isAdminMenuEnabled = false;
 export function bindMenuEvents() {
     $(document).ready(function () {
         var targetId = $('#imageDataBtn').data('target');

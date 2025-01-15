@@ -47,22 +47,66 @@
     display: none !important;
 }
 
+.navbar-toggle{
+    display: block;
+}
+
 @media (min-width: 900px) {
-    #navbar-menu {
+    #head-nav {
         display: block !important;
+        margin-left:auto;
     }
 }
 
 @media (max-width: 899px) {
-    #menu-toggle {
+    .toggle {
         display: block !important;
     }
-}
 
-@media (max-width: 568px) and (max-height: 700px) {
-    #searchPanel {
-        position: fixed; /* 設置固定位置 */
-        left: 0px; /* 固定到左側 */
-        top: 100px; /* 固定到距離頂部 100px */
+    .navbar-toggle{
+        display: none !important;
+    }
+
+    #col1, #col2 {
+        display: block !important; /* 讓每個區塊占滿整行 */
+        width: 100%; /* 占滿父容器寬度 */
+        text-align: center; /* 內容置中（可選） */
+        margin: 0 auto; /* 垂直排列並置中 */
+    }
+
+    #sidebar-toggle{
+        margin-right: auto;
+    }
+
+    #menu-toggle{
+        margin-left: auto;
+    }
+    #head-nav {
+        display: block; /* 確保內容分為一列 */
+        width: 100%; /* 占滿整行寬度 */
+        text-align: center; /* 內容文字置中 */
+        margin-top: 10px; /* 與上方按鈕間距 */
+    }
+
+    #left-nav{
+        margin-right: auto;
+    }
+
+    #right-nav{
+        margin-left: auto;
+    }
+
+    #navbar-menu {
+        flex-direction: column; /* 垂直排列 */
+        align-items: stretch; /* 占滿可用寬度 */
+        width: 100%; /* 占滿父容器寬度 */
+    }
+    #navbar-menu .nav-item {
+        flex: 1; /* 子項目占滿可用空間 */
+        width: 100%; /* 確保項目自身寬度占滿父容器 */
+        text-align: center; /* 文字置中 */
+    }
+    #navbar-menu .dropdown-button {
+        width: 100%; /* 確保按鈕寬度與父容器一致 */
     }
 }

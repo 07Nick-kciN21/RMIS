@@ -43,6 +43,8 @@
 <link rel="stylesheet" href="~/css/index/flagPanel.css" />
 <link rel="stylesheet" href="~/css/index/focusPanel.css" />
 <link rel="stylesheet" href="~/css/index/projectPanel.css" />
+<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
@@ -66,79 +68,89 @@
     </div>
 } *@
 @section HomeHeaderNavList{
-    <nav id="head-nav" style="padding: 0; margin-left:auto">
-        <div class="container-fluid ">
-            <!-- Responsive Button for Small Screens -->
+    <div id="col1">
+        <nav id="left-nav" style="display: flex;">
+            <div id="sidebar-toggle" class="toggle">
+                <button class="dropdown-button" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">
+                    ☰ 側欄
+                </button>
+            </div>
             <div id="menu-toggle" class="toggle">
-                <button class="dropdown-button" style="float: right;">
+                <button class="dropdown-button">
                     ☰ 菜單
                 </button>
             </div>
-            
-            <div id="navbar-menu" class="toggle navbar-collapse collapse d-sm-inline-flex justify-content-between" style="float: right;">
-                <div class="nav-item dropdown">
-                    <button id="dropdownMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
-                    <div id="adminMenuContent" class="dropdown-content">
-                        <ul id="adminMenu" class="menu-background">
-                            <li>
-                                <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddMapSource">
-                                    <h4>新增圖源</h4>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddCategory">
-                                    <h4>新增類別</h4>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddPipeline">
-                                    <h4>新增管線</h4>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddRoadByCSV">
-                                    <h4>上傳路線資料</h4>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddCategoryByJson">
-                                    <h4>上傳圖資類別</h4>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link text-success modal-link modal-xl" data-action="/Admin/AddRoadProject">
-                                    <h4>新增道路專案</h4>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddRoadProjectByExcel">
-                                    <h4>上傳道路專案</h4>
-                                </a>
-                            </li>
-                        </ul>
+        </nav>
+    </div>
+    
+    <div id="col2">
+        <nav id="head-nav" class="navbar-toggle"  style="padding: 0;">
+            <div class="container-fluid ">
+                <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
+                    <div class="nav-item dropdown">
+                        <button id="dropdownMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
+                        <div id="adminMenuContent" class="dropdown-content">
+                            <ul id="adminMenu" class="menu-background">
+                                <li>
+                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddMapSource">
+                                        <h4>新增圖源</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddCategory">
+                                        <h4>新增類別</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddPipeline">
+                                        <h4>新增管線</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddRoadByCSV">
+                                        <h4>上傳路線資料</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddCategoryByJson">
+                                        <h4>上傳圖資類別</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link modal-xl" data-action="/Admin/AddRoadProject">
+                                        <h4>新增道路專案</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddRoadProjectByExcel">
+                                        <h4>上傳道路專案</h4>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                </div>
-                <div class="nav-item dropdown">
-                    <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
-                </div>
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" id="imageDataBtn" data-target="imageData">業務圖資</button>
-                    <div class="dropdown-content" id="imageData">
+                    <div class="nav-item dropdown">
+                        <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
                     </div>
-                </div>
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list2" aria-expanded="false">
-                        常用連結
-                    </button>
-                </div>
-                <div class="nav-item dropdown">
-                    <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list3" aria-expanded="false">
-                        下載專區
-                    </button>
+                    <div class="nav-item dropdown">
+                        <button class="dropdown-button" id="imageDataBtn" data-target="imageData">業務圖資</button>
+                        <div class="dropdown-content" id="imageData">
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list2" aria-expanded="false">
+                            常用連結
+                        </button>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list3" aria-expanded="false">
+                            下載專區
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </div>
 }
 
 
@@ -153,7 +165,7 @@
 </div>
 
 <div id="indexMap" style="width: 100%; height: 100vh;">
-    <div class="map-controls" style="display:block">
+    <div class="map-controls">
         <span id="tb-sidebar" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock"></span>
         <span id="tb-zoomIn" title="放大"></span>
         <span id="tb-zoomOut" title="縮小"></span>
@@ -169,10 +181,10 @@
         <span id="tb-projectPanel" title="專案查詢"></span>
     </div>
     <div class="map-footer">
-        <div id="scale-control" class="footer-tip" style="display: inline-block; margin-left: 20px;"></div>
+        <div id="scale-control" class="footer-tip"></div>
         <span class="title-divider"></span>
         <div id="map-Zoomlevel">
-            <select id="zoom-level" class="footer-tip" style="background-color:transparent">
+            <select id="zoom-level" class="footer-tip">
                 <option value="-1" disabled selected>縮放等級</option>
                 <option value="3">3</option>
                 <option value="6">6</option>
@@ -671,9 +683,9 @@
         <div class="form-group">
             @* 日期範圍 *@
             <label>日期範圍</label>
-            <input type="date" id="focusStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="focusStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
             ⇔
-            <input type="date" id="focusEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <input type="text" id="focusEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
         </div>
         <div class="form-group">
             @* 道路借用類型 *@
@@ -690,9 +702,25 @@
             <label>路名</label>
             <input type="text" id="focusRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
         </div>
-        <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-            <button id="focusGoResult" class="btn js-modal-toggle">顯示結果</button>
-        </div>
+    </div>
+    <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+        <button id="focusGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
+    </div>
+    <div id="focusResultDiv" class="panelList">
+        <table id="focusTable" class="propTable">
+            <thead id="focusThead">
+                <tr id="focusHdr" role="row">
+                    @* 日期 *@
+                    <th style="width:100px">日期</th>
+                    @* 地點 *@
+                    <th style="width:100px">地點</th>
+                    @* 借用類型 *@
+                    <th style="width:120px">借用類型</th>
+                </tr>
+            </thead>
+            <tbody id="focusTbody"></tbody>
+        </table>
+
     </div>
 </div>
 

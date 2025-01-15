@@ -1,5 +1,5 @@
 ﻿#searchPanel {
-    width: 300px;
+    width: 200px;
     height: 250px;
 }
 
@@ -28,7 +28,7 @@
 
 #focusPanel {
     width: 450px;
-    height: 600px;
+    max-height: 600px;
 }
 
 #projectPanel {
@@ -40,7 +40,7 @@
     z-index: 1051;
     position: absolute;
     top: 20%;
-    left: 50%;
+    left: 30%;
     border: 1px solid #ccc;
     border-radius: 10px;
     display: flex;
@@ -113,10 +113,6 @@
     transition: background-color 0.3s;
 }
 
-    .panelResult:hover {
-        background-color: #e0e0e0;
-    }
-
 .searchBar {
     font-weight: bold;
     display: flex;
@@ -169,8 +165,45 @@
     font-weight: bolder;
 }
 
+    .goResult:hover {
+        background-color: gray;
+        color:white;
+    }
+
 .resultListTitle label,
 .resultListTitle a{
     font-size: 20px;
     font-weight: bold;
+}
+
+@media (max-width:899px){
+    #tb-painterPanel,
+    #tb-propEnabled
+    #tb-flagPanel,
+    #tb-searchPropPanel,
+    #tb-projectPanel,
+    #tb-flagPanel{
+        display: none;
+    }
+
+    #searchPanel{
+        top:10%;
+        left: 0%;
+    }
+
+    #searchPanel li{
+        font-size: 16px;
+    }
+
+    #focusPanel{
+        top:51.5px;
+        left: 0%;
+        width: 100%;
+    }
+
+    #focusPanel input[type="date"]{
+        max-width: 200px;
+        width: 100%;
+        box-sizing: border-box;
+    }
 }

@@ -63,8 +63,3 @@
     overflow-y: auto;
     overflow-x: auto;
 }
-
-#flagGoResult:hover{
-    background-color: gray;
-    color:white;
-}

@@ -1,121 +1,4 @@
-﻿.map-controls {
-    position: absolute;
-    top: 100px;
-    width: 40px;
-    z-index: 1055;
-    filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.2));
-}
-
-    .map-controls span {
-        font-size: 1.75rem;
-        text-align: center;
-        float: left;
-        width: 39px;
-        height: 39px;
-        line-height: 42px;
-        background: #567331;
-        cursor: pointer;
-        background-size: cover;
-        background-repeat: no-repeat;
-        border: 0.03rem solid #ffffff;
-        border-radius: 0 10px 10px 0;
-    }
-
-        .map-controls span:hover {
-            background-color: #91c54d;
-        }
-
-        .map-controls span.active {
-            background-color: #91c54d;
-        }
-
-
-.map-footer {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    width: 900px;
-    background-color: #4a5d23; /* 深綠色背景 */
-    padding: 10px 20px;
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-    border-radius: 10px 10px 10px 10px;
-    z-index: 1000;
-    align-items: center;
-    justify-content: space-between;
-    color: white; /* 設置文字顏色為白色 */
-    font-size: 18px;
-}
-
-    .map-footer > div {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px;
-        white-space: nowrap; /* 防止文字換行 */
-    }
-
-
-.title-divider {
-    display: inline-block; /* 讓分隔線具有寬度和高度 */
-    height: 20px; /* 設定高度 */
-    border-left: 1px solid #f8f8f8; /* 左邊顯示分隔線 */
-    margin: 0 5px; /* 左右外間距10px */
-}
-
-/* 粗體字 */
-.selectTitle{
-    font-weight: bold;
-    color:white
-}
-
-.footerSelect{
-    position: absolute;
-    z-index: 1050;
-    background-color: #4a5d23; /* 深綠色背景 */
-    border-radius: 10px 10px 0px 0px;
-    color: black; /* 設置文字顏色為白色 */
-    list-style: none;
-    padding: 10px;
-    padding-bottom: 0;
-}
-
-.footerSelect > ul {
-    padding-left: 0px;
-}
-
-.footerSelect > ul > li {
-    list-style-type: none;
-    background-color: #f8f8f8;
-}
-
-
-#mapSelect{
-    width: 250px;
-    top: -430px;
-}
-
-
-#coordinateSelect{
-    width: 250px;
-    top: -65px;
-}
-    
-#overlayMapSelector > .selected{
-    background-color: #91c54d;
-}
-
-.coordinate-item:hover {
-    background-color: #91c54d;
-    border-radius: 5px 5px 5px 5px;
-}
-
-.coordinate-item > span{
-    min-width: 60px; /* 確保對齊的寬度一致 */
-    text-align: right; /* 右對齊文字 */
-    padding-left: 5px; /* 設置左側內邊距，使文字與分隔線有間距 */
-}
-
-#map-Coordinate {
+﻿#map-Coordinate {
     width: 290px; /* 設置固定寬度，確保寬度不變 */
     overflow: hidden; /* 隱藏溢出的內容 */
     text-overflow: ellipsis; /* 當內容超出寬度時顯示省略號 */
@@ -127,6 +10,8 @@
 
 #scale-control {
     width: 150px;
+    display: inline-block; 
+    margin-left: 20px;
 }
 
 #map-basemapCtrl{
@@ -220,4 +105,149 @@
     background-image: url('/svg/tiptool/roadproject.svg');
     background-size: 70%;
     background-position: center;
+}
+
+#mapSelect{
+    width: 250px;
+    top: -430px;
+}
+
+#coordinateSelect{
+    width: 250px;
+    top: -65px;
+}
+    
+#overlayMapSelector > .selected{
+    background-color: #91c54d;
+}
+
+.map-controls {
+    display:block;
+    position: absolute;
+    top: 100px;
+    width: 40px;
+    z-index: 1045;
+    filter: drop-shadow(4px 4px 4px rgba(0, 0, 0, 0.2));
+}
+
+    .map-controls span {
+        font-size: 1.75rem;
+        text-align: center;
+        float: left;
+        width: 39px;
+        height: 39px;
+        line-height: 42px;
+        background: #567331;
+        cursor: pointer;
+        background-size: cover;
+        background-repeat: no-repeat;
+        border: 0.03rem solid #ffffff;
+        border-radius: 0 10px 10px 0;
+    }
+
+        .map-controls span:hover {
+            background-color: #91c54d;
+        }
+
+        .map-controls span.active {
+            background-color: #91c54d;
+        }
+
+
+.map-footer {
+    align-items: center;
+    background-color: #4a5d23; /* 深綠色背景 */
+    border-radius: 10px 10px 10px 10px;
+    bottom: 0;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+    color: white; /* 設置文字顏色為白色 */
+    display: flex;
+    font-size: 18px;
+    justify-content: flex-end;
+    left: auto;
+    padding: 10px 20px;
+    position: fixed;
+    right: 0;
+    width: auto;
+    z-index: 1000;
+}
+        
+
+    .map-footer > div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px;
+        white-space: nowrap; /* 防止文字換行 */
+    }
+
+
+.title-divider {
+    display: inline-block; /* 讓分隔線具有寬度和高度 */
+    height: 20px; /* 設定高度 */
+    border-left: 1px solid #f8f8f8; /* 左邊顯示分隔線 */
+    margin: 0 5px; /* 左右外間距10px */
+}
+
+/* 粗體字 */
+.selectTitle{
+    font-weight: bold;
+    color:white
+}
+
+.footerSelect{
+    position: absolute;
+    z-index: 1050;
+    background-color: #4a5d23; /* 深綠色背景 */
+    border-radius: 10px 10px 0px 0px;
+    color: black; /* 設置文字顏色為白色 */
+    list-style: none;
+    padding: 10px;
+    padding-bottom: 0;
+}
+
+.footerSelect > ul {
+    padding-left: 0px;
+}
+
+.footerSelect > ul > li {
+    list-style-type: none;
+    background-color: #f8f8f8;
+}
+
+
+.coordinate-item:hover {
+    background-color: #91c54d;
+    border-radius: 5px 5px 5px 5px;
+}
+
+.coordinate-item > span{
+    min-width: 60px; /* 確保對齊的寬度一致 */
+    text-align: right; /* 右對齊文字 */
+    padding-left: 5px; /* 設置左側內邊距，使文字與分隔線有間距 */
+}
+
+.leaflet-control-attribution{
+    display: none; /* 隱藏地圖底部的版權信息 */
+}
+
+@media (max-width: 1000px) {
+    .map-controls{
+        position: fixed;
+    }
+    .map-footer > div:not(#map-basemapCtrl) {
+        display: none; /* 隐藏其他元素 */
+    }
+    .map-footer > .title-divider{
+        display: none; /* 隐藏分隔线 */
+    }
+
+    .map-footer {
+        justify-content: flex-end; /* 工具栏移动到右侧 */
+        width: auto; /* 宽度自适应内容 */
+    }
+
+    #tb-sidebar {
+        display: none; /* 隐藏地图控件 */
+    }
 }

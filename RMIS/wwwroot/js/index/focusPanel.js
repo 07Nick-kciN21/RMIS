@@ -17,7 +17,6 @@ export function initFocusPanel(){
         .then(data => {
             console.log(data);
             // 取得搜尋後管線的資料
-            
         })
     });
 }
