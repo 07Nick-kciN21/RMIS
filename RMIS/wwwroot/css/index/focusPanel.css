@@ -1,7 +1,7 @@
 #focusPanel .panelBody{
     border: 1px solid gray;
     border-radius: 0px;
-    margin: 0 10px 10px;
+    margin: 0 15px 10px;
     padding-top: 10px;
 }
 
@@ -9,12 +9,11 @@
     border: 1px solid gray;
     border-radius: 0px;
     margin: 15px;
+    max-height: 300px;
 }
 
-#focusPanel #focusTbody{
-    border: 1px solid gray;
-    border-radius: 0px;
-    margin: 15px;
+#focusPanel .panelInput{
+    padding: 10px 15px 0;
 }
 
 #focusPanel .form-group{
@@ -30,4 +29,19 @@
 #focusPanel .form-group select, 
 #focusPanel .form-group div {
     width: 70%;
+}
+
+#focusPanel #focusTbody{
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px;
+}
+
+#focusPanel #focusTbody td{
+    table-layout: fixed;
+    white-space: normal;
+}
+
+#focusPanel #focusTable{
+    width: 500px;
 }

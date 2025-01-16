@@ -13,6 +13,7 @@ namespace RMIS.Models.API
         
         public string date { get; set; }
         public string location { get; set; }
+        public string caseType { get; set; }
         public List<Point> points { get; set; }
     }
 }

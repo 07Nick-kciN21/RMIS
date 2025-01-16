@@ -1,4 +1,4 @@
-﻿import { getIndexMap } from '../map.js';
+﻿import { getIndexMap, popupEnabled } from '../map.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer, addArrowlineToLayer } from './utils.js';
 
 export let layerProps = {};
@@ -31,6 +31,7 @@ export function addLayer2Map(id ,LayerData) {
                     if (areas != null) {
                         var newLayer = createNewLayer(result, pipelineId);
                         indexMap.addLayer(newLayer);
+                        setPointerEvents(newLayer, popupEnabled);
                         layers[result.id] = newLayer;
                     }
                     console.log("Add Layer Success");
@@ -93,7 +94,30 @@ function createNewLayer(result, pipelineId) {
             }
         });
     });
+    // 追蹤popupEnabled參數 如果為false，則interactive為false， 如果為true，則interactive為true
+    $("#tb-propEnabled").on('activeChange', (event, isActive) => {
+        // 檢查indexMap中有沒有該圖層
+        console.log("popupEnabled", isActive);
+        if (indexMap.hasLayer(newLayer)) {
+            newLayer.eachLayer(function (layer) {
+                const el = layer.getElement();
+                if (el) {
+                    el.style.pointerEvents = isActive ? 'auto' : 'none';
+                }
+            });
+        }
+    });
     return newLayer;
+}
+
+function setPointerEvents(targetLayer, isActive) {
+    targetLayer.eachLayer(function (layer) {
+        const el = layer.getElement();
+        if (el) {
+            el.style.pointerEvents = isActive ? 'auto' : 'none';
+        }
+    });
+
 }
 
 export function removeLayer2Map(id) {

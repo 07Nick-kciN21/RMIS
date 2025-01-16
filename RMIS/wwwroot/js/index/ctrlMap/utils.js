@@ -6,7 +6,6 @@ let currentLine = null;
 
 // 將標記加入圖層
 export function addMarkersToLayer(points, newLayer, svg, name) {
-
     var $indexMap = getIndexMap();
     let currentRectangle = null; // 用於保存當前的矩形
     let icon = L.icon({
@@ -20,7 +19,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             icon: icon,
             iconSize: [30, 30],
             iconAnchor: [15, 15],
-            popupAnchor: [0, -15]
+            popupAnchor: [0, -15],
         }).addTo(newLayer);
 
         let prop = point[1];
@@ -37,6 +36,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             maxHeight: 450
         });
         marker.on('click', function (e) {
+            console.log("Marker Clicked",popupEnabled);
             if(popupEnabled){
                 const latLng = e.latlng;
                 $indexMap.setView(latLng, $indexMap.getZoom());
@@ -67,7 +67,6 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                 const mapClickHandler = function (e) {
                     if (currentRectangle) {
                         newLayer.removeLayer(currentRectangle);
-                        currentRectangle = null;
                         console.log("Removed currentRectangle");
             
                         // 事件執行一次後立即移除
@@ -81,8 +80,6 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                 e.target.closePopup();
             }
         });
-
-        
         marker._isVisible = true;
         point[2].Instance = marker;
     });
@@ -164,10 +161,10 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     }
     // 創建 Leaflet Polygon
     let polygon = L.polygon(pointGroup, {
-        color: "#000000",        // 邊框顏色
+        color: "#000000",       // 邊框顏色
         opacity: 0,             // 邊框透明度
-        fillColor: color,    // 填充顏色
-        fillOpacity: 0     // 填充透明度
+        fillColor: color,       // 填充顏色
+        fillOpacity: 0         // 填充透明度
     }).addTo(newLayer);
     polygon.bindPopup(`
             <div class="popupData" style="display: none;">
@@ -237,7 +234,10 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
         }
     }
     // 建立polyline
-    let polyline = L.polyline(pointGroup, { color: color }).addTo(newLayer);
+    let polyline = L.polyline(pointGroup,{ 
+        color: color, 
+         
+    }).addTo(newLayer);
     // 在線段加上popup
     polyline.bindPopup(`
         <div class="popupData" style="display: none;">

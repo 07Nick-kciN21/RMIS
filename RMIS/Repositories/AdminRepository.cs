@@ -735,8 +735,8 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)") || p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate);
-                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[1]), input.FocusStartDate, input.FocusEndDate);
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[1]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
                 var result = new FocusedData
                 {
                     FocusedRoad = focusedRoadPoints,
@@ -750,7 +750,7 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate);
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
                 var result = new FocusedData
                 {
                     FocusedRoad = null,
@@ -764,7 +764,7 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate);
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
                 var result = new FocusedData
                 {
                     FocusedRoad = focusedRoadPoints,
@@ -777,7 +777,7 @@ namespace RMIS.Repositories
             return null;
         }
 
-        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, string FocusStartDate, string FocusEndDate)
+        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, string FocusStartDate, string FocusEndDate, string caseType)
         {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
@@ -804,7 +804,8 @@ namespace RMIS.Repositories
                             {
                                 date = $"{propDict["租借起始日"]}至{propDict["租借結束日"]}",
                                 location = propDict["借用路段"],
-                                points = new List<Point>()
+                                points = new List<Point>(),
+                                caseType = caseType
                             };
 
                             var focusedRoadPoints = await _mapDBContext.Points

@@ -28,7 +28,7 @@
 
 #focusPanel {
     width: 450px;
-    max-height: 600px;
+    height: 500px;
 }
 
 #projectPanel {
@@ -96,7 +96,7 @@
 
 .panelList {
     padding: 0;
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
     overflow-y: auto;
     border: 2px solid gray;
     height: 100%;
@@ -170,10 +170,11 @@
         color:white;
     }
 
-.resultListTitle label,
+.resultListTitle span,
 .resultListTitle a{
     font-size: 20px;
     font-weight: bold;
+    text-decoration: none;
 }
 
 @media (max-width:899px){
@@ -195,15 +196,13 @@
         font-size: 16px;
     }
 
+    #searchPanel{
+        top: 70%;
+        left: 0%;
+    }
     #focusPanel{
         top:51.5px;
         left: 0%;
         width: 100%;
-    }
-
-    #focusPanel input[type="date"]{
-        max-width: 200px;
-        width: 100%;
-        box-sizing: border-box;
     }
 }

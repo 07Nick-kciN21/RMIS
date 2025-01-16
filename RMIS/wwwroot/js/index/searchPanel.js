@@ -56,7 +56,7 @@ function addRoadLayer(id) {
                 }
                 let points = result.points.map(point => [point.latitude, point.longitude]);
                 if (points.length > 0) {
-                    roadlayer = L.polyline(points, { color: 'blue' }).addTo(indexMap); // 添加新的圖層
+                    roadlayer = L.polyline(points, { color: 'blue', interactive: false }).addTo(indexMap); // 添加新的圖層
                     indexMap.setView(points[0], 17); // 移動視角到第一個點
                 }
                 console.log("Add Layer Success");

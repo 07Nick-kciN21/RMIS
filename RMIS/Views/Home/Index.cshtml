@@ -154,7 +154,7 @@
 }
 
 
-<div class="offcanvas offcanvas-start custom-offcanvas-width show" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="false">
+<div class="offcanvas offcanvas-start custom-offcanvas-width show" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="true">
     <div id="layerBarContainer" class="layerList container-fluid">
         <h5 id="layerBar-ListTitle" class="offcanvas-title">圖資清單</h5>
     </div>
@@ -176,7 +176,7 @@
         <span id="tb-location" title="目前位置"></span>
         <span id="tb-streetView" title="google街景"></span>
         <span id="tb-propEnabled" title="屬性資料"></span>
-        <span id="tb-flagPanel" title="屬性資料"></span>
+        <span id="tb-flagPanel" title="權管土地"></span>
         <span id="tb-focusPanel" title="養工焦點"></span>
         <span id="tb-projectPanel" title="專案查詢"></span>
     </div>
@@ -351,7 +351,7 @@
             </div>
         </div>
     </div>
-    <div id="prop3" class="panelBody" style="background-color: white; padding-bottom: 0.2rem; display: none;">
+    <div id="prop3" class="panelBody" style="padding-bottom: 0.2rem; display: none;">
         <div class="propResultTitle">
             <span style="width:50px; height:30px; margin:0px">圖層:</span>
             <span id="propResultLayer" style="margin:0px"></span>
@@ -384,7 +384,7 @@
             </span>
         </div>
     </div>
-    <div id="prop4" class="panelBody" style="background-color: white; padding-bottom: 2rem; display: none;">
+    <div id="prop4" class="panelBody" style="padding-bottom: 2rem; display: none;">
         <div class="propResultTitle" style="height:30px;">
             <span style="width:50px; height:30px; margin:0px">圖層:</span>
             <span id="analysisResultLayer" style="margin:0px"></span>
@@ -438,7 +438,7 @@
 
             <div id="anaResultDiv" style="display:none">
                 <div class="form-group resultListTitle" style="margin: 2px 0px 2px; clear: both;">
-                    <label style="vertical-align: text-top; margin: 0px;">數值統計結果</label>
+                    <span style="vertical-align: text-top; margin: 0px;">數值統計結果</span>
                     <a id="exportExcel2" class="exportExcel" style="float: right;">匯出Excel</a>
                 </div>
                 <div class="propResultDiv" style="max-height: 114px; overflow-y: auto;">
@@ -679,49 +679,69 @@
             <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
         </li>
     </ul>
-    <div class="panelBody" style="display: block">
-        <div class="form-group">
-            @* 日期範圍 *@
-            <label>日期範圍</label>
-            <input type="text" id="focusStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
-            ⇔
-            <input type="text" id="focusEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
+        <div class="panelBody" style="display: block">
+            <div class="form-group">
+                @* 日期範圍 *@
+                <label>日期範圍</label>
+                <input type="text" id="focusStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+                ⇔
+                <input type="text" id="focusEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;">
+            </div>
+            <div class="form-group">
+                @* 道路借用類型 *@
+                <label>借用類型</label>
+                <select id="ofType" class="form-select">
+                    <option value="0">請選擇</option>
+                    <option value="1">臨時道路借用(範圍)</option>
+                    <option value="2">臨時道路借用(路線)</option>
+                    <option value="3">施工通報(道路挖掘)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                @* 路名 *@
+                <label>路名</label>
+                <input type="text" id="focusRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
+            </div>
         </div>
-        <div class="form-group">
-            @* 道路借用類型 *@
-            <label>借用類型</label>
-            <select id="ofType" class="form-select">
-                <option value="0">請選擇</option>
-                <option value="1">臨時道路借用(範圍)</option>
-                <option value="2">臨時道路借用(路線)</option>
-                <option value="3">施工通報(道路挖掘)</option>
+        <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+            <button id="focusGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
+        </div>
+        <div class="form-group resultListTitle" style="margin: 0 15px; clear: both;">
+            <span style="vertical-align: text-top; margin: 0px;">結果列表</span>
+            <span id="focusTotalCount"></span>
+            <a id="focusExportExcel" class="exportExcel" style="float: right; margin-left: auto;">匯出Excel</a>
+        </div>
+        <div id="focusResultDiv" class="panelList">
+            <table id="focusTable" class="propTable">
+                <thead id="focusThead">
+                    <tr id="focusHdr" role="row">
+                        <th style="width:60px">操作</th>
+                        @* 日期 *@
+                        <th style="width:100px">日期</th>
+                        @* 地點 *@
+                        <th style="width:100px">地點</th>
+                        @* 借用類型 *@
+                        <th style="width:100px">借用類型</th>
+                    </tr>
+                </thead>
+                <tbody id="focusTbody"></tbody>
+            </table>
+        </div>
+        <div class="tablePage" style="margin: 0 15px;">
+            <span style="float:left">每頁最多</span>
+            <select id="focusPageSize" style="float:left">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
             </select>
-        </div>
-        <div class="form-group">
-            @* 路名 *@
-            <label>路名</label>
-            <input type="text" id="focusRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
+            <span style="float:left"> 筆</span>
+            <span id="focusPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
+            </span>
         </div>
     </div>
-    <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-        <button id="focusGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
-    </div>
-    <div id="focusResultDiv" class="panelList">
-        <table id="focusTable" class="propTable">
-            <thead id="focusThead">
-                <tr id="focusHdr" role="row">
-                    @* 日期 *@
-                    <th style="width:100px">日期</th>
-                    @* 地點 *@
-                    <th style="width:100px">地點</th>
-                    @* 借用類型 *@
-                    <th style="width:120px">借用類型</th>
-                </tr>
-            </thead>
-            <tbody id="focusTbody"></tbody>
-        </table>
-
-    </div>
+    
 </div>
 
 @* 專案查詢 *@

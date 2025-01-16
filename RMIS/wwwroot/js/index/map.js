@@ -3,7 +3,7 @@ let dtreetViewEnabled = false;
 let indexMap;
 // 初始化地图
 export function initMap(mapId) {
-    indexMap = L.map(mapId, { zoomControl: false, doubleClickZoom: false }).setView([24.957276277371435, 121.21903318892302], 15);
+    indexMap = L.map(mapId, { zoomControl: false, doubleClickZoom: false }).setView([24.99305818692662, 121.3010601], 19);
     
     createBaseLayers();
 
@@ -96,9 +96,9 @@ export function initMap(mapId) {
         popupEnabled = !popupEnabled;
         
         if (popupEnabled) {
-            $('#tb-propEnabled').addClass('active');
+            $('#tb-propEnabled').addClass('active').trigger('activeChange', [popupEnabled]);
         } else {
-            $('#tb-propEnabled').removeClass('active');
+            $('#tb-propEnabled').removeClass('active').trigger('activeChange', [popupEnabled]);
         }
     });
     

@@ -122,7 +122,7 @@ export function initFlagPanel(){
                 }
                 console.log(`#${pipeline} click`);
             };
-            flagProps = layerProps[data['pipelines'][0]];
+            
         });
     });
 
@@ -246,7 +246,7 @@ function renderTableBody(pageData){
                 iconSize: [24, 24],         // 圖標大小
                 iconAnchor: [12, 12]        // 錨點在正方形中心
             });
-            currentSquare = L.marker(center, { icon: squareIcon }).addTo($indexMap);
+            currentSquare = L.marker(center, { icon: squareIcon, interactive: false }).addTo($indexMap);
         });
         const flagRow = 
         `
