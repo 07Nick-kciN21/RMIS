@@ -100,9 +100,14 @@ function createNewLayer(result, pipelineId) {
         console.log("popupEnabled", isActive);
         if (indexMap.hasLayer(newLayer)) {
             newLayer.eachLayer(function (layer) {
-                const el = layer.getElement();
-                if (el) {
-                    el.style.pointerEvents = isActive ? 'auto' : 'none';
+                if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
+                    const path = layer._path; // 直接取底層 SVG 路徑
+                    if (path) {
+                        path.style.pointerEvents = isActive ? 'auto' : 'none';
+                    }
+                } else if (layer instanceof L.PolylineDecorator) {
+                    // 如果是 L.polylineDecorator，取出裝飾的基礎圖層
+                    console.log("L.PolylineDecorator");
                 }
             });
         }
@@ -111,13 +116,20 @@ function createNewLayer(result, pipelineId) {
 }
 
 function setPointerEvents(targetLayer, isActive) {
-    targetLayer.eachLayer(function (layer) {
-        const el = layer.getElement();
-        if (el) {
-            el.style.pointerEvents = isActive ? 'auto' : 'none';
-        }
-    });
-
+    if (targetLayer instanceof L.LayerGroup) {
+        targetLayer.eachLayer(function (layer) {
+            if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
+                const path = layer._path; // 直接取底層 SVG 路徑
+                if (path) {
+                    path.style.pointerEvents = isActive ? 'auto' : 'none';
+                }
+            } else if (layer instanceof L.PolylineDecorator) {
+                // 如果是 L.polylineDecorator，取出裝飾的基礎圖層
+                console.log("L.PolylineDecorator");
+            }
+        });
+    }
+    
 }
 
 export function removeLayer2Map(id) {

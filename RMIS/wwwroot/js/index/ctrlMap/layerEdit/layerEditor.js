@@ -11,7 +11,7 @@ export function layerEditor(id, name, layersId){
         if(data.kind == "point"){
             pointEdit(id, name, layersId);
         }
-        else if(data.kind == "line"){
+        else if(data.kind == "line" || data.kind == "arrowline"){
             lineEdit(id, name, layersId);
         }
         else if(data.kind == "plane"){

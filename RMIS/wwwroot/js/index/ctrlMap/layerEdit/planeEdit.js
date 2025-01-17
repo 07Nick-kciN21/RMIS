@@ -266,6 +266,9 @@ function adjustDuplicateColors(colorSet) {
     return colorSet;
 }
 
+const planeNoSelect = ["OBJECTID", "Instance", "全市編號", "行政區編號", "公園名稱", "行政區", "里", "大小分類", "公園分類", "維管單位", "座落位置", "備註", "分區類別", "Shape.STArea()", "Shape.STLength()", "UNIT", "鄉鎮市區", "段名", "段小段", "Fid_key", "都市計畫", "都計用地", "使用分區", "使用地", "公私別", "取得方式", "取得單位"];
+const focusNoSelect = ["座標", "ID", "申請日期", "申請租借事由", "租借起始日", "租借結束日", "借用時段", "借用路段", "案件狀態"];
+
 function planeEditStep2(id){
     console.log("planeEditStep2");
     var symClass = $('.symbolClass.selected').data('symclass');
@@ -288,8 +291,9 @@ function planeEditStep2(id){
         $('#editSymbol-Step2').html(pointStep2_1);
         $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 依分級選擇`);
         var fields = Object.keys(layerProps[id][0]);
+        console.log(fields);
         fields.forEach(function (field) {
-            if(field == "開闢年度" || field == "段號" || field == "地號" || field == "子地號" || field == "地籍面積"){
+            if(!planeNoSelect.includes(field) && !focusNoSelect.includes(field)){
                 $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
             };
         });

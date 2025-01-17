@@ -58,7 +58,6 @@ export function add2List(id, name, datas) {
 
     // 編輯圖徽
     $(`#more_action2_${id}`).on('click', function () {
-        // 如果type是點
         layerEditor(id, name, layersId);
     });
     // 使用透明度不要关闭

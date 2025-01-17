@@ -38,3 +38,21 @@ export function removePipeline(id) {
         });
     });
 }
+
+
+export function addFocusPipeline(ofType) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/api/MapAPI/GetLayersByFocusPipeline?ofType=${ofType}`,
+            method: 'POST',
+            success: function (result) {
+                console.log("Add layer success");
+                resolve(result);
+            },
+            error: function (err) {
+                console.error('Error fetching layer data', err);
+                reject(err);
+            }
+        });
+    });
+}

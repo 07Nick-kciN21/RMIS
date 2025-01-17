@@ -66,7 +66,7 @@ export function initProjectPanel() {
         console.log(formData);
         $('#projectTbody').empty();
         // console.log(adminDists[admimVal], projectMoney, projectMoneyEnd);
-        fetch(`/api/AdminAPI/getRoadProject`, {
+        fetch(`/api/MapAPI/GetRoadProject`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -75,6 +75,7 @@ export function initProjectPanel() {
         }).then(response => response.json())
         .then(data => {
             filterProject = data['roadProjects'];
+            $("#projectTotalCount").text(`(總數:${filterProject.length})`);
             updateProjectTable();
         })
     });
@@ -84,10 +85,38 @@ export function initProjectPanel() {
         currentPage = 1;
         updateProjectTable();
     });
+
+    // 申請人 行政區	起訖位置	道路長度	目前路寬	計畫路寬	公有土地	私有土地	公私土地	工程經費	用地經費	補償經費	總經費	備註
+    $('#exportProjectExcel').click(function () {
+        const data = filterProject.map(project => {
+            // 
+            return {
+                '申請人': project['proposer'],
+                '行政區': project['administrativeDistrict'],
+                '起訖位置': project['startEndLocation'],
+                '道路長度': project['roadLength'] + '公尺',
+                '目前路寬': project['currentRoadWidth'] + '公尺',
+                '計畫路寬': project['plannedRoadWidth'] + '公尺',
+                '公有土地': project['publicLand'] + '筆',
+                '私有土地': project['privateLand'] + '筆',
+                '公私土地': project['publicPrivateLand'] + '筆',
+                '工程經費': project['constructionBudget']/10000 + '萬',
+                '用地經費': project['landAcquisitionBudget']/10000 + '萬',
+                '補償經費': project['compensationBudget']/10000 + '萬',
+                '總經費': project['totalBudget']/10000 + '萬',
+                '備註': project['remarks']
+            };
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+        // 專案資料yyyyMMdd.xlsx
+        XLSX.writeFile(wb, `專案列表${new Date().toISOString().split('T')[0].replace(/-/g, '')}.xlsx`);
+    });
 }
 
 function addLayerToMap(projectId) {
-    fetch(`/api/AdminAPI/GetPointsByProjectId?projectId=${projectId}`, {
+    fetch(`/api/MapAPI/GetPointsByProjectId?projectId=${projectId}`, {
         method: 'POST'
     }).then(response => response.json())
     .then(data => {

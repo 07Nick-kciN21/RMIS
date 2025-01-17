@@ -36,5 +36,23 @@
 }
 
 #budgetDiv select{
-    width: 10%;
+    width: 25%;
+}
+
+#budgetDiv input{
+    width: 40%;
+}
+
+#budgetDiv .totalBudget > input{
+    width: 30%;
+}
+@media (max-width: 899px) {
+    #projectPanel .panelBody label {
+        font-size: 1.5rem;
+    }
+    
+    #budgetDiv select {
+        width: 25%;
+        font-size: 12px;
+    }
 }

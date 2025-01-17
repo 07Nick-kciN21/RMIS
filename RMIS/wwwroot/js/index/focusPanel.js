@@ -1,4 +1,6 @@
-import { layers, layerProps } from './ctrlMap/layers.js';
+import { addFocusPipeline } from './ctrlMap/pipeline.js';
+import { add2List, remove2List} from './ctrlMap/list.js';
+import { addLayer2Map } from './ctrlMap/layers.js';
 
 let currentRow = null;
 let currentSquare = null;
@@ -13,7 +15,7 @@ export function initFocusPanel(){
         formData.append('FocusEndDate', new Date($('#focusEndDate').val()).getTime());
         formData.append('FocusType', $('#ofType').val());
         console.log(new Date($('#focusStartDate').val()).getTime(), new Date($('#focusEndDate').val()).getTime());
-        fetch(`/api/AdminAPI/getFocusData`, {
+        fetch(`/api/MapAPI/GetFocusData`, {
             method: 'POST',
             body: formData
         })
@@ -26,6 +28,11 @@ export function initFocusPanel(){
             focusData = focuseRoad.concat(focuseRange);
         })
         .then(() => {
+            // 新增圖資清單
+            let ofType = $('#ofType').val();
+            addFocusPipeline(ofType).then(result => {
+                addFocus2List(result);
+            });
             // 更新屬性表格
             $("#focusTotalCount").text(`(總數:${focusData.length})`);
             updateFlagTable();
@@ -33,7 +40,9 @@ export function initFocusPanel(){
             $('#focusResultDiv').show();
         });
     });
-
+    $('#focusExportExcel').on('click', function(){
+        console.log(focusData);
+    });
     $('#focusPageSize').on('change', function () {
         pageSize = parseInt($(this).find('option:selected').text(), 10);
         currentPage = 1;

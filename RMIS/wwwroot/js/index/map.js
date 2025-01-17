@@ -40,6 +40,20 @@ export function initMap(mapId) {
         });
     });
 
+    // 檢查螢幕尺寸條件
+    function defaultOffCanvas() {
+        const isSmallScreen = window.matchMedia("(max-width: 899px)").matches; // 設定特定寬度條件
+        const offcanvasElement = document.getElementById('layerListBlock');
+        const offcanvasInstance = new bootstrap.Offcanvas(offcanvasElement);
+        if (!isSmallScreen) {
+            offcanvasInstance.show(); // 預設啟用
+        } else {
+            offcanvasInstance.hide(); // 預設關閉
+        }
+    }
+
+    defaultOffCanvas();
+
     $('#menu-toggle').on('click', function () {
         console.log('menu-toggle');
         // 移除id="navbar-menu"的toggle

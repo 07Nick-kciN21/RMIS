@@ -110,7 +110,7 @@ export function initFlagPanel(){
         }
     });
     $('#tb-flagPanel').on('click', function(){
-        fetch('/api/AdminAPI/getFlaggedPipelines', {method: 'POST'})
+        fetch('/api/MapAPI/GetFlaggedPipelines', {method: 'POST'})
         .then(response => response.json())
         .then(data => {
             console.log(data['pipelines']);

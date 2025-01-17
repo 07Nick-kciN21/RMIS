@@ -261,6 +261,10 @@ function adjustDuplicateColors(colorSet) {
     return colorSet;
 }
 
+const lineNoSelect = ["座標", "備註", "OBJECTID", "內容物", "Instance", "類別碼", "識別碼", "起點編號", "終點編號", "管理單位", "管線編號", "設置日期", "管線材料"];
+const focusNoSelect = ["ID", "申請日期", "申請租借事由", "租借起始日", "租借結束日", "借用時段", "借用路段", "案件狀態"];
+
+
 function lineEditStep2(id){
     console.log("pointEditStep2");
     // 從.symbolClass下找到.selected的data-symclass
@@ -284,10 +288,11 @@ function lineEditStep2(id){
         $('#editSymbol-Step2').html(pointStep2_1);
         $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 依分級選擇`);
         var fields = Object.keys(layerProps[id][0]);
+        
         fields.forEach(function(field){
-            if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance" && field != "類別碼" && field != "識別碼" && field != "起點編號" && field != "終點編號" && field != "管理單位" && field != "管線編號" && field != "設置日期" && field != "管線材料"){
+            if (!lineNoSelect.includes(field) && !focusNoSelect.includes(field)) {
                 $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
-            };
+            }
         });
 
         // 2. 初始化 Select2，並使用 templateResult
@@ -412,6 +417,11 @@ function lineEditStep2(id){
             idList.forEach(function(id){
                 if(layers[id]){
                     layers[id].eachLayer(function(layer){
+                        if(layer instanceof L.PolylineDecorator) {
+                            console.log("L.PolylineDecorator");
+                            layers[id].removeLayer(layer);
+                            return;
+                        }
                         layer.setStyle({
                             color: color,
                             weight: thickness*thickness
@@ -466,7 +476,7 @@ function lineEditStep2(id){
         
             idList.forEach(function (id) {
                 if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {
+                    layers[id].eachLayer(function (layer) {    
                         var popup = layer.getPopup();
                         if (popup) {
                             var content = popup.getContent();
@@ -508,6 +518,11 @@ function lineEditStep2(id){
             idList.forEach(function (id) {
                 if (layers[id]) {
                     layers[id].eachLayer(function (layer) {
+                        if(layer instanceof L.PolylineDecorator) {
+                            console.log("L.PolylineDecorator");
+                            layers[id].removeLayer(layer);
+                            return;
+                        }                        
                         var popup = layer.getPopup();
                         if (popup) {
                             var content = popup.getContent();
@@ -581,7 +596,7 @@ function lineEditStep2(id){
             let fields = [];
             idList.forEach(function (id) {
                 if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {
+                    layers[id].eachLayer(function (layer) {     
                         var popup = layer.getPopup();
                         if (popup) {
                             var content = popup.getContent();
@@ -624,6 +639,11 @@ function lineEditStep2(id){
             idList.forEach(function (id) {
                 if(layers[id]){
                     layers[id].eachLayer(function (layer) {
+                        if(layer instanceof L.PolylineDecorator) {
+                            console.log("L.PolylineDecorator");
+                            layers[id].removeLayer(layer);
+                            return;
+                        }  
                         var popup = layer.getPopup();
                         if (popup) {
                             var content = popup.getContent();

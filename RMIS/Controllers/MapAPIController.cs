@@ -5,21 +5,24 @@ using RMIS.Data;
 using System.Linq;
 using RMIS.Models.API;
 using RMIS.Models.sql;
+using RMIS.Repositories;
 
 namespace RMIS.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class MapAPIController : ControllerBase
     {
+        private readonly AdminInterface _adminInterface;
         private readonly MapDBContext _mapDBContext;
 
-        public MapAPIController(MapDBContext mapDBContext)
+        public MapAPIController(AdminInterface adminInterface, MapDBContext mapDBContext)
         {
+            _adminInterface = adminInterface;
             _mapDBContext = mapDBContext;
         }
 
-        [HttpGet]
+        [HttpGet("GetLayers")]
         public IActionResult GetLayers(Guid pipelineId)
         {
             var layers = _mapDBContext.Layers
@@ -30,7 +33,7 @@ namespace RMIS.Controllers
             return Ok(layers);
         }
 
-        [HttpPost]
+        [HttpPost("GetLayersByPipeline")]
         public async Task<List<LayersByPipeline>> GetLayersByPipeline(Guid pipelineId)
         {
             try
@@ -57,7 +60,7 @@ namespace RMIS.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("GetAreasByLayer")]
         public async Task<AreasByLayer> GetAreasByLayer(Guid LayerId)
         {
             try
@@ -102,7 +105,7 @@ namespace RMIS.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("GetLayerIdByPipeline")]
         public async Task<LayerIdByPipeline> GetLayerIdByPipeline(Guid PipelineId)
         {
             try
@@ -123,7 +126,7 @@ namespace RMIS.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("GetRoadbyName")]
         public async Task<List<RoadbyName>> GetRoadbyName(string name)
         {
             try
@@ -148,7 +151,7 @@ namespace RMIS.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("GetPointsbyLayerId")]
         public async Task<PointsbyId> GetPointsbyLayerId(Guid LayerId)
         {
             try
@@ -180,7 +183,7 @@ namespace RMIS.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpPost("GetMapSources")]
         public async Task<MapSourceOrderbyTileType> GetMapSources()
         {
             try
@@ -259,7 +262,7 @@ namespace RMIS.Controllers
             return Ok("Data cleared successfully.");
         }
 
-        [HttpGet]
+        [HttpGet("GetGeoKindByPipeId")]
         public async Task<IActionResult> GetGeoKindByPipeId(Guid pipelineId)
         {
             // 先取得 layer
@@ -285,6 +288,108 @@ namespace RMIS.Controllers
             }
 
             return Ok(geometryKind);
+        }
+
+        [HttpPost("GetFlaggedPipelines")]
+        public async Task<IActionResult> GetFlaggedPipelines()
+        {
+            try
+            {
+                var pipelines = await _adminInterface.GetFlaggedPipelinesAsync();
+
+                if (pipelines != null)
+                {
+                    return Ok(new { success = true, pipelines });
+                }
+                else
+                {
+                    return NotFound(new { success = false, message = "No flagged pipelines found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while fetching flagged pipelines.", error = ex.Message });
+            }
+        }
+
+        // selectType：道路借用類型
+        [HttpPost("GetFocusData")]
+        public async Task<IActionResult> GetFocusedData([FromForm] GetFocusDataInput data)
+        {
+            try
+            {
+                var Datas = await _adminInterface.GetFocusDataAsync(data);
+
+                if (Datas != null)
+                {
+                    return Ok(new { success = true, Datas });
+                }
+                else
+                {
+                    return NotFound(new { success = false, message = "No focused pipelines found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while fetching focused pipelines.", error = ex.Message });
+            }
+        }
+
+        [HttpPost("GetRoadProject")]
+        public async Task<IActionResult> GetRoadProject([FromBody] GetRoadProjectInput data)
+        {
+            try
+            {
+                var roadProjects = await _adminInterface.GetProjectByAsync(data);
+                // return Ok(new { success = true, data });
+                if (roadProjects != null)
+                {
+                    return Ok(new { success = true, roadProjects });
+                }
+                else
+                {
+                    return NotFound(new { success = false, message = "No road projects found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while fetching road projects.", error = ex.Message });
+            }
+        }
+
+        [HttpPost("GetPointsByProjectId")]
+        public async Task<IActionResult> GetPointsByProjectId(Guid projectId)
+        {
+            try
+            {
+                var points = await _adminInterface.GetPointsByProjectIdAsync(projectId);
+
+                if (points != null)
+                {
+                    return Ok(new { success = true, points });
+                }
+                else
+                {
+                    return NotFound(new { success = false, message = "No points found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "取得專案座標資料失敗.", error = ex.Message });
+            }
+        }
+
+        [HttpPost("GetLayersByFocusPipeline")]
+        public async Task<IActionResult> GetLayersByFocusPipeline(int ofType)
+        {
+            try
+            {
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "取得養工焦點圖層失敗" });
+            }
         }
     }
 }

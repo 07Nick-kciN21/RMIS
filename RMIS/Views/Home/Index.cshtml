@@ -132,7 +132,7 @@
                     <div class="nav-item dropdown">
                         <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
                     </div>
-                    <div class="nav-item dropdown">
+                    <div class="nav-item dropdown mobile-show">
                         <button class="dropdown-button" id="imageDataBtn" data-target="imageData">業務圖資</button>
                         <div class="dropdown-content" id="imageData">
                         </div>
@@ -154,7 +154,7 @@
 }
 
 
-<div class="offcanvas offcanvas-start custom-offcanvas-width show" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="true">
+<div class="offcanvas offcanvas-start custom-offcanvas-width" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="false">
     <div id="layerBarContainer" class="layerList container-fluid">
         <h5 id="layerBar-ListTitle" class="offcanvas-title">圖資清單</h5>
     </div>
@@ -673,13 +673,13 @@
         </span>
         <button class="closeButton">&times;</button>
     </div>
-    <ul class="panelInput" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
-        <li style="width: 25%">
-            <input type="radio" class="btn-check" name="btnradio" id="focus1" autocomplete="off" checked />
-            <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
-        </li>
-    </ul>
     <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
+        <ul class="panelInput" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
+            <li style="width: 25%">
+                <input type="radio" class="btn-check" name="btnradio" id="focus1" autocomplete="off" checked />
+                <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
+            </li>
+        </ul>
         <div class="panelBody" style="display: block">
             <div class="form-group">
                 @* 日期範圍 *@
@@ -816,47 +816,47 @@
                 <div class="form-group">
                     <label style="margin-right: auto;">工程經費</label>
                     @* 比較運算選項(> < =) *@
-                    <select id="constructionBudgetOption" class="form-select" style="width: 25%;">
+                    <select id="constructionBudgetOption" class="form-select">
                         <option value="-1">請選擇</option>
                         <option value="1">大於</option>
                         <option value="2">小於</option>
                         <option value="3">等於</option>
                     </select>
-                    <input type="text" id="constructionBudget" class="form-control" style="width: 40%;">
+                    <input type="text" id="constructionBudget" class="form-control">
                     <label style="width: 5%;">萬</label>
                 </div>
                 @* 用地經費 *@
                 <div class="form-group">
                     <label style="margin-right: auto;">用地經費</label>
                     @* 比較運算選項(> < =) *@
-                    <select id="landAcquisitionBudgetOption" class="form-select" style="width: 25%;">
+                    <select id="landAcquisitionBudgetOption" class="form-select">
                         <option value="-1">請選擇</option>
                         <option value="1">大於</option>
                         <option value="2">小於</option>
                         <option value="3">等於</option>
                     </select>
-                    <input type="text" id="landAcquisitionBudget" class="form-control" style="width: 40%;">
+                    <input type="text" id="landAcquisitionBudget" class="form-control">
                     <label style="width: 5%;">萬</label>
                 </div>
                 @* 補償經費 *@
                 <div class="form-group">
                     <label style="margin-right: auto;">補償經費</label>
                     @* 比較運算選項(> < =) *@
-                    <select id="compensationBudgetOption" class="form-select" style="width: 25%;">
+                    <select id="compensationBudgetOption" class="form-select">
                         <option value="-1">請選擇</option>
                         <option value="1">大於</option>
                         <option value="2">小於</option>
                         <option value="3">等於</option>
                     </select>
-                    <input type="text" id="compensationBudget" class="form-control" style="width: 40%;">
+                    <input type="text" id="compensationBudget" class="form-control">
                     <label style="width: 5%;">萬</label>
                 </div>
-                <div class="form-group">
+                <div class="form-group totalBudget">
                     @* 合計經費(範圍) *@
                     <label style="margin-right: auto;">經費範圍</label>
-                    <input type="text" id="totalBudgetStart" class="form-control" style="width: 30%;">
-                    <label style="width: 5%;">⇔</label>
-                    <input type="text" id="totalBudgetEnd" class="form-control" style="width: 30%;">
+                    <input type="text" id="totalBudgetStart" class="form-control">
+                    <label style="width: 5%; width: 5%; align-items: center; justify-content: center; display: flex;">⇔</label>
+                    <input type="text" id="totalBudgetEnd" class="form-control">
                     <label style="width: 5%;">萬</label>
                 </div>
             </div>

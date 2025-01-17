@@ -112,6 +112,7 @@ export function bindMenuEvents() {
                 $switch.removeClass('switch-on').addClass('switch-off');
             });
         } else {
+            // result: layerIdList
             addPipeline(id).then(result => {
                 layerList[id] = true;
                 add2List(id, name, result);

@@ -1,13 +1,14 @@
 ﻿import { getIndexMap, popupEnabled } from '../map.js'; 
 
 
-let currentLine = null;
-
+let currentRectangle = null; // 用於保存當前的矩形
+let currentLine = null; // 用於保存當前的線段
+let currentPolygon = null; // 用於保存當前的多邊形
+let currentArrow = null; // 用於保存當前的箭頭線段
 
 // 將標記加入圖層
 export function addMarkersToLayer(points, newLayer, svg, name) {
     var $indexMap = getIndexMap();
-    let currentRectangle = null; // 用於保存當前的矩形
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
@@ -125,11 +126,11 @@ export function addLineToLayer(points, newLayer, color, name) {
                     color: 'white',
                     opacity: 0.8
                 }).addTo(newLayer);
-    
+                
                 // 移動地圖中央到點擊的點
                 const latLng = e.latlng; // 取得點擊事件中的座標
                 $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
-
+                
                 const mapClickHandler = function (e) {
                     if (currentLine) {
                         newLayer.removeLayer(currentLine);
@@ -154,7 +155,7 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     var $indexMap = getIndexMap();
     var pointGroup = [];
     var prop = points[0][1];
-    
+
     // 把points的所有[0]取出集合
     for (var i = 0; i < points.length; i++) {
         pointGroup.push(points[i][0]);
@@ -186,14 +187,26 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     polygon.on('click', function () {
         if(popupEnabled){
             const inverseColor = getInverseColor(color);
+            
+            // 如果有已記錄的多邊形，重置它的顏色
+            if (currentPolygon && currentPolygon !== this) {
+                currentPolygon.setStyle({ fillColor: color });
+            }
+
+            // 更新目前點選的多邊形
+            currentPolygon = this;
             polygon.setStyle({ fillColor: inverseColor });
 
             const mapClickHandler = function (e) {
-                polygon.setStyle({ fillColor: color });
-                console.log("Removed currentPolygon");
+                // 重置當前多邊形的顏色
+                if (currentPolygon) {
+                    currentPolygon.setStyle({ fillColor: color });
+                    currentPolygon = null; // 清空記錄
+                }
+                console.log("Reset currentPolygon");
                 $indexMap.off('click', mapClickHandler);
             };
-
+            
             $indexMap.on('click', mapClickHandler);
         }
         else{ 
@@ -208,6 +221,7 @@ export function addPolygonToLayer(points, newLayer, color, name) {
 
 // 添加箭頭線段
 export function addArrowlineToLayer(points, newLayer, color, name) {
+    var $indexMap = getIndexMap();
     function addArrowToLine(line, color) {
         var arrow = L.polylineDecorator(line, {
             patterns: [
@@ -219,7 +233,8 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
                         pathOptions: {
                             fillOpacity: 1,
                             weight: 0,
-                            color: color
+                            color: color,
+                            interactive: false, // 禁用互動
                         }
                     })
                 }
@@ -233,13 +248,13 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
             pointGroup.push(points[i][0]); // 提取座標點
         }
     }
-    // 建立polyline
-    let polyline = L.polyline(pointGroup,{ 
+    // 建立arrowline
+    let arrowline = L.polyline(pointGroup,{ 
         color: color, 
          
     }).addTo(newLayer);
     // 在線段加上popup
-    polyline.bindPopup(`
+    arrowline.bindPopup(`
         <div class="popupData" style="display: none;">
             ${points[0][1]}
         </div>
@@ -255,7 +270,34 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
         maxHeight: 450
     });
     // 在尾端添加箭頭
-    addArrowToLine(polyline, color);
+    addArrowToLine(arrowline, color);
+    arrowline.on('click', function (e) {
+        if(popupEnabled){
+            if(currentArrow){
+                $indexMap.removeLayer(currentArrow);
+            }
+            const inverseColor = getInverseColor(color);
+            currentArrow = L.polyline(arrowline.getLatLngs(), {
+                color: inverseColor,
+                opacity: 0.8
+            }).addTo(newLayer);
+            const latLng = e.latlng; // 取得點擊事件中的座標
+            $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
+
+            const mapClickHandler = function (e) {
+                if(currentArrow){
+                    $indexMap.removeLayer(currentArrow);
+                }
+                $indexMap.off('click', mapClickHandler);
+            };
+
+            $indexMap.on('click', mapClickHandler);
+        }
+        else{ 
+            // popupEnabled為false時，不顯示popup
+            arrowline.closePopup();
+        }
+    });
 }
 
 function getInverseColor(color) {

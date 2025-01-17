@@ -182,7 +182,6 @@
     #tb-propEnabled
     #tb-flagPanel,
     #tb-searchPropPanel,
-    #tb-projectPanel,
     #tb-flagPanel{
         display: none;
     }
@@ -201,6 +200,11 @@
         left: 0%;
     }
     #focusPanel{
+        top:51.5px;
+        left: 0%;
+        width: 100%;
+    }
+    #projectPanel{
         top:51.5px;
         left: 0%;
         width: 100%;

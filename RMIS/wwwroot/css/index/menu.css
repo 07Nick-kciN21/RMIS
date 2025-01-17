@@ -109,4 +109,8 @@
     #navbar-menu .dropdown-button {
         width: 100%; /* 確保按鈕寬度與父容器一致 */
     }
+
+    #navbar-menu > div:not(.mobile-show){
+        display: none;
+    }
 }

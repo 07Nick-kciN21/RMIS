@@ -32,7 +32,19 @@
         e.preventDefault();
     });
 
-    $(document).on('pointermove', handlePanelMove);
+
+    // 檢查螢幕尺寸條件
+    function enablePanelDrag() {
+        const isSmallScreen = window.matchMedia("(max-width: 899px)").matches; // 設定特定寬度條件
+        if (!isSmallScreen) {
+            $(document).on('pointermove', handlePanelMove); // 啟用拖移
+        } else {
+            $(document).off('pointermove', handlePanelMove); // 禁用拖移
+        }
+    }
+
+    enablePanelDrag();
+    
     $(document).on('pointerup', () => {
         isDragging = false;
     });
