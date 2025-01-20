@@ -6,11 +6,11 @@ import { layerEditor } from './layerEdit/layerEditor.js';
 import { opacityLayer } from './opacityCtrl.js';
 
 
-// 圖資清單控制.
-
+// 圖資清單控制
 export function add2List(id, name, datas) {
     let sections = "";
     let layersId = [];
+    // pipeline下的layer
     datas.forEach(function (data) {
         layersId.push(data.id);
         var section = `
@@ -21,6 +21,7 @@ export function add2List(id, name, datas) {
         `;
         sections += section;
     });
+    // layer編輯工具
     let layerItem = `
         <div class="layerBar featureLayer-Bg" id="layerBar_${id}">
             <div class="layerTitle" style="border-top">
@@ -160,4 +161,8 @@ function displayLayer(id, layersId) {
         }
     });
     layerList[id] = true;
+}
+
+export function addFocus2List() {
+
 }

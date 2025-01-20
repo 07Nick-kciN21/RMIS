@@ -31,7 +31,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             </div>
             <div style="font-size: 18px;">
             <h4>圖層：${name}</h4><br>
-            ${popUpForm(prop)}
+            ${ name == "街景照片" ? popupProjectPhoto(prop) : popUpForm(prop)}
             </div>`, {
             maxWidth: 350,
             maxHeight: 450
@@ -176,7 +176,7 @@ export function addPolygonToLayer(points, newLayer, color, name) {
                     圖層：${name}
                 </text>
                 <div style="font-size: 20px;">
-                    ${popUpForm(prop)}
+                    ${ name == "預拓範圍" ? popupProjectFrom(prop) : popUpForm(prop)}
                 </div>
             </div>`, {
         maxWidth: 350,
@@ -216,7 +216,6 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     });
 
     polygon._isVisible = true;
-    console.log("Polygon 已繪製完成");
 }
 
 // 添加箭頭線段
@@ -327,6 +326,129 @@ function popUpForm(prop) {
         table += `<tr><th>${key}</th><td>${prop[key]}</td></tr>`;
     });
 
+    table += '</table>';
+
+    return `
+        <div class="popup-table">
+            ${table}
+        </div>
+    `;
+}
+
+function popupProjectPhoto(url){
+    // 創建 popupContent
+    let popupContent = document.createElement('div');
+    popupContent.id = 'photoPopup';
+
+    // 添加圖片
+    let img = document.createElement('img');
+    let src = `/roadProject/${url}?v=${new Date().getTime()}`;
+    img.src = src;
+    img.style.width = '450px';
+    img.style.height = '300px';
+    popupContent.appendChild(img);
+
+    // 編輯按鈕 => 選擇圖片 => 顯示圖片 => 儲存
+    // 如果用戶角色為 Admin，添加編輯按鈕和文件輸入框
+    if (getCookie('UserRole') === 'Admin') {
+        let editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-primary';
+        editBtn.innerText = '編輯圖片';
+        editBtn.addEventListener('click', () => {
+            // 編輯按鈕
+            document.getElementById(`photoEdit`).click();
+        });
+
+        let fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = `photoEdit`;
+        fileInput.style.display = 'none';
+        // 選擇圖片
+        fileInput.addEventListener('change', event => {
+            const file = event.target.files[0];
+            if (file) {
+                // 把img的src改成file的url
+                img.src = URL.createObjectURL(file);
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+                cancelBtn.style.display = 'inline-block';
+            }
+        });
+        
+        let saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-success';
+        saveBtn.innerText = '儲存';
+        saveBtn.style.display = 'none';
+        saveBtn.addEventListener('click', () => {
+            if(confirm('是否修改圖片')){
+                console.log('修改圖片');
+                var formData = new FormData();
+                formData.append('Photo', fileInput.files[0]);
+                formData.append('PhotoName', url);
+                fetch(`/api/AdminAPI/updateProjectPhoto`, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    img.src = `${src}?v=${new Date().getTime()}`;
+                    saveBtn.style.display = 'none';
+                    cancelBtn.style.display = 'none';
+                    editBtn.style.display = 'inline-block';
+                });
+            } 
+        });
+        let cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.innerText = '取消';
+        cancelBtn.style.display = 'none';
+        cancelBtn.addEventListener('click', () => {
+            img.src = src;
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+        });
+        popupContent.appendChild(editBtn);
+        popupContent.appendChild(saveBtn);
+        popupContent.appendChild(cancelBtn);
+        popupContent.appendChild(fileInput);
+    }
+    return popupContent;
+}
+
+function popupProjectFrom(prop){
+    if (typeof prop === 'string') {
+        prop = prop.replace(/NaN/g, 'null');
+        try {
+            prop = JSON.parse(prop);
+        } catch (e) {
+            console.error("無法解析 JSON:", e);
+            return "無效的 JSON 資料";
+        }
+    }
+    let table = '<table class="popup-table-content"  cellpadding="5" cellspacing="0">';
+    
+    Object.keys(prop).forEach(key => {
+        // 如果key不存在於propMap中，則不顯示
+        // if (!propMap[key]) return;
+        let value = prop[key];
+    
+        // 如果是CurrentRoadWidth、PlannedRoadWidth，轉換成json格式，並顯示路寬與路況
+        if (["現況路寬", "計畫路寬"].includes(key)) {
+            const parsedValue = JSON.parse(value);
+            value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
+        }
+    
+        // 如果是ConstructionBudget等，則轉換成萬元
+        if (["工程經費", "用地經費", "補償經費", "合計經費"].includes(key)) {
+            value = value === 0 ? value : value / 10000 + '萬';
+        }
+    
+        // 如果是PublicPrivateLand等，則顯示筆數
+        if (["公有土地", "私有土地", "公私土地"].includes(key)) {
+            value += "筆";
+        }
+        table += `<tr><th style="width: 40%;">${key}</th><td>${value}</td></tr>`;
+    });
+    
     table += '</table>';
 
     return `

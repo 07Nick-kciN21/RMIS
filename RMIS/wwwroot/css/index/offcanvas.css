@@ -15,6 +15,7 @@
 
 .layerTitle {
     flex-grow: 1; /* This will allow the title to take up the remaining space */
+    width: 50%;
 }
 
 .layerTitle div {

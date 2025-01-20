@@ -146,3 +146,47 @@ export function removeLayer2Map(id) {
         console.log("Layer not found for id:", id);
     }
 }
+
+
+export function addFocusLayer2Map(id, LayerData, startDate, endDate){
+    indexMap = getIndexMap();
+    if (!indexMap) {
+        console.error('indexMap is not initialized.');
+        return;
+    }
+    const pipelineId = id;
+    console.log(`pipelineId：${pipelineId} addLayer2Map`);
+    if (layerProps[pipelineId] == null) {
+        layerProps[pipelineId] = [];
+        console.log(`layerProps[${pipelineId}]： is null`);
+    }
+    layerProps[pipelineId].length = 0;
+
+    LayerData.map(function (Ldata) {
+        var formData = new FormData();
+        formData.append('id', Ldata.id);
+        formData.append('startDate', startDate);
+        formData.append('endDate', endDate);
+        fetch(`/api/MapAPI/GetAreasByFocusLayer`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            console.log(`/api/MapAPI/GetAreasByFocusLayer`, Ldata.id, startDate, endDate);
+            try {
+                var areas = result.areas;
+                if (areas != null) {
+                    var newLayer = createNewLayer(result, pipelineId);
+                    indexMap.addLayer(newLayer);
+                    setPointerEvents(newLayer, popupEnabled);
+                    layers[result.id] = newLayer;
+                }
+                console.log("Add Layer Success");
+            }
+            catch (err) {
+                console.error('Add Layer Fail', err)
+            }
+        });
+    });
+}

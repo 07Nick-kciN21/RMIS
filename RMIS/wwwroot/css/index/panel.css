@@ -187,7 +187,7 @@
     }
 
     #searchPanel{
-        top:10%;
+        top:50%;
         left: 0%;
     }
 
@@ -195,10 +195,6 @@
         font-size: 16px;
     }
 
-    #searchPanel{
-        top: 70%;
-        left: 0%;
-    }
     #focusPanel{
         top:51.5px;
         left: 0%;

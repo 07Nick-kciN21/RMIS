@@ -133,83 +133,10 @@ function addLayerToMap(projectId) {
         data['points']['photoPoints'].forEach(point => {
             // 添加 marker
             let marker = L.marker([point['latitude'], point['longitude']]).addTo(projectLayer);
-        
-            // 創建 popupContent
-            let popupContent = document.createElement('div');
-            popupContent.id = 'photoPopup';
-        
-            // 添加圖片
-            let img = document.createElement('img');
-            let src = `/roadProject/${point['url']}?v=${new Date().getTime()}`;
-            img.src = src;
-            img.style.width = '450px';
-            img.style.height = '300px';
-            popupContent.appendChild(img);
-        
-            // 編輯按鈕 => 選擇圖片 => 顯示圖片 => 儲存
-            // 如果用戶角色為 Admin，添加編輯按鈕和文件輸入框
-            if (getCookie('UserRole') === 'Admin') {
-                let editBtn = document.createElement('button');
-                editBtn.className = 'btn btn-primary';
-                editBtn.innerText = '編輯圖片';
-                editBtn.addEventListener('click', () => {
-                    // 編輯按鈕
-                    document.getElementById(`photoEdit`).click();
-                });
-
-                let fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.id = `photoEdit`;
-                fileInput.style.display = 'none';
-                // 選擇圖片
-                fileInput.addEventListener('change', event => {
-                    const file = event.target.files[0];
-                    if (file) {
-                        // 把img的src改成file的url
-                        img.src = URL.createObjectURL(file);
-                        editBtn.style.display = 'none';
-                        saveBtn.style.display = 'inline-block';
-                        cancelBtn.style.display = 'inline-block';
-                    }
-                });
-                
-                let saveBtn = document.createElement('button');
-                saveBtn.className = 'btn btn-success';
-                saveBtn.innerText = '儲存';
-                saveBtn.style.display = 'none';
-                saveBtn.addEventListener('click', () => {
-                    if(confirm('是否修改圖片')){
-                        console.log('修改圖片');
-                        var formData = new FormData();
-                        formData.append('Photo', fileInput.files[0]);
-                        formData.append('PhotoName', point['url']);
-                        fetch(`/api/AdminAPI/updateProjectPhoto`, {
-                            method: 'POST',
-                            body: formData
-                        }).then(response => {
-                            img.src = `${src}?v=${new Date().getTime()}`;
-                            saveBtn.style.display = 'none';
-                            cancelBtn.style.display = 'none';
-                            editBtn.style.display = 'inline-block';
-                        });
-                    } 
-                });
-                let cancelBtn = document.createElement('button');
-                cancelBtn.className = 'btn btn-secondary';
-                cancelBtn.innerText = '取消';
-                cancelBtn.style.display = 'none';
-                cancelBtn.addEventListener('click', () => {
-                    img.src = src;
-                    saveBtn.style.display = 'none';
-                    cancelBtn.style.display = 'none';
-                    editBtn.style.display = 'inline-block';
-                });
-                popupContent.appendChild(editBtn);
-                popupContent.appendChild(saveBtn);
-                popupContent.appendChild(cancelBtn);
-                popupContent.appendChild(fileInput);
-            }
-        
+            var url = point['url'].json();
+            // 添加照片
+            let popupContent = popUpPhoto(url['url']);
+            
             // 綁定 popup
             marker.bindPopup(popupContent, {
                 maxWidth: 450,
@@ -237,6 +164,85 @@ function addLayerToMap(projectId) {
     });
 }
 
+function popUpPhoto(url){
+    // 創建 popupContent
+    let popupContent = document.createElement('div');
+    popupContent.id = 'photoPopup';
+
+    // 添加圖片
+    let img = document.createElement('img');
+    let src = `/roadProject/${url}?v=${new Date().getTime()}`;
+    img.src = src;
+    img.style.width = '450px';
+    img.style.height = '300px';
+    popupContent.appendChild(img);
+
+    // 編輯按鈕 => 選擇圖片 => 顯示圖片 => 儲存
+    // 如果用戶角色為 Admin，添加編輯按鈕和文件輸入框
+    if (getCookie('UserRole') === 'Admin') {
+        let editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-primary';
+        editBtn.innerText = '編輯圖片';
+        editBtn.addEventListener('click', () => {
+            // 編輯按鈕
+            document.getElementById(`photoEdit`).click();
+        });
+
+        let fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = `photoEdit`;
+        fileInput.style.display = 'none';
+        // 選擇圖片
+        fileInput.addEventListener('change', event => {
+            const file = event.target.files[0];
+            if (file) {
+                // 把img的src改成file的url
+                img.src = URL.createObjectURL(file);
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+                cancelBtn.style.display = 'inline-block';
+            }
+        });
+        
+        let saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-success';
+        saveBtn.innerText = '儲存';
+        saveBtn.style.display = 'none';
+        saveBtn.addEventListener('click', () => {
+            if(confirm('是否修改圖片')){
+                console.log('修改圖片');
+                var formData = new FormData();
+                formData.append('Photo', fileInput.files[0]);
+                formData.append('PhotoName', url);
+                fetch(`/api/AdminAPI/updateProjectPhoto`, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    img.src = `${src}?v=${new Date().getTime()}`;
+                    saveBtn.style.display = 'none';
+                    cancelBtn.style.display = 'none';
+                    editBtn.style.display = 'inline-block';
+                });
+            } 
+        });
+        let cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.innerText = '取消';
+        cancelBtn.style.display = 'none';
+        cancelBtn.addEventListener('click', () => {
+            img.src = src;
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+        });
+        popupContent.appendChild(editBtn);
+        popupContent.appendChild(saveBtn);
+        popupContent.appendChild(cancelBtn);
+        popupContent.appendChild(fileInput);
+    }
+    return popupContent;
+}
+
 function popUpForm(prop) {
     if (typeof prop === 'string') {
         prop = prop.replace(/NaN/g, 'null');
@@ -249,23 +255,6 @@ function popUpForm(prop) {
     }
     console.log(prop);
     let table = '<table class="popup-table-content"  cellpadding="5" cellspacing="0">';
-    
-    const propMap = {
-        "Proposer": "提案人",
-        "AdministrativeDistrict": "行政區",
-        "StartEndLocation": "起訖位置",
-        "RoadLength": "道路長度",
-        "CurrentRoadWidth": "現況路寬",
-        "PlannedRoadWidth": "計畫路寬",
-        "PublicLand": "公有土地",
-        "PrivateLand": "私有土地",
-        "PublicPrivateLand": "公私土地",
-        "ConstructionBudget": "工程經費",
-        "LandAcquisitionBudget": "用地經費",
-        "CompensationBudget": "補償經費",
-        "TotalBudget": "合計經費",
-        "Remarks": "備註"
-    };
     
     Object.keys(prop).forEach(key => {
         // 如果key不存在於propMap中，則不顯示
@@ -289,7 +278,7 @@ function popUpForm(prop) {
         }
     
         console.log(value);
-        table += `<tr><th style="width: 40%;">${propMap[key]}</th><td>${value}</td></tr>`;
+        table += `<tr><th style="width: 40%;">${key}</th><td>${value}</td></tr>`;
     });
     
     table += '</table>';

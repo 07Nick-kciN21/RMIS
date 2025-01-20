@@ -1,20 +1,22 @@
 import { addFocusPipeline } from './ctrlMap/pipeline.js';
 import { add2List, remove2List} from './ctrlMap/list.js';
-import { addLayer2Map } from './ctrlMap/layers.js';
+import { addFocusLayer2Map } from './ctrlMap/layers.js';
 
 let currentRow = null;
 let currentSquare = null;
 let currentPage = 1;
 let focusData = null;
+let focuseRoad = null;
+let focuseRange = null;
 let pageSize = 10;
 export function initFocusPanel(){
     $('#focusGoResult').on('click', function(){
         var formData = new FormData();
         // focusStartDate與focusEndDate，轉換成時間戳記
-        formData.append('FocusStartDate', new Date($('#focusStartDate').val()).getTime());
-        formData.append('FocusEndDate', new Date($('#focusEndDate').val()).getTime());
+        formData.append('FocusStartDate', $('#focusStartDate').val());
+        formData.append('FocusEndDate', $('#focusEndDate').val());
         formData.append('FocusType', $('#ofType').val());
-        console.log(new Date($('#focusStartDate').val()).getTime(), new Date($('#focusEndDate').val()).getTime());
+        console.log($('#focusStartDate').val(), $('#focusEndDate').val());
         fetch(`/api/MapAPI/GetFocusData`, {
             method: 'POST',
             body: formData
@@ -23,17 +25,23 @@ export function initFocusPanel(){
         .then(message => {
             // 取得搜尋後管線的資料
             var datas = message.datas;
-            var focuseRoad = datas.focusedRoad;
-            var focuseRange = datas.focusedRange;
+            focuseRoad = datas.focusedRoad || [];
+            focuseRange = datas.focusedRange || [];
             focusData = focuseRoad.concat(focuseRange);
         })
         .then(() => {
             // 新增圖資清單
             let ofType = $('#ofType').val();
-            addFocusPipeline(ofType).then(result => {
-                addFocus2List(result);
+            addFocusPipeline(ofType).then((result) => {
+                var datas = result.datas;
+                console.log(datas);
+                for(var i = 0; i < datas.length; i++){
+                    var { id, name, layers } = datas[i];
+                    add2List(id, name, layers);
+                    // addFocusLayer2Map(id, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
+                }
             });
-            // 更新屬性表格
+
             $("#focusTotalCount").text(`(總數:${focusData.length})`);
             updateFlagTable();
             console.log(focusData);

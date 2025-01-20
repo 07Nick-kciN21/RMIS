@@ -326,7 +326,7 @@ namespace RMIS.Controllers
                 }
                 else
                 {
-                    return NotFound(new { success = false, message = "No focused pipelines found" });
+                    return NotFound(new { success = false, message = "無焦點資訊" });
                 }
             }
             catch (Exception ex)
@@ -384,11 +384,27 @@ namespace RMIS.Controllers
         {
             try
             {
-                return Ok();
+                var datas = await _adminInterface.GetLayersByFocusPipelineAsync(ofType);
+                return Ok(new { success = true, datas });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = "取得養工焦點圖層失敗" });
+            }
+        }
+
+        [HttpPost("GetAreasByFocusLayer")]
+        public async Task<IActionResult> GetAreasByFocusLayer([FromForm] GetAreasByFocusLayerInput AreasByFocusLayerInput)
+        {
+            
+            try
+            {
+                var datas = await _adminInterface.GetAreasByFocusLayerAsync(AreasByFocusLayerInput);
+                return Ok(new { success = true, datas });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "取得養工焦點圖資失敗" });
             }
         }
     }

@@ -3,8 +3,8 @@
     public class GetFocusDataInput
     {
         public int FocusType { get; set; }
-        // 時間戳 ex 1733011200000, 1738281600000
-        public string FocusStartDate { get; set; }
-        public string FocusEndDate { get; set; }
+        // 時間 ex 2024/12/3, 2024/12/4
+        public DateTime FocusStartDate { get; set; }
+        public DateTime FocusEndDate { get; set; }
     }
 }

@@ -27,5 +27,8 @@ namespace RMIS.Repositories
         Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput);
         Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput);
         Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput);
+        Task<List<LayersByFocusPipeline>> GetLayersByFocusPipelineAsync(int ofType);
+
+        Task<AreasByLayer> GetAreasByFocusLayerAsync(GetAreasByFocusLayerInput AreasByFocusLayerInput);
     }
 }

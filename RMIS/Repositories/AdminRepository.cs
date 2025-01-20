@@ -777,14 +777,13 @@ namespace RMIS.Repositories
             return null;
         }
 
-        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, string FocusStartDate, string FocusEndDate, string caseType)
+        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
         {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
                 // 先取出各點的prop過濾出符合日期的點
-                var focusStartDate = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(FocusStartDate)).DateTime;
-                var focusEndDate = DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(FocusEndDate)).DateTime;        
+                // FocusStartDate 為 
                 var query = await _mapDBContext.Points.Where(p => p.Area.Layer.PipelineId == FocusRoadPipelineId && p.Index == 0).ToListAsync();
                 var result = new List<focusedCase>();
                 for (int i = 0; i < query.Count; i++)
@@ -793,12 +792,12 @@ namespace RMIS.Repositories
                     var propDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(prop);
                     // 租借起始日或租借結束日其中一個在FocusStartDate與FocusEndDate之中
                     // FocusStartDate為時間戳 ex. 1733011200000
-                    if (DateTime.TryParseExact(propDict["租借起始日"], "yyyy/MM/dd", null, System.Globalization.DateTimeStyles.None, out DateTime rentalStartDate) &&
-                        DateTime.TryParseExact(propDict["租借結束日"], "yyyy/MM/dd", null, System.Globalization.DateTimeStyles.None, out DateTime rentalEndDate))
+                    if (DateTime.TryParseExact(propDict["租借起始日"], "yyyy/MM/d", null, System.Globalization.DateTimeStyles.None, out DateTime rentalStartDate) &&
+                        DateTime.TryParseExact(propDict["租借結束日"], "yyyy/MM/d", null, System.Globalization.DateTimeStyles.None, out DateTime rentalEndDate))
                     {
                         // 檢查租借日期是否在範圍內
-                        if ((rentalStartDate >= focusStartDate && rentalStartDate <= focusEndDate) ||
-                            (rentalEndDate >= focusStartDate && rentalEndDate <= focusEndDate))
+                        if ((rentalStartDate >= FocusStartDate && rentalStartDate <= FocusEndDate) ||
+                            (rentalEndDate >= FocusStartDate && rentalEndDate <= FocusEndDate))
                         {
                             var focusedRoad = new focusedCase
                             {
@@ -820,7 +819,7 @@ namespace RMIS.Repositories
                     else
                     {
                         // 無法解析日期的錯誤處理
-                        Console.WriteLine($"解析日期失敗：{propDict["租借起始日"]} 或 {propDict["租借結束日"]}");
+                        Console.WriteLine($" {query[i].Id} 解析日期失敗：{propDict["租借起始日"]} 或 {propDict["租借結束日"]}");
                     }
                 }
                 return result;
@@ -997,10 +996,30 @@ namespace RMIS.Repositories
             projectExcel.PlannedRoadWidth = JsonConvert.SerializeObject(parseRoadWidth(projectExcel.PlannedRoadWidth)); // points[0].Property 為 json {路寬: "6公尺", 路況: "未開闢"}
 
             var pointProp = MapperHelper.A2B<RoadProjectExcelFormat, RoadProjectProp>(projectExcel);
-            //var config = new MapperConfiguration(cfg => cfg.CreateMap<RoadProjectExcelFormat, RoadProjectProp>());
-            //var mapper =config.CreateMapper();
-            //var pointProp = mapper.Map<RoadProjectProp>(projectExcel);
-            points[0].Property = JsonConvert.SerializeObject(pointProp);
+            var propMap = new Dictionary<string, string>
+            {
+                { "Proposer", "提案人" },
+                { "AdministrativeDistrict", "行政區" },
+                { "StartEndLocation", "起訖位置" },
+                { "RoadLength", "道路長度" },
+                { "CurrentRoadWidth", "現況路寬" },
+                { "PlannedRoadWidth", "計畫路寬" },
+                { "PublicLand", "公有土地" },
+                { "PrivateLand", "私有土地" },
+                { "PublicPrivateLand", "公私土地" },
+                { "ConstructionBudget", "工程經費" },
+                { "LandAcquisitionBudget", "用地經費" },
+                { "CompensationBudget", "補償經費" },
+                { "TotalBudget", "合計經費" },
+                { "Remarks", "備註" }
+            };
+            var propDict = pointProp.GetType().GetProperties()
+            .ToDictionary(
+                prop => propMap.ContainsKey(prop.Name) ? propMap[prop.Name] : prop.Name, // 使用中文名稱
+                prop => prop.GetValue(pointProp)?.ToString() // 獲取屬性值
+            );
+
+            points[0].Property = JsonConvert.SerializeObject(propDict);
             return points;
         }
         
@@ -1019,7 +1038,7 @@ namespace RMIS.Repositories
                     Latitude = double.Parse(coordinate[0]),
                     Longitude = double.Parse(coordinate[1]),
                     AreaId = areaId,
-                    Property = $"{ProjectId}/{photoPoint.Key}"
+                    Property = $"{{\"url\":{ProjectId}/{photoPoint.Key}}}"
                 };
                 points.Add(point);
                 i += 1;
@@ -1471,11 +1490,6 @@ namespace RMIS.Repositories
             
         }
 
-        //public class UpdateProjectPhotoInput
-        //{
-        //    public IFormFile Photo { get; set; }
-        //    public string PhotoName { get; set; }
-        //}
         public async Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput)
         {
             // 更新圖片
@@ -1520,5 +1534,144 @@ namespace RMIS.Repositories
                 return false;
             }
         }
+
+        public async Task <List<LayersByFocusPipeline>> GetLayersByFocusPipelineAsync(int ofType)
+        {
+            try
+            {
+                Console.WriteLine("GetLayersByFocusPipelineAsync");
+                var result = new List<LayersByFocusPipeline>();
+                // 根據ofType取得對應的pipeline
+                // 0 : 臨時道路借用申請(路線)、臨時道路借用申請(借用範團)、施工通報
+                // 1 : 臨時道路借用申請(借用範團)
+                // 2 : 臨時道路借用申請(路線)
+                // 3 : 施工通報
+                if(ofType == 0)
+                {
+                    var focusedPipelines = await _mapDBContext.Pipelines
+                        .Where(p => p.Name.Contains("臨時道路借用申請(路線)") || p.Name.Contains("臨時道路借用申請(借用範團)") || p.Name.Contains("施工通報"))
+                        .Select(p => new LayersByFocusPipeline
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Layers = _mapDBContext.Layers
+                                .Where(l => l.PipelineId == p.Id)
+                                .Select(l => new FocusLayer
+                                {
+                                    id = l.Id,
+                                    name = l.Name,
+                                    svg = l.GeometryType.Svg
+                                }).ToList()
+                        }).ToListAsync();
+                    result.AddRange(focusedPipelines);
+                }
+                else if (ofType == 1)
+                {
+                    var focusedPipelines = await _mapDBContext.Pipelines
+                        .Where(p => p.Name.Contains("臨時道路借用申請(借用範團)"))
+                        .Select(p => new LayersByFocusPipeline
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Layers = _mapDBContext.Layers
+                                .Where(l => l.PipelineId == p.Id)
+                                .Select(l => new FocusLayer
+                                {
+                                    id = l.Id,
+                                    name = l.Name,
+                                    svg = l.GeometryType.Svg
+                                }).ToList()
+                        }).ToListAsync();
+                    result.AddRange(focusedPipelines);
+                }
+                else if (ofType == 2)
+                {
+                    var focusedPipelines = await _mapDBContext.Pipelines
+                        .Where(p => p.Name.Contains("臨時道路借用申請(路線)"))
+                        .Select(p => new LayersByFocusPipeline
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Layers = _mapDBContext.Layers
+                                .Where(l => l.PipelineId == p.Id)
+                                .Select(l => new FocusLayer
+                                {
+                                    id = l.Id,
+                                    name = l.Name,
+                                    svg = l.GeometryType.Svg
+                                }).ToList()
+                        }).ToListAsync();
+                    result.AddRange(focusedPipelines);
+                }
+                else if (ofType == 3)
+                {
+                    var focusedPipelines = await _mapDBContext.Pipelines
+                        .Where(p => p.Name.Contains("施工通報"))
+                        .Select(p => new LayersByFocusPipeline
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Layers = _mapDBContext.Layers
+                                .Where(l => l.PipelineId == p.Id)
+                                .Select(l => new FocusLayer
+                                {
+                                    id = l.Id,
+                                    name = l.Name,
+                                    svg = l.GeometryType.Svg
+                                }).ToList()
+                        }).ToListAsync();
+                    result.AddRange(focusedPipelines);
+                }
+                return result;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<AreasByLayer> GetAreasByFocusLayerAsync(GetAreasByFocusLayerInput AreasByFocusLayerInput)
+        {
+            Console.WriteLine("GetAreasByFocusLayerAsync");
+            try
+            {
+                // 取得
+                var areas = await _mapDBContext.Areas
+                                        .Include(a => a.Points)
+                                        .Include(a => a.Layer)
+                                            .ThenInclude(l => l.GeometryType)
+                                        .Where(a => a.LayerId == AreasByFocusLayerInput.id)
+                                        .ToListAsync();
+                var layer = await _mapDBContext.Layers.Include(l => l.Pipeline).FirstOrDefaultAsync(l => l.Id == AreasByFocusLayerInput.id);
+                var results = new AreasByLayer
+                {
+                    id = layer.Id.ToString(),
+                    name = layer.Name,
+                    color = layer.GeometryType.Color,
+                    svg = layer.GeometryType.Svg,
+                    type = layer.GeometryType.Kind,
+                    areas = areas.Select(a => new AreaDto
+                    {
+                        id = a.Id.ToString(),
+                        ConstructionUnit = a.ConstructionUnit,
+                        points = a.Points.OrderBy(p => p.Index).Select(p => new PointDto
+                        {
+                            Index = p.Index,
+                            Latitude = p.Latitude,
+                            Longitude = p.Longitude,
+                            Prop = p.Property
+                        }).ToList()
+                    }).ToList()
+                };
+                var Areas = _mapDBContext.Areas.Where(A => A.LayerId == AreasByFocusLayerInput.id);
+                return results;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
+        }
+        
     }
 }
