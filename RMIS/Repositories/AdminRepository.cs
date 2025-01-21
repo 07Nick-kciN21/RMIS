@@ -1038,7 +1038,7 @@ namespace RMIS.Repositories
                     Latitude = double.Parse(coordinate[0]),
                     Longitude = double.Parse(coordinate[1]),
                     AreaId = areaId,
-                    Property = $"{{\"url\":{ProjectId}/{photoPoint.Key}}}"
+                    Property = $"{{\"url\":\"{ProjectId}/{photoPoint.Key}\"}}"
                 };
                 points.Add(point);
                 i += 1;
@@ -1423,7 +1423,7 @@ namespace RMIS.Repositories
 
             // 將 Base64 字串轉換為 byte[]
             var imageBytes = Convert.FromBase64String(base64Data);
-            var directoryPath = @"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject";
+            var directoryPath = @"C:/Users/maybu/OneDrive/圖片/RMIS_IMG/roadProject";
             // 儲存路徑（伺服器上的某個目錄）
             var savePath = Path.Combine(directoryPath, roadProjectDic);
             if (!Directory.Exists(savePath))

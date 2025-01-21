@@ -28,8 +28,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
                 : "Default", // 如果沒有 Controller，存入 Default 檔案
             configure: (controller, wt) =>
             {
-                
-                var homePath = Environment.GetEnvironmentVariable("USERPROFILE").Replace("\\", "/");
+
+                var homePath = Environment.GetEnvironmentVariable("USERPROFILE").Replace("//", "/");
                 if (string.IsNullOrEmpty(homePath))
                 {
                     throw new InvalidOperationException("環境變數 'HOMEPATH' 無法解析");
@@ -68,7 +68,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(@"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject"),
+    FileProvider = new PhysicalFileProvider(@"C:/Users/maybu/OneDrive/圖片/RMIS_IMG/roadProject"),
     RequestPath = "/roadProject"
 });
 

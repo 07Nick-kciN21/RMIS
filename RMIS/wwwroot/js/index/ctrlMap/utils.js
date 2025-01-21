@@ -1,5 +1,5 @@
 ﻿import { getIndexMap, popupEnabled } from '../map.js'; 
-
+import { getCookie } from '../../admin/UserRole.js'
 
 let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null; // 用於保存當前的線段
@@ -24,17 +24,22 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
         }).addTo(newLayer);
 
         let prop = point[1];
-        
-        marker.bindPopup(`
-            <div class="popupData" style="display: none;">
-            ${prop}
-            </div>
-            <div style="font-size: 18px;">
-            <h4>圖層：${name}</h4><br>
-            ${ name == "街景照片" ? popupProjectPhoto(prop) : popUpForm(prop)}
-            </div>`, {
-            maxWidth: 350,
-            maxHeight: 450
+        let popupContent = name == "街景照片" ? popupPhoto(prop) : `
+                <div class="popupData" style="display: none;">
+                    ${prop}
+                </div>
+                <div style="font-size: 18px;">
+                    <text style="font-size: 25px; font-weight: bolder;">
+                        圖層：${name}
+                    </text>
+                    <div>
+                        ${popUpForm(prop)}
+                    </div> 
+                </div>`;
+
+        marker.bindPopup(popupContent, {
+            maxWidth: 450,
+            maxHeight: 350
         });
         marker.on('click', function (e) {
             console.log("Marker Clicked",popupEnabled);
@@ -335,14 +340,16 @@ function popUpForm(prop) {
     `;
 }
 
-function popupProjectPhoto(url){
+function popupPhoto(prop){
+    let url = JSON.parse(prop);
+    console.log(url);
     // 創建 popupContent
     let popupContent = document.createElement('div');
     popupContent.id = 'photoPopup';
 
     // 添加圖片
     let img = document.createElement('img');
-    let src = `/roadProject/${url}?v=${new Date().getTime()}`;
+    let src = `/roadProject/${url["url"]}?v=${new Date().getTime()}`;
     img.src = src;
     img.style.width = '450px';
     img.style.height = '300px';

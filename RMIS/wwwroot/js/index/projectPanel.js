@@ -133,9 +133,8 @@ function addLayerToMap(projectId) {
         data['points']['photoPoints'].forEach(point => {
             // 添加 marker
             let marker = L.marker([point['latitude'], point['longitude']]).addTo(projectLayer);
-            var url = point['url'].json();
             // 添加照片
-            let popupContent = popUpPhoto(url['url']);
+            let popupContent = popUpPhoto(point['url']);
             
             // 綁定 popup
             marker.bindPopup(popupContent, {
@@ -164,14 +163,16 @@ function addLayerToMap(projectId) {
     });
 }
 
-function popUpPhoto(url){
+function popUpPhoto(prop){
+    let url = JSON.parse(prop);
+    console.log(url);
     // 創建 popupContent
     let popupContent = document.createElement('div');
     popupContent.id = 'photoPopup';
 
     // 添加圖片
     let img = document.createElement('img');
-    let src = `/roadProject/${url}?v=${new Date().getTime()}`;
+    let src = `/roadProject/${url["url"]}?v=${new Date().getTime()}`;
     img.src = src;
     img.style.width = '450px';
     img.style.height = '300px';
@@ -262,22 +263,20 @@ function popUpForm(prop) {
         let value = prop[key];
     
         // 如果是CurrentRoadWidth、PlannedRoadWidth，轉換成json格式，並顯示路寬與路況
-        if (["CurrentRoadWidth", "PlannedRoadWidth"].includes(key)) {
+        if (["現況路寬", "計畫路寬"].includes(key)) {
             const parsedValue = JSON.parse(value);
             value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
         }
     
         // 如果是ConstructionBudget等，則轉換成萬元
-        if (["ConstructionBudget", "LandAcquisitionBudget", "CompensationBudget", "TotalBudget"].includes(key)) {
+        if (["工程經費", "用地經費", "補償經費", "合計經費"].includes(key)) {
             value = value === 0 ? value : value / 10000 + '萬';
         }
     
         // 如果是PublicPrivateLand等，則顯示筆數
-        if (["PublicLand", "PrivateLand", "PublicPrivateLand"].includes(key)) {
+        if (["公有土地", "私有土地", "公私土地"].includes(key)) {
             value += "筆";
         }
-    
-        console.log(value);
         table += `<tr><th style="width: 40%;">${key}</th><td>${value}</td></tr>`;
     });
     
