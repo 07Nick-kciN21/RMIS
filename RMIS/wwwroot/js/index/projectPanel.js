@@ -214,7 +214,7 @@ function popUpPhoto(prop){
                 console.log('修改圖片');
                 var formData = new FormData();
                 formData.append('Photo', fileInput.files[0]);
-                formData.append('PhotoName', url);
+                formData.append('PhotoName', url["url"]);
                 fetch(`/api/AdminAPI/updateProjectPhoto`, {
                     method: 'POST',
                     body: formData

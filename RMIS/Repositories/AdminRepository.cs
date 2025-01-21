@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.SqlServer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
@@ -12,6 +13,7 @@ using RMIS.Utils;
 using AutoMapper;
 using CsvHelper;
 using OfficeOpenXml;
+using System.Linq;
 
 
 namespace RMIS.Repositories
@@ -785,42 +787,34 @@ namespace RMIS.Repositories
                 // 先取出各點的prop過濾出符合日期的點
                 // FocusStartDate 為 
                 var query = await _mapDBContext.Points.Where(p => p.Area.Layer.PipelineId == FocusRoadPipelineId && p.Index == 0).ToListAsync();
+                query = query.Where(q =>
+                {
+                    var prop = JObject.Parse(q.Property);
+                    var startDate = prop["租借起始日"].Value<DateTime>();
+                    var endDate = prop["租借結束日"].Value<DateTime>();
+                    return startDate >= FocusStartDate && startDate <= FocusEndDate || endDate >= FocusStartDate && endDate <= FocusEndDate;
+                }).ToList();
+
                 var result = new List<focusedCase>();
                 for (int i = 0; i < query.Count; i++)
                 {
                     var prop = query[i].Property;
                     var propDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(prop);
-                    // 租借起始日或租借結束日其中一個在FocusStartDate與FocusEndDate之中
-                    // FocusStartDate為時間戳 ex. 1733011200000
-                    if (DateTime.TryParseExact(propDict["租借起始日"], "yyyy/MM/d", null, System.Globalization.DateTimeStyles.None, out DateTime rentalStartDate) &&
-                        DateTime.TryParseExact(propDict["租借結束日"], "yyyy/MM/d", null, System.Globalization.DateTimeStyles.None, out DateTime rentalEndDate))
+                    var focusedRoad = new focusedCase
                     {
-                        // 檢查租借日期是否在範圍內
-                        if ((rentalStartDate >= FocusStartDate && rentalStartDate <= FocusEndDate) ||
-                            (rentalEndDate >= FocusStartDate && rentalEndDate <= FocusEndDate))
-                        {
-                            var focusedRoad = new focusedCase
-                            {
-                                date = $"{propDict["租借起始日"]}至{propDict["租借結束日"]}",
-                                location = propDict["借用路段"],
-                                points = new List<Point>(),
-                                caseType = caseType
-                            };
+                        date = $"{propDict["租借起始日"]}至{propDict["租借結束日"]}",
+                        location = propDict["借用路段"],
+                        points = new List<Point>(),
+                        caseType = caseType
+                    };
 
-                            var focusedRoadPoints = await _mapDBContext.Points
-                                .Where(p => p.AreaId == query[i].AreaId)
-                                .OrderBy(p => p.Index)
-                                .ToListAsync();
+                    var focusedRoadPoints = await _mapDBContext.Points
+                        .Where(p => p.AreaId == query[i].AreaId)
+                        .OrderBy(p => p.Index)
+                        .ToListAsync();
 
-                            focusedRoad.points.AddRange(focusedRoadPoints);
-                            result.Add(focusedRoad);
-                        }
-                    }
-                    else
-                    {
-                        // 無法解析日期的錯誤處理
-                        Console.WriteLine($" {query[i].Id} 解析日期失敗：{propDict["租借起始日"]} 或 {propDict["租借結束日"]}");
-                    }
+                    focusedRoad.points.AddRange(focusedRoadPoints);
+                    result.Add(focusedRoad);
                 }
                 return result;
             }
@@ -830,7 +824,6 @@ namespace RMIS.Repositories
                 _logger.LogError(ex, "An error occurred while getting focus data by datetime.");
                 throw;
             }
-            return null;
         }
 
         public async Task<int> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput input)
@@ -1423,7 +1416,7 @@ namespace RMIS.Repositories
 
             // 將 Base64 字串轉換為 byte[]
             var imageBytes = Convert.FromBase64String(base64Data);
-            var directoryPath = @"C:/Users/maybu/OneDrive/圖片/RMIS_IMG/roadProject";
+            var directoryPath = @"C:\Users\KingSu\Pictures\RMIS_IMG\roadProject";
             // 儲存路徑（伺服器上的某個目錄）
             var savePath = Path.Combine(directoryPath, roadProjectDic);
             if (!Directory.Exists(savePath))
@@ -1522,7 +1515,7 @@ namespace RMIS.Repositories
                 // 使用 FileStream 保存新文件
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    Console.WriteLine("更新圖片");
+                    Console.WriteLine("更新圖片", photoName);
                     await photo.CopyToAsync(stream); // 使用 IFormFile 的 CopyToAsync 方法
                 }
 
@@ -1635,36 +1628,61 @@ namespace RMIS.Repositories
             Console.WriteLine("GetAreasByFocusLayerAsync");
             try
             {
-                // 取得
+                var inputStartDate = AreasByFocusLayerInput.startDate;
+                var inputEndDate = AreasByFocusLayerInput.endDate;
+                // 取得目標 Layer 資料
+                var layer = await _mapDBContext.Layers
+                    .Include(l => l.GeometryType)
+                    .Where(l => l.Id == AreasByFocusLayerInput.id)
+                    .FirstOrDefaultAsync();
+
+                if (layer == null) throw new Exception("Layer not found");
+
+                // 找到該 Layer 下的所有 Area
                 var areas = await _mapDBContext.Areas
-                                        .Include(a => a.Points)
-                                        .Include(a => a.Layer)
-                                            .ThenInclude(l => l.GeometryType)
-                                        .Where(a => a.LayerId == AreasByFocusLayerInput.id)
-                                        .ToListAsync();
-                var layer = await _mapDBContext.Layers.Include(l => l.Pipeline).FirstOrDefaultAsync(l => l.Id == AreasByFocusLayerInput.id);
-                var results = new AreasByLayer
+                    .Where(a => a.LayerId == AreasByFocusLayerInput.id)
+                    .ToListAsync();
+
+                // 取得相關 Point 的資料，並只提取每個 Area 的第一個點
+                var pointsGroupedByArea = await _mapDBContext.Points
+                    .Where(p => areas.Select(a => a.Id).Contains(p.AreaId)) // 過濾相關 Area 的 Point
+                    .GroupBy(p => p.AreaId) // 按 AreaId 分組
+                    .Select(g => g.OrderBy(p => p.Index).FirstOrDefault()) // 每組取 Index 最小的第一個 Point
+                    .ToListAsync(); // 將結果轉為 List
+                // 從point中取得Property
+
+                var pointsProp = pointsGroupedByArea.Select(p => JObject.Parse(p.Property)).ToList();
+                for(int i=0; i<pointsProp.Count; i++)
                 {
-                    id = layer.Id.ToString(),
-                    name = layer.Name,
-                    color = layer.GeometryType.Color,
-                    svg = layer.GeometryType.Svg,
-                    type = layer.GeometryType.Kind,
-                    areas = areas.Select(a => new AreaDto
+                    var startDate = pointsProp[i]["租借起始日"].Value<DateTime>();
+                    var endDate = pointsProp[i]["租借結束日"].Value<DateTime>();
+                    if (startDate >= inputStartDate && startDate <= inputEndDate || endDate >= inputStartDate && endDate <= inputEndDate)
                     {
-                        id = a.Id.ToString(),
-                        ConstructionUnit = a.ConstructionUnit,
-                        points = a.Points.OrderBy(p => p.Index).Select(p => new PointDto
-                        {
-                            Index = p.Index,
-                            Latitude = p.Latitude,
-                            Longitude = p.Longitude,
-                            Prop = p.Property
-                        }).ToList()
-                    }).ToList()
-                };
-                var Areas = _mapDBContext.Areas.Where(A => A.LayerId == AreasByFocusLayerInput.id);
-                return results;
+                        Console.WriteLine($"{pointsProp[i]["租借起始日"].ToString()} {pointsProp[i]["租借結束日"].ToString()}");
+                    }
+                }
+                var filterPoints = pointsGroupedByArea.Where(p =>
+                {
+                    var prop = JObject.Parse(p.Property);
+                    var startDate = prop["租借起始日"].Value<DateTime>();
+                    var endDate = prop["租借結束日"].Value<DateTime>();
+                    return startDate >= inputStartDate && startDate <= inputEndDate || endDate >= inputStartDate && endDate <= inputEndDate;
+                }).ToList();
+                
+                // 組合結果
+                //var result = new AreasByLayer
+                //{
+                //    id = layer.Id,
+                //    name = layer.Name,
+                //    color = layer.GeometryType.Color,
+                //    type = layer.GeometryType.Kind,
+                //    svg = layer.GeometryType.Svg
+                //    // 根據point的property 過濾出符合的area
+                    
+                //};
+                // 取得該圖層下的每一筆資料
+
+                return null;
             }
             catch (Exception ex)
             {

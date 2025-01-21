@@ -80,7 +80,6 @@ export function bindMenuEvents() {
     $('#imageDataBtn').click(function (e) {
         e.stopPropagation();
         var targetId = $(this).data('target');
-        console.log(targetId);
         $(`#${targetId}`).toggle();
         updateOpenState($(this), $(`#${targetId}`));
     });

@@ -7,7 +7,7 @@
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public string? Property { get; set; }
-        public Guid? AreaId { get; set; }
+        public Guid AreaId { get; set; }
         public Area Area { get; set; }
     }
 }

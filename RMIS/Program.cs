@@ -68,7 +68,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(@"C:/Users/maybu/OneDrive/圖片/RMIS_IMG/roadProject"),
+    FileProvider = new PhysicalFileProvider(@"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject"),
     RequestPath = "/roadProject"
 });
 

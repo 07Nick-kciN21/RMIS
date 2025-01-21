@@ -78,14 +78,14 @@ namespace RMIS.Controllers
                 }
                 var results = new AreasByLayer
                 {
-                    id = layer.Id.ToString(),
+                    id = layer.Id,
                     name = layer.Name,
                     color = layer.GeometryType.Color,
                     svg = layer.GeometryType.Svg,
                     type = layer.GeometryType.Kind,
                     areas = areas.Select(a => new AreaDto
                     {
-                        id = a.Id.ToString(),
+                        id = a.Id,
                         ConstructionUnit = a.ConstructionUnit,
                         points = a.Points.OrderBy(p => p.Index).Select(p => new PointDto
                         {

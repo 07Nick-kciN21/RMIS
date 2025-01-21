@@ -5,7 +5,7 @@ using RMIS.Models.sql;
 
 namespace RMIS.Data
 {
-    public class MapDBContext:DbContext
+    public class MapDBContext : DbContext
     {
         public MapDBContext(DbContextOptions<MapDBContext> options) : base(options)
         {

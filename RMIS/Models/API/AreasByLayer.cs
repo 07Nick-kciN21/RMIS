@@ -4,7 +4,7 @@ namespace RMIS.Models.API
 {
     public class AreasByLayer
     {
-        public string id { get; set; }
+        public Guid id { get; set; }
         public string name { get; set; }
         public string color { get; set; }
         public string type { get; set; }
@@ -13,7 +13,7 @@ namespace RMIS.Models.API
     }
     public class AreaDto
     {
-        public string id { get; set; }
+        public Guid id { get; set; }
         public string ConstructionUnit { get; set; }
         public List<PointDto> points { get; set; }
     }

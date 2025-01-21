@@ -38,7 +38,7 @@ export function initFocusPanel(){
                 for(var i = 0; i < datas.length; i++){
                     var { id, name, layers } = datas[i];
                     add2List(id, name, layers);
-                    // addFocusLayer2Map(id, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
+                    addFocusLayer2Map(id, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
                 }
             });
 
