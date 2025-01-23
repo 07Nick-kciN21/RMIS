@@ -49,11 +49,23 @@ export function addLayer2Map(id ,LayerData) {
 
 // 建立新物件的圖層
 function createNewLayer(result, pipelineId) {
-    var newLayer = L.layerGroup();
+    var newLayer = result.name === "施工地點" ?  L.markerClusterGroup({
+        iconCreateFunction: function (cluster) {
+            const count = cluster.getChildCount();
+            return L.icon({
+                iconUrl: `/img/${result.svg}`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+        }
+    }) : L.layerGroup();
+    // 只在result.name為
     if (!indexMap) {
         console.error('indexMap is not initialized.');
         return;
     }
+    console.log("createNewLayer");
     console.log(result.name);
     result.areas.forEach(function (area) {
         // item1: 該點座標
@@ -137,7 +149,7 @@ export function removeLayer2Map(id) {
         console.error('indexMap is not initialized.');
         return;
     }
-    console.log(`layers[${id}]`);
+    console.log(`Remove layer [${id}]`);
     if (layers[id]) {
         indexMap.removeLayer(layers[id]);
         delete layers[id];
@@ -146,6 +158,7 @@ export function removeLayer2Map(id) {
         console.log("Layer not found for id:", id);
     }
 }
+
 
 
 export function addFocusLayer2Map(id, LayerData, startDate, endDate){
@@ -175,14 +188,15 @@ export function addFocusLayer2Map(id, LayerData, startDate, endDate){
         .then(result => {
             console.log(`/api/MapAPI/GetAreasByFocusLayer`, Ldata.id, startDate, endDate);
             try {
-                var areas = result.areas;
+                var areas = result.datas.areas;
+                console.log(result.datas);
                 if (areas != null) {
-                    var newLayer = createNewLayer(result, pipelineId);
+                    var newLayer = createNewLayer(result.datas, pipelineId);
                     indexMap.addLayer(newLayer);
                     setPointerEvents(newLayer, popupEnabled);
-                    layers[result.id] = newLayer;
+                    layers[result.datas.id] = newLayer;
+                    console.log("Add Layer Success", result.datas);
                 }
-                console.log("Add Layer Success");
             }
             catch (err) {
                 console.error('Add Layer Fail', err)

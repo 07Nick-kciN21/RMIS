@@ -1,0 +1,116 @@
+﻿@model RMIS.Models.Admin.AddRoadProjectInput;
+
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "新增道路專案";
+    Layout = null; // 禁用 _Layout.cshtml 加载
+}
+
+
+<script src="~/js/admin/AddConstructionNotice.js"></script>
+
+<form id="addRoadProjectForm" method="post" style="max-height: 70vh; overflow-y: auto;">
+    <div>
+        <label>許可證號:</label>
+        <input id="LicenseNumber" class="form-control" placeholder="AB12345678"/>
+    </div>
+    <div>
+        <label>工程案號:</label>
+        <input id="ProjectNumber" class="form-control" placeholder="AB12345678" />
+    </div>
+    <div>
+        <label>核定單位:</label>
+        <input id="ApprovalUnit" class="form-control" placeholder="桃園區公所"/>
+    </div>
+    <div>
+        <label>工程名稱:</label>
+        <input id="ProjectName" class="form-control" placeholder="維修通報案件" />
+    </div>
+    <div>
+        <label>施工狀態:</label>
+        <input id="ConstructionStatus" class="form-control" placeholder="本日施工"/>
+    </div>
+    <div>
+        <label>施工日期:</label>
+        <input type="date" id="ConstructionStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 20%;" readonly>
+        到
+        <input type="date" id="ConstructionEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 20%;" readonly>
+    </div>
+    <div>
+        <label>施工地點:</label>
+        <div class="boxList" style="width: 60%;">
+            <div class="boxHeader" style="display: flex;">
+                <input id="ConstructionLocation" class="form-control" placeholder="" />
+                <button id="addLocationBtn" class="btn btn-secondary" type="button" title="新增地點">+</button>
+            </div>
+            <div class="boxBody tableDiv">
+                <table id="locationTable" class="propTable">
+                    <thead>
+                        <tr>
+                            <th>地點</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dateTimeRange">
+        <label>早上施工時段:</label>
+        <input type="time" id="MorningStart" class="form-control" min="00:00" max="11:59"/>
+        <span>到</span>
+        <input type="time" id="MorningEnd" class="form-control" min="00:00" max="11:59"/>
+    </div>
+    <div class="dateTimeRange">
+        <label>晚上施工時段:</label>
+        <input type="time" id="NightStart" class="form-control" min="12:00" max="23:59"/>
+        <span>到</span>
+        <input type="time" id="NightEnd" class="form-control" min="12:00" max="23:59"/>
+    </div>
+    <div>
+        <label>管線單位:</label>
+        <input id="PipelineUnit" class="form-control" placeholder="台灣自來水股份有限公司第二區管理處中壢服務所" />
+    </div>
+    <div>
+        <label>施工原因:</label>
+        <input id="ConstructionReason" class="form-control" placeholder=""/>
+    </div>
+    <div>
+        <label>變更狀態:</label>
+        <select id="ChangeStatus">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+    </div>
+    <div>
+        <label>變更日期:</label>
+        <input type="date" id="ChangeDate" class="form-control" placeholder="" />
+    </div>
+    <div>
+        <label>結案日期:</label>
+        <input type="date" id="ClosingDate" class="form-control" placeholder="" />
+    </div>
+    <div>
+        <label>施工前照片:</label>
+        <input type="file" id="PreConstructionPhoto" class="form-control" placeholder="" accept="image/*" />
+    </div>
+    <div>
+        <label>施工後照片:</label>
+        <input type="file" id="PostConstructionPhoto" class="form-control" placeholder="" accept="image/*" />
+    </div>
+    <div>
+        <label>打卡告示照片:</label>
+        <input type="file" id="NoticePhoto" class="form-control" placeholder="" accept="image/*" />
+    </div>
+    <div>
+        <label>打卡交管照片:</label>
+        <input type="file" id="TrafficControlPhoto" class="form-control" placeholder="" accept="image/*" />
+    </div>
+
+    <button id="submit">提交</button>
+</form>

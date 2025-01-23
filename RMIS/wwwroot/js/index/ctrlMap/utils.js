@@ -21,8 +21,8 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             iconSize: [30, 30],
             iconAnchor: [15, 15],
             popupAnchor: [0, -15],
-        }).addTo(newLayer);
-
+        });
+        marker.addTo(newLayer);
         let prop = point[1];
         let popupContent = name == "街景照片" ? popupPhoto(prop) : `
                 <div class="popupData" style="display: none;">
@@ -168,9 +168,7 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     // 創建 Leaflet Polygon
     let polygon = L.polygon(pointGroup, {
         color: "#000000",       // 邊框顏色
-        opacity: 0,             // 邊框透明度
         fillColor: color,       // 填充顏色
-        fillOpacity: 0         // 填充透明度
     }).addTo(newLayer);
     polygon.bindPopup(`
             <div class="popupData" style="display: none;">

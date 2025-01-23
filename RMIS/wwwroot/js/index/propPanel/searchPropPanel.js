@@ -382,7 +382,7 @@ function highlightMapFeature(item) {
     } catch (e) {
         console.log("error:", e);
     } finally {
-        $indexMap.setView(item["座標"], 17);
+        $indexMap.setView(item["座標"], 19);
         // item['Instance'].openPopup();
     }
 }
@@ -394,12 +394,15 @@ function markerHighlight(marker) {
     if (highlightRectangle) {
         $indexMap.removeLayer(highlightRectangle);
     }
-    const bounds = [[latLng.lat - 0.00002, latLng.lng - 0.00002], [latLng.lat + 0.00002, latLng.lng + 0.00002]];
+    const bounds = [[latLng.lat - 0.00001, latLng.lng - 0.00001], [latLng.lat + 0.00001, latLng.lng + 0.00001]];
     highlightRectangle = L.rectangle(bounds, {
         color: "#ff7800",
         weight: 1,
         fillOpacity: 0.3
     }).addTo($indexMap);
+
+    // 把地圖移動到高亮的位置
+    $indexMap.setView(latLng, 19);
 }
 
 function lineHighlight(polyline) {

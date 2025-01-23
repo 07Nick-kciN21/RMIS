@@ -1,6 +1,7 @@
-import { addFocusPipeline } from './ctrlMap/pipeline.js';
+import { addFocusPipeline, removePipeline } from './ctrlMap/pipeline.js';
 import { add2List, remove2List} from './ctrlMap/list.js';
 import { addFocusLayer2Map } from './ctrlMap/layers.js';
+import { getIndexMap } from './map.js';
 
 let currentRow = null;
 let currentSquare = null;
@@ -9,6 +10,8 @@ let focusData = null;
 let focuseRoad = null;
 let focuseRange = null;
 let pageSize = 10;
+let focusPipeline = [];
+
 export function initFocusPanel(){
     $('#focusGoResult').on('click', function(){
         var formData = new FormData();
@@ -32,14 +35,22 @@ export function initFocusPanel(){
         .then(() => {
             // 新增圖資清單
             let ofType = $('#ofType').val();
+            focusPipeline.forEach(id => {
+                removePipeline(id).then(result => {
+                    remove2List(id);
+                });
+            })
+            focusPipeline.length = 0;
             addFocusPipeline(ofType).then((result) => {
                 var datas = result.datas;
                 console.log(datas);
                 for(var i = 0; i < datas.length; i++){
                     var { id, name, layers } = datas[i];
+                    focusPipeline.push(id);
                     add2List(id, name, layers);
                     addFocusLayer2Map(id, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
                 }
+                console.log(focusPipeline);
             });
 
             $("#focusTotalCount").text(`(總數:${focusData.length})`);
@@ -76,9 +87,9 @@ function updateFlagTable() {
 
 function renderTableBody(pageData){
     var $focusTbody = $('#focusTbody');
-            
+    var $indexMap = getIndexMap();
     $focusTbody.empty();
-    for(var i = 0; i < pageData.length; i++){
+    pageData.forEach(data => {
         const button = $('<button>目標</button>').on('click', function () {
             if(currentRow){
                 currentRow.removeClass('selectRow');
@@ -86,20 +97,56 @@ function renderTableBody(pageData){
             if(currentSquare){
                 $indexMap.removeLayer(currentSquare);
             }
+            console.log(data);
             currentRow = $(this).closest('tr');
             currentRow.addClass('selectRow');
+            // 轉換成可用的經緯度
+            const latlngs = data.points.map(point => [point.latitude, point.longitude]);
+            if(data.caseType == "臨時道路借用申請(範圍)"){
+                currentSquare = L.polygon(latlngs, {color: 'red'}).addTo($indexMap);
+                // zoom:19
+                $indexMap.fitBounds(currentSquare.getBounds(), { maxZoom: 19 });
+            }
+            else if(data.caseType == "臨時道路借用申請(路線)"){
+                currentSquare = L.polyline(latlngs, {color: 'red'}).addTo($indexMap);
+                // zoom:19
+                $indexMap.fitBounds(currentSquare.getBounds(), { maxZoom: 19 });
+            }
         });
         const tableRow = $('<tr></tr>');
         const focusRow =
         `
-            <td>${pageData[i].date}</td>
-            <td>${pageData[i].location}</td>
-            <td>${pageData[i].caseType}</td>
+            <td>${data.date}</td>
+            <td>${data.location}</td>
+            <td>${data.caseType}</td>
         `;
         tableRow.append($('<td></td>').append(button));
         tableRow.append(focusRow);
         $focusTbody.append(tableRow);
-    };
+    });
+    // for(var i = 0; i < pageData.length; i++){
+    //     const button = $('<button>目標</button>').on('click', function () {
+    //         if(currentRow){
+    //             currentRow.removeClass('selectRow');
+    //         }
+    //         if(currentSquare){
+    //             $indexMap.removeLayer(currentSquare);
+    //         }
+    //         console.log(pageData[i]);
+    //         currentRow = $(this).closest('tr');
+    //         currentRow.addClass('selectRow');
+    //     });
+    //     const tableRow = $('<tr></tr>');
+    //     const focusRow =
+    //     `
+    //         <td>${pageData[i].date}</td>
+    //         <td>${pageData[i].location}</td>
+    //         <td>${pageData[i].caseType}</td>
+    //     `;
+    //     tableRow.append($('<td></td>').append(button));
+    //     tableRow.append(focusRow);
+    //     $focusTbody.append(tableRow);
+    // };
 }
 
 function updatePagination(totalPages) {

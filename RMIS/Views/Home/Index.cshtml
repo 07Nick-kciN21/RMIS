@@ -57,9 +57,12 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://unpkg.com/leaflet-polylinedecorator"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
 <script src="~/lib/proj4.js"></script>
 
 @* @section HomeHeaderToolBar{
@@ -92,38 +95,48 @@
                         <div id="adminMenuContent" class="dropdown-content">
                             <ul id="adminMenu" class="menu-background">
                                 <li>
-                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddMapSource">
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddMapSource">
                                         <h4>新增圖源</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddCategory">
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddCategory">
                                         <h4>新增類別</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddPipeline">
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddPipeline">
                                         <h4>新增管線</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddRoadByCSV">
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadByCSV">
                                         <h4>上傳路線資料</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddCategoryByJson">
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddCategoryByJson">
                                         <h4>上傳圖資類別</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link modal-xl" data-action="/Admin/AddRoadProject">
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadProject">
                                         <h4>新增道路專案</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link modal-l" data-action="/Admin/AddRoadProjectByExcel">
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadProjectByExcel">
                                         <h4>上傳道路專案</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddConstructionNotice">
+                                        <h4>新增施工通報</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddConstructNoticeByExcel">
+                                        <h4>上傳施工通報</h4>
                                     </a>
                                 </li>
                             </ul>

@@ -1434,8 +1434,7 @@ namespace RMIS.Repositories
             Console.WriteLine(ex);
             }
         }
-    
-  
+     
         public async Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput)
         {
             Console.WriteLine("UpdateProjectDataAsync");
@@ -1480,9 +1479,7 @@ namespace RMIS.Repositories
                 _logger.LogError(ex, "修改專案資料失敗.");
                 throw;
             }
-            
         }
-
         public async Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput)
         {
             // 更新圖片
@@ -1650,39 +1647,52 @@ namespace RMIS.Repositories
                     .Select(g => g.OrderBy(p => p.Index).FirstOrDefault()) // 每組取 Index 最小的第一個 Point
                     .ToListAsync(); // 將結果轉為 List
                 // 從point中取得Property
-
-                var pointsProp = pointsGroupedByArea.Select(p => JObject.Parse(p.Property)).ToList();
-                for(int i=0; i<pointsProp.Count; i++)
-                {
-                    var startDate = pointsProp[i]["租借起始日"].Value<DateTime>();
-                    var endDate = pointsProp[i]["租借結束日"].Value<DateTime>();
-                    if (startDate >= inputStartDate && startDate <= inputEndDate || endDate >= inputStartDate && endDate <= inputEndDate)
+                var pointsProp = pointsGroupedByArea
+                    .Select(p => new 
                     {
-                        Console.WriteLine($"{pointsProp[i]["租借起始日"].ToString()} {pointsProp[i]["租借結束日"].ToString()}");
-                    }
-                }
-                var filterPoints = pointsGroupedByArea.Where(p =>
+                        id = p.AreaId,
+                        area = p.Area,
+                        prop =  JObject.Parse(p.Property)
+                    })
+                    .ToList();
+                // 過濾出符合日期區間的點
+                var filterPoints = pointsProp.Where(pp =>
                 {
-                    var prop = JObject.Parse(p.Property);
-                    var startDate = prop["租借起始日"].Value<DateTime>();
-                    var endDate = prop["租借結束日"].Value<DateTime>();
+                    var startDate = pp.prop["租借起始日"].Value<DateTime>();
+                    var endDate = pp.prop["租借結束日"].Value<DateTime>();
                     return startDate >= inputStartDate && startDate <= inputEndDate || endDate >= inputStartDate && endDate <= inputEndDate;
                 }).ToList();
-                
+                var filterPointIds = new HashSet<Guid>(filterPoints.Select(fp => fp.id));
+                for(int i = 0; i < filterPoints.Count; i++)
+                {
+                    Console.WriteLine(filterPoints[i].id);
+                }
                 // 組合結果
-                //var result = new AreasByLayer
-                //{
-                //    id = layer.Id,
-                //    name = layer.Name,
-                //    color = layer.GeometryType.Color,
-                //    type = layer.GeometryType.Kind,
-                //    svg = layer.GeometryType.Svg
-                //    // 根據point的property 過濾出符合的area
-                    
-                //};
+                var result = new AreasByLayer
+                {
+                    id = layer.Id,
+                    name = layer.Name,
+                    color = layer.GeometryType.Color,
+                    type = layer.GeometryType.Kind,
+                    svg = layer.GeometryType.Svg,
+                    // 根據point的property 過濾出符合的area
+                    areas = _mapDBContext.Areas.Select(a => new AreaDto
+                        {
+                            id = a.Id,
+                            ConstructionUnit = a.ConstructionUnit,
+                            points = a.Points.Select(p => new PointDto
+                            {
+                                Index = p.Index,
+                                Latitude = p.Latitude,
+                                Longitude = p.Longitude,
+                                Prop = p.Property
+                            }).OrderBy(p => p.Index).ToList()
+                        }
+                    ).Where(a => filterPointIds.Contains(a.id)).ToList()
+                };
                 // 取得該圖層下的每一筆資料
 
-                return null;
+                return result;
             }
             catch (Exception ex)
             {
@@ -1690,6 +1700,10 @@ namespace RMIS.Repositories
                 throw;
             }
         }
-        
+
+        public Task<int> AddConstructNoticeByExcelAsync(AddRoadProjectByExcelInput roadProjectByExcelInput)
+        {
+            
+        }
     }
 }

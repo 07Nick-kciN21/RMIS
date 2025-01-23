@@ -27,8 +27,9 @@ export function removePipeline(id) {
                 var layerIds = result.layerIdList;
                 layerIds.forEach(function (layerId) {
                     removeLayer2Map(layerId);
+                    console.log("Remove Pipeline layerId success", layerId);
                 })
-                console.log("Remove Pipeline success", id);
+                
                 resolve(result);
             },
             error: function (err) {
@@ -51,6 +52,27 @@ export function addFocusPipeline(ofType) {
             },
             error: function (err) {
                 console.error('Error fetching layer data', err);
+                reject(err);
+            }
+        });
+    });
+}
+
+export function removeFocusPipeline(id) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/api/MapAPI/GetLayerIdByFocusPipeline?PipelineId=${id}`,
+            method: 'POST',
+            success: function (result) {
+                var layerIds = result.layerIdList;
+                layerIds.forEach(function (layerId) {
+                    removeLayer2Map(layerId);
+                })
+                console.log("Remove Pipeline success", id);
+                resolve(result);
+            },
+            error: function (err) {
+                console.error('Error fetching layer IDs', err);
                 reject(err);
             }
         });

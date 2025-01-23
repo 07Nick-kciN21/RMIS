@@ -71,6 +71,20 @@
     cursor: pointer;
 }
 
+.modal-body .dateTimeRange{
+    align-items: center;
+}
+
+.modal-body .dateTimeRange input{
+    width: 27%;
+}
+
+.modal-body .dateTimeRange span{
+    margin: auto;
+    font-size: 24px;
+    font-weight: bold;
+}
+
 /* 动画效果 */
 @keyframes modalFadeIn {
     from {

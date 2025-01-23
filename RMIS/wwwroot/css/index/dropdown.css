@@ -37,11 +37,9 @@
     border-bottom-right-radius: 5px;
     display: none;
     left:-10px;
-    overflow-y: auto;
     position: absolute;
     z-index: 1;
 }
-
     .dropdown-content li {
         background-color: white;
         position: relative;
@@ -55,11 +53,19 @@
         list-style-type: none;
     }
 
+.menu-background{
+    max-height: 350px;
+    overflow-y: auto;
+}
+    .menu-background::-webkit-scrollbar {
+        width: 2px;
+        height:5px;
+    }
+
 .modal-link{
     cursor: pointer;
     font-size:large
 }
-
 
 @media (max-width: 899px) {
     .dropdown-content{
