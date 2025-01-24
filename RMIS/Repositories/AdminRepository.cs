@@ -1701,9 +1701,32 @@ namespace RMIS.Repositories
             }
         }
 
-        public Task<int> AddConstructNoticeByExcelAsync(AddRoadProjectByExcelInput roadProjectByExcelInput)
+        public Task<int> AddConstructNoticeByExcelAsync(AddConstructNoticeByExcelInput constructNoticeByExcelInput)
         {
+            // 讀取Excel檔案 constructNoticeByExcelInput.constructNoticeFile
             
+            //許可證號 
+            //工程案號    
+            //核定單位 
+            //工程名稱   
+            //施工狀態 
+            //施工日期(開始)    
+            //施工日期(結束)    
+            //施工地點 
+            //白天施工時段  
+            //晚上施工時段 
+            //管線單位    
+            //施工原因 
+            //變更狀態    
+            //變更日期 
+            //結案日期    
+            //施工前照片 
+            //施工後照片   
+            //打卡告示照片 
+            //打卡交管照片  
+            //施工範圍
+
+            return null;
         }
     }
 }
