@@ -24,66 +24,81 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
         });
         marker.addTo(newLayer);
         let prop = point[1];
-        let popupContent = name == "街景照片" ? popupPhoto(prop) : `
-                <div class="popupData" style="display: none;">
-                    ${prop}
-                </div>
-                <div style="font-size: 18px;">
-                    <text style="font-size: 25px; font-weight: bolder;">
-                        圖層：${name}
-                    </text>
-                    <div>
-                        ${popUpForm(prop)}
-                    </div> 
-                </div>`;
+        if (typeof prop === 'string') {
+            prop = prop.replace(/NaN/g, 'null');
+            try {
+                prop = JSON.parse(prop);
+            } catch (e) {
+                console.error("無法解析 JSON:", e);
+                return "無效的 JSON 資料";
+            }
+        }
+        let popupContent = name == "街景照片" ? popupPhoto(prop) : popupFormat(prop, name);
 
         marker.bindPopup(popupContent, {
             maxWidth: 450,
             maxHeight: 350
         });
         marker.on('click', function (e) {
-            console.log("Marker Clicked",popupEnabled);
-            if(popupEnabled){
-                const latLng = e.latlng;
-                $indexMap.setView(latLng, $indexMap.getZoom());
-
-                if (currentRectangle) {
-                    newLayer.removeLayer(currentRectangle);
-                }
-
-                const squareIcon = L.divIcon({
-                    html: `<svg width="24" height="24">
-                            <rect 
-                            x="0" 
-                            y="0" 
-                            width="24" 
-                            height="24" 
-                            fill="none" 
-                            stroke="#0066CC" 
-                            stroke-width="3"
-                            />
-                        </svg>`,
-                    className: 'square-marker',  // 避免 Leaflet 默認樣式
-                    iconSize: [24, 24],         // 圖標大小
-                    iconAnchor: [12, 12]        // 錨點在正方形中心
+            if(name == "施工地點"){
+                // 取得prop["施工範圍"]的座標，[["25.013416726144825, 121.21638832141913", "25.01320769080961, 121.21635613491283","25.0130278229108, 121.21669409322902","25.01330491659119, 121.21656534720383"],["25.01259658950617, 121.21894740175556","25.01260631213617, 121.21915661404655","25.012681662492607, 121.21900909255933"]]
+                let latlngs = JSON.parse(prop["施工範圍"]);
+                // 歷遍施工範圍的座標，並將其轉換成L.polygon
+                latlngs.forEach(function (latlng) {
+                    let polygon = L.polygon(latlng.map(function (point) {
+                        return point.split(',').map(function (coord) {
+                            return parseFloat(coord);
+                        });
+                    }), {
+                        color: 'red'
+                    }).addTo(newLayer);
                 });
-
-                currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
-
-                const mapClickHandler = function (e) {
+                console.log(latlngs);
+            }
+            else{
+                console.log("Marker Clicked",popupEnabled);
+                if(popupEnabled){
+                    const latLng = e.latlng;
+                    $indexMap.setView(latLng, $indexMap.getZoom());
+    
                     if (currentRectangle) {
                         newLayer.removeLayer(currentRectangle);
-                        console.log("Removed currentRectangle");
-            
-                        // 事件執行一次後立即移除
-                        $indexMap.off('click', mapClickHandler);
                     }
-                };
-                // 動態綁定地圖點擊事件
-                $indexMap.on('click', mapClickHandler);
-            }
-            else{ 
-                e.target.closePopup();
+    
+                    const squareIcon = L.divIcon({
+                        html: `<svg width="24" height="24">
+                                <rect 
+                                x="0" 
+                                y="0" 
+                                width="24" 
+                                height="24" 
+                                fill="none" 
+                                stroke="#0066CC" 
+                                stroke-width="3"
+                                />
+                            </svg>`,
+                        className: 'square-marker',  // 避免 Leaflet 默認樣式
+                        iconSize: [24, 24],         // 圖標大小
+                        iconAnchor: [12, 12]        // 錨點在正方形中心
+                    });
+    
+                    currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
+    
+                    const mapClickHandler = function (e) {
+                        if (currentRectangle) {
+                            newLayer.removeLayer(currentRectangle);
+                            console.log("Removed currentRectangle");
+                
+                            // 事件執行一次後立即移除
+                            $indexMap.off('click', mapClickHandler);
+                        }
+                    };
+                    // 動態綁定地圖點擊事件
+                    $indexMap.on('click', mapClickHandler);
+                }
+                else{ 
+                    e.target.closePopup();
+                }
             }
         });
         marker._isVisible = true;
@@ -312,34 +327,8 @@ function getInverseColor(color) {
     return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1).toUpperCase()}`;
 }
 
-function popUpForm(prop) {
-    if (typeof prop === 'string') {
-        prop = prop.replace(/NaN/g, 'null');
-        try {
-            prop = JSON.parse(prop);
-        } catch (e) {
-            console.error("無法解析 JSON:", e);
-            return "無效的 JSON 資料";
-        }
-    }
-
-    let table = '<table class="popup-table-content"  cellpadding="5" cellspacing="0">';
-
-    Object.keys(prop).forEach(key => {
-        table += `<tr><th>${key}</th><td>${prop[key]}</td></tr>`;
-    });
-
-    table += '</table>';
-
-    return `
-        <div class="popup-table">
-            ${table}
-        </div>
-    `;
-}
-
 function popupPhoto(prop){
-    let url = JSON.parse(prop);
+    let url = prop;
     console.log(url);
     // 創建 popupContent
     let popupContent = document.createElement('div');
@@ -419,6 +408,38 @@ function popupPhoto(prop){
     return popupContent;
 }
 
+function popupFormat(prop, name){
+    return `
+    <div class="popupData" style="display: none;">
+        ${JSON.stringify(prop)}
+    </div>
+    <div style="font-size: 18px;">
+        <text style="font-size: 25px; font-weight: bolder;">
+            圖層：${name}
+        </text>
+        <div>
+            ${name == "施工地點" ? popupConstruct(prop) : popUpForm(prop)}
+        </div> 
+    </div>`;
+}
+
+function popUpForm(prop) {
+ 
+    let table = '<table class="popup-table-content" cellpadding="5" cellspacing="0">';
+
+    Object.keys(prop).forEach(key => {
+        table += `<tr><th>${key}</th><td>${prop[key]}</td></tr>`;
+    });
+
+    table += '</table>';
+
+    return `
+        <div class="popup-table">
+            ${table}
+        </div>
+    `;
+}
+
 function popupProjectFrom(prop){
     if (typeof prop === 'string') {
         prop = prop.replace(/NaN/g, 'null');
@@ -454,6 +475,37 @@ function popupProjectFrom(prop){
         table += `<tr><th style="width: 40%;">${key}</th><td>${value}</td></tr>`;
     });
     
+    table += '</table>';
+
+    return `
+        <div class="popup-table">
+            ${table}
+        </div>
+    `;
+}
+
+function popupConstruct(prop){
+    let table = '<table class="popup-table-content"  cellpadding="5" cellspacing="0">';
+
+    Object.keys(prop).forEach(key => {
+        // 如果是 施工前照片 施工後照片 打卡告示照片 打卡交管照片，則顯示圖片
+        if(["施工前照片", "施工後照片", "打卡告示照片", "打卡交管照片"].includes(key)){
+            table += `
+                <tr>
+                    <th>${key}</th>
+                    <td style="width: 40%;">
+                        <img src="/constructNotice/${prop["工程案號"]}/${prop[key]}?v=${new Date().getTime()}" style="width:100px"/>
+                    </td>
+                </tr>`;
+            return;
+        }
+        else if(key === "施工範圍"){
+            table += `<tr style="display:none"><th style="width: 40%;">${key}</th><td>${prop[key]}</td></tr>`;
+            return
+        }
+        table += `<tr><th style="width: 40%;">${key}</th><td>${prop[key]}</td></tr>`;
+    });
+
     table += '</table>';
 
     return `

@@ -1,6 +1,6 @@
-﻿namespace RMIS.Models.Admin
+﻿namespace RMIS.Models.sql
 {
-    public class ConstructNoticeExcelFormat
+    public class ConstructNotice
     {
         public Guid Id { get; set; }
         public string LicenseNumber { get; set; } // 許可證號
@@ -27,5 +27,4 @@
         public string NoticePosition { get; set; } // 通報座標
         public Guid PositionId { get; set; } // 通報座標的 AreaId
     }
-
 }

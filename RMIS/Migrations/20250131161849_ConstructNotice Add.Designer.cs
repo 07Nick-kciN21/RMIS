@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMIS.Data;
 
@@ -11,9 +12,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250131161849_ConstructNotice Add")]
+    partial class ConstructNoticeAdd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,6 +110,7 @@ namespace RMIS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("AfterConstructionPhoto")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ApprovalUnit")
@@ -114,12 +118,14 @@ namespace RMIS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BeforeConstructionPhoto")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("ChangeDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ChangeStatus")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CompletionDate")
@@ -133,6 +139,7 @@ namespace RMIS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConstructionReason")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConstructionScope")
@@ -147,6 +154,7 @@ namespace RMIS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DaytimeConstructionPeriod")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LicenseNumber")
@@ -154,9 +162,11 @@ namespace RMIS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NighttimeConstructionPeriod")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NoticePhoto")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NoticePosition")
@@ -164,6 +174,7 @@ namespace RMIS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PipelineUnit")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("PositionId")
@@ -178,6 +189,7 @@ namespace RMIS.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TrafficControlPhoto")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

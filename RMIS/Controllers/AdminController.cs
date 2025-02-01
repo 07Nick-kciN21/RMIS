@@ -270,7 +270,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddConstructNoticeByExcel(AddConstructNoticeByExcelInput ConstructNoticeByExcel)
+        public async Task<IActionResult> AddConstructNoticeByExcel(AddConstructNoticeByExcelInput ConstructNoticeByExcel)
         {
             try
             {

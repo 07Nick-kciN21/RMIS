@@ -2,7 +2,7 @@
 {
     public class AddConstructNoticeByExcelInput
     {
-        public IFormFile constructNoticeFile { get; set; }
-        public List<IFormFile> constructNoticePhoto { get; set; }
+        public IFormFile noticeFile { get; set; }
+        public List<IFormFile> noticePhoto { get; set; }
     }
 }

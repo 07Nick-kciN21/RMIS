@@ -19,6 +19,7 @@ namespace RMIS.Data
         public DbSet<MapSource> MapSources { get; set; }
         public DbSet<GeometryType> GeometryTypes { get; set; }
         public DbSet<RoadProject> RoadProjects { get; set; }
+        public DbSet<ConstructNotice> ConstructNotices { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));

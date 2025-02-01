@@ -3,8 +3,8 @@
     public class RoadProjectExcelFormat
     {
         public Guid Id { get; set; }
-        public int Index { get; set; }
         public string ProjectId { get; set; }
+        public int Index { get; set; }
         /// 提案人
         public string Proposer { get; set; }
         /// 行政區
@@ -35,12 +35,13 @@
         public int CompensationBudget { get; set; }
         /// 合計經費（單位：萬元）
         public int TotalBudget { get; set; }
+        public string Remarks { get; set; }
+
         /// 預拓範圍（經緯度陣列，格式：["緯度,經度", ...]）
         public string PlannedExpansionRange { get; set; }
         /// 街景照片（JSON 格式，鍵為檔名，值為經緯度）
         public string StreetViewPhotos { get; set; }
         /// 備註
-        public string Remarks { get; set; }
         // 預拓範圍的AreaId
         public Guid PlannedExpansionId { get; set; }
         // 街景的AreaId

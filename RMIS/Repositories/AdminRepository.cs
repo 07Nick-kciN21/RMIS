@@ -1628,24 +1628,25 @@ namespace RMIS.Repositories
                 var inputStartDate = AreasByFocusLayerInput.startDate;
                 var inputEndDate = AreasByFocusLayerInput.endDate;
                 // 取得目標 Layer 資料
-                var layer = await _mapDBContext.Layers
+                var focusLayer = await _mapDBContext.Layers
                     .Include(l => l.GeometryType)
                     .Where(l => l.Id == AreasByFocusLayerInput.id)
                     .FirstOrDefaultAsync();
 
-                if (layer == null) throw new Exception("Layer not found");
+                if (focusLayer == null) throw new Exception("Layer not found");
 
                 // 找到該 Layer 下的所有 Area
                 var areas = await _mapDBContext.Areas
                     .Where(a => a.LayerId == AreasByFocusLayerInput.id)
                     .ToListAsync();
+                // 取得符合條件的 Area Id 列表
+                var areaIds = areas.Select(a => a.Id).ToList();
 
-                // 取得相關 Point 的資料，並只提取每個 Area 的第一個點
+                // 只篩選屬於這些 Areas 的 Points
                 var pointsGroupedByArea = await _mapDBContext.Points
-                    .Where(p => areas.Select(a => a.Id).Contains(p.AreaId)) // 過濾相關 Area 的 Point
-                    .GroupBy(p => p.AreaId) // 按 AreaId 分組
-                    .Select(g => g.OrderBy(p => p.Index).FirstOrDefault()) // 每組取 Index 最小的第一個 Point
-                    .ToListAsync(); // 將結果轉為 List
+                    .Where(p => areaIds.Contains(p.AreaId) && p.Index == 0)
+                    .ToListAsync();
+
                 // 從point中取得Property
                 var pointsProp = pointsGroupedByArea
                     .Select(p => new 
@@ -1670,11 +1671,11 @@ namespace RMIS.Repositories
                 // 組合結果
                 var result = new AreasByLayer
                 {
-                    id = layer.Id,
-                    name = layer.Name,
-                    color = layer.GeometryType.Color,
-                    type = layer.GeometryType.Kind,
-                    svg = layer.GeometryType.Svg,
+                    id = focusLayer.Id,
+                    name = focusLayer.Name,
+                    color = focusLayer.GeometryType.Color,
+                    type = focusLayer.GeometryType.Kind,
+                    svg = focusLayer.GeometryType.Svg,
                     // 根據point的property 過濾出符合的area
                     areas = _mapDBContext.Areas.Select(a => new AreaDto
                         {
@@ -1701,32 +1702,220 @@ namespace RMIS.Repositories
             }
         }
 
-        public Task<int> AddConstructNoticeByExcelAsync(AddConstructNoticeByExcelInput constructNoticeByExcelInput)
-        {
-            // 讀取Excel檔案 constructNoticeByExcelInput.constructNoticeFile
-            
-            //許可證號 
-            //工程案號    
-            //核定單位 
-            //工程名稱   
-            //施工狀態 
-            //施工日期(開始)    
-            //施工日期(結束)    
-            //施工地點 
-            //白天施工時段  
-            //晚上施工時段 
-            //管線單位    
-            //施工原因 
-            //變更狀態    
-            //變更日期 
-            //結案日期    
-            //施工前照片 
-            //施工後照片   
-            //打卡告示照片 
-            //打卡交管照片  
-            //施工範圍
 
-            return null;
+        public async Task<int> AddConstructNoticeByExcelAsync(AddConstructNoticeByExcelInput input)
+        {
+            var file = input.noticeFile;
+            var photoFile = input.noticePhoto;
+            if (file == null || file.Length == 0)
+            {
+                throw new Exception("請提供有效的 xlsx 文件。");
+            }
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            try
+            {
+                int rowsAffected = 0;
+                using (var stream = new MemoryStream())
+                {
+                    await file.CopyToAsync(stream);
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        var constructNoticeSheet = package.Workbook.Worksheets[0];
+                        var constructNotices = await ParseConstructNoticeExcelAsync(constructNoticeSheet);
+                        var noticeAreas = new List<Area>();
+                        var noticePoints = new List<Point>();
+                        for (int i = 0; i < constructNotices.Count; i++)
+                        {
+                            constructNotices[i].Id = Guid.NewGuid();
+                            // 新增通報座標和施工範圍的area
+                            var constructionLocation = constructNotices[i].ConstructionLocation;
+                            var projectNumber = constructNotices[i].ProjectNumber;
+                            var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == constructNotices[i].AdministrativeDistrict)?.Id;
+                            var noticeId = Guid.NewGuid();
+                            var noticeArea = new Area
+                            {
+                                Id = noticeId,
+                                Name = $"{constructionLocation} - {projectNumber}",
+                                ConstructionUnit = "工務局",
+                                AdminDistId = adminDistId ?? Guid.Empty,
+                                LayerId = Guid.Parse("B8D36E95-7C82-4ADA-BA91-C91B6162C723")
+                            };
+                            var point = constructNotices[i].NoticePosition.Split(",");
+                            var noticePoint = new Point
+                            {
+                                Id = Guid.NewGuid(),
+                                Index = 0,
+                                Latitude = double.Parse(point[0]),
+                                Longitude = double.Parse(point[1]),
+                                AreaId = noticeId,
+                                Property = parseNoticePropAsync(constructNotices[i])
+                            };
+                            constructNotices[i].PositionId = noticeArea.Id;
+                            noticeAreas.Add(noticeArea);
+                            noticePoints.Add(noticePoint);
+                        };
+                        var constructNoticeList = MapperHelper.A2B<List<ConstructNoticeExcelFormat>, List<ConstructNotice>>(constructNotices);
+                        // roadProjects轉換成RoadProject型態
+                        await _mapDBContext.AddRangeAsync(noticeAreas);
+                        await _mapDBContext.SaveChangesAsync();
+                        await _mapDBContext.AddRangeAsync(noticePoints);
+                        await _mapDBContext.SaveChangesAsync();
+                        await _mapDBContext.AddRangeAsync(constructNoticeList);
+                        rowsAffected = await _mapDBContext.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                    }
+                }
+                for (int i = 0; i < photoFile.Count; i++)
+                {
+                    var noticeId = photoFile[i].FileName.Split("_")[0];
+                    var base64Photo = await ConvertToBase64Async(photoFile[i]);
+                    await saveNoticePhotoAsync(base64Photo, photoFile[i].FileName, noticeId);
+                    // await savePhotoFileAsync(photoFile[i]);
+                }
+                return rowsAffected;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
+        }
+        private async Task<List<ConstructNoticeExcelFormat>> ParseConstructNoticeExcelAsync(ExcelWorksheet worksheet)
+        {
+            var result = new List<ConstructNoticeExcelFormat>();
+            var rowCount = worksheet.Dimension.Rows;
+
+            // 獲取標題行 (假設第一行為標題)
+            var headers = new Dictionary<string, int>();
+            for (int col = 1; col <= worksheet.Dimension.Columns; col++)
+            {
+                headers[worksheet.Cells[1, col].Text.Trim()] = col;
+            }
+            var maxIndex = await _mapDBContext.RoadProjects.MaxAsync(rp => (int?)rp.Index) ?? 0;
+            for (int row = 2; row <= rowCount; row++) // 從第2行開始讀取數據
+            {
+                // 獲取每一行的數據
+                var notice = new ConstructNoticeExcelFormat
+                {
+                    LicenseNumber = headers.ContainsKey("許可證號") ? worksheet.Cells[row, headers["許可證號"]].Text.Trim() : "",
+                    ProjectNumber = headers.ContainsKey("工程案號") ? worksheet.Cells[row, headers["工程案號"]].Text.Trim() : "",
+                    ApprovalUnit = headers.ContainsKey("核定單位") ? worksheet.Cells[row, headers["核定單位"]].Text.Trim() : "",
+                    ProjectName = headers.ContainsKey("工程名稱") ? worksheet.Cells[row, headers["工程名稱"]].Text.Trim() : "",
+                    ConstructionStatus = headers.ContainsKey("施工狀態") ? worksheet.Cells[row, headers["施工狀態"]].Text.Trim() : "",
+                    ConstructionStartDate = headers.ContainsKey("施工開始日期") ? ParseDateTime(worksheet.Cells[row, headers["施工開始日期"]].Text) : DateTime.MinValue,
+                    ConstructionEndDate = headers.ContainsKey("施工結束日期") ? ParseDateTime(worksheet.Cells[row, headers["施工結束日期"]].Text) : DateTime.MinValue,
+                    AdministrativeDistrict = headers.ContainsKey("行政區") ? worksheet.Cells[row, headers["行政區"]].Text.Trim() : "",
+                    ConstructionLocation = headers.ContainsKey("施工地點") ? worksheet.Cells[row, headers["施工地點"]].Text.Trim() : "",
+                    DaytimeConstructionPeriod = headers.ContainsKey("白天施工時段") ? worksheet.Cells[row, headers["白天施工時段"]].Text.Trim() : null,
+                    NighttimeConstructionPeriod = headers.ContainsKey("晚上施工時段") ? worksheet.Cells[row, headers["晚上施工時段"]].Text.Trim() : null,
+                    PipelineUnit = headers.ContainsKey("管線單位") ? worksheet.Cells[row, headers["管線單位"]].Text.Trim() : null,
+                    ConstructionReason = headers.ContainsKey("施工原因") ? worksheet.Cells[row, headers["施工原因"]].Text.Trim() : null,
+                    ChangeStatus = headers.ContainsKey("變更狀態") ? worksheet.Cells[row, headers["變更狀態"]].Text.Trim() : null,
+                    ChangeDate = headers.ContainsKey("變更日期") ? ParseDateTime(worksheet.Cells[row, headers["變更日期"]].Text) : null,
+                    CompletionDate = headers.ContainsKey("結案日期") ? ParseDateTime(worksheet.Cells[row, headers["結案日期"]].Text) : null,
+                    BeforeConstructionPhoto = headers.ContainsKey("施工前照片") ? worksheet.Cells[row, headers["施工前照片"]].Text.Trim() : null,
+                    AfterConstructionPhoto = headers.ContainsKey("施工後照片") ? worksheet.Cells[row, headers["施工後照片"]].Text.Trim() : null,
+                    NoticePhoto = headers.ContainsKey("打卡告示照片") ? worksheet.Cells[row, headers["打卡告示照片"]].Text.Trim() : null,
+                    TrafficControlPhoto = headers.ContainsKey("打卡交管照片") ? worksheet.Cells[row, headers["打卡交管照片"]].Text.Trim() : null,
+                    ConstructionScope = headers.ContainsKey("施工範圍") ? worksheet.Cells[row, headers["施工範圍"]].Text.Trim() : "",
+                    NoticePosition = headers.ContainsKey("通報座標") ? worksheet.Cells[row, headers["通報座標"]].Text.Trim() : "",
+                };
+                result.Add(notice);
+            }
+
+            return result;
+        }
+        private DateTime ParseDateTime(string dateStr)
+        {
+            if (string.IsNullOrWhiteSpace(dateStr))
+                return DateTime.MinValue;
+
+            if (DateTime.TryParseExact(dateStr, "yyyy/MM/dd tt hh:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))
+            {
+                return parsedDate;
+            }
+
+            return DateTime.MinValue;
+        }
+
+        private string parseNoticePropAsync(ConstructNoticeExcelFormat constructNotice)
+        {
+            try
+            {
+                // 將 ConstructNoticeExcelFormat 的欄位名稱轉換成中文
+                var constructNoticeProp = MapperHelper.A2B<ConstructNoticeExcelFormat, ConstructNotice>(constructNotice);
+
+                // 英中欄位對應字典
+                var propMap = new Dictionary<string, string>
+                {
+                    { "LicenseNumber", "許可證號" },
+                    { "ProjectNumber", "工程案號" },
+                    { "ApprovalUnit", "核定單位" },
+                    { "ProjectName", "工程名稱" },
+                    { "ConstructionStatus", "施工狀態" },
+                    { "ConstructionStartDate", "施工開始日期" },
+                    { "ConstructionEndDate", "施工結束日期" },
+                    { "ConstructionLocation", "施工地點" },
+                    { "DaytimeConstructionPeriod", "白天施工時段" },
+                    { "NighttimeConstructionPeriod", "晚上施工時段" },
+                    { "PipelineUnit", "管線單位" },
+                    { "ConstructionReason", "施工原因" },
+                    { "ChangeStatus", "變更狀態" },
+                    { "ChangeDate", "變更日期" },
+                    { "CompletionDate", "結案日期" },
+                    { "BeforeConstructionPhoto", "施工前照片" },
+                    { "AfterConstructionPhoto", "施工後照片" },
+                    { "NoticePhoto", "打卡告示照片" },
+                    { "TrafficControlPhoto", "打卡交管照片" },
+                    { "ConstructionScope", "施工範圍"}
+                };
+
+                // 轉換屬性名稱與值
+                var propDict = constructNoticeProp.GetType().GetProperties()
+                    .Where(prop => propMap.ContainsKey(prop.Name)) // 只篩選在 propMap 中存在的欄位
+                    .ToDictionary(
+                        prop => propMap[prop.Name], // 轉換為中文名稱
+                        prop => prop.GetValue(constructNoticeProp)?.ToString() // 獲取屬性值
+                    );
+
+                // 轉換為 JSON
+                var property = JsonConvert.SerializeObject(propDict);
+                return property;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            return "";
+        }
+
+        private async Task saveNoticePhotoAsync(string noticePhoto, string photoName, string constructNoticeDic)
+        {
+            Console.WriteLine("savePhoto");
+            try
+            {
+                // 提取 Base64 字串（移除開頭的 data:image/png;base64, 部分）
+                var base64Data = Regex.Replace(noticePhoto, @"^data:image/\w+;base64,", string.Empty);
+
+                // 將 Base64 字串轉換為 byte[]
+                var imageBytes = Convert.FromBase64String(base64Data);
+                var directoryPath = @"C:\Users\maybu\OneDrive\圖片\RMIS_IMG\constructNotice";
+                // 儲存路徑（伺服器上的某個目錄）
+                var savePath = Path.Combine(directoryPath, constructNoticeDic);
+                if (!Directory.Exists(savePath))
+                {
+                    Directory.CreateDirectory(savePath);
+                }
+
+                var filePath = Path.Combine(savePath, photoName);
+
+                // 將 byte[] 寫入檔案
+                await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
     }
 }

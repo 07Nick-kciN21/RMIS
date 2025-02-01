@@ -124,29 +124,6 @@ function renderTableBody(pageData){
         tableRow.append(focusRow);
         $focusTbody.append(tableRow);
     });
-    // for(var i = 0; i < pageData.length; i++){
-    //     const button = $('<button>目標</button>').on('click', function () {
-    //         if(currentRow){
-    //             currentRow.removeClass('selectRow');
-    //         }
-    //         if(currentSquare){
-    //             $indexMap.removeLayer(currentSquare);
-    //         }
-    //         console.log(pageData[i]);
-    //         currentRow = $(this).closest('tr');
-    //         currentRow.addClass('selectRow');
-    //     });
-    //     const tableRow = $('<tr></tr>');
-    //     const focusRow =
-    //     `
-    //         <td>${pageData[i].date}</td>
-    //         <td>${pageData[i].location}</td>
-    //         <td>${pageData[i].caseType}</td>
-    //     `;
-    //     tableRow.append($('<td></td>').append(button));
-    //     tableRow.append(focusRow);
-    //     $focusTbody.append(tableRow);
-    // };
 }
 
 function updatePagination(totalPages) {

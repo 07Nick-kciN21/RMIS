@@ -29,6 +29,6 @@ namespace RMIS.Repositories
         Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput);
         Task<List<LayersByFocusPipeline>> GetLayersByFocusPipelineAsync(int ofType);
         Task<AreasByLayer> GetAreasByFocusLayerAsync(GetAreasByFocusLayerInput AreasByFocusLayerInput);
-        Task<int> AddConstructNoticeByExcelAsync(AddRoadProjectByExcelInput roadProjectByExcelInput);
+        Task<int> AddConstructNoticeByExcelAsync(AddConstructNoticeByExcelInput roadProjectByExcelInput);
     }
 }

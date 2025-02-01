@@ -49,18 +49,19 @@ export function addLayer2Map(id ,LayerData) {
 
 // 建立新物件的圖層
 function createNewLayer(result, pipelineId) {
-    var newLayer = result.name === "施工地點" ?  L.markerClusterGroup({
-        iconCreateFunction: function (cluster) {
-            const count = cluster.getChildCount();
-            return L.icon({
-                iconUrl: `/img/${result.svg}`,
-                iconSize: [30, 30],
-                iconAnchor: [15, 15],
-                popupAnchor: [0, -15]
-            });
-        }
-    }) : L.layerGroup();
+    // var newLayer = result.name === "施工地點" ?  L.markerClusterGroup({
+    //     iconCreateFunction: function (cluster) {
+    //         const count = cluster.getChildCount();
+    //         return L.icon({
+    //             iconUrl: `/img/${result.svg}`,
+    //             iconSize: [30, 30],
+    //             iconAnchor: [15, 15],
+    //             popupAnchor: [0, -15]
+    //         });
+    //     }
+    // }) : L.layerGroup();
     // 只在result.name為
+    var newLayer = L.layerGroup();
     if (!indexMap) {
         console.error('indexMap is not initialized.');
         return;
