@@ -5,7 +5,7 @@ let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null; // 用於保存當前的線段
 let currentPolygon = null; // 用於保存當前的多邊形
 let currentArrow = null; // 用於保存當前的箭頭線段
-
+let noticeLayer = L.layerGroup();
 // 將標記加入圖層
 export function addMarkersToLayer(points, newLayer, svg, name) {
     var $indexMap = getIndexMap();
@@ -40,24 +40,34 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             maxHeight: 350
         });
         marker.on('click', function (e) {
-            if(name == "施工地點"){
-                // 取得prop["施工範圍"]的座標，[["25.013416726144825, 121.21638832141913", "25.01320769080961, 121.21635613491283","25.0130278229108, 121.21669409322902","25.01330491659119, 121.21656534720383"],["25.01259658950617, 121.21894740175556","25.01260631213617, 121.21915661404655","25.012681662492607, 121.21900909255933"]]
-                let latlngs = JSON.parse(prop["施工範圍"]);
-                // 歷遍施工範圍的座標，並將其轉換成L.polygon
-                latlngs.forEach(function (latlng) {
-                    let polygon = L.polygon(latlng.map(function (point) {
-                        return point.split(',').map(function (coord) {
-                            return parseFloat(coord);
-                        });
-                    }), {
-                        color: 'red'
-                    }).addTo(newLayer);
-                });
-                console.log(latlngs);
-            }
-            else{
-                console.log("Marker Clicked",popupEnabled);
-                if(popupEnabled){
+            console.log("Marker Clicked",popupEnabled);
+            if(popupEnabled){
+                if(name == "施工地點"){
+                    let latlngs = JSON.parse(prop["施工範圍"]);
+                    // 歷遍施工範圍的座標，並將其轉換成L.polygon
+                    latlngs.forEach(function (latlng) {
+                        let polygon = L.polygon(latlng.map(function (point) {
+                            return point.split(',').map(function (coord) {
+                                return parseFloat(coord);
+                            });
+                        }), {
+                            color: 'red'
+                        }).addTo(noticeLayer);
+                    });
+                    noticeLayer.addTo($indexMap);
+                    const mapClickHandler = function (e) {
+                        if (noticeLayer) {
+                            noticeLayer.clearLayers();
+                            console.log("Removed noticeLayer");
+                            
+                            // 事件執行一次後立即移除
+                            $indexMap.off('click', mapClickHandler);
+                        }
+                    };
+                    // 動態綁定地圖點擊事件
+                    $indexMap.on('click', mapClickHandler);
+                }
+                else{
                     const latLng = e.latlng;
                     $indexMap.setView(latLng, $indexMap.getZoom());
     
@@ -96,9 +106,9 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
                     // 動態綁定地圖點擊事件
                     $indexMap.on('click', mapClickHandler);
                 }
-                else{ 
-                    e.target.closePopup();
-                }
+            }
+            else{ 
+                e.target.closePopup();
             }
         });
         marker._isVisible = true;
@@ -122,6 +132,15 @@ export function addLineToLayer(points, newLayer, color, name) {
             color: color
         }).addTo(newLayer);
 
+        if (typeof prop === 'string') {
+            prop = prop.replace(/NaN/g, 'null');
+            try {
+                prop = JSON.parse(prop);
+            } catch (e) {
+                console.error("無法解析 JSON:", e);
+                return "無效的 JSON 資料";
+            }
+        }
         // 為每個線段綁定 Popup，顯示其起點和終點座標
         segment.bindPopup(`
             <div class="popupData" style="display: none;">
@@ -175,6 +194,15 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     var $indexMap = getIndexMap();
     var pointGroup = [];
     var prop = points[0][1];
+    if (typeof prop === 'string') {
+        prop = prop.replace(/NaN/g, 'null');
+        try {
+            prop = JSON.parse(prop);
+        } catch (e) {
+            console.error("無法解析 JSON:", e);
+            return "無效的 JSON 資料";
+        }
+    }
 
     // 把points的所有[0]取出集合
     for (var i = 0; i < points.length; i++) {
@@ -268,8 +296,19 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
     // 建立arrowline
     let arrowline = L.polyline(pointGroup,{ 
         color: color, 
-         
     }).addTo(newLayer);
+
+    var prop = points[0][1];
+    
+    if (typeof prop === 'string') {
+        prop = prop.replace(/NaN/g, 'null');
+        try {
+            prop = JSON.parse(prop);
+        } catch (e) {
+            console.error("無法解析 JSON:", e);
+            return "無效的 JSON 資料";
+        }
+    }
     // 在線段加上popup
     arrowline.bindPopup(`
         <div class="popupData" style="display: none;">

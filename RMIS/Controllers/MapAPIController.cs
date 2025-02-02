@@ -396,7 +396,6 @@ namespace RMIS.Controllers
         [HttpPost("GetAreasByFocusLayer")]
         public async Task<IActionResult> GetAreasByFocusLayer([FromForm] GetAreasByFocusLayerInput AreasByFocusLayerInput)
         {
-            
             try
             {
                 var datas = await _adminInterface.GetAreasByFocusLayerAsync(AreasByFocusLayerInput);

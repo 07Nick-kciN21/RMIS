@@ -6,5 +6,6 @@
         // 時間 ex 2024/12/3, 2024/12/4
         public DateTime FocusStartDate { get; set; }
         public DateTime FocusEndDate { get; set; }
+        public string? RoadName { get; set; }
     }
 }

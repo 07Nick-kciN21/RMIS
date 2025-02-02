@@ -7,11 +7,19 @@ namespace RMIS.Models.API
         
         public List<focusedCase>? FocusedRoad { get; set; }
         public List<focusedCase>? FocusedRange { get; set; }
+        public List<noticeCase>? Construct { get; set; }
     }
 
     
 
     public class focusedCase
+    {
+        public string date { get; set; }
+        public string location { get; set; }
+        public string caseType { get; set; }
+        public List<Point> points { get; set; }
+    }
+    public class noticeCase
     {
         public string date { get; set; }
         public string location { get; set; }

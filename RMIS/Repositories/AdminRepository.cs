@@ -730,6 +730,7 @@ namespace RMIS.Repositories
             // 0: 臨時道路借用申請(路線)、臨時道路借用申請(借用範團)
             // 1: 臨時道路借用申請(路線)
             // 2: 臨時道路借用申請(借用範圍)
+            var RoadName = input.RoadName == null ? "" : input.RoadName;
             var focusedPipelines = new List<string>();
             if (input.FocusType == 0)
             {
@@ -737,8 +738,8 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)") || p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
-                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[1]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[1]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
                 var result = new FocusedData
                 {
                     FocusedRoad = focusedRoadPoints,
@@ -752,7 +753,7 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
                 var result = new FocusedData
                 {
                     FocusedRoad = null,
@@ -766,20 +767,37 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
                 var result = new FocusedData
                 {
                     FocusedRoad = focusedRoadPoints,
-                    FocusedRange = null
+                    FocusedRange = null,
+                    Construct = null
                 };
                 return result;
             }
+            else if (input.FocusType == 3)
+            {
+                var noticeQuery = await _mapDBContext.ConstructNotices.Where(cn => 
+                    ((cn.ConstructionStartDate >=input.FocusStartDate && cn.ConstructionStartDate <= input.FocusEndDate) ||
+                    (cn.ConstructionEndDate >= input.FocusStartDate && cn.ConstructionEndDate <= input.FocusEndDate)) &&
+                    cn.ConstructionLocation.Contains(RoadName)
+                    ).ToListAsync();
 
+                var constructPoints = await GetNoticePointByDatetime(noticeQuery, input.FocusStartDate, input.FocusEndDate, "施工通報(道路挖掘)");
+                var result = new FocusedData
+                {
+                    FocusedRoad = null,
+                    FocusedRange = null,
+                    Construct = constructPoints
+                };
+                return result;
+            }
             // 根據focusedPipelines的Id查找對應的資料
             return null;
         }
 
-        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
+        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, string RoadName, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
         {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
@@ -792,7 +810,9 @@ namespace RMIS.Repositories
                     var prop = JObject.Parse(q.Property);
                     var startDate = prop["租借起始日"].Value<DateTime>();
                     var endDate = prop["租借結束日"].Value<DateTime>();
-                    return startDate >= FocusStartDate && startDate <= FocusEndDate || endDate >= FocusStartDate && endDate <= FocusEndDate;
+                    var roadName = prop["借用路段"].Value<string>();
+                    return (startDate >= FocusStartDate && startDate <= FocusEndDate || endDate >= FocusStartDate && endDate <= FocusEndDate) &&
+                        roadName.Contains(RoadName);
                 }).ToList();
 
                 var result = new List<focusedCase>();
@@ -825,7 +845,53 @@ namespace RMIS.Repositories
                 throw;
             }
         }
+        private async Task<List<noticeCase>> GetNoticePointByDatetime(List<ConstructNotice> noticeQuery, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
+        {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            var noticePositionList = noticeQuery.Select(n => n.PositionId).ToList();
+            var query = await _mapDBContext.Points.Where(p => noticePositionList.Contains(p.AreaId)).ToListAsync();
+            //query = query.Where(q =>
+            //{
+            //    var prop = JObject.Parse(q.Property);
+            //    var startDate = prop["施工開始日期"].Value<DateTime>();
+            //    var endDate = prop["施工結束日期"].Value<DateTime>();
+            //    return startDate >= FocusStartDate && startDate <= FocusEndDate || endDate >= FocusStartDate && endDate <= FocusEndDate;
+            //}).ToList();
 
+            var result = new List<noticeCase>();
+            for (int i = 0; i < query.Count; i++)
+            {
+                var prop = query[i].Property;
+                var propDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(prop);
+                var startDate = ParseDate(propDict["施工開始日期"]);
+                var endDate = ParseDate(propDict["施工結束日期"]);
+                var focusedRoad = new noticeCase
+                {
+                    date = $"{startDate}至{endDate}",
+                    location = propDict["施工地點"],
+                    points = new List<Point>(),
+                    caseType = caseType
+                };
+
+                var focusedRoadPoints = await _mapDBContext.Points
+                    .Where(p => p.AreaId == query[i].AreaId)
+                    .OrderBy(p => p.Index)
+                    .ToListAsync();
+
+                focusedRoad.points.AddRange(focusedRoadPoints);
+                result.Add(focusedRoad);
+            }
+            return result;
+        }
+        // 方法: 解析日期並轉換為 yyyy/M/d 格式
+        private string ParseDate(string dateStr)
+        {
+            if (DateTime.TryParse(dateStr, out DateTime parsedDate))
+            {
+                return parsedDate.ToString("yyyy/M/d");
+            }
+            return dateStr; // 如果解析失敗，返回原始字串
+        }
         public async Task<int> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput input)
         {
             var file = input.projectFile;
@@ -1656,15 +1722,40 @@ namespace RMIS.Repositories
                         prop =  JObject.Parse(p.Property)
                     })
                     .ToList();
+                
                 // 過濾出符合日期區間的點
-                var filterPoints = pointsProp.Where(pp =>
+                List<dynamic> filterPoints; // 先在外部宣告
+
+                if (AreasByFocusLayerInput.ofType == 3)
                 {
-                    var startDate = pp.prop["租借起始日"].Value<DateTime>();
-                    var endDate = pp.prop["租借結束日"].Value<DateTime>();
-                    return startDate >= inputStartDate && startDate <= inputEndDate || endDate >= inputStartDate && endDate <= inputEndDate;
-                }).ToList();
-                var filterPointIds = new HashSet<Guid>(filterPoints.Select(fp => fp.id));
-                for(int i = 0; i < filterPoints.Count; i++)
+                    filterPoints = pointsProp.Where(pp =>
+                    {
+                        DateTime startDate, endDate;
+
+                        // 安全解析日期
+                        bool isStartParsed = DateTime.TryParse(pp.prop["施工開始日期"]?.ToString(), out startDate);
+                        bool isEndParsed = DateTime.TryParse(pp.prop["施工結束日期"]?.ToString(), out endDate);
+
+                        return (isStartParsed && startDate >= inputStartDate && startDate <= inputEndDate) ||
+                               (isEndParsed && endDate >= inputStartDate && endDate <= inputEndDate);
+                    }).Select(pp => (dynamic)pp).ToList();
+                }
+                else
+                {
+                    filterPoints = pointsProp.Where(pp =>
+                    {
+                        DateTime startDate, endDate;
+
+                        // 安全解析日期
+                        bool isStartParsed = DateTime.TryParse(pp.prop["租借起始日"]?.ToString(), out startDate);
+                        bool isEndParsed = DateTime.TryParse(pp.prop["租借結束日"]?.ToString(), out endDate);
+
+                        return (isStartParsed && startDate >= inputStartDate && startDate <= inputEndDate) ||
+                               (isEndParsed && endDate >= inputStartDate && endDate <= inputEndDate);
+                    }).Select(pp => (dynamic)pp).ToList();
+                }
+                var filterPointIds = new HashSet<Guid>(filterPoints.Select(fp => (Guid)fp.id));
+                for (int i = 0; i < filterPoints.Count; i++)
                 {
                     Console.WriteLine(filterPoints[i].id);
                 }
@@ -1701,7 +1792,6 @@ namespace RMIS.Repositories
                 throw;
             }
         }
-
 
         public async Task<int> AddConstructNoticeByExcelAsync(AddConstructNoticeByExcelInput input)
         {
@@ -1830,9 +1920,9 @@ namespace RMIS.Repositories
             if (string.IsNullOrWhiteSpace(dateStr))
                 return DateTime.MinValue;
 
-            if (DateTime.TryParseExact(dateStr, "yyyy/MM/dd tt hh:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))
+            if (DateTime.TryParse(dateStr, out DateTime parsedDate))
             {
-                return parsedDate;
+                return parsedDate.Date;
             }
 
             return DateTime.MinValue;
@@ -1875,8 +1965,17 @@ namespace RMIS.Repositories
                     .Where(prop => propMap.ContainsKey(prop.Name)) // 只篩選在 propMap 中存在的欄位
                     .ToDictionary(
                         prop => propMap[prop.Name], // 轉換為中文名稱
-                        prop => prop.GetValue(constructNoticeProp)?.ToString() // 獲取屬性值
+                        prop =>
+                        {
+                            var value = prop.GetValue(constructNoticeProp);
+                            if (value is DateTime dateValue)
+                            {
+                                return dateValue.ToString("yyyy-MM-dd"); // 確保日期格式
+                            }
+                            return value?.ToString();
+                        }
                     );
+
 
                 // 轉換為 JSON
                 var property = JsonConvert.SerializeObject(propDict);

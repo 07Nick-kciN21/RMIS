@@ -160,9 +160,7 @@ export function removeLayer2Map(id) {
     }
 }
 
-
-
-export function addFocusLayer2Map(id, LayerData, startDate, endDate){
+export function addFocusLayer2Map(id, ofType, LayerData, startDate, endDate){
     indexMap = getIndexMap();
     if (!indexMap) {
         console.error('indexMap is not initialized.');
@@ -179,6 +177,7 @@ export function addFocusLayer2Map(id, LayerData, startDate, endDate){
     LayerData.map(function (Ldata) {
         var formData = new FormData();
         formData.append('id', Ldata.id);
+        formData.append('ofType', ofType);
         formData.append('startDate', startDate);
         formData.append('endDate', endDate);
         fetch(`/api/MapAPI/GetAreasByFocusLayer`, {

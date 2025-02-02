@@ -16,9 +16,15 @@ export function initFocusPanel(){
     $('#focusGoResult').on('click', function(){
         var formData = new FormData();
         // focusStartDate與focusEndDate，轉換成時間戳記
-        formData.append('FocusStartDate', $('#focusStartDate').val());
-        formData.append('FocusEndDate', $('#focusEndDate').val());
-        formData.append('FocusType', $('#ofType').val());
+        var focusStartDate = $('#focusStartDate').val();
+        var focusEndDate = $('#focusEndDate').val();
+        var focusType = $('#ofType').val();
+        var roadName = $('#focusRoad').val();
+
+        formData.append('FocusStartDate', focusStartDate);
+        formData.append('FocusEndDate', focusEndDate);
+        formData.append('FocusType', focusType);
+        formData.append('RoadName', roadName);
         console.log($('#focusStartDate').val(), $('#focusEndDate').val());
         fetch(`/api/MapAPI/GetFocusData`, {
             method: 'POST',
@@ -28,13 +34,19 @@ export function initFocusPanel(){
         .then(message => {
             // 取得搜尋後管線的資料
             var datas = message.datas;
-            focuseRoad = datas.focusedRoad || [];
-            focuseRange = datas.focusedRange || [];
-            focusData = focuseRoad.concat(focuseRange);
+            if($('#ofType').val() == 3){
+                console.log(datas.construct);
+                focusData = datas.construct || [];
+            }
+            else{
+                focuseRoad = datas.focusedRoad || [];
+                focuseRange = datas.focusedRange || [];
+                focusData = focuseRoad.concat(focuseRange);
+            }
         })
         .then(() => {
-            // 新增圖資清單
             let ofType = $('#ofType').val();
+            // 新增圖資清單
             focusPipeline.forEach(id => {
                 removePipeline(id).then(result => {
                     remove2List(id);
@@ -48,11 +60,12 @@ export function initFocusPanel(){
                     var { id, name, layers } = datas[i];
                     focusPipeline.push(id);
                     add2List(id, name, layers);
-                    addFocusLayer2Map(id, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
+                    addFocusLayer2Map(id, ofType, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
                 }
                 console.log(focusPipeline);
             });
-
+            
+            
             $("#focusTotalCount").text(`(總數:${focusData.length})`);
             updateFlagTable();
             console.log(focusData);
@@ -101,16 +114,42 @@ function renderTableBody(pageData){
             currentRow = $(this).closest('tr');
             currentRow.addClass('selectRow');
             // 轉換成可用的經緯度
-            const latlngs = data.points.map(point => [point.latitude, point.longitude]);
+            
             if(data.caseType == "臨時道路借用申請(範圍)"){
+                const latlngs = data.points.map(point => [point.latitude, point.longitude]);
                 currentSquare = L.polygon(latlngs, {color: 'red'}).addTo($indexMap);
                 // zoom:19
                 $indexMap.fitBounds(currentSquare.getBounds(), { maxZoom: 19 });
             }
             else if(data.caseType == "臨時道路借用申請(路線)"){
+                const latlngs = data.points.map(point => [point.latitude, point.longitude]);
                 currentSquare = L.polyline(latlngs, {color: 'red'}).addTo($indexMap);
                 // zoom:19
                 $indexMap.fitBounds(currentSquare.getBounds(), { maxZoom: 19 });
+            }
+            else if(data.caseType == "施工通報(道路挖掘)"){
+                const latlngs = data.points.map(point => [point.latitude, point.longitude]);
+                console.log(latlngs[0]);
+                const squareIcon = L.divIcon({
+                    html: `<svg width="24" height="24">
+                            <rect 
+                            x="0" 
+                            y="0" 
+                            width="24" 
+                            height="24" 
+                            fill="none" 
+                            stroke="#0066CC" 
+                            stroke-width="3"
+                            />
+                        </svg>`,
+                    className: 'square-marker',  // 避免 Leaflet 默認樣式
+                    iconSize: [24, 24],         // 圖標大小
+                    iconAnchor: [12, 12]        // 錨點在正方形中心
+                });
+
+                currentSquare = L.marker(latlngs[0], { icon: squareIcon, interactive: false }).addTo($indexMap);
+                // 使用 setView() 將地圖聚焦到 marker
+                $indexMap.setView(latlngs[0], 19);
             }
         });
         const tableRow = $('<tr></tr>');
