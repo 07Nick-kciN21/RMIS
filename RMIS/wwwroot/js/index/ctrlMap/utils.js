@@ -319,7 +319,7 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
                 圖層：${name}
             </text>
             <div style="font-size: 20px;">
-                ${popUpForm(points[0][1])}
+                ${popUpForm(prop)}
             </div>
         </div>`, {
         maxWidth: 350,
@@ -539,10 +539,9 @@ function popupConstruct(prop){
             return;
         }
         else if(key === "施工範圍"){
-            table += `<tr style="display:none"><th style="width: 40%;">${key}</th><td>${prop[key]}</td></tr>`;
             return
         }
-        table += `<tr><th style="width: 40%;">${key}</th><td>${prop[key]}</td></tr>`;
+        table += `<tr><th style="width: 40%;">${key}</th><td>${prop[key] == null ? "" : prop[key]}</td></tr>`;
     });
 
     table += '</table>';

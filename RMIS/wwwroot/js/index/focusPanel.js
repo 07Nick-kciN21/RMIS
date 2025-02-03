@@ -72,7 +72,20 @@ export function initFocusPanel(){
             $('#focusResultDiv').show();
         });
     });
-    $('#focusExportExcel').on('click', function(){
+    $('#focusExcel').on('click', function(){
+        const data = focusData.map(function (item) {
+            return {
+                '借用類型': item['caseType'],
+                '日期': item['date'],
+                '地點': item['location'],
+                '施工通報許可證號': item['licenseNumber'],
+                '臨時道路租借事由': item['reason']
+            };
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+        XLSX.writeFile(wb, `養工焦點列表_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.xlsx`);
         console.log(focusData);
     });
     $('#focusPageSize').on('change', function () {
@@ -117,13 +130,13 @@ function renderTableBody(pageData){
             
             if(data.caseType == "臨時道路借用申請(範圍)"){
                 const latlngs = data.points.map(point => [point.latitude, point.longitude]);
-                currentSquare = L.polygon(latlngs, {color: 'red'}).addTo($indexMap);
+                currentSquare = L.polygon(latlngs, {color: 'red', interactive: false}).addTo($indexMap);
                 // zoom:19
                 $indexMap.fitBounds(currentSquare.getBounds(), { maxZoom: 19 });
             }
             else if(data.caseType == "臨時道路借用申請(路線)"){
                 const latlngs = data.points.map(point => [point.latitude, point.longitude]);
-                currentSquare = L.polyline(latlngs, {color: 'red'}).addTo($indexMap);
+                currentSquare = L.polyline(latlngs, {color: 'red', interactive: false}).addTo($indexMap);
                 // zoom:19
                 $indexMap.fitBounds(currentSquare.getBounds(), { maxZoom: 19 });
             }

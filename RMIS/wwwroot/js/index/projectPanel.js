@@ -111,7 +111,7 @@ export function initProjectPanel() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
         // 專案資料yyyyMMdd.xlsx
-        XLSX.writeFile(wb, `專案列表${new Date().toISOString().split('T')[0].replace(/-/g, '')}.xlsx`);
+        XLSX.writeFile(wb, `專案列表_${new Date().toISOString().split('T')[0].replace(/-/g, '')}.xlsx`);
     });
 }
 

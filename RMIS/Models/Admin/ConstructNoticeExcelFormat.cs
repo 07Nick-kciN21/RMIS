@@ -8,8 +8,8 @@
         public string ApprovalUnit { get; set; } // 核定單位
         public string ProjectName { get; set; } // 工程名稱
         public string ConstructionStatus { get; set; } // 施工狀態
-        public DateTime ConstructionStartDate { get; set; } // 施工開始日期
-        public DateTime ConstructionEndDate { get; set; } // 施工結束日期
+        public DateTime? ConstructionStartDate { get; set; } // 施工開始日期
+        public DateTime? ConstructionEndDate { get; set; } // 施工結束日期
         public string AdministrativeDistrict { get; set; } // 行政區
         public string ConstructionLocation { get; set; } // 施工地點
         public string? DaytimeConstructionPeriod { get; set; } // 白天施工時段

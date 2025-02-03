@@ -820,12 +820,16 @@ namespace RMIS.Repositories
                 {
                     var prop = query[i].Property;
                     var propDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(prop);
+                    var startDate = ParseDate(propDict["租借起始日"]);
+                    var endDate = ParseDate(propDict["租借結束日"]);
                     var focusedRoad = new focusedCase
                     {
-                        date = $"{propDict["租借起始日"]}至{propDict["租借結束日"]}",
+                        licenseNumber = propDict.ContainsKey("許可證號") ? propDict["許可證號"] : "",
+                        date = $"{startDate}至{endDate}",
                         location = propDict["借用路段"],
-                        points = new List<Point>(),
-                        caseType = caseType
+                        reason = propDict["申請租借事由"],
+                        caseType = caseType,
+                        points = new List<Point>()
                     };
 
                     var focusedRoadPoints = await _mapDBContext.Points
@@ -867,10 +871,12 @@ namespace RMIS.Repositories
                 var endDate = ParseDate(propDict["施工結束日期"]);
                 var focusedRoad = new noticeCase
                 {
+                    licenseNumber = propDict["許可證號"],
                     date = $"{startDate}至{endDate}",
                     location = propDict["施工地點"],
-                    points = new List<Point>(),
-                    caseType = caseType
+                    reason = propDict["施工原因"],
+                    caseType = caseType,
+                    points = new List<Point>()
                 };
 
                 var focusedRoadPoints = await _mapDBContext.Points
@@ -883,12 +889,12 @@ namespace RMIS.Repositories
             }
             return result;
         }
-        // 方法: 解析日期並轉換為 yyyy/M/d 格式
+        // 方法: 解析日期並轉換為 yyyy/M/d TT hh:mm:ss 格式
         private string ParseDate(string dateStr)
         {
             if (DateTime.TryParse(dateStr, out DateTime parsedDate))
             {
-                return parsedDate.ToString("yyyy/M/d");
+                return parsedDate.ToString("yyyy/M/d tt hh:mm:ss");
             }
             return dateStr; // 如果解析失敗，返回原始字串
         }
@@ -1755,10 +1761,6 @@ namespace RMIS.Repositories
                     }).Select(pp => (dynamic)pp).ToList();
                 }
                 var filterPointIds = new HashSet<Guid>(filterPoints.Select(fp => (Guid)fp.id));
-                for (int i = 0; i < filterPoints.Count; i++)
-                {
-                    Console.WriteLine(filterPoints[i].id);
-                }
                 // 組合結果
                 var result = new AreasByLayer
                 {
@@ -1892,8 +1894,8 @@ namespace RMIS.Repositories
                     ApprovalUnit = headers.ContainsKey("核定單位") ? worksheet.Cells[row, headers["核定單位"]].Text.Trim() : "",
                     ProjectName = headers.ContainsKey("工程名稱") ? worksheet.Cells[row, headers["工程名稱"]].Text.Trim() : "",
                     ConstructionStatus = headers.ContainsKey("施工狀態") ? worksheet.Cells[row, headers["施工狀態"]].Text.Trim() : "",
-                    ConstructionStartDate = headers.ContainsKey("施工開始日期") ? ParseDateTime(worksheet.Cells[row, headers["施工開始日期"]].Text) : DateTime.MinValue,
-                    ConstructionEndDate = headers.ContainsKey("施工結束日期") ? ParseDateTime(worksheet.Cells[row, headers["施工結束日期"]].Text) : DateTime.MinValue,
+                    ConstructionStartDate = headers.ContainsKey("施工開始日期") ? ParseDateTime(worksheet.Cells[row, headers["施工開始日期"]].Text) : null,
+                    ConstructionEndDate = headers.ContainsKey("施工結束日期") ? ParseDateTime(worksheet.Cells[row, headers["施工結束日期"]].Text) : null,
                     AdministrativeDistrict = headers.ContainsKey("行政區") ? worksheet.Cells[row, headers["行政區"]].Text.Trim() : "",
                     ConstructionLocation = headers.ContainsKey("施工地點") ? worksheet.Cells[row, headers["施工地點"]].Text.Trim() : "",
                     DaytimeConstructionPeriod = headers.ContainsKey("白天施工時段") ? worksheet.Cells[row, headers["白天施工時段"]].Text.Trim() : null,
@@ -1915,17 +1917,17 @@ namespace RMIS.Repositories
 
             return result;
         }
-        private DateTime ParseDateTime(string dateStr)
+        private DateTime? ParseDateTime(string dateStr)
         {
             if (string.IsNullOrWhiteSpace(dateStr))
-                return DateTime.MinValue;
+                return null;
 
             if (DateTime.TryParse(dateStr, out DateTime parsedDate))
             {
                 return parsedDate.Date;
             }
 
-            return DateTime.MinValue;
+            return null;
         }
 
         private string parseNoticePropAsync(ConstructNoticeExcelFormat constructNotice)
