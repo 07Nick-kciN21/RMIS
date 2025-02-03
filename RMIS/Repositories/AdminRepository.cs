@@ -1482,7 +1482,7 @@ namespace RMIS.Repositories
 
             // 將 Base64 字串轉換為 byte[]
             var imageBytes = Convert.FromBase64String(base64Data);
-            var directoryPath = @"C:\Users\KingSu\Pictures\RMIS_IMG\roadProject";
+            var directoryPath = @"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject";
             // 儲存路徑（伺服器上的某個目錄）
             var savePath = Path.Combine(directoryPath, roadProjectDic);
             if (!Directory.Exists(savePath))
@@ -1998,7 +1998,7 @@ namespace RMIS.Repositories
 
                 // 將 Base64 字串轉換為 byte[]
                 var imageBytes = Convert.FromBase64String(base64Data);
-                var directoryPath = @"C:\Users\maybu\OneDrive\圖片\RMIS_IMG\constructNotice";
+                var directoryPath = @"C:/Users/KingSu/Pictures/RMIS_IMG/constructNotice";
                 // 儲存路徑（伺服器上的某個目錄）
                 var savePath = Path.Combine(directoryPath, constructNoticeDic);
                 if (!Directory.Exists(savePath))
