@@ -5,7 +5,7 @@ let currentOverlay;
 let isAddPhotoEnabled = false;
 export function initPhoto() {
     $indexMap = getIndexMap();
-    var $tb = $("#tb-addPhoto");
+    var $btn = $("#addPhotoBtn");
     $(document).on('mousemove', function (e) {
         $('#tooltip')
             .css({
@@ -13,13 +13,13 @@ export function initPhoto() {
                 top: e.pageY - 20 + 'px',
             });
     });
-    $tb.on("click", function () {
+    $btn.on("click", function () {
         isAddPhotoEnabled = !isAddPhotoEnabled;
         if (isAddPhotoEnabled) {
-            $tb.addClass("active");
+            $btn.addClass("active");
             $('#tooltip').css('display', 'block');
         } else {
-            $tb.removeClass("active");
+            $btn.removeClass("active");
             $('#tooltip').css('display', 'none');
             if (currentOverlay) {
                 $indexMap.removeLayer(currentOverlay);
@@ -27,7 +27,7 @@ export function initPhoto() {
         }
     });
     $indexMap.on('click', function (e) {
-        if ($tb.hasClass("active")) {
+        if ($btn.hasClass("active")) {
             addPHOTO(e);
         }
     });

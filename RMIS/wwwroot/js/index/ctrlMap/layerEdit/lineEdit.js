@@ -1,7 +1,7 @@
 import {layers, layerProps} from '../layers.js';
 
 var pointStep1 = `
-        <h5 id="editSymbol-Title0" class="offcanvas-title"></h5>
+        <h5 class="offcanvas-title">編輯圖徽 - 編輯類型</h5>
         <div id="editStep1">
             <div id="lineEdit0" class="symbolClass pSymbol0" data-symclass="0">
                 <div class="symbolText">線符號</div>
@@ -29,7 +29,7 @@ export function lineEdit(id, pipeName, layersId){
     $('#layerBarContainer').addClass('hidden');
     $('#editSymbol-Step1').removeClass('hidden');
     $('#editSymbol-Step1').html(pointStep1);
-    $("#editSymbol-Title0").append(`編輯圖徽 - ${name} <br> 選擇編輯類型`);
+    // $("#editSymbol-Title0").append(`編輯圖徽 - ${name} <br> 選擇編輯類型`);
     
     $('#editNext').click(function () {
         lineEditStep2(id);
@@ -281,12 +281,12 @@ function lineEditStep2(id){
     if(symClass == 0){
         console.log("pointStep2_0");
         $('#editSymbol-Step2').html(pointStep2_0);
-        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 線符號選擇`);
+        $('#editSymbol-Title1').append(`編輯圖徽 - 線符號選擇`);
     }
     if(symClass == 1){
         console.log("pointStep2_1");
         $('#editSymbol-Step2').html(pointStep2_1);
-        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 依分級選擇`);
+        $('#editSymbol-Title1').append(`編輯圖徽 - 依分級選擇`);
         var fields = Object.keys(layerProps[id][0]);
         
         fields.forEach(function(field){
@@ -339,7 +339,7 @@ function lineEditStep2(id){
     if(symClass == 2){
         console.log("pointStep2_2");
         $('#editSymbol-Step2').html(pointStep2_2);
-        $('#editSymbol-Title1').append(`編輯圖徽 - ${name} <br> 選擇依類型`);
+        $('#editSymbol-Title1').append(`編輯圖徽 - 依類型選擇`);
         var fields = Object.keys(layerProps[id][0]);
         fields.forEach(function (field) {
             // 不等於座標、備註、OBJECTID、內容物、Instance

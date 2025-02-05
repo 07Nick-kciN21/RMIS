@@ -10,5 +10,7 @@
         public Guid CategoryId { get; set; } // 管線Id
         public Category Category { get; set; } // 管線階層
         public ICollection<Layer> Layers { get; set; } // 多個圖層
+        public Guid MetaId { get; set; } // 圖資Id
+        public MetaData? MetaData { get; set; } // 圖資
     }
 }

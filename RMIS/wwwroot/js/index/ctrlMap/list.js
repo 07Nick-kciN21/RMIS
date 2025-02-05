@@ -4,10 +4,10 @@ import { addLayer2Map, layers } from './layers.js';
 import { getIndexMap } from '../map.js';
 import { layerEditor } from './layerEdit/layerEditor.js';
 import { opacityLayer } from './opacityCtrl.js';
-
+import { openPanel } from '../metaDataPanel.js';
 
 // 圖資清單控制
-export function add2List(id, name, datas) {
+export function add2List(id, name, datas, metaData) {
     let sections = "";
     let layersId = [];
     // pipeline下的layer
@@ -25,7 +25,7 @@ export function add2List(id, name, datas) {
     let layerItem = `
         <div class="layerBar featureLayer-Bg" id="layerBar_${id}">
             <div class="layerTitle" style="border-top">
-                <div style="display: flex; border-bottom: solid 1px green;"> 
+                <div style="display:flex; border-bottom:solid 1px #160386;"> 
                     <span class="menu-icon menu-open" id="layerLegend_${id}"></span>
                     <div class="layerName">${name}</div>
                 </div>
@@ -60,6 +60,10 @@ export function add2List(id, name, datas) {
     // 編輯圖徽
     $(`#more_action2_${id}`).on('click', function () {
         layerEditor(id, name, layersId);
+    });
+
+    $(`#more_action3_${id}`).on('click', function () {
+        openPanel(metaData);
     });
     // 使用透明度不要关闭
     $('.layerOpacity').on('click', function (e) {

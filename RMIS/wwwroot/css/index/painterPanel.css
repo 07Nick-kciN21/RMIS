@@ -44,3 +44,12 @@
         color:white;
         background-color:gray;
     }
+
+.searchBar {
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 5px;
+}

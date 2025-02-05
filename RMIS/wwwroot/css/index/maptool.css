@@ -19,14 +19,14 @@
 }
 
 #zoom-level {
-    color: white; /* 改變選中框的文字顏色 */
+    color: #43413d; /* 改變選中框的文字顏色 */
     background-color: transparent; /* 保持背景透明 */
     border:none;
 }
 
     #zoom-level > option {
-        background-color: #4a5d23; /* 深綠色背景 */
-        color: white; /* 改變選中框的文字顏色 */
+        background-color: #e4b867;
+        color: #43413d; /* 改變選中框的文字顏色 */
         border: none;
     }
 
@@ -118,7 +118,7 @@
 }
     
 #overlayMapSelector > .selected{
-    background-color: #91c54d;
+    background-color: #e4b867;
 }
 
 .map-controls {
@@ -137,7 +137,7 @@
         width: 39px;
         height: 39px;
         line-height: 42px;
-        background: #567331;
+        background: #f0d984;
         cursor: pointer;
         background-size: cover;
         background-repeat: no-repeat;
@@ -146,21 +146,21 @@
     }
 
         .map-controls span:hover {
-            background-color: #91c54d;
+            background-color: #ffffff;
         }
 
         .map-controls span.active {
-            background-color: #91c54d;
+            background-color: #ffffff;
         }
 
 
 .map-footer {
     align-items: center;
-    background-color: #4a5d23; /* 深綠色背景 */
+    background-color: #e4b867; /* 深綠色背景 */
     border-radius: 10px 10px 10px 10px;
     bottom: 0;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-    color: white; /* 設置文字顏色為白色 */
+    color: #43413d; /* 設置文字顏色為白色 */
     display: flex;
     font-size: 18px;
     justify-content: flex-end;
@@ -198,7 +198,7 @@
 .footerSelect{
     position: absolute;
     z-index: 1050;
-    background-color: #4a5d23; /* 深綠色背景 */
+    background-color: #e4b867; /* 深綠色背景 */
     border-radius: 10px 10px 0px 0px;
     color: black; /* 設置文字顏色為白色 */
     list-style: none;
@@ -217,7 +217,7 @@
 
 
 .coordinate-item:hover {
-    background-color: #91c54d;
+    background-color: #e4b867;
     border-radius: 5px 5px 5px 5px;
 }
 

@@ -1,9 +1,10 @@
 ﻿.layerList {
     width: 90%;
     height: 90%;
-    border: 3px solid #73AD21;
-    padding: 10px;
-    margin-top: auto;
+    border: 2px solid #e0e0e0;
+    padding: 10px 5px;
+    margin-top: 71.5px;
+    margin-bottom: 20px;
     border-radius: 5px;
 }
 
@@ -20,6 +21,11 @@
 
 .layerTitle div {
     margin-bottom: 5px;
+}
+
+.layerName{
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .layerRemove {
@@ -67,6 +73,7 @@
 .section_icon {
     width: 24px; /* or any appropriate size */
     height: 24px;
+    margin-right: 5px;
     background-size: cover; /* or 'contain' depending on how you want the image to scale */
     background-repeat: no-repeat;
     display: block; /* Ensure the element is displayed */
@@ -80,11 +87,17 @@
     display: block; /* Ensure the element is displayed */
 }
 
+.offcanvas{
+    background-color: #f6f5dd;
+    z-index: 1050;
+    visibility: visible;
+}
+
 .offcanvas-title{
     flex-grow: 1;
     padding: 1rem 1rem;
     overflow-y: auto;
-    color: #567331;
+    color: #43413d;
     font-weight: 300;
     margin: 0 6px;
     padding: 0.51667rem;

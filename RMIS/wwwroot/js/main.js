@@ -1,6 +1,7 @@
 ﻿// main.js
 import { initMap } from './index/map.js';
 import { generateMenu, bindMenuEvents } from './index/ctrlMap/menu.js';
+import { initCommonLink } from './index/commonLink.js';
 import { initPanel } from './index/panel.js';
 import { initSearchPanel } from './index/searchPanel.js'
 import { initPainterPanel } from './index/painterPanel.js'
@@ -18,8 +19,10 @@ $(document).ready(function () {
 
     // 生成選單
     var menuHtml = generateMenu(MenuData, "", 0);
-    $('#imageData').html(menuHtml);
+    $('#imageDataContent').html(menuHtml);
+    initCommonLink();
     initModal();
+    initPanel("metaDataPanel");
     initPanel("searchPanel");
     initPanel("painterPanel");
     initPanel("searchPropPanel");

@@ -56,8 +56,8 @@
 
     // Event listener for toggling the panel visibility
     $tb.on('click', () => {
-        if ($("#tb-addPhoto").hasClass("active")) {
-            $("#tb-addPhoto").trigger('click');
+        if ($("#addPhotoBtn").hasClass("active")) {
+            $("#addPhotoBtn").trigger('click');
         }
         $panel.toggleClass('hide');
         $panel.css('z-index', 1053);

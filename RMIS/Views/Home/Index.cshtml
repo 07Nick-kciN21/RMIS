@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "首頁";
+    ViewData["Title"] = "桃園市養護工程處整合協作平台";
 }
 <style>
     label{
@@ -43,6 +43,7 @@
 <link rel="stylesheet" href="~/css/index/flagPanel.css" />
 <link rel="stylesheet" href="~/css/index/focusPanel.css" />
 <link rel="stylesheet" href="~/css/index/projectPanel.css" />
+<link rel="stylesheet" href="~/css/index/metaDataPanel.css" />
 <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
@@ -78,15 +79,21 @@
                     ☰ 側欄
                 </button>
             </div>
+            @* <div class="head-logo-box toggle">
+                 <div class="head-logo">桃園市養護工程處整合協作平台</div>
+            </div> *@
             <div id="menu-toggle" class="toggle">
                 <button class="dropdown-button">
                     ☰ 菜單
                 </button>
             </div>
+            <div class="head-logo-box navbar-toggle">
+                <div class="head-logo">桃園市養護工程處整合協作平台</div>
+            </div>
         </nav>
     </div>
     
-    <div id="col2">
+    <div id="col2" style="margin-left:auto">
         <nav id="head-nav" class="navbar-toggle"  style="padding: 0;">
             <div class="container-fluid ">
                 <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
@@ -95,47 +102,47 @@
                         <div id="adminMenuContent" class="dropdown-content">
                             <ul id="adminMenu" class="menu-background">
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddMapSource">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
                                         <h4>新增圖源</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddCategory">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
                                         <h4>新增類別</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddPipeline">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
                                         <h4>新增管線</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadByCSV">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
                                         <h4>上傳路線資料</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddCategoryByJson">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
                                         <h4>上傳圖資類別</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadProject">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
                                         <h4>新增道路專案</h4>
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddRoadProjectByExcel">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
                                         <h4>上傳道路專案</h4>
                                     </a>
                                 </li>
                                 @* <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddConstructionNotice">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructionNotice">
                                         <h4>新增施工通報</h4>
                                     </a>
                                 </li> *@
                                 <li>
-                                    <a class="nav-link text-success modal-link" data-action="/Admin/AddConstructNoticeByExcel">
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
                                         <h4>上傳施工通報</h4>
                                     </a>
                                 </li>
@@ -143,20 +150,45 @@
                         </div>
                     </div>
                     <div class="nav-item dropdown">
-                        <button id="tb-addPhoto" class="dropdown-button">正射影像</button>
+                        <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
                     </div>
                     <div class="nav-item dropdown mobile-show">
-                        <button class="dropdown-button" id="imageDataBtn" data-target="imageData">業務圖資</button>
-                        <div class="dropdown-content" id="imageData">
+                        <button id="imageDataBtn" class="dropdown-button" data-target="imageDataContent">業務圖資</button>
+                        <div id="imageDataContent" class="dropdown-content">
                         </div>
                     </div>
                     <div class="nav-item dropdown">
-                        <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list2" aria-expanded="false">
+                        <button id="commonLinkBtn" class="dropdown-button" data-target="commonLinkContent">
                             常用連結
                         </button>
+                        <div id="commonLinkContent" class="dropdown-content">
+                            <ul id="commonLinkMenu" class="menu-background">
+                                <li>
+                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20130702.png" target="_blank">
+                                        <h4>
+                                            非都市土地使用分區圖
+                                        </h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20140925.png" target="_blank">
+                                        <h4>
+                                            非都市土地使用分區圖(II)
+                                        </h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/109%E5%B9%B4%E7%89%88%E5%9C%8B%E5%9C%9F%E5%88%A9%E7%94%A8%E8%89%B2%E7%A2%BC%E8%A1%A8.png" target="_blank">
+                                        <h4>
+                                            國土利用現況調查成果分類圖
+                                        </h4>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                     <div class="nav-item dropdown">
-                        <button class="dropdown-button" role="button" id="" data-bs-toggle="top-vav-list3" aria-expanded="false">
+                        <button id="" class="dropdown-button" role="button" data-bs-toggle="top-vav-list3" aria-expanded="false">
                             下載專區
                         </button>
                     </div>
@@ -167,7 +199,7 @@
 }
 
 
-<div class="offcanvas offcanvas-start custom-offcanvas-width" style="background-color:#f2f7ec; z-index: 1050" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="false">
+<div class="offcanvas offcanvas-start custom-offcanvas-width" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="false">
     <div id="layerBarContainer" class="layerList container-fluid">
         <h5 id="layerBar-ListTitle" class="offcanvas-title">圖資清單</h5>
     </div>
@@ -312,19 +344,19 @@
     <ul class="panelInput" role="group" aria-label="Basic radio toggle button group">
         <li style="width: 25%">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked />
-            <label class="btn btn-outline-success" for="btnradio1">依屬性</label>
+            <label class="btn btn-outline-warning" for="btnradio1">依屬性</label>
         </li>
         <li style="width: 25%">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" />
-            <label class="btn btn-outline-success" for="btnradio2">依空間</label>
+            <label class="btn btn-outline-warning" for="btnradio2">依空間</label>
         </li>
         <li style="width: 25%; visibility: hidden;">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" />
-            <label class="btn btn-outline-success" for="btnradio3">結果</label>
+            <label class="btn btn-outline-warning" for="btnradio3">結果</label>
         </li>
         <li style="width: 25%; visibility: hidden;">
             <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off" />
-            <label class="btn btn-outline-success" for="btnradio4">統計</label>
+            <label class="btn btn-outline-warning" for="btnradio4">統計</label>
         </li>
     </ul>
     <div id="prop1" class="panelBody" style="display: block">
@@ -690,7 +722,7 @@
         <ul class="panelInput" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
             <li style="width: 25%">
                 <input type="radio" class="btn-check" name="btnradio" id="focus1" autocomplete="off" checked />
-                <label class="btn btn-outline-success" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
+                <label class="btn btn-outline-warning" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
             </li>
         </ul>
         <div class="panelBody" style="display: block">
@@ -918,6 +950,19 @@
             <span style="float:left"> 筆</span>
             <span id="protectPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
             </span>
+        </div>
+    </div>
+</div>
+
+<div id="metaDataPanel" class="panel hide">
+    <div class="panelHeading">
+        <span>
+            詮釋資料
+        </span>
+        <button class="closeButton">&times;</button>
+    </div>
+    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
+        <div class="panelBody" style="display: block">
         </div>
     </div>
 </div>

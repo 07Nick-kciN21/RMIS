@@ -6,18 +6,18 @@ export let layerList = {};
 
 // 業務圖資下拉選單控制
 export function generateMenu(data, parent_name, index) {
-    let html = '<ul class=';
+    let html = '<ul';
     if (index > 0) {
-        html += '"menu-sub"';
+        html += ' class="menu-sub"';
     } else {
-        html += '"menu-background"';
+        html += ' id="imageDataMenu" class="menu-background"';
     }
     html += '>';
     data.forEach(function (item) {
         console.log(item.text, item.parent);
         let liClass;
         if (index == 0) {
-            liClass = 'head-menu';
+            liClass = 'menu-head';
         } else {
             if (item.tag == "node") {
                 liClass = 'menu-sublayer';
@@ -40,7 +40,7 @@ export function generateMenu(data, parent_name, index) {
 
         if (index == 0) {
             headingTag = 'h4';
-            headingClass = 'border-bottom text-success';
+            headingClass = 'menu-title';
         } else {
             headingTag = 'span';
             headingClass = 'text-secondary';
@@ -113,9 +113,10 @@ export function bindMenuEvents() {
         } else {
             // result: layerIdList
             addPipeline(id).then(result => {
+                var { metaData, layers } = result;
                 layerList[id] = true;
-                add2List(id, name, result);
-                addLayer2Map(id, result);
+                add2List(id, name, layers, metaData);
+                addLayer2Map(id, layers);
                 $switch.removeClass('switch-off').addClass('switch-on');
             });
         }

@@ -34,7 +34,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("GetLayersByPipeline")]
-        public async Task<List<LayersByPipeline>> GetLayersByPipeline(Guid pipelineId)
+        public async Task<LayersByPipeline> GetLayersByPipeline(Guid pipelineId)
         {
             try
             {
@@ -43,20 +43,25 @@ namespace RMIS.Controllers
                     .OrderBy(l => l.GeometryType.OrderId)
                     .Where(l => l.PipelineId == pipelineId)
                     .ToListAsync();
-
-                var results = layers.Select(l => new LayersByPipeline
+                var metaId = await _mapDBContext.Pipelines.Where(p => p.Id == pipelineId).Select(p => p.MetaId).FirstOrDefaultAsync();
+                var results = new LayersByPipeline
                 {
-                    id = l.Id.ToString(),
-                    name = l.Name,
-                    svg = l.GeometryType.Svg
-                }).ToList();
+                    // 根據 pipelineId 取得的 MetaData
 
+                    metaData = await _mapDBContext.MetaDatas.Where(md => md.Id == metaId).FirstOrDefaultAsync(),
+                    layers = layers.Select(l => new LayerByPipe
+                    {
+                        id = l.Id.ToString(),
+                        name = l.Name,
+                        svg = l.GeometryType.Svg
+                    }).ToList()
+                };
                 return results;
             }
             catch (Exception e)
             {
                 ModelState.AddModelError("", "Error: " + e.Message);
-                return new List<LayersByPipeline>();
+                return new LayersByPipeline();
             }
         }
 

@@ -1,6 +1,10 @@
-﻿.menu-background {
-    padding-left: 10px;
-    padding-right: 10px;
+﻿.menu-head{
+    padding-bottom: 5px;
+}
+
+.menu-background {
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 .menu-sub {
@@ -11,11 +15,16 @@
 .menu-node {
     display: flex;
     align-items: center;
+    font-size: 16px;
 }
 
     .menu-node h4 {
         margin: 0;
     }
+
+.menu-title{
+    color: #956904;
+}
 
 .menu-layer {
     display: flex;

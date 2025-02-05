@@ -3,54 +3,53 @@
     min-width:180px;
 }
 
-#imageData {
+#imageDataContent {
     max-height: 400px;
-    min-width: 300px;
+    min-width: 250px;
+}
+
+#commonLinkContent{
+    min-width: 200px;
 }
 
 .active {
-    background-color: white;
+    background-color: #e9b02c;
     color: black;
 }
 
 .dropdown-button {
-    background-color: #9ac43e;
+    background-color: #f0d984;
     border: none;
-    color: white;
+    color: #43413d;
     cursor: pointer;
+    font-size: 1.5rem; /* 調整字體大小 */
+    font-weight: bold;
     padding: 10px 20px;
 }
 
-    .dropdown-button:hover {
-        
-        background-color: white;
-        color: black;
-    }
+    .dropdown-button:hover,
     .open {
-        background-color: white;
+        background-color: #ffffff;
         color: black;
     }
 
 .dropdown-content {
-    background-color: #9ac43e;
+    background-color: #f0d984;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
     display: none;
-    left:-10px;
+    left:-5px;
     position: absolute;
     z-index: 1;
 }
     .dropdown-content li {
-        background-color: white;
+        background-color: #ffffff;
         position: relative;
     }
 
-        .dropdown-content li:hover {
-            background-color: white;
-        }
-
     .dropdown-content ul {
         list-style-type: none;
+        margin-bottom: 5px;
     }
 
 .menu-background{

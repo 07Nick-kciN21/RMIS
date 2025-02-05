@@ -1,4 +1,9 @@
-﻿#searchPanel {
+﻿#metaDataPanel{
+    width: 500px;
+    height: 500px;
+}
+
+#searchPanel {
     width: 200px;
     height: 250px;
 }
@@ -53,9 +58,9 @@
 }
 
 .panelHeading {
-    background-color: #9ac43e;
+    background-color: #f0d984;
     border-radius: 10px 10px 0 0;
-    color: white;
+    color: #43413d;
     padding: 5px 5px 5px 10px;
     cursor: move;
     display: flex;
@@ -64,6 +69,7 @@
 }
     .panelHeading span {
         font-size: 20px;
+        font-weight: 800;
     }
     .panelHeading .close-button {
         background: none;
@@ -110,17 +116,10 @@
 .panelResult {
     font-size: 20px;
     padding: 5px;
-    transition: background-color 0.3s;
+    transition: 0.3s;
 }
 
-.searchBar {
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px;
-    margin-bottom: 5px;
-}
+
 
 /* 自訂 .layerBar 的滾動條樣式 */
 .panelList::-webkit-scrollbar {

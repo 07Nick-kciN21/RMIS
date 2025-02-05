@@ -1,0 +1,5 @@
+#metaDataPanel tr{
+    width: 160px;
+    text-align: right;
+    white-space: pre-line;
+}

@@ -3,14 +3,51 @@
     padding: 0;
     position: relative;
     z-index: 1051;
-    background-color: #9ac43e
+    background-color: #f0d984
 }
 
     header .dropdown-button {
         font-size: 1.5rem; /* 調整字體大小 */
+        font-weight: bold;
     }
 
 .nav-item {
     position: relative;
     display: inline-block;
+}
+
+.head-logo-box {
+    height: 51.5px;
+    background: #e4b867;
+    color: #43413d;
+    line-height: 51.5px;
+    float: left;
+}
+
+.head-logo{
+    font-size: 18px; 
+    font-weight: 800;
+    
+}
+
+@media (min-width: 900px) {
+    header{
+        display: flex;
+    }
+    .head-logo-box {
+        width: 300px;
+    }
+    .head-logo{
+        margin-left: 25px;
+    }
+}
+
+@media (max-width: 899px) {
+    header{
+        display: block;
+    }
+
+    .head-logo-box {
+        width: 50%;
+    }
 }
