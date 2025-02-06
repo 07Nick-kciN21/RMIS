@@ -1,7 +1,4 @@
-﻿.searchPanelBtn:hover{
-    background-color:gainsboro;
-}
-.searchPanelBtn {
+﻿#searchPanel .searchPanelBtn {
     width: 25px;
     height: 27px;
     background-position: center;
@@ -11,7 +8,15 @@
     cursor: pointer;
 }
 
-.searchPanelInput {
+#searchPanel .searchPanelBtn:hover{
+    background-color:gainsboro;
+}
+
+#searchPanel .searchPanelInput {
     margin-bottom: 0;
     width:90%;
+}
+
+#searchPanel .panelResult{
+    font-size: 16px;
 }

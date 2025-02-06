@@ -47,6 +47,9 @@ function observeLayerBarChanges() {
 // 切換管理
 function setupRadioButtonHandlers() {
     $('input[name="btnradio"]').on('change', function () {
+        $('label.btn').removeClass('select');
+        $(this).next('label').addClass('select');
+
         const selectedLabel = $(this).next('label').text();
         $('#prop1, #prop2, #prop3, #prop4').css('display', 'none');
 

@@ -28,13 +28,13 @@ function handleSearch() {
                 try {
                     $searchList.empty();
                     result.forEach(road => {
-                        $searchList.append(`<li id="panel_${road.id}" class="panelResult">${road.name}</li>`);
-                        $(`#panel_${road.id}`).on('click', function () {
+                        var $li = $(`<li class="panelResult">${road.name}</li>`).on('click', function () {
                             $(`#searchList li`).removeClass("selected");
                             $(this).addClass("selected");
                             addRoadLayer(road.id);
                             console.log(road.id);
-                        })
+                        });
+                        $searchList.append($li);
                     });
                 }
                 catch (e) {

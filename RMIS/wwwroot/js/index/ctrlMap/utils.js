@@ -24,15 +24,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
         });
         marker.addTo(newLayer);
         let prop = point[1];
-        if (typeof prop === 'string') {
-            prop = prop.replace(/NaN/g, 'null');
-            try {
-                prop = JSON.parse(prop);
-            } catch (e) {
-                console.error("無法解析 JSON:", e);
-                return "無效的 JSON 資料";
-            }
-        }
+
         let popupContent = name == "街景照片" ? popupPhoto(prop) : popupFormat(prop, name);
 
         marker.bindPopup(popupContent, {
@@ -132,24 +124,9 @@ export function addLineToLayer(points, newLayer, color, name) {
             color: color
         }).addTo(newLayer);
 
-        if (typeof prop === 'string') {
-            prop = prop.replace(/NaN/g, 'null');
-            try {
-                prop = JSON.parse(prop);
-            } catch (e) {
-                console.error("無法解析 JSON:", e);
-                return "無效的 JSON 資料";
-            }
-        }
+        let popupContent = popupFormat(prop, name);
         // 為每個線段綁定 Popup，顯示其起點和終點座標
-        segment.bindPopup(`
-            <div class="popupData" style="display: none;">
-                ${prop}
-            </div>
-            <div style="font-size: 18px;">
-                <h4>圖層：${name}</h4><br>
-                ${popUpForm(prop)}
-            </div>`, {
+        segment.bindPopup(popupContent, {
             maxWidth: 350,
             maxHeight: 450
         });
@@ -194,15 +171,6 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     var $indexMap = getIndexMap();
     var pointGroup = [];
     var prop = points[0][1];
-    if (typeof prop === 'string') {
-        prop = prop.replace(/NaN/g, 'null');
-        try {
-            prop = JSON.parse(prop);
-        } catch (e) {
-            console.error("無法解析 JSON:", e);
-            return "無效的 JSON 資料";
-        }
-    }
 
     // 把points的所有[0]取出集合
     for (var i = 0; i < points.length; i++) {
@@ -299,29 +267,11 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
     }).addTo(newLayer);
 
     var prop = points[0][1];
-    
-    if (typeof prop === 'string') {
-        prop = prop.replace(/NaN/g, 'null');
-        try {
-            prop = JSON.parse(prop);
-        } catch (e) {
-            console.error("無法解析 JSON:", e);
-            return "無效的 JSON 資料";
-        }
-    }
+
+    var popupContent = popupFormat(prop, name);
+
     // 在線段加上popup
-    arrowline.bindPopup(`
-        <div class="popupData" style="display: none;">
-            ${points[0][1]}
-        </div>
-        <div>
-            <text style="font-size: 25px; font-weight: bolder;">
-                圖層：${name}
-            </text>
-            <div style="font-size: 20px;">
-                ${popUpForm(prop)}
-            </div>
-        </div>`, {
+    arrowline.bindPopup(popupContent, {
         maxWidth: 350,
         maxHeight: 450
     });
@@ -448,16 +398,26 @@ function popupPhoto(prop){
 }
 
 function popupFormat(prop, name){
+    var formProp = "";
+    if (typeof prop === 'string') {
+        formProp = prop.replace(/NaN/g, 'null');
+        try {
+            formProp = JSON.parse(formProp);
+        } catch (e) {
+            console.error("無法解析 JSON:", e);
+            return "無效的 JSON 資料";
+        }
+    }
     return `
     <div class="popupData" style="display: none;">
-        ${JSON.stringify(prop)}
+        ${prop}
     </div>
     <div style="font-size: 18px;">
         <text style="font-size: 25px; font-weight: bolder;">
             圖層：${name}
         </text>
         <div>
-            ${name == "施工地點" ? popupConstruct(prop) : popUpForm(prop)}
+            ${name == "施工地點" ? popupConstruct(prop) : popUpForm(formProp)}
         </div> 
     </div>`;
 }

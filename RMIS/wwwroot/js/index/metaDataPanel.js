@@ -25,7 +25,7 @@ export function openPanel(metaData) {
     const $panelBody = $('#metaDataPanel .panelBody');
     // 清空 panelBody
     $panelBody.empty();
-    const $table = $('<table>');
+    const $table = $('<table class="table">');
     const $tbody = $('<tbody>');
     $table.append($tbody);
     

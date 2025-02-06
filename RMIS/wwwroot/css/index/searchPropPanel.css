@@ -13,7 +13,17 @@
 
 #searchPropPanel .panelInput li label{
     width: 100%; 
+    border: 1px solid #f0d984;
     border-radius: 0;
+}
+
+#searchPropPanel .panelInput li .select{
+    background-color: #f0d984;
+    box-shadow: none;
+}
+
+#searchPropPanel #pFeatSelect{
+    box-shadow: none;
 }
 
 #searchPropPanel #prop2 #shapeGroup #propGeoCustom button{
@@ -21,7 +31,7 @@
     height:90px; 
     float:left; 
     margin-right:10px; 
-    background-color: #9ac43e;
+    background-color: #f0d984;
 }
 
 #searchPropPanel #prop2 #shapeGroup #propGeoCustom button img{
@@ -40,6 +50,11 @@
 
 #searchPropPanel #prop4 .form-check label{
     font-size: 26px;
+}
+
+#searchPropPanel #prop4 #anaHdr{
+    background-color:#f2f2f2; 
+    font-weight: bold;
 }
 
 .propTable {
@@ -80,16 +95,16 @@
 }
 
 .pageList a:hover {
-    background-color:gray;
+    background-color:#e4b867;
 }
 
 .pageList .select {
-    background-color: #9ac43e;
+    background-color: #f0d984;
 }
 
 
 .selectRow {
-    background-color: green !important;
+    background-color: #e4b867 !important;
     color: white;
 }
 

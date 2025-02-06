@@ -16,6 +16,17 @@
     padding: 10px 15px 0;
 }
 
+#focusPanel .panelInput li label{
+    width: 100%;
+    border: 1px solid #f0d984;
+    border-radius: 0;
+}
+
+#focusPanel .panelInput li .select{
+    background-color: #f0d984;
+    box-shadow: none;
+}
+
 #focusPanel .form-group{
     margin-bottom: 10px;
     display: flex; 

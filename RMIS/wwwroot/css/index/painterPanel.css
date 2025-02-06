@@ -53,3 +53,7 @@
     padding: 5px;
     margin-bottom: 5px;
 }
+
+.searchBar:hover{
+    background-color: #dddada;
+}
