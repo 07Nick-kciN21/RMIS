@@ -41,6 +41,11 @@
     height: 450px;
 }
 
+#accidentPanel {
+    width: 450px;
+    height: 450px;
+}
+
 .panel {
     z-index: 1051;
     position: absolute;
@@ -83,7 +88,7 @@
     padding: 10px 10px 0;
     margin: 0;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 .panelBody {
     display: flex;
@@ -91,6 +96,21 @@
     align-items: center; /* 垂直方向上居中對齊 */
     padding: 0 10px 10px;
     border-radius: 10px;
+}
+
+.panelRadio li{
+    width: 25%;
+}
+
+.panelRadio li .select{
+    background-color: #f0d984;
+    box-shadow: none !important;
+}
+
+.panelRadio li label{
+    width: 100%;
+    border: 1px solid #f0d984;
+    border-radius: 0;
 }
 
 .panelFooter {
@@ -179,14 +199,6 @@
 }
 
 @media (max-width:899px){
-    #tb-painterPanel,
-    #tb-propEnabled
-    #tb-flagPanel,
-    #tb-searchPropPanel,
-    #tb-flagPanel{
-        display: none;
-    }
-
     #searchPanel{
         top:50%;
         left: 0%;

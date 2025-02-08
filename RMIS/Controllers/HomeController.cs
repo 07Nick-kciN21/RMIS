@@ -1,27 +1,36 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RMIS.Data;
 using RMIS.Models;
+using RMIS.Models.sql;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
-using RMIS.Models.sql;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using RMIS.Models.Auth;
+using System.Data;
+
 
 namespace RMIS.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly MapDBContext _mapDBContext;
-        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly AuthDbContext _authDBContext;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(MapDBContext mapDBContext, IWebHostEnvironment webHostEnvironment, ILogger<HomeController> logger)
+        public HomeController(MapDBContext mapDBContext, AuthDbContext authDBContext, UserManager<ApplicationUser> userManager, ILogger<HomeController> logger)
         {
             _mapDBContext = mapDBContext;
-            _webHostEnvironment = webHostEnvironment;
+            _authDBContext = authDBContext;
+            _userManager = userManager;
             _logger = logger;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var allCategories = _mapDBContext.Categories.Where(c => c.Id != Guid.Parse("E2726075-D228-4A6B-BC65-0D3D28877681")).ToList();
             var jsTreeData = BuildJsTreeData(allCategories, null);
@@ -32,12 +41,27 @@ namespace RMIS.Controllers
             }).ToList();
             _logger.LogInformation("Index page loaded");
 
-            var cookieOptions = new CookieOptions
+            var userPermissions = new Dictionary<string, string>();
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
             {
-                Expires = DateTime.UtcNow.AddHours(1)
-            };
-            Response.Cookies.Append("UserRole", "Admin", cookieOptions);
-            return View();
+                // 從user取得roleId(基本上一個user只有一個role)
+                var roleId = (await _userManager.GetRolesAsync(user))
+                             .Select(roleName => _authDBContext.Roles.FirstOrDefault(r => r.Name == roleName).Id)
+                             .FirstOrDefault();
+                // 根據roleId取得PermissionId與他的AccessLevel
+                // 取得該角色對應的權限及 AccessLevel
+                var permissions = await _authDBContext.RolePermissions
+                    .Where(rp => rp.RoleId == roleId)
+                    .Select(rp => new { rp.Permission.Name, rp.AccessLevel })
+                    .ToListAsync();
+
+                userPermissions = permissions.ToDictionary(p => p.Name, p => p.AccessLevel);
+            }
+
+            Console.WriteLine("Index page loaded");
+            return View(userPermissions);
         }
 
         private List<object> BuildJsTreeData(IEnumerable<Category> categories, Guid? parentId)

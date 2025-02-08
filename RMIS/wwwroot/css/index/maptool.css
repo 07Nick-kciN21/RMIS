@@ -101,6 +101,12 @@
     background-position: center;
 }
 
+#tb-accidentPanel{
+    background-image: url('/svg/tiptool/accident.svg');
+    background-size: 80%;
+    background-position: center;
+}
+
 #tb-projectPanel{
     background-image: url('/svg/tiptool/roadproject.svg');
     background-size: 70%;
@@ -235,9 +241,14 @@
     .map-controls{
         position: fixed;
     }
+
+    .map-controls > span:not(.mobileTool){
+        display: none; /* 隱藏非手機工具 */
+    }
     .map-footer > div:not(#map-basemapCtrl) {
         display: none; /* 隐藏其他元素 */
     }
+
     .map-footer > .title-divider{
         display: none; /* 隐藏分隔线 */
     }
@@ -246,6 +257,7 @@
         justify-content: flex-end; /* 工具栏移动到右侧 */
         width: auto; /* 宽度自适应内容 */
     }
+    
 
     #tb-sidebar {
         display: none; /* 隐藏地图控件 */

@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Dictionary<string, string>
+@{
     ViewData["Title"] = "桃園市養護工程處整合協作平台";
 }
 <style>
@@ -44,6 +45,7 @@
 <link rel="stylesheet" href="~/css/index/focusPanel.css" />
 <link rel="stylesheet" href="~/css/index/projectPanel.css" />
 <link rel="stylesheet" href="~/css/index/metaDataPanel.css" />
+<link rel="stylesheet" href="~/css/index/accidentPanel.css" />
 <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
@@ -66,11 +68,7 @@
 
 <script src="~/lib/proj4.js"></script>
 
-@* @section HomeHeaderToolBar{
-    <div class="nav-item dropdown">
-        <button class="dropdown-button" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">側欄</button>
-    </div>
-} *@
+
 @section HomeHeaderNavList{
     <div id="col1">
         <nav id="left-nav" style="display: flex;">
@@ -79,9 +77,6 @@
                     ☰ 側欄
                 </button>
             </div>
-            @* <div class="head-logo-box toggle">
-                 <div class="head-logo">桃園市養護工程處整合協作平台</div>
-            </div> *@
             <div id="menu-toggle" class="toggle">
                 <button class="dropdown-button">
                     ☰ 菜單
@@ -97,58 +92,60 @@
         <nav id="head-nav" class="navbar-toggle"  style="padding: 0;">
             <div class="container-fluid ">
                 <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
-                    <div class="nav-item dropdown">
-                        <button id="dropdownMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
-                        <div id="adminMenuContent" class="dropdown-content">
-                            <ul id="adminMenu" class="menu-background">
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
-                                        <h4>新增圖源</h4>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
-                                        <h4>新增類別</h4>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
-                                        <h4>新增管線</h4>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
-                                        <h4>上傳路線資料</h4>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
-                                        <h4>上傳圖資類別</h4>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
-                                        <h4>新增道路專案</h4>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
-                                        <h4>上傳道路專案</h4>
-                                    </a>
-                                </li>
-                                @* <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructionNotice">
-                                        <h4>新增施工通報</h4>
-                                    </a>
-                                </li> *@
-                                <li>
-                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
-                                        <h4>上傳施工通報</h4>
-                                    </a>
-                                </li>
-                            </ul>
+                    @if (User.IsInRole("Admin")){
+                        <div class="nav-item dropdown">
+                            <button id="dropdownMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
+                            <div id="adminMenuContent" class="dropdown-content">
+                                <ul id="adminMenu" class="menu-background">
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
+                                            <h4>新增圖源</h4>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
+                                            <h4>新增類別</h4>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
+                                            <h4>新增管線</h4>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
+                                            <h4>上傳路線資料</h4>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
+                                            <h4>上傳圖資類別</h4>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
+                                            <h4>新增道路專案</h4>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
+                                            <h4>上傳道路專案</h4>
+                                        </a>
+                                    </li>
+                                    @* <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructionNotice">
+                                            <h4>新增施工通報</h4>
+                                        </a>
+                                    </li> *@
+                                    <li>
+                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
+                                            <h4>上傳施工通報</h4>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
+                    }
                     <div class="nav-item dropdown">
                         <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
                     </div>
@@ -211,19 +208,32 @@
 
 <div id="indexMap" style="width: 100%; height: 100vh;">
     <div class="map-controls">
-        <span id="tb-sidebar" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock"></span>
-        <span id="tb-zoomIn" title="放大"></span>
-        <span id="tb-zoomOut" title="縮小"></span>
-        <span id="tb-searchPanel" title="道路快搜"></span>
-        <span id="tb-painterPanel" title="繪圖板"></span>
-        <span id="tb-searchPropPanel" title="屬性搜尋"></span>
-        <span id="tb-measurePanel" title="測量"></span>
-        <span id="tb-location" title="目前位置"></span>
-        <span id="tb-streetView" title="google街景"></span>
-        <span id="tb-propEnabled" title="屬性資料"></span>
-        <span id="tb-flagPanel" title="權管土地"></span>
-        <span id="tb-focusPanel" title="養工焦點"></span>
-        <span id="tb-projectPanel" title="專案查詢"></span>
+        <span id="tb-sidebar" class="mobileTool" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock"></span>
+        <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
+        <span id="tb-zoomOut" class="mobileTool" title="縮小"></span>
+        <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
+        <span id="tb-painterPanel" class="mobileTool" title="繪圖板"></span>
+        <span id="tb-searchPropPanel" class="mobileTool" title="屬性搜尋"></span>
+        <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
+        <span id="tb-location" class="mobileTool" title="目前位置"></span>
+        <span id="tb-streetView" class="mobileTool" title="google街景"></span>
+        @if (Model.ContainsKey("屬性查詢") && Model["屬性查詢"] != "None")
+        {
+            <span id="tb-propEnabled" title="屬性資料"></span>
+        }
+        @if (Model.ContainsKey("權管土地") && Model["權管土地"] != "None")
+        {
+            <span id="tb-flagPanel" title="權管土地"></span>
+        }
+        @if (Model.ContainsKey("養工焦點") && Model["養工焦點"] != "None")
+        {
+            <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
+        }
+       @if (Model.ContainsKey("交通事故") && Model["交通事故"] != "None")
+        {
+            <span id="tb-accidentPanel" title="交通事故"></span>
+        }
+        <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
     </div>
     <div class="map-footer">
         <div id="scale-control" class="footer-tip"></div>
@@ -341,22 +351,22 @@
             <button class="closeButton">&times;</button>
         </div>
     </div>
-    <ul class="panelInput" role="group" aria-label="Basic radio toggle button group">
+    <ul class="panelInput panelRadio" role="group" aria-label="Basic radio toggle button group">
         <li style="width: 25%">
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked />
-            <label class="btn" for="btnradio1">依屬性</label>
+            <input type="radio" class="btn-check" name="propradio" id="propradio1" autocomplete="off" checked />
+            <label class="btn" for="propradio1">依屬性</label>
         </li>
         <li style="width: 25%">
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" />
-            <label class="btn" for="btnradio2">依空間</label>
+            <input type="radio" class="btn-check" name="propradio" id="propradio2" autocomplete="off" />
+            <label class="btn" for="propradio2">依空間</label>
         </li>
         <li style="width: 25%; visibility: hidden;">
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" />
-            <label class="btn" for="btnradio3">結果</label>
+            <input type="radio" class="btn-check" name="propradio" id="propradio3" autocomplete="off" />
+            <label class="btn" for="propradio3">結果</label>
         </li>
         <li style="width: 25%; visibility: hidden;">
-            <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off" />
-            <label class="btn" for="btnradio4">統計</label>
+            <input type="radio" class="btn-check" name="propradio" id="propradio4" autocomplete="off" />
+            <label class="btn" for="propradio4">統計</label>
         </li>
     </ul>
     <div id="prop1" class="panelBody" style="display: block">
@@ -719,9 +729,9 @@
         <button class="closeButton">&times;</button>
     </div>
     <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
-        <ul class="panelInput" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
+        <ul class="panelInput panelRadio" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
             <li style="width: 25%">
-                <input type="radio" class="btn-check" name="btnradio" id="focus1" autocomplete="off" checked />
+                <input type="radio" class="btn-check" name="focusradio" id="focus1" autocomplete="off" checked />
                 <label class="btn select" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
             </li>
         </ul>
@@ -954,6 +964,7 @@
     </div>
 </div>
 
+@* 詮釋資料 *@
 <div id="metaDataPanel" class="panel hide">
     <div class="panelHeading">
         <span>
@@ -964,6 +975,161 @@
     <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
         <div class="panelBody" style="display: block">
         </div>
+    </div>
+</div>
+
+@* 交通事故 *@
+<div id="accidentPanel" class="panel hide">
+    <div class="panelHeading">
+        <span>
+            交通事故
+        </span>
+        <button class="closeButton">&times;</button>
+    </div>
+    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
+        <ul class="panelInput panelRadio" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
+            <li style="width: 25%">
+                <input type="radio" class="btn-check" name="accradio" id="accident1" autocomplete="off" checked />
+                <label class="btn" for="accident1">圖層開關</label>
+            </li>
+            <li style="width: 25%">
+                <input type="radio" class="btn-check" name="accradio" id="accident2" autocomplete="off"/>
+                <label class="btn" for="accident2">簡易查詢</label>
+            </li>
+            <li style="width: 25%">
+                <input type="radio" class="btn-check" name="accradio" id="accident3" autocomplete="off"/>
+                <label class="btn" for="accident3">資料匯出</label>
+            </li>
+        </ul>
+        <div id="acc1" class="panelBody" style="display: block">
+            <div class="form-group">
+                <label class="sw-label">
+                    <input type="checkbox" name="" id="accCluster" class="sw-chk">
+                    <span class="sw-box">
+                        <span class="sw-btn"></span>
+                    </span>
+                    <span>叢集模組</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="sw-label">
+                    <input type="checkbox" name="" id="accTimeline" class="sw-chk">
+                    <span class="sw-box">
+                        <span class="sw-btn"></span>
+                    </span>
+                    <span>A1A2熱區時間軸</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="sw-label">
+                    <input type="checkbox" name="" id="accTowCmp" class="sw-chk">
+                    <span class="sw-box">
+                        <span class="sw-btn"></span>
+                    </span>
+                    <span>前後期比對</span>
+                </label>
+            </div>
+        </div>
+        <div id="acc2" class="panelBody" style="display: none">
+            <div class="form-group">
+                @* 日期範圍 *@
+                <label>日期範圍</label>
+                <input type="text" id="accStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
+                ⇔
+                <input type="text" id="accEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
+            </div>
+            <div class="form-group">
+                <label>行政區</label>
+                <select id="acc2AdminDict" class="form-select" style="flex-grow: 1;border-radius:0;">
+                    <option value="-1">請選擇</option>
+                    <option value="0">桃園區</option>
+                    <option value="1">大溪區</option>
+                    <option value="2">中壢區</option>
+                    <option value="3">楊梅區</option>
+                    <option value="4">蘆竹區</option>
+                    <option value="5">大園區</option>
+                    <option value="6">龜山區</option>
+                    <option value="7">八德區</option>
+                    <option value="8">龍潭區</option>
+                    <option value="9">平鎮區</option>
+                    <option value="10">新屋區</option>
+                    <option value="11">觀音區</option>
+                    <option value="12">復興區</option>
+                </select>
+            </div>
+            <div class="form-group">
+                @* 路名 *@
+                <label>路名</label>
+                <input type="text" id="accRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
+            </div>
+            <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+                <button id="acc2GoResult" class="btn js-modal-toggle goResult">進行篩選</button>
+            </div>
+            <div id="accidentResultDiv" class="panelList">
+                <table id="accidentTable" class="propTable">
+                <thead id="accidentThead">
+                    <th>事故類型</th>
+                    <th>事故發生</th>
+                    <th>行政區</th>
+                    <th>事故地點</th>
+                    <th>死亡人數</th>
+                    <th>受傷人數</th>
+                    <th>事故車種</th>
+                    <th>經度</th>
+                    <th>緯度</th>
+                </thead>
+                <tbody id="accidentTbody">
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div id="acc3" class="panelBody" style="display: none">
+            <div class="form-group">
+                <label>行政區</label>
+                <select id="acc3AdminDict" class="form-select" style="flex-grow: 1;border-radius:0;">
+                    <option value="-1">請選擇</option>
+                    <option value="0">桃園區</option>
+                    <option value="1">大溪區</option>
+                    <option value="2">中壢區</option>
+                    <option value="3">楊梅區</option>
+                    <option value="4">蘆竹區</option>
+                    <option value="5">大園區</option>
+                    <option value="6">龜山區</option>
+                    <option value="7">八德區</option>
+                    <option value="8">龍潭區</option>
+                    <option value="9">平鎮區</option>
+                    <option value="10">新屋區</option>
+                    <option value="11">觀音區</option>
+                    <option value="12">復興區</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>年分</label>
+                <select id="acc3Year" class="form-select">
+                        <option value="108">108</option>
+                        <option value="109">109</option>
+                        <option value="110">110</option>
+                        <option value="111">111</option>
+                        <option value="112">112</option>
+                        <option value="113">113</option>
+                        <option value="114">114</option>
+                </select>
+            </div>
+            <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+                <button id="acc3GoResult" class="btn js-modal-toggle goResult">匯出</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* 管養道路 *@
+<div id="roadMaintPanel" class="panel hide">
+    <div class="panelHeading">
+        <span>
+            管養道路
+        </span>
+        <button class="closeButton">&times;</button>
     </div>
 </div>
 

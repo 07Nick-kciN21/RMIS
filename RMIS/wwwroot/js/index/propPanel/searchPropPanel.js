@@ -46,7 +46,7 @@ function observeLayerBarChanges() {
 
 // 切換管理
 function setupRadioButtonHandlers() {
-    $('input[name="btnradio"]').on('change', function () {
+    $('input[name="propradio"]').on('change', function () {
         $('label.btn').removeClass('select');
         $(this).next('label').addClass('select');
 
@@ -59,7 +59,7 @@ function setupRadioButtonHandlers() {
             $('#prop2').css('display', 'block');
         } else if (selectedLabel === '結果') {
             $('#prop3').css('display', 'block');
-        } else {
+        } else if (selectedLabel === '統計') {
             $('#prop4').css('display', 'block');
         }
     });

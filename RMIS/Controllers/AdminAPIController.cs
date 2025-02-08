@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RMIS.Models.sql;
 using RMIS.Repositories;
 using RMIS.Models.Admin;
 using RMIS.Models.API;
 
+
 namespace RMIS.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminAPIController : ControllerBase

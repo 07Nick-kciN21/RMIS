@@ -7,21 +7,6 @@
     display: flex;
 }
 
-#searchPropPanel .panelInput li{
-    width: 25%;
-}
-
-#searchPropPanel .panelInput li label{
-    width: 100%; 
-    border: 1px solid #f0d984;
-    border-radius: 0;
-}
-
-#searchPropPanel .panelInput li .select{
-    background-color: #f0d984;
-    box-shadow: none;
-}
-
 #searchPropPanel #pFeatSelect{
     box-shadow: none;
 }

@@ -12,6 +12,7 @@ import { initMeasurePanel } from './index/measure.js';
 import { initFlagPanel } from './index/flagPanel.js';
 import { initFocusPanel } from './index/focusPanel.js';
 import { initProjectPanel } from './index/projectPanel.js';
+import { initAccidentPanel } from './index/accidentPanel.js';
 
 $(document).ready(function () {
     // 初始化地图
@@ -29,6 +30,7 @@ $(document).ready(function () {
     initPanel("measurePanel");
     initPanel("flagPanel");
     initPanel("focusPanel");
+    initPanel("accidentPanel");
     initPanel("projectPanel");
     initSearchPanel();
     initPainterPanel();
@@ -38,6 +40,7 @@ $(document).ready(function () {
     initFlagPanel();
     initFocusPanel();
     initProjectPanel();
+    initAccidentPanel();
     
     bindMenuEvents();
 });

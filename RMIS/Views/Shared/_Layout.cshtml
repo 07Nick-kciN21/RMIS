@@ -41,15 +41,6 @@
 <body>
     <div class="content-wrapper">
         <header class="gx-0 custom-header">
-            <div class="">
-                @* <div class="nav-item">
-                    <button class="dropdown-button" onclick="location.href='@Url.Action("Index", "Home")'">首頁</button>
-                </div> *@
-                @if (IsSectionDefined("HomeHeaderToolBar"))
-                {
-                    @RenderSection("HomeHeaderToolBar", required: false)
-                }
-            </div>
             @if (IsSectionDefined("HomeHeaderNavList"))
             {
                 @RenderSection("HomeHeaderNavList", required: false)
