@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Models.Auth;
+using System.Reflection.Emit;
 
 public class AuthDbContext : IdentityDbContext<ApplicationUser>
 {
@@ -23,18 +24,35 @@ public class AuthDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<RolePermission>()
             .HasOne(rp => rp.Role)
-            .WithMany()
-            .HasForeignKey(rp => rp.RoleId);
+            .WithMany(r => r.RolePermissions) // ✅ 明確指定關聯
+            .HasForeignKey(rp => rp.RoleId)
+            .OnDelete(DeleteBehavior.Cascade); // ✅ 設定關聯刪除行為
 
         builder.Entity<RolePermission>()
             .HasOne(rp => rp.Permission)
             .WithMany(p => p.RolePermissions)
-            .HasForeignKey(rp => rp.PermissionId);
+            .HasForeignKey(rp => rp.PermissionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // 預設值設定
+        builder.Entity<RolePermission>()
+            .Property(rp => rp.Read)
+        .HasDefaultValue(false);
 
         builder.Entity<RolePermission>()
-            .Property(rp => rp.AccessLevel)
-            .IsRequired()
-            .HasMaxLength(10);
+            .Property(rp => rp.Create)
+            .HasDefaultValue(false);
 
+        builder.Entity<RolePermission>()
+            .Property(rp => rp.Update)
+            .HasDefaultValue(false);
+
+        builder.Entity<RolePermission>()
+            .Property(rp => rp.Delete)
+            .HasDefaultValue(false);
+
+        builder.Entity<RolePermission>()
+            .Property(rp => rp.Export)
+            .HasDefaultValue(false);
     }
 }

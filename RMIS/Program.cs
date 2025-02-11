@@ -10,10 +10,7 @@ using RMIS.Middleware;
 using RMIS.Models.Auth;
 using RMIS.Repositories;
 using Serilog;
-using Serilog.Expressions;
-using Serilog.Sinks.Map;
-using System.IO;
-using RMIS.Controllers;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,11 +48,11 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbConnectionString")));
 
 // 設定 Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = true;
+    options.SignIn.RequireConfirmedAccount = true; 
 })
-.AddEntityFrameworkStores<AuthDbContext>()
+.AddEntityFrameworkStores<AuthDbContext>() // ✅ 讓 `UserManager<ApplicationUser>` 和 `RoleManager<ApplicationRole>` 使用 `EF Core`
 .AddDefaultTokenProviders();
 
 // 註冊 Controllers
@@ -68,6 +65,10 @@ builder.Services.AddDbContext<MapDBContext>(options =>
 // 註冊 Repository
 builder.Services.AddScoped<AdminInterface, AdminRepository>();
 
+// ✅ 註冊 RoleManager<ApplicationRole>
+builder.Services.AddScoped<RoleManager<ApplicationRole>>();
+builder.Services.AddScoped<UserManager<ApplicationUser>>();
+
 var app = builder.Build();
 
 // ✅ 執行 Seeders
@@ -76,7 +77,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var _authDbContext = services.GetRequiredService<AuthDbContext>();
     var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-    var _roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var _roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
 
     try
     {

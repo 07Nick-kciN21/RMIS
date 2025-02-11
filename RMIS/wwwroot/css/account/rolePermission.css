@@ -1,0 +1,24 @@
+.merged-cell {
+    border-bottom: none !important; /* 移除下方邊框 */
+    border-right: 1px solid #dee2e6 !important; /* 保持右邊框 */
+}
+
+    /* 讓最後一個合併的 `<td>` 恢復底部邊框 */
+    .merged-cell[rowspan]:last-of-type {
+        border-bottom: 1px solid #dee2e6 !important;
+    }
+
+.permissionTable{
+    font-size: 20px;
+    margin: auto;
+    width: 70%;
+}
+
+.permissionName{
+    font-weight: bold;
+}
+
+#roleSelector{
+    margin: auto;
+    width: 70%;
+}

@@ -28,20 +28,19 @@ namespace RMIS.Controllers
             _userManager = userManager;
             _logger = logger;
         }
+        public class PermissionDetail
+        {
+            public bool Read { get; set; }
+            public bool Create { get; set; }
+            public bool Update { get; set; }
+            public bool Delete { get; set; }
+            public bool Export { get; set; }
+        }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var allCategories = _mapDBContext.Categories.Where(c => c.Id != Guid.Parse("E2726075-D228-4A6B-BC65-0D3D28877681")).ToList();
-            var jsTreeData = BuildJsTreeData(allCategories, null);
-            ViewBag.JsTreeData = jsTreeData;
-            ViewBag.pipelineId = _mapDBContext.Pipelines.Select(p => new
-            {
-                id = p.Id
-            }).ToList();
-            _logger.LogInformation("Index page loaded");
-
-            var userPermissions = new Dictionary<string, string>();
+            var userPermissions = new Dictionary<string, PermissionDetail>();
 
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
@@ -50,14 +49,51 @@ namespace RMIS.Controllers
                 var roleId = (await _userManager.GetRolesAsync(user))
                              .Select(roleName => _authDBContext.Roles.FirstOrDefault(r => r.Name == roleName).Id)
                              .FirstOrDefault();
-                // 根據roleId取得PermissionId與他的AccessLevel
-                // 取得該角色對應的權限及 AccessLevel
+                // 取得該角色對應的權限及 CRUDE
                 var permissions = await _authDBContext.RolePermissions
                     .Where(rp => rp.RoleId == roleId)
-                    .Select(rp => new { rp.Permission.Name, rp.AccessLevel })
+                    .Select(rp => new
+                    {
+                        rp.Permission.Name,
+                        rp.Read,
+                        rp.Create,
+                        rp.Update,
+                        rp.Delete,
+                        rp.Export
+                    })
                     .ToListAsync();
 
-                userPermissions = permissions.ToDictionary(p => p.Name, p => p.AccessLevel);
+                userPermissions = permissions.ToDictionary(
+                    p => p.Name, 
+                    p => new PermissionDetail 
+                    {
+                        Read = p.Read,
+                        Create = p.Create,
+                        Update = p.Update,
+                        Delete = p.Delete,
+                        Export = p.Export
+                    });
+
+                var CategoryData = await _authDBContext.RolePermissions
+                    .Where(rp => rp.RoleId == roleId && 
+                                 rp.Permission.Name.StartsWith("業務圖資"))
+                    .Include(rp => rp.Permission)
+                    .ToListAsync();
+
+                if (CategoryData[0].Read)
+                {
+                    var allCategories = _mapDBContext.Categories.Where(c => c.Id != Guid.Parse("E2726075-D228-4A6B-BC65-0D3D28877681") && c.ParentId == null).ToList();
+                    // 先篩選具有讀取權限的根節點
+                    var allowedCategories = allCategories.Where(c => CategoryData.Any(cd => cd.Permission.Name.Contains(c.Name) && cd.Read)).ToList();
+                    var jsTreeData = BuildJsTreeData(allowedCategories, null);
+                    ViewBag.JsTreeData = jsTreeData;
+                    ViewBag.pipelineId = _mapDBContext.Pipelines.Select(p => new
+                    {
+                        id = p.Id
+                    }).ToList();
+                }
+                
+                _logger.LogInformation("Index page loaded");
             }
 
             Console.WriteLine("Index page loaded");
@@ -69,8 +105,8 @@ namespace RMIS.Controllers
             var result = new List<object>();
 
             // 選擇當前層級的分類
-            var currentCategories = categories.Where(c => c.ParentId == parentId).OrderBy(c => c.OrderId).ToList();
-            foreach (var category in currentCategories)
+            // var currentCategories = categories.Where(c => c.ParentId == parentId).OrderBy(c => c.OrderId).ToList();
+            foreach (var category in categories)
             {
                 // 創建分類節點
                 var categoryNode = new
@@ -100,17 +136,17 @@ namespace RMIS.Controllers
                     ((List<object>)categoryNode.children).Add(pipelineNode);
                 }
 
+                var next_category = _mapDBContext.Categories.Where(c => c.ParentId == category.Id).ToList();
                 // 處理該分類的子分類
-                var childCategories = BuildJsTreeData(categories, category.Id);
+                var childCategories = BuildJsTreeData(next_category, category.Id);
                 if (childCategories.Any())
                 {
                     ((List<object>)categoryNode.children).AddRange(childCategories);
                 }
 
                 result.Add(categoryNode);
+                
             }
-
-            
             return result;
         }
         public IActionResult Privacy()

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using RMIS.Models.Auth;
 using System;
 using System.Threading.Tasks;
 namespace RMIS.Data
@@ -7,16 +8,23 @@ namespace RMIS.Data
     {
         public static async Task InitializeRoles(IServiceProvider serviceProvider)
         {
-            var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-            string[] roles = { "Admin", "User", "Manager" };
-            foreach (var role in roles)
+            try
             {
-                if (!await roleManager.RoleExistsAsync(role))
+                var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+
+                string[] roles = { "Admin", "使用者", "管理者" };
+                foreach (var role in roles)
                 {
-                    await roleManager.CreateAsync(new IdentityRole(role));
-                    Console.WriteLine($"角色 {role} 已建立");
+                    if (!await roleManager.RoleExistsAsync(role))
+                    {
+                        await roleManager.CreateAsync(new ApplicationRole { Name = role });
+                        Console.WriteLine($"角色 {role} 已建立");
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[錯誤] InitializeRoles失敗: {ex.Message}");
             }
         }
     }

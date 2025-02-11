@@ -1,4 +1,4 @@
-﻿@model Dictionary<string, string>
+﻿@model Dictionary<string, RMIS.Controllers.HomeController.PermissionDetail>
 @{
     ViewData["Title"] = "桃園市養護工程處整合協作平台";
 }
@@ -29,6 +29,7 @@
     }
 </style>
 
+<link rel="stylesheet" href="~/css/index/measureTool.css" />
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
 <link rel="stylesheet" href="~/css/index/offcanvas.css" />
 <link rel="stylesheet" href="~/css/index/menu.css" />
@@ -37,6 +38,7 @@
 <link rel="stylesheet" href="~/css//index/searchPropPanel.css"/>
 <link rel="stylesheet" href="~/css/index/searchPanel.css" />
 <link rel="stylesheet" href="~/css/index/drawtool.css" />
+<link rel="stylesheet" href="~/css/index/panel.css" />
 <link rel="stylesheet" href="~/css/index/painterPanel.css"/>
 <link rel="stylesheet" href="~/css/index/maptool.css" />
 <link rel="stylesheet" href="~/css/index/modal.css" />
@@ -65,6 +67,11 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-pip@latest/leaflet-pip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.10.3/src/leaflet.geometryutil.min.js"></script>
+
 
 <script src="~/lib/proj4.js"></script>
 
@@ -217,22 +224,14 @@
         <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
         <span id="tb-location" class="mobileTool" title="目前位置"></span>
         <span id="tb-streetView" class="mobileTool" title="google街景"></span>
-        @if (Model.ContainsKey("屬性查詢") && Model["屬性查詢"] != "None")
-        {
-            <span id="tb-propEnabled" title="屬性資料"></span>
-        }
-        @if (Model.ContainsKey("權管土地") && Model["權管土地"] != "None")
-        {
-            <span id="tb-flagPanel" title="權管土地"></span>
-        }
-        @if (Model.ContainsKey("養工焦點") && Model["養工焦點"] != "None")
-        {
-            <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
-        }
-       @if (Model.ContainsKey("交通事故") && Model["交通事故"] != "None")
-        {
-            <span id="tb-accidentPanel" title="交通事故"></span>
-        }
+        <span id="tb-propEnabled" title="屬性資料"></span>
+       
+        <span id="tb-flagPanel" title="權管土地"></span>
+        
+        <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
+        
+        <span id="tb-accidentPanel" title="交通事故"></span>
+        
         <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
     </div>
     <div class="map-footer">

@@ -84,8 +84,8 @@ function setupSelectChangeHandlers() {
     $('#gFeatSelect').on('change', function () {
         gselectedId = $(this).val();
         if (gselectedId == -1) {
-            $('label[for="btnradio3"]').css('visibility', 'hidden');
-            $('label[for="btnradio4"]').css('visibility', 'hidden');
+            $('label[for="propradio3"]').css('visibility', 'hidden');
+            $('label[for="propradio4"]').css('visibility', 'hidden');
             $('#shapeGroup').addClass('hide');
             return;
         }
@@ -128,12 +128,12 @@ function setupFilterAndClearHandlers() {
         $('#totalCount').text(`(總數:${filteredProps.length})`);
         updatePropTable();
         updateAnalysisList();
-        $('label[for="btnradio3"]').css('visibility', 'visible');
-        $('label[for="btnradio4"]').css('visibility', 'visible');
+        $('label[for="propradio3"]').css('visibility', 'visible');
+        $('label[for="propradio4"]').css('visibility', 'visible');
     });
     $('#propClear').on('click', function () {
-        $('label[for="btnradio3"]').css('visibility', 'hidden');
-        $('label[for="btnradio4"]').css('visibility', 'hidden');
+        $('label[for="propradio3"]').css('visibility', 'hidden');
+        $('label[for="propradio4"]').css('visibility', 'hidden');
         $('#pFeatSelect').val('-1').trigger('change');
     });
 
@@ -153,8 +153,8 @@ function setupFilterAndClearHandlers() {
                 updatePropTable();
                 updateAnalysisList();
                 $('#totalCount').text(`(總數:${filteredProps.length})`);
-                $('label[for="btnradio3"]').css('visibility', 'visible');
-                $('label[for="btnradio4"]').css('visibility', 'visible');
+                $('label[for="propradio3"]').css('visibility', 'visible');
+                $('label[for="propradio4"]').css('visibility', 'visible');
             }
         });
     });

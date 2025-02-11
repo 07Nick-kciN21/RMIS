@@ -1,0 +1,65 @@
+﻿@model RMIS.Models.Account.UpdateRolePermission
+@*
+    For more information on enabling MVC for empty proiects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<link rel="stylesheet" href="~/css/account/rolePermission.css" />
+<script src="~/js/account/updatePermission.js"></script>
+<h2 class="text-center">角色權限管理</h2>
+
+<form asp-action="UpdateRolePermission" method="post">
+    <select id="roleSelector" class="form-select">
+        @for (int i = 0; i < Model.Roles.Count; i++)
+        {
+            <option value="@Model.Roles[i]">@Model.Roles[i]</option>
+        }
+    </select>
+    <table class="table table-bordered permissionTable">
+        <thead class="table-primary">
+            <tr>
+                <th style="width: 400px">權限名稱</th>
+                <th style="width: 70px">查看</th>
+                <th style="width: 70px">新增</th>
+                <th style="width: 70px">修改</th>
+                <th style="width: 70px">刪除</th>
+                <th style="width: 70px">匯出</th>
+            </tr>
+        </thead>
+        <tbody id="permissionBody">
+            @for (int i = 0; i < Model.Permissions.Count; i++)
+            {
+                <tr>
+                    <td class="permissionName">@Model.Permissions[i].PermissionName</td>
+
+                    <!-- 隱藏 input，確保未勾選時仍有值 -->
+                    <td>
+                        <input type="hidden" name="Permissions[@i].Read" value="false">
+                        <input type="checkbox" name="Permissions[@i].Read" value="true" @(Model.Permissions[i].Read ? "checked" : "")>
+                    </td>
+                    <td>
+                        <input type="hidden" name="Permissions[@i].Create" value="false">
+                        <input type="checkbox" name="Permissions[@i].Create" value="true" @(Model.Permissions[i].Create ? "checked" : "")>
+                    </td>
+                    <td>
+                        <input type="hidden" name="Permissions[@i].Update" value="false">
+                        <input type="checkbox" name="Permissions[@i].Update" value="true" @(Model.Permissions[i].Update ? "checked" : "")>
+                    </td>
+                    <td>
+                        <input type="hidden" name="Permissions[@i].Delete" value="false">
+                        <input type="checkbox" name="Permissions[@i].Delete" value="true" @(Model.Permissions[i].Delete ? "checked" : "")>
+                    </td>
+                    <td>
+                        <input type="hidden" name="Permissions[@i].Export" value="false">
+                        <input type="checkbox" name="Permissions[@i].Export" value="true" @(Model.Permissions[i].Export ? "checked" : "")>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+    <div class="text-end mt-3">
+        <button type="button" id="saveChanges" class="btn btn-primary">儲存變更</button>
+    </div>
+</form>
+
