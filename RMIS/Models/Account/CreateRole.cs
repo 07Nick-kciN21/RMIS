@@ -1,12 +1,12 @@
 ﻿namespace RMIS.Models.Account
 {
-    public class CreateRolePermission
+    public class CreateRole
     {
         public string RoleName { get; set; }
-        public List<PermissionDto> Permissions { get; set; }
+        public List<CreatePermission> Permissions { get; set; }
     }
 
-    public class PermissionDto
+    public class CreatePermission
     {
         public int PermissionId { get; set; } // 權限 ID
         public string PermissionName { get; set; } // 權限名稱

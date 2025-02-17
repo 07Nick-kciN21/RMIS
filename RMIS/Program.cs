@@ -64,6 +64,7 @@ builder.Services.AddDbContext<MapDBContext>(options =>
 
 // 註冊 Repository
 builder.Services.AddScoped<AdminInterface, AdminRepository>();
+builder.Services.AddScoped<AccountInterface, AccountRepository>();
 
 // ✅ 註冊 RoleManager<ApplicationRole>
 builder.Services.AddScoped<RoleManager<ApplicationRole>>();
@@ -72,26 +73,26 @@ builder.Services.AddScoped<UserManager<ApplicationUser>>();
 var app = builder.Build();
 
 // ✅ 執行 Seeders
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var _authDbContext = services.GetRequiredService<AuthDbContext>();
-    var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-    var _roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    var _authDbContext = services.GetRequiredService<AuthDbContext>();
+//    var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+//    var _roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
 
-    try
-    {
-        RoleSeeder.InitializeRoles(services).GetAwaiter().GetResult();
-        PermissionSeeder.SeedPermissions(_authDbContext).GetAwaiter().GetResult();
-        PermissionSeeder.SeedAdminUser(_authDbContext, _userManager).GetAwaiter().GetResult();
-        PermissionSeeder.SeedRolePermissions(_authDbContext, _roleManager).GetAwaiter().GetResult();
-        Console.WriteLine("Seeder 執行完成");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[錯誤] 權限初始化失敗: {ex.Message}");
-    }
-}
+//    try
+//    {
+//        RoleSeeder.InitializeRoles(services).GetAwaiter().GetResult();
+//        PermissionSeeder.SeedPermissions(_authDbContext).GetAwaiter().GetResult();
+//        PermissionSeeder.SeedAdminUser(_authDbContext, _userManager).GetAwaiter().GetResult();
+//        PermissionSeeder.SeedRolePermissions(_authDbContext, _roleManager).GetAwaiter().GetResult();
+//        Console.WriteLine("Seeder 執行完成");
+//    }
+//    catch (Exception ex)
+//    {
+//        Console.WriteLine($"[錯誤] 權限初始化失敗: {ex.Message}");
+//    }
+//}
 
 // ✅ 正確的 Middleware 執行順序
 app.UseRouting(); // 🔹 必須先執行 Routing
@@ -139,26 +140,38 @@ foreach (var path in staticFilePaths)
 app.Use(async (context, next) =>
 {
     if (!context.User.Identity.IsAuthenticated &&
-        !context.Request.Path.StartsWithSegments("/Account/Login") &&
+        !context.Request.Path.StartsWithSegments("/Portal/Login") &&
         !context.Request.Path.StartsWithSegments("/Account/Register") &&
         !context.Request.Path.StartsWithSegments("/css") &&
         !context.Request.Path.StartsWithSegments("/js") &&
         !context.Request.Path.StartsWithSegments("/images") &&
         !context.Request.Path.StartsWithSegments("/favicon.ico"))
     {
-        context.Response.Redirect("/Account/Login");
+        context.Response.Redirect("/Portal/Login");
         return;
     }
 
     await next();
 });
 
+
 // ✅ 設定路由與預設頁面
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapControllerRoute(
-        name: "default",
-        pattern: "{controller=Account}/{action=Login}/{id?}");
-});
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Portal}/{action=Login}/{id?}"
+);
+
+
+//app.UseEndpoints(endpoints =>
+//{
+//    endpoints.MapControllerRoute(
+//        name: "root",
+//        pattern: "/",
+//        defaults: new { controller = "Account", action = "Login" });
+
+//    endpoints.MapControllerRoute(
+//        name: "default",
+//        pattern: "{controller=Account}/{action=Login}/{id?}");
+//});
 
 app.Run();

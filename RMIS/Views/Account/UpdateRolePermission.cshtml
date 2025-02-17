@@ -1,11 +1,12 @@
 ﻿@model RMIS.Models.Account.UpdateRolePermission
-@*
-    For more information on enabling MVC for empty proiects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+
 @{
+    ViewData["Title"] = "角色權限管理";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
-<link rel="stylesheet" href="~/css/account/rolePermission.css" />
+
 <script src="~/js/account/updatePermission.js"></script>
+
 <h2 class="text-center">角色權限管理</h2>
 
 <form asp-action="UpdateRolePermission" method="post">
@@ -58,8 +59,6 @@
         </tbody>
 
     </table>
-    <div class="text-end mt-3">
-        <button type="button" id="saveChanges" class="btn btn-primary">儲存變更</button>
-    </div>
+    <button type="button" id="saveChanges" class="btn btn-primary">儲存變更</button>
 </form>
 

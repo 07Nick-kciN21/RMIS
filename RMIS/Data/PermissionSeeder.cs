@@ -17,6 +17,8 @@ namespace RMIS.Data
             {
                 var permissions = new[]
                 {
+                    new Permission { Name = "使用者管理"},
+
                     new Permission { Name = "業務圖資" },
                     new Permission { Name = "業務圖資-道路挖掘科" },
                     new Permission { Name = "業務圖資-道路行政科" },

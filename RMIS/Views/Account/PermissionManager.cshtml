@@ -1,0 +1,38 @@
+﻿@model RMIS.Models.Account.PermissionManagerView
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "權限管理";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<script src="~/js/account/permissionManage.js"></script>
+<h2>權限管理</h2>
+
+<form action="/Account/Permission/Create" method="post">
+    <div class="input-group mb-3">
+        <input type="text" asp-for="Name" class="form-control" placeholder="請輸入新權限名稱" required>
+        <button type="submit" class="btn btn-primary">新增權限</button>
+    </div>
+</form>
+
+<table class="table table-bordered text-center permissionTable">
+    <thead class="table-primary">
+        <tr>
+            <th>權限名稱</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var permission in Model.Permissions)
+        {
+            <tr>
+                <td>@permission.Name</td>
+                <td>
+                    <button class="btn btn-danger delete-permission" data-permission-id="@permission.Id">刪除</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

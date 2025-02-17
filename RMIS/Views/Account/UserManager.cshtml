@@ -1,0 +1,48 @@
+﻿@model RMIS.Models.Account.UserManagerView;
+@{
+    ViewData["Title"] = "使用者管理";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+<style>
+    .d-none{
+        display: none;
+    }
+</style>
+<script>
+    var allRoles = @Html.Raw(Json.Serialize(Model.Roles));
+    var allUsers = @Html.Raw(Json.Serialize(Model.Users));
+    var allDepartments = @Html.Raw(Json.Serialize(Model.Departments));
+</script>
+<script src="~/js/account/userManager.js"></script>
+
+<div style="display: flex;">
+    <select id="departmentSelector" class="form-select">
+        <option value="0">全部</option>
+        @for (int i = 0; i < Model.Departments.Count; i++)
+        {
+            <option value="@Model.Departments[i].Id">@Model.Departments[i].Name</option>
+        }
+    </select>
+    <button>刪除</button>
+    <button>編輯</button>
+    <button>新增</button>
+</div>
+
+<table class="table table-bordered text-center permissionTable">
+    <thead class="table-primary">
+        <tr>
+            <th style="width: 50px;"></th>
+            <th style="width: 200px; max-width: 200px;">部門</th>
+            <th style="width: 200px; max-width: 200px;">使用者名稱</th>
+            <th style="width: 200px; max-width: 200px;">身分</th>
+            <th style="width: 100px; max-width: 100px;">狀態</th>
+            <th style="width: 200px; max-width: 200px;">創建日期</th>
+            <th style="width: 200px; max-width: 200px;">操作</th>
+        </tr>
+    </thead>
+    <tbody id="userTable">
+        
+        
+    </tbody>
+</table>
+

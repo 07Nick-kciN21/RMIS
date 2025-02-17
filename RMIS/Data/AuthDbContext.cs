@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RMIS.Models.Auth;
 using System.Reflection.Emit;
 
-public class AuthDbContext : IdentityDbContext<ApplicationUser>
+public class AuthDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
 {
     public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
     {
@@ -13,7 +13,7 @@ public class AuthDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
-
+    public DbSet<Department> Departments { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

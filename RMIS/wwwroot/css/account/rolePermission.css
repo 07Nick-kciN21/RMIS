@@ -1,3 +1,19 @@
+.enable{
+    border: 1px solid #32cd32;
+    border-radius: 3px;
+    color: #32cd32;
+    width: 70%;
+    margin: auto;
+}
+
+.stop{
+    border: 1px solid #ff0000;
+    border-radius: 3px;
+    color: #ff0000;
+    width: 70%;
+    margin: auto;
+}
+
 .merged-cell {
     border-bottom: none !important; /* 移除下方邊框 */
     border-right: 1px solid #dee2e6 !important; /* 保持右邊框 */
@@ -11,14 +27,26 @@
 .permissionTable{
     font-size: 20px;
     margin: auto;
-    width: 70%;
+    width: 100%;
 }
 
+.permissionTable tbody{
+    vertical-align: middle;
+}
 .permissionName{
     font-weight: bold;
 }
 
+.edit{
+    width: 100%;
+    justify-items: center;
+}
+
 #roleSelector{
     margin: auto;
-    width: 70%;
+    width: 40%;
+}
+
+#departmentSelector{
+    width: 30%;
 }

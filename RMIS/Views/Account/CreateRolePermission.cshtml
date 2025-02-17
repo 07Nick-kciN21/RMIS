@@ -1,10 +1,14 @@
-﻿@model RMIS.Models.Account.CreateRolePermission
+﻿@model RMIS.Models.Account.CreateRole
 
-<link rel="stylesheet" href="~/css/account/rolePermission.css" />
+@{
+    ViewData["Title"] = "新增角色與權限";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
 
-<h2>新增角色與權限</h2>
 
-<form asp-action="CreateRolePermission" method="post">
+<h2>新增角色權限</h2>
+
+<form asp-action="CreateRole" method="post">
     <div class="mb-3">
         <label asp-for="RoleName" class="form-label">角色名稱</label>
         <input type="text" asp-for="RoleName" class="form-control" required>

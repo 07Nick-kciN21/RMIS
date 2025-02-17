@@ -4,103 +4,60 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Models.Account;
 using RMIS.Models.Auth;
+using RMIS.Repositories;
 using System.Data;
 using System.Security;
 
 namespace RMIS.Controllers
 {
-
     public class AccountController : Controller
     {
+        private readonly AccountInterface _accountInterface;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AuthDbContext _authDbContext;
 
-        public AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext)
+        public AccountController(AccountInterface accountInterface, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext)
         {
+            _accountInterface = accountInterface;
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
             _authDbContext = authDbContext;
         }
 
-        [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
-        {
-            Console.WriteLine("Login");
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == model.UserName);
-            if (user == null)
-            {
-                ModelState.AddModelError(string.Empty, "無效的登入嘗試");
-                return View(model);
-            }
-
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
-
-            if (result.Succeeded)
-            {
-                return RedirectToLocal(returnUrl);
-            }
-            else
-            {
-                ModelState.AddModelError(string.Empty, "登入失敗，請檢查您的帳號和密碼");
-                return View(model);
-            }
-        }
-
-        [HttpGet]
+        [HttpGet("[controller]/Register")]
         public IActionResult Register()
         {
             return View();
         }
-        [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+
+        [HttpPost("[controller]/Register")]
+        public async Task<IActionResult> Register(RegisterUser user)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return View(user);
 
-            var user = new ApplicationUser
+            var createUser = new CreateUser
             {
-                UserName = model.Username,
-                Email = model.Email,
-                EmailConfirmed = true // ✅ 預設 Email 已確認
+                Name = user.Username,
+                Password = user.Password,
+                Email = user.Email,
+                Phone = user.Phone
             };
+            var result = await _accountInterface.CreateUserAsync(createUser);
 
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
+            if (result.Success)
             {
-                await _userManager.AddToRoleAsync(user, "User");
-                await _authDbContext.SaveChangesAsync();
-                // ✅ 註冊後自動登入
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "Home"); // ✅ 註冊成功跳轉首頁
+                return RedirectToAction("Login", "Portal"); // ✅ 註冊成功跳轉首頁
             }
-
-            // ❌ 註冊失敗顯示錯誤訊息
-            foreach (var error in result.Errors)
+            else
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                // ✅ 透過 ViewData 讓錯誤訊息顯示在 `Register` View
+                ViewData["ErrorMessage"] = result.Message;
+                return View(user);
             }
-
-            return View(model);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Logout()
-        {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
         }
 
         private IActionResult RedirectToLocal(string returnUrl)
@@ -111,63 +68,30 @@ namespace RMIS.Controllers
                 return RedirectToAction("Index", "Home");
         }
 
+        // 身分更新
         [Authorize(Roles = "Admin")]
-        [HttpGet]
+        [HttpGet("[controller]/RolePermission/Update")]
         public async Task<IActionResult> UpdateRolePermission()
         {
-            var roles = await _authDbContext.Roles.Select(r => r.Name).ToListAsync();
-            var adminRole = await _authDbContext.Roles.Where(r => r.Name == "Admin").FirstAsync();
-            var updateRole = new UpdateRolePermission
-            {
-                Roles = roles,
-                RoleId = adminRole.Id,
-                RoleName = adminRole.Name,
-                Permissions = await _authDbContext.RolePermissions
-                        .Where(rp => rp.RoleId == adminRole.Id)
-                        .Select(rp => new Permissions
-                        {
-                            PermissionName = rp.Permission.Name,
-                            Read = rp.Read,
-                            Create = rp.Create,
-                            Update = rp.Update,
-                            Delete = rp.Delete,
-                            Export = rp.Export
-                        })
-                        .ToListAsync()
-            };
+            var updateRole = await _accountInterface.GetUpdateRolePermissionsAsync();
+
             return View(updateRole);
         }
 
-        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        [HttpPost("[controller]/RolePermission/Update")]
         public async Task<IActionResult> UpdateRolePermission([FromForm] UpdateRolePermission updateRoles)
         {
             if(updateRoles == null)
             {
                 Console.WriteLine("updateRoles is null");
             }
-            var rolePermissions = await _authDbContext.RolePermissions
-                .Where(rp => rp.RoleId == updateRoles.RoleId)
-                .Include(rp => rp.Permission)
-                .ToListAsync();
-            foreach(var permission in updateRoles.Permissions)
-            {
-                var existingPermission = rolePermissions.FirstOrDefault(rp => rp.Permission.Name == permission.PermissionName);
-                if (existingPermission != null)
-                {
-                    existingPermission.Read = permission.Read;
-                    existingPermission.Create = permission.Create;
-                    existingPermission.Update = permission.Update;
-                    existingPermission.Delete = permission.Delete;
-                    existingPermission.Export = permission.Export;
-                }
-            }
-
-            var roweffected = await _authDbContext.SaveChangesAsync();
+            await _accountInterface.UpdateRolePermissionsAsync(updateRoles);
 
             return Ok();
         }
 
-        [HttpGet]
+        [HttpGet("[controller]/RolePermissions/Get")]
         public async Task<IActionResult> GetRolePermissions(string roleName)
         {
             var role = await _authDbContext.Roles.Where(r => r.Name == roleName).FirstOrDefaultAsync();
@@ -178,7 +102,7 @@ namespace RMIS.Controllers
 
             var rolePermissions = await _authDbContext.RolePermissions
                 .Where(rp => rp.RoleId == role.Id)
-                .Select(rp => new Permissions
+                .Select(rp => new GetRolePermission
                 {
                     PermissionName = rp.Permission.Name,
                     Read = rp.Read,
@@ -193,11 +117,11 @@ namespace RMIS.Controllers
         }
 
 
-        [HttpGet]
+        [HttpGet("[controller]/RolePermission/Create")]
         public async Task<IActionResult> CreateRolePermission()
         {
             var permissions = await _authDbContext.Permissions
-                .Select(p => new PermissionDto
+                .Select(p => new CreatePermission
                 {
                     PermissionId = p.Id,
                     PermissionName = p.Name,
@@ -209,7 +133,7 @@ namespace RMIS.Controllers
                 })
                 .ToListAsync();
 
-                var model = new CreateRolePermission
+                var model = new CreateRole
                 {
                     Permissions = permissions
                 };
@@ -217,8 +141,8 @@ namespace RMIS.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateRolePermission(CreateRolePermission model)
+        [HttpPost("[controller]/RolePermission/Create")]
+        public async Task<IActionResult> CreateRolePermission(CreateRole model)
         {
 
             if (string.IsNullOrWhiteSpace(model.RoleName))
@@ -266,5 +190,157 @@ namespace RMIS.Controllers
 
             return RedirectToAction("Account", "UpdateRolePermission");
         }
+
+        [HttpGet("[controller]/User/List")]
+        public async Task<IActionResult> UserManager()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+            
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+
+            var users = await _authDbContext.Users
+                .OrderBy(u => u.Order)
+                .Select(u => new User
+                {
+                    Id = u.Id,
+                    DepartmentId = u.DepartmentId,
+                    Department = u.Department.Name,
+                    Name = u.UserName,
+                    Role = _userManager.GetRolesAsync(u).Result.First(),
+                    Status = u.Status,
+                    CreateAt = u.CreatedAt
+                }
+                ).ToListAsync();
+
+            var departments = await _authDbContext.Departments
+                .OrderBy(u => u.Order)
+                .Select(d => new UserDepartment
+                {
+                    Id = d.Id,
+                    Name = d.Name
+                }
+            ).ToListAsync();
+
+            var roles = await _authDbContext.Roles
+                .OrderBy(r => r.Order)
+                .Select(r =>
+                new UserRole
+                {
+                    Id = r.Id,
+                    Name = r.Name
+                }
+            ).ToListAsync();
+            // 建立 UserManagerView 物件
+            var userManagerView = new UserManagerView
+            {
+                Users = users,
+                Roles = roles,
+                Departments = departments
+            };
+            return View(userManagerView);
+        }
+
+        [HttpPost("[controller]/User/Update")]
+        public async Task<IActionResult> UserUpdate([FromForm] UpdateUser updateUser)
+        {
+            var updated = await _accountInterface.UpdateUserAsync(updateUser);
+            if (updated)
+            {
+                return Ok(new {success = true});
+            }
+            else
+            {
+                return Ok(new { success = false });
+            }
+        }
+
+        [HttpPost("[controller]/User/Delete")]
+        public async Task<IActionResult> DeleteUser(string UserId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser.Id == UserId)
+            {
+                return Json(new { success = false, message = "無法刪除自己" });
+            }
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Delete)
+            {
+                return Json(new { success = false, message = "無權限刪除使用者" });
+            }
+
+            var result = await _accountInterface.DeleteUserAsync(UserId);
+
+            if (result)
+            {
+                Console.WriteLine($"刪除{UserId}成功");
+                return Json(new { success = true });
+            }
+            else
+            {
+                return Json(new { success = false, message = "刪除使用者失敗" });
+            }
+        }
+
+        [HttpPost("[controller]/User/GetUsersByDepartment")]
+        public async Task<IActionResult> GetUsersByDepartment([FromForm] int departmentId)
+        {
+            var departmentUsers = await _accountInterface.GetDepartmentUser(departmentId);
+            return Ok(new {success = true, users = departmentUsers});
+        }
+
+        [HttpPost("[controller]/User/GetUsers")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var departmentUsers = await _accountInterface.GetAllUser();
+            return Ok(new { success = true, users = departmentUsers });
+        }
+
+        [HttpGet("[controller]/Permission/List")]
+        public async Task<IActionResult> PermissionManager()
+        {
+            var permissions = await _authDbContext.Permissions.ToListAsync();
+            var permissionManager = new PermissionManagerView
+            {
+                Permissions = permissions
+            };
+
+            return View(permissionManager);
+        }
+
+        [HttpPost("[controller]/Permission/Create")]
+        public async Task<IActionResult> CreatePermission(NewPermission newPermission)
+        {
+            if (string.IsNullOrWhiteSpace(newPermission.Name))
+            {
+                ModelState.AddModelError("NewPermissionName", "權限名稱不能為空");
+                return View(newPermission);
+            }
+
+            var Created = await _accountInterface.CreatePermissionAsync(newPermission);
+
+
+            return RedirectToAction("PermissionManager");
+        }
+
+        [HttpPost("[controller]/Permission/Delete")]
+        public async Task<IActionResult> DeletePermission([FromForm] int permissionId)
+        {
+            var Deleted = await _accountInterface.DeletePermissionAsync(permissionId);
+            return Ok(new {success = true});
+        }
+
+        // 無權限時
+        public IActionResult AccessDenied(string returnUrl = null)
+        {
+            return RedirectToAction("Login", "Portal", new { returnUrl });
+        }
     }
+
 }

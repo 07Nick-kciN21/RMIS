@@ -2,7 +2,7 @@
 
 namespace RMIS.Models.Account
 {
-    public class LoginViewModel
+    public class LoginView
     {
         [Required]
         public string UserName { get; set; }

@@ -8,7 +8,7 @@ $(document).ready(function () {
     $('#roleSelector').on('change', function () {
         let selectedRole = $(this).val();
         $.ajax({
-            url: '/Account/GetRolePermissions',
+            url: '/Account/RolePermissions/Get',
             type: 'GET',
             data: { roleName: selectedRole },
             xhrFields: {
@@ -81,7 +81,7 @@ $(document).ready(function () {
         });
 
         $.ajax({
-            url: '/Account/UpdateRolePermission',
+            url: '/Account/RolePermission/Update',
             type: 'POST',
             processData: false,
             contentType: false,

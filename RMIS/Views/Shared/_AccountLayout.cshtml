@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/account/rolePermission.css" />
+
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+
+        <title>
+            @ViewData["Title"]
+        </title>
+
+    </head>
+    <body>
+        <div style="display:flex">
+            <div>
+                <ul>
+                    <li>
+                        <a class="nav-link menu-title" href="/Account/RolePermission/Update">
+                            <h4>身分管理</h4>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link menu-title" href="/Account/RolePermission/Create">
+                            <h4>身分新增</h4>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link menu-title" href="/Account/Permission/List">
+                            <h4>權限管理</h4>
+                        </a>
+                    </li>
+                    @* <li>
+                        <a class="nav-link menu-title" href="/Account/Permission/Create">
+                            <h4>權限新增</h4>
+                        </a>
+                    </li> *@
+                    <li>
+                        <a class="nav-link menu-title" href="/Account/User/List">
+                            <h4>使用者列表</h4>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div style="display:block; width:100%">
+                @RenderBody()
+            </div>
+        </div>
+    </body>
+</html>
