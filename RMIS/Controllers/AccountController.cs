@@ -194,60 +194,30 @@ namespace RMIS.Controllers
         [HttpGet("[controller]/User/List")]
         public async Task<IActionResult> UserManager()
         {
+            return View();
+        }
+
+        [HttpPost("[controller]/User/Get/ManagerData")]
+        public async Task<IActionResult> GetUserManagerData()
+        {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
-            
+
             if (!currentUserPermission.Read)
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
 
-            var users = await _authDbContext.Users
-                .OrderBy(u => u.Order)
-                .Select(u => new User
-                {
-                    Id = u.Id,
-                    DepartmentId = u.DepartmentId,
-                    Department = u.Department.Name,
-                    Name = u.UserName,
-                    Role = _userManager.GetRolesAsync(u).Result.First(),
-                    Status = u.Status,
-                    CreateAt = u.CreatedAt
-                }
-                ).ToListAsync();
-
-            var departments = await _authDbContext.Departments
-                .OrderBy(u => u.Order)
-                .Select(d => new UserDepartment
-                {
-                    Id = d.Id,
-                    Name = d.Name
-                }
-            ).ToListAsync();
-
-            var roles = await _authDbContext.Roles
-                .OrderBy(r => r.Order)
-                .Select(r =>
-                new UserRole
-                {
-                    Id = r.Id,
-                    Name = r.Name
-                }
-            ).ToListAsync();
-            // 建立 UserManagerView 物件
-            var userManagerView = new UserManagerView
-            {
-                Users = users,
-                Roles = roles,
-                Departments = departments
-            };
-            return View(userManagerView);
+            
+            var UserManagerData = await _accountInterface.GetUserManagerDataAsync();
+            return Ok(new { Success = true, UserManager = UserManagerData });
         }
 
         [HttpPost("[controller]/User/Update")]
         public async Task<IActionResult> UserUpdate([FromForm] UpdateUser updateUser)
         {
+            Console.WriteLine("UserUpdate");
             var updated = await _accountInterface.UpdateUserAsync(updateUser);
             if (updated)
             {
@@ -274,7 +244,7 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限刪除使用者" });
             }
-
+            Console.WriteLine("DeleteUser");
             var result = await _accountInterface.DeleteUserAsync(UserId);
 
             if (result)
@@ -286,13 +256,6 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "刪除使用者失敗" });
             }
-        }
-
-        [HttpPost("[controller]/User/GetUsersByDepartment")]
-        public async Task<IActionResult> GetUsersByDepartment([FromForm] int departmentId)
-        {
-            var departmentUsers = await _accountInterface.GetDepartmentUser(departmentId);
-            return Ok(new {success = true, users = departmentUsers});
         }
 
         [HttpPost("[controller]/User/GetUsers")]
@@ -334,6 +297,67 @@ namespace RMIS.Controllers
         {
             var Deleted = await _accountInterface.DeletePermissionAsync(permissionId);
             return Ok(new {success = true});
+        }
+
+        [HttpGet("[controller]/Department/List")]
+        public IActionResult DepartmentManage()
+        {
+            return View();
+        }
+
+        [HttpPost("[controller]/Department/Get/ManagerData")]
+        public async Task<IActionResult> GetDepartmentManagerData()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+
+            var DepartmentManagerData = await _accountInterface.GetDepartmentManagerDataAsync();
+            return Ok(new { Success = true, DepartmentManager = DepartmentManagerData });
+        }
+        [HttpPost("[controller]/Department/Update")]
+        public async Task<IActionResult> DepartmentUpdate([FromForm] UpdateDepartment updateDepartment)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限修改" });
+            }
+
+            Console.WriteLine("DepartmentUpdate");
+            var updated = await _accountInterface.UpdateDepartmentAsync(updateDepartment);
+            if (updated)
+            {
+                return Ok(new { success = true });
+            }
+            else
+            {
+                return Ok(new { success = false });
+            }
+        }
+        [HttpPost("[controller]/Department/Delete")]
+        public async Task<IActionResult> DepartmentDelete(int departmentId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Delete)
+            {
+                return Json(new { success = false, message = "無權限刪除" });
+            }
+
+            var result = await _accountInterface.DeleteDepartmentAsync(departmentId);
+
+            return Ok(new { result.Success, result.Message });
         }
 
         // 無權限時

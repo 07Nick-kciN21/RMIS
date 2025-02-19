@@ -76,7 +76,7 @@ namespace RMIS.Repositories
             {
                 return false;
             }
-
+            Console.WriteLine("DeleteUserAsync");
             var roles = await _userManager.GetRolesAsync(user);
             if (roles.Any())
             {
@@ -100,9 +100,12 @@ namespace RMIS.Repositories
 
                 // 修改使用者資料
                 user.UserName = updateUser.UserName;
+                user.NormalizedUserName = updateUser.UserName.ToUpper();
                 user.DepartmentId = updateUser.DepartmentId; // 確保 User 類別有 `DepartmentId`
                 user.Status = updateUser.Status; // 確保 User 類別有 `Status` 欄位
-
+                user.PhoneNumber = updateUser.Phone;
+                user.Email = updateUser.Email;
+                user.NormalizedEmail = updateUser.Email?.ToUpper();
                 var result = await _userManager.UpdateAsync(user);
                 return result.Succeeded;
             }
@@ -111,7 +114,6 @@ namespace RMIS.Repositories
                 Console.WriteLine(ex);
                 return false;
             }
-            return false;
         }
 
         public async Task<(bool Success, string Message)> CreateUserAsync(CreateUser createUser)
@@ -224,24 +226,6 @@ namespace RMIS.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<List<DepartmentUser>> GetDepartmentUser(int departmentId)
-        {
-            var users = await _authDbContext.Users
-                .Where(u => u.DepartmentId == departmentId)
-                .OrderBy(u => u.Order)
-                .Select(u => new DepartmentUser
-                    {
-                        Id = u.Id,
-                        Department = u.Department.Name,
-                        Name = u.UserName,
-                        Role = _userManager.GetRolesAsync(u).Result.First(),
-                        Status = u.Status,
-                        CreateAt = u.CreatedAt
-                    }
-                ).ToListAsync();
-            return users;
-        }
-
         public async Task<List<DepartmentUser>> GetAllUser()
         {
             var users = await _authDbContext.Users
@@ -258,6 +242,120 @@ namespace RMIS.Repositories
                 }
                 ).ToListAsync();
             return users;
+        }
+
+        public async Task<UserManager> GetUserManagerDataAsync()
+        {
+            var users = await _authDbContext.Users
+                .OrderBy(u => u.Order)
+                .Select(u => new UserData
+                {
+                    Id = u.Id,
+                    DepartmentId = u.DepartmentId,
+                    Department = u.Department.Name,
+                    Name = u.UserName,
+                    Email = u.Email,
+                    Phone = u.PhoneNumber,
+                    RoleId = _authDbContext.UserRoles
+                                .Where(ur => ur.UserId == u.Id)
+                                .Select(ur => ur.RoleId)
+                                .First(),
+                    Role = _userManager.GetRolesAsync(u).Result.First(),
+                    Status = u.Status,
+                    CreateAt = u.CreatedAt
+                }).ToListAsync();
+
+            var departments = await _authDbContext.Departments
+                .OrderBy(u => u.Order)
+                .Select(d => new UserDepartment
+                {
+                    Id = d.Id,
+                    Name = d.Name
+                }
+            ).ToListAsync();
+
+            var roles = await _authDbContext.Roles
+                .OrderBy(r => r.Order)
+                .Select(r =>
+                new UserRole
+                {
+                    Id = r.Id,
+                    Name = r.Name
+                }
+            ).ToListAsync();
+            // 建立 UserManagerView 物件
+            var UserManagerData = new UserManager
+            {
+                Users = users,
+                Roles = roles,
+                Departments = departments
+            };
+
+            return UserManagerData;
+        }
+
+        public async Task<DepartmentManager> GetDepartmentManagerDataAsync()
+        {
+            var departments = await _authDbContext.Departments
+                .OrderBy(d => d.Order)
+                .Select(d => new DepartmentData
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    Status = d.Status,
+                    CreateAt = d.CreatedAt
+                }).ToListAsync();
+            var DepartmentManagerData = new DepartmentManager
+            {
+                Departments = departments
+            };
+            return DepartmentManagerData;
+        }
+
+        public async Task<bool> UpdateDepartmentAsync(UpdateDepartment updateDepartment)
+        {
+            try
+            {
+                var department = await _authDbContext.Departments.FindAsync(updateDepartment.Id);
+
+                // 修改使用者資料
+                department.Name = updateDepartment.Name;
+                department.Status = updateDepartment.Status; // 確保 User 類別有 `Status` 欄位
+                _authDbContext.Departments.Update(department);
+                int changes = await _authDbContext.SaveChangesAsync(); // 🚀 儲存變更
+
+                return changes > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return false;
+            }
+        }
+
+        public async Task<(bool Success, string Message)> DeleteDepartmentAsync(int departmentId)
+        {
+            try
+            {
+                var department = await _authDbContext.Departments.Include(d => d.Users).FirstAsync(d => d.Id == departmentId);
+                if(department == null)
+                {
+                    return (false, "該部門不存在");
+                }
+                var c = department.Users.Count;
+                if (department.Users.Count > 0)
+                {
+                    return (false, "無法刪除部門，請先移除或轉移所有關聯的使用者");
+                }
+                _authDbContext.Departments.Remove(department);
+                await _authDbContext.SaveChangesAsync();
+                return (true, "部門刪除成功");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return (false, $"刪除失敗{ex}");
+            }
         }
     }
 }

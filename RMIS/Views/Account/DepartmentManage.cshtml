@@ -3,12 +3,12 @@
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 <style>
-    .d-none{
+    .d-none {
         display: none;
     }
 </style>
 
-<script src="~/js/account/userManager.js"></script>
+<script src="~/js/account/departmentManager.js"></script>
 
 <div style="display: flex;">
     <select id="departmentSelector" class="form-select">
@@ -22,17 +22,12 @@
     <thead class="table-primary">
         <tr>
             <th style="width: 50px;"></th>
-            <th style="width: 200px; max-width: 200px;">部門</th>
-            <th style="width: 200px; max-width: 200px;">使用者名稱</th>
-            <th style="width: 200px; max-width: 200px;">身分</th>
+            <th style="width: 200px; max-width: 200px;">部門名稱</th>
             <th style="width: 100px; max-width: 100px;">狀態</th>
-            <th style="width: 200px; max-width: 200px;">信箱</th>
-            <th style="width: 200px; max-width: 200px;">電話</th>
             <th style="width: 200px; max-width: 200px;">創建日期</th>
             <th style="width: 150px; max-width: 150px;">操作</th>
         </tr>
     </thead>
-    <tbody id="userTable">
+    <tbody id="departmentTable">
     </tbody>
 </table>
-

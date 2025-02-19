@@ -42,6 +42,10 @@
     justify-items: center;
 }
 
+.action-cell button{
+    width: 50%;
+}
+
 #roleSelector{
     margin: auto;
     width: 40%;
