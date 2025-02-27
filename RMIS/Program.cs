@@ -55,6 +55,16 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 .AddEntityFrameworkStores<AuthDbContext>() // ✅ 讓 `UserManager<ApplicationUser>` 和 `RoleManager<ApplicationRole>` 使用 `EF Core`
 .AddDefaultTokenProviders();
 
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequireDigit = false; // 不要求數字
+    options.Password.RequireLowercase = false; // 不要求小寫字母
+    options.Password.RequireUppercase = false; // 不要求大寫字母
+    options.Password.RequireNonAlphanumeric = false; // **不要求特殊字元**
+    options.Password.RequiredLength = 6; // 最低密碼長度
+    options.Password.RequiredUniqueChars = 0; // 不要求最少不同字元數
+});
+
 // 註冊 Controllers
 builder.Services.AddControllersWithViews();
 
@@ -72,27 +82,6 @@ builder.Services.AddScoped<UserManager<ApplicationUser>>();
 
 var app = builder.Build();
 
-// ✅ 執行 Seeders
-//using (var scope = app.Services.CreateScope())
-//{
-//    var services = scope.ServiceProvider;
-//    var _authDbContext = services.GetRequiredService<AuthDbContext>();
-//    var _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-//    var _roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
-
-//    try
-//    {
-//        RoleSeeder.InitializeRoles(services).GetAwaiter().GetResult();
-//        PermissionSeeder.SeedPermissions(_authDbContext).GetAwaiter().GetResult();
-//        PermissionSeeder.SeedAdminUser(_authDbContext, _userManager).GetAwaiter().GetResult();
-//        PermissionSeeder.SeedRolePermissions(_authDbContext, _roleManager).GetAwaiter().GetResult();
-//        Console.WriteLine("Seeder 執行完成");
-//    }
-//    catch (Exception ex)
-//    {
-//        Console.WriteLine($"[錯誤] 權限初始化失敗: {ex.Message}");
-//    }
-//}
 
 // ✅ 正確的 Middleware 執行順序
 app.UseRouting(); // 🔹 必須先執行 Routing
@@ -141,7 +130,7 @@ app.Use(async (context, next) =>
 {
     if (!context.User.Identity.IsAuthenticated &&
         !context.Request.Path.StartsWithSegments("/Portal/Login") &&
-        !context.Request.Path.StartsWithSegments("/Account/Register") &&
+        !context.Request.Path.StartsWithSegments("/Portal/Register") &&
         !context.Request.Path.StartsWithSegments("/css") &&
         !context.Request.Path.StartsWithSegments("/js") &&
         !context.Request.Path.StartsWithSegments("/images") &&

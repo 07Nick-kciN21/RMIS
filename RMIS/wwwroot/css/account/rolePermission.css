@@ -1,4 +1,8 @@
-.enable{
+.d-none {
+    display: none;
+}
+
+.enable {
     border: 1px solid #32cd32;
     border-radius: 3px;
     color: #32cd32;
@@ -46,11 +50,6 @@
     width: 50%;
 }
 
-#roleSelector{
-    margin: auto;
-    width: 40%;
-}
-
-#departmentSelector{
+.selector{
     width: 30%;
 }

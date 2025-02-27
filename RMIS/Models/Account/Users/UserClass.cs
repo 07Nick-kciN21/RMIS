@@ -1,9 +1,20 @@
-﻿namespace RMIS.Models.Account
+﻿namespace RMIS.Models.Account.Users
 {
+    public class UpdateUser
+    {
+        public string UserId { get; set; }
+        public string UserName { get; set; }
+        public string RoleId { get; set; }
+        public int DepartmentId { get; set; }
+        public bool Status { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+    }
+
     public class UserManager
     {
         public List<UserData> Users { get; set; }
-        public List<UserRole> Roles { get; set; } 
+        public List<UserRole> Roles { get; set; }
         public List<UserDepartment> Departments { get; set; }
     }
     public class UserData

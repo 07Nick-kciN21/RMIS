@@ -9,7 +9,6 @@ using RMIS.Models.API;
 
 namespace RMIS.Controllers
 {
-    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class AdminAPIController : ControllerBase

@@ -1,4 +1,4 @@
-﻿namespace RMIS.Models.Account
+﻿namespace RMIS.Models.Portal
 {
     public class CreateRole
     {

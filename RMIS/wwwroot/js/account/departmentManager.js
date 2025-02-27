@@ -140,7 +140,6 @@ function updateDepartmentTable(departments){
 
     departments.forEach(function(department){
         var row = $("<tr></tr>").attr("data-department-id", department.id);
-        row.append(`<td><input type="checkbox"/></td>`);
         row.append($(`<td class="name-cell">
                         <span class="read">${department.name}</span>
                         <input class="edit d-none form-control name" type="text" value="${department.name}">
@@ -159,7 +158,7 @@ function updateDepartmentTable(departments){
         row.append(`<td>${createAtDate} ${createAtTime}</td>`);
         // 建立按鈕
         var actionTd = $("<td class='action-cell'></td>");
-        var editButton = $('<button class="btn btn-primary edit-department read">修改</button>');
+        var editButton = $('<button class="btn btn-primary edit-department read">編輯</button>');
         var saveButton = $('<button class="btn btn-success save-department edit d-none">儲存</button>');
         var deleteButton = $(`<button class="btn btn-danger delete-department read">刪除</button>`);
         var cancelButton = $(`<button class="btn btn-secondary cancel-department edit d-none">取消</button>`);

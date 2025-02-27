@@ -1,13 +1,14 @@
 ﻿using RMIS.Models.Auth;
 using System.ComponentModel.DataAnnotations;
 
-namespace RMIS.Models.Account
+namespace RMIS.Models.Portal
 {
     public class RegisterUser
     {
-        [Required(ErrorMessage = "帳號是必填欄位")]
-        [StringLength(20, MinimumLength = 6, ErrorMessage = "帳號長度不合規定(6~20)")]
-        public string Username { get; set; }
+        [Required(ErrorMessage = "使用者名稱是必填欄位")]
+        [StringLength(20, MinimumLength = 2, ErrorMessage = "使用者名稱長度不合規定(2~20)")]
+        [RegularExpression(@"^[\u4e00-\u9fa5a-zA-Z0-9_]+$", ErrorMessage = "只能包含中文、英文、數字及底線")]
+        public string DisplayName { get; set; }
 
         [Required(ErrorMessage = "帳號是必填欄位")]
         [StringLength(20, MinimumLength = 6, ErrorMessage = "帳號長度不合規定(6~20)")]
@@ -15,7 +16,6 @@ namespace RMIS.Models.Account
         public string Account { get; set; }
 
         [Required(ErrorMessage = "密碼是必填欄位")]
-        [DataType(DataType.Password)]
         [StringLength(20, MinimumLength = 6, ErrorMessage = "密碼長度不合規定(6~20)")]
         [RegularExpression(@"^[a-zA-Z0-9_]+$", ErrorMessage = "使用者名稱只能包含英文字母、數字和底線")]
         public string Password { get; set; }

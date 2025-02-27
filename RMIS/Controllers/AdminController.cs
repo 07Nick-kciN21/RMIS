@@ -15,7 +15,10 @@ using System.Text.RegularExpressions;
 
 namespace RMIS.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    /// <summary>
+    /// 新增圖資、道路、類別、專案等資料
+    /// </summary>
+    /// <returns></returns>
     public class AdminController : Controller
     {
         private readonly AdminInterface _adminInterface;

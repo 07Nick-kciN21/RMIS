@@ -73,11 +73,25 @@ export function generateMenu(data, parent_name, index) {
 
 export function bindMenuEvents() {
     $(document).ready(function () {
-        var targetId = $('#imageDataBtn').data('target');
-        var targetElement = $(`#${targetId}`);
-        observeDisplayChanges($('#imageDataBtn'), targetElement);
+        function initializeObserver(buttonId) {
+            var button = $(`#${buttonId}`);
+            var targetId = button.data('target');
+            var targetElement = $(`#${targetId}`);
+            
+            console.log(targetId);
+            observeDisplayChanges(button, targetElement);
+        }
+    
+        // 呼叫函數處理不同按鈕
+        ['imageDataBtn', 'userMenuBtn'].forEach(initializeObserver);
     });
     $('#imageDataBtn').click(function (e) {
+        e.stopPropagation();
+        var targetId = $(this).data('target');
+        $(`#${targetId}`).toggle();
+        updateOpenState($(this), $(`#${targetId}`));
+    });
+    $('#userMenuBtn').click(function (e) {
         e.stopPropagation();
         var targetId = $(this).data('target');
         $(`#${targetId}`).toggle();

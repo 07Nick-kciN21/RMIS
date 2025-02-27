@@ -1,8 +1,12 @@
 ﻿
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using RMIS.Models.Account;
+using RMIS.Models.Account.Departments;
+using RMIS.Models.Account.Permissions;
+using RMIS.Models.Account.Roles;
+using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
+using RMIS.Models.Portal;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RMIS.Repositories
@@ -122,7 +126,8 @@ namespace RMIS.Repositories
             {
                 var user = new ApplicationUser
                 {
-                    UserName = createUser.Name,
+                    DisplayName = createUser.DisplayName,
+                    UserName = createUser.Account,
                     PhoneNumber = createUser.Phone,
                     Email = createUser.Email,
                     EmailConfirmed = true, // ✅ 預設 Email 已確認
@@ -152,62 +157,27 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<UpdateRolePermission> GetUpdateRolePermissionsAsync()
+        public async Task<ReadRolePermission> GetRolePermissionsAsync(string id)
         {
-            var roles = await _authDbContext.Roles.Select(r => r.Name).ToListAsync();
-            var adminRole = await _authDbContext.Roles.Where(r => r.Name == "Admin").FirstAsync();
-            var updateRole = new UpdateRolePermission
+            var role = await _authDbContext.Roles.FindAsync(id);
+            var updatePermission = _authDbContext.RolePermissions
+                                .Where(rp => rp.RoleId == id)
+                                .Select(rp => new ReadPermission
+                                {
+                                    PermissionName = rp.Permission.Name,
+                                    Create = rp.Create,
+                                    Read = rp.Read,
+                                    Delete = rp.Delete,
+                                    Update = rp.Update,
+                                    Export = rp.Export
+                                }).ToList();
+            var updateRole = new ReadRolePermission
             {
-                Roles = roles,
-                RoleId = adminRole.Id,
-                RoleName = adminRole.Name,
-                Permissions = await _authDbContext.RolePermissions
-                        .Where(rp => rp.RoleId == adminRole.Id)
-                        .Select(rp => new UpsatePermission
-                        {
-                            PermissionName = rp.Permission.Name,
-                            Read = rp.Read,
-                            Create = rp.Create,
-                            Update = rp.Update,
-                            Delete = rp.Delete,
-                            Export = rp.Export
-                        })
-                        .ToListAsync()
+                RoleName = role.Name,
+                Permissions = updatePermission
             };
             return updateRole;
         }
-
-        public async Task<bool> UpdateRolePermissionsAsync(UpdateRolePermission updateRoles)
-        {
-            try
-            {
-                var rolePermissions = await _authDbContext.RolePermissions
-                .Where(rp => rp.RoleId == updateRoles.RoleId)
-                .Include(rp => rp.Permission)
-                .ToListAsync();
-                foreach (var permission in updateRoles.Permissions)
-                {
-                    var existingPermission = rolePermissions.FirstOrDefault(rp => rp.Permission.Name == permission.PermissionName);
-                    if (existingPermission != null)
-                    {
-                        existingPermission.Read = permission.Read;
-                        existingPermission.Create = permission.Create;
-                        existingPermission.Update = permission.Update;
-                        existingPermission.Delete = permission.Delete;
-                        existingPermission.Export = permission.Export;
-                    }
-                }
-
-                var roweffected = await _authDbContext.SaveChangesAsync();
-                return true;
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex);
-                return false;
-            }
-        }
-
         public async Task<bool> DeletePermissionAsync(int PermissionId)
         {
             // 刪除與role的關聯
@@ -247,7 +217,7 @@ namespace RMIS.Repositories
         public async Task<UserManager> GetUserManagerDataAsync()
         {
             var users = await _authDbContext.Users
-                .OrderBy(u => u.Order)
+                .OrderBy(u => u.Department.Order)
                 .Select(u => new UserData
                 {
                     Id = u.Id,
@@ -355,6 +325,115 @@ namespace RMIS.Repositories
             {
                 Console.WriteLine(ex);
                 return (false, $"刪除失敗{ex}");
+            }
+        }
+
+        public async Task<GetRolePermission> GetRolePermissionAsync(string roleName)
+        {
+            var role = await _authDbContext.Roles.Where(r => r.Name == roleName).FirstOrDefaultAsync();
+            if (role == null)
+            {
+                return null;
+            }
+            var permissions = await _authDbContext.RolePermissions
+                .Where(rp => rp.RoleId == role.Id)
+                .Select(rp => new GetPermission
+                {
+                    PermissionName = rp.Permission.Name,
+                    Read = rp.Read,
+                    Create = rp.Create,
+                    Update = rp.Update,
+                    Delete = rp.Delete,
+                    Export = rp.Export
+                })
+                .ToListAsync();
+            var rolePermissions = new GetRolePermission
+            {
+                RoleId = role.Id,
+                RoleName = role.Name,
+                Permissions = permissions
+            };
+            return rolePermissions;
+        }
+
+        public async Task<RoleManager> GetRoleManagerDataAsync()
+        {
+            var roles = await _authDbContext.Roles
+                .OrderBy(r => r.Order)
+                .Select(r => new RoleData
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Status = r.Status,
+                    CreateAt = r.CreatedAt,
+                    permissions = _authDbContext.RolePermissions
+                                    .Where(rp => rp.RoleId == r.Id)
+                                    .Select(rp => new RolePermissionData
+                                    {
+                                        Name = rp.Permission.Name,
+                                        Create = rp.Create,
+                                        Read = rp.Read,
+                                        Delete = rp.Delete,
+                                        Update = rp.Update,
+                                        Export = rp.Export
+                                    }).ToList()
+                }).ToListAsync();
+            var roleManagerData = new RoleManager
+            {
+                Roles = roles
+            };
+            return roleManagerData;
+        }
+
+        public async Task<UpdateRoleView> UpdateRoleViewAsync(string id)
+        {
+            var role = _authDbContext.Roles.Find(id);
+            var permissions = await _authDbContext.RolePermissions
+                .Where(rp => rp.RoleId == id)
+                .Select(rp => new UpdatePermission
+                {
+                    PermissionId = rp.PermissionId,
+                    PermissionName = rp.Permission.Name,
+                    Create = rp.Create,
+                    Read = rp.Read,
+                    Delete = rp.Delete,
+                    Update = rp.Update,
+                    Export = rp.Export
+                }).ToListAsync();
+            var roleData = new UpdateRoleView
+            {
+                RoleId = id,
+                RoleName = role.Name,
+                Status = role.Status,
+                Permissions = permissions
+            };
+
+            return roleData;
+        }
+
+        public async Task<(bool Success, string Message)> UpdateRoleAsync(UpdateRoleView input)
+        {
+            try
+            {
+                var role = await _authDbContext.Roles.FindAsync(input.RoleId);
+                var rolePermission = await _authDbContext.RolePermissions.Where(p => p.RoleId == input.RoleId).ToListAsync();
+                role.Status = input.Status;
+                role.Name = input.RoleName;
+                foreach(var permission in input.Permissions)
+                {
+                    var oldPermission = rolePermission.FirstOrDefault(p => p.PermissionId == permission.PermissionId);
+                    oldPermission.Read = permission.Read;
+                    oldPermission.Update = permission.Update;
+                    oldPermission.Create = permission.Create;
+                    oldPermission.Delete = permission.Delete;
+                    oldPermission.Export = permission.Export;
+                }
+                await _authDbContext.SaveChangesAsync();
+                return (true, $"身分更新成功");
+            }
+            catch(Exception ex)
+            {
+                return (false, $"身分更新失敗: {ex}");
             }
         }
     }

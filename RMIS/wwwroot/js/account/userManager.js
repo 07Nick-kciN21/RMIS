@@ -199,7 +199,6 @@ function updateUserTable(users){
             "data-user-role": user.role
         });
         // 選取框
-        row.append(`<td><input type="checkbox"/></td>`);
         row.append(`<td class="department-cell">
                         <span class="read">${user.department}</span>
                         ${initDepartmentSelector(user.departmentId)}
@@ -229,15 +228,11 @@ function updateUserTable(users){
                     <span class="read">${maskPhone(user.phone)}</span>
                     <input class="edit d-none phone" value="${user.phone ?? ''}"/>
                 </td>`);
-        // 2025-02-17T10:21:36.8466667 轉換成 2025-02-17 10:21:36
-        var createAt = user.createAt.split("T");
-        var createAtDate = createAt[0];
-        var createAtTime = createAt[1].split(".")[0];
-        row.append(`<td class="createAt-cell">${createAtDate} ${createAtTime}</td>`);
+        row.append(`<td class="createAt-cell">${convertDate(user.createAt)}</td>`);
 
-        // 建立按鈕
+        // 建立操作按鈕
         var actionTd = $("<td class='action-cell'></td>");
-        var editButton = $('<button class="btn btn-primary edit-user read">修改</button>');
+        var editButton = $('<button class="btn btn-primary edit-user read">編輯</button>');
         var saveButton = $('<button class="btn btn-success save-user edit d-none">儲存</button>');
         var deleteButton = $(`<button class="btn btn-danger delete-user read">刪除</button>`);
         var cancelButton = $(`<button class="btn btn-secondary cancel-user edit d-none">取消</button>`);
@@ -248,6 +243,14 @@ function updateUserTable(users){
 
         tbody.append(row);
     });
+}
+
+// 2025-02-17T10:21:36.8466667 轉換成 2025-02-17 10:21:36
+function convertDate(createAt){
+    var datetime = createAt.split("T");
+    var createAtDate = datetime[0];
+    var createAtTime = datetime[1].split(".")[0];
+    return `${createAtDate} ${createAtTime}`;
 }
 
 function maskEmail(email) {

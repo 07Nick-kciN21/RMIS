@@ -2,14 +2,22 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RMIS.Models.Account;
+using RMIS.Models.Account.Departments;
+using RMIS.Models.Account.Permissions;
+using RMIS.Models.Account.Roles;
+using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
+using RMIS.Models.Portal;
 using RMIS.Repositories;
 using System.Data;
 using System.Security;
 
 namespace RMIS.Controllers
 {
+    /// <summary>
+    /// 帳號權限管理
+    /// </summary>
+    /// <returns></returns>
     public class AccountController : Controller
     {
         private readonly AccountInterface _accountInterface;
@@ -27,39 +35,6 @@ namespace RMIS.Controllers
             _authDbContext = authDbContext;
         }
 
-        [HttpGet("[controller]/Register")]
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        [HttpPost("[controller]/Register")]
-        public async Task<IActionResult> Register(RegisterUser user)
-        {
-            if (!ModelState.IsValid)
-                return View(user);
-
-            var createUser = new CreateUser
-            {
-                Name = user.Username,
-                Password = user.Password,
-                Email = user.Email,
-                Phone = user.Phone
-            };
-            var result = await _accountInterface.CreateUserAsync(createUser);
-
-            if (result.Success)
-            {
-                return RedirectToAction("Login", "Portal"); // ✅ 註冊成功跳轉首頁
-            }
-            else
-            {
-                // ✅ 透過 ViewData 讓錯誤訊息顯示在 `Register` View
-                ViewData["ErrorMessage"] = result.Message;
-                return View(user);
-            }
-        }
-
         private IActionResult RedirectToLocal(string returnUrl)
         {
             if (Url.IsLocalUrl(returnUrl))
@@ -68,27 +43,40 @@ namespace RMIS.Controllers
                 return RedirectToAction("Index", "Home");
         }
 
-        // 身分更新
-        [Authorize(Roles = "Admin")]
-        [HttpGet("[controller]/RolePermission/Update")]
-        public async Task<IActionResult> UpdateRolePermission()
+        [HttpGet("[controller]/Permission/List")]
+        public async Task<IActionResult> PermissionManager()
         {
-            var updateRole = await _accountInterface.GetUpdateRolePermissionsAsync();
+            var permissions = await _authDbContext.Permissions.ToListAsync();
+            var permissionManager = new PermissionManagerView
+            {
+                Permissions = permissions
+            };
 
-            return View(updateRole);
+            return View(permissionManager);
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpPost("[controller]/RolePermission/Update")]
-        public async Task<IActionResult> UpdateRolePermission([FromForm] UpdateRolePermission updateRoles)
+        [HttpGet("[controller]/Role/List")]
+        public async Task<IActionResult> RoleManager()
         {
-            if(updateRoles == null)
-            {
-                Console.WriteLine("updateRoles is null");
-            }
-            await _accountInterface.UpdateRolePermissionsAsync(updateRoles);
+            return View();
+        }
 
-            return Ok();
+        [HttpGet("[controller]/User/List")]
+        public async Task<IActionResult> UserManager()
+        {
+            return View();
+        }
+
+        [HttpGet("[controller]/Department/List")]
+        public IActionResult DepartmentManage()
+        {
+            return View();
+        }
+        [HttpGet("[controller]/Role/Read/Permission")]
+        public async Task<IActionResult> RolePermission(string id)
+        {
+            var rolePermission = await _accountInterface.GetRolePermissionsAsync(id);
+            return View(rolePermission);
         }
 
         [HttpGet("[controller]/RolePermissions/Get")]
@@ -100,20 +88,9 @@ namespace RMIS.Controllers
                 return NotFound();
             }
 
-            var rolePermissions = await _authDbContext.RolePermissions
-                .Where(rp => rp.RoleId == role.Id)
-                .Select(rp => new GetRolePermission
-                {
-                    PermissionName = rp.Permission.Name,
-                    Read = rp.Read,
-                    Create = rp.Create,
-                    Update = rp.Update,
-                    Delete = rp.Delete,
-                    Export = rp.Export
-                })
-                .ToListAsync();
+            var rolePermissions = await _accountInterface.GetRolePermissionAsync(roleName);
 
-            return Json(new { RoleId = role.Id, RoleName = role.Name, Permissions = rolePermissions });
+            return Json(rolePermissions);
         }
 
 
@@ -191,11 +168,7 @@ namespace RMIS.Controllers
             return RedirectToAction("Account", "UpdateRolePermission");
         }
 
-        [HttpGet("[controller]/User/List")]
-        public async Task<IActionResult> UserManager()
-        {
-            return View();
-        }
+        
 
         [HttpPost("[controller]/User/Get/ManagerData")]
         public async Task<IActionResult> GetUserManagerData()
@@ -258,23 +231,62 @@ namespace RMIS.Controllers
             }
         }
 
+        [HttpPost("[controller]/Role/Get/ManagerData")]
+        public async Task<IActionResult> GetRoleManagerData()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+
+            var RoleManagerData = await _accountInterface.GetRoleManagerDataAsync();
+            return Ok(new { success = true, RoleManager = RoleManagerData });
+        }
+
+        [HttpGet("[controller]/Role/Update")]
+        public async Task<IActionResult> UpdateRole(string id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限修改" });
+            }
+
+            var role = await _accountInterface.UpdateRoleViewAsync(id);
+            return View(role);
+        }
+
+        [HttpPost("[controller]/Role/Update")]
+        public async Task<IActionResult> UpdateRole(UpdateRoleView input)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限修改" });
+            }
+            // role : (bool Success, string Message)
+            if(input.RoleId == null)
+            {
+                return Json(new { success = false, message = "修改失敗" });
+            }
+            var role = await _accountInterface.UpdateRoleAsync(input);
+            return Json(new { success = role.Success, message = role.Message });
+        }
         [HttpPost("[controller]/User/GetUsers")]
         public async Task<IActionResult> GetUsers()
         {
             var departmentUsers = await _accountInterface.GetAllUser();
             return Ok(new { success = true, users = departmentUsers });
-        }
-
-        [HttpGet("[controller]/Permission/List")]
-        public async Task<IActionResult> PermissionManager()
-        {
-            var permissions = await _authDbContext.Permissions.ToListAsync();
-            var permissionManager = new PermissionManagerView
-            {
-                Permissions = permissions
-            };
-
-            return View(permissionManager);
         }
 
         [HttpPost("[controller]/Permission/Create")]
@@ -299,11 +311,7 @@ namespace RMIS.Controllers
             return Ok(new {success = true});
         }
 
-        [HttpGet("[controller]/Department/List")]
-        public IActionResult DepartmentManage()
-        {
-            return View();
-        }
+        
 
         [HttpPost("[controller]/Department/Get/ManagerData")]
         public async Task<IActionResult> GetDepartmentManagerData()

@@ -4,18 +4,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Models.Account;
 using RMIS.Models.Auth;
+using RMIS.Models.Portal;
 using RMIS.Repositories;
 using System.Data;
 using System.Security;
 
 namespace RMIS.Controllers
 {
+    /// <summary>
+    /// 入口網站(登入、註冊)
+    /// </summary>
+    /// <returns></returns>
     public class PortalController : Controller
     {
+        private readonly AccountInterface _accountInterface;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        public PortalController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager) 
+        public PortalController(AccountInterface accountInterface, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager) 
         {
+            _accountInterface = accountInterface;
             _signInManager = signInManager;
             _userManager = userManager;
         }
@@ -54,10 +61,45 @@ namespace RMIS.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterUser user)
+        {
+            if (!ModelState.IsValid)
+                return View(user);
+
+            var createUser = new CreateUser
+            {
+                DisplayName = user.DisplayName,
+                Account = user.Account,
+                Password = user.Password,
+                Email = user.Email,
+                Phone = user.Phone
+            };
+            var result = await _accountInterface.CreateUserAsync(createUser);
+
+            if (result.Success)
+            {
+                return RedirectToAction("Login", "Portal"); // ✅ 註冊成功跳轉首頁
+            }
+            else
+            {
+                // ✅ 透過 ViewData 讓錯誤訊息顯示在 `Register` View
+                ViewData["ErrorMessage"] = result.Message;
+                return View(user);
+            }
         }
 
         private IActionResult RedirectToLocal(string returnUrl)

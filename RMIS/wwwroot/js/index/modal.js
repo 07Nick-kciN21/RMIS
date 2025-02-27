@@ -1,14 +1,21 @@
 ﻿export function initModal() {
     $(document).ready(function () {
-        var targetId = $('#dropdownMenuBtn').data('target');
-        var targetElement = $(`#${targetId}`);
-        observeDisplayChanges($('#dropdownMenuBtn'), targetElement);
+        function initializeObserver(buttonId) {
+            var button = $(`#${buttonId}`);
+            var targetId = button.data('target');
+            var targetElement = $(`#${targetId}`);
+            
+            console.log(targetId);
+            observeDisplayChanges(button, targetElement);
+        }
+    
+        ['adminMenuBtn'].forEach(initializeObserver);
     });
     // Dropdown 切換邏輯
-    $('#dropdownMenuBtn').on('click', function (e) {
+    $('#adminMenuBtn').on('click', function (e) {
         e.stopPropagation();
         var targetId = $(this).data('target');
-        console.log("dropdownMenuBtn click");
+        console.log("adminMenuBtn click");
         $(`#${targetId}`).toggle();
         $(this).addClass('open');
     });
@@ -73,14 +80,6 @@
             $('body').removeClass('dimmed');
         }
     });
-
-    // 提交modal表單時阻止頁面跳轉，用ajax提交
-    // $('.modal-form').on('submit', function (e) {
-    //     e.preventDefault(); // 阻止默認行為
-    //     var url = $(this).attr('action');
-    //     var formData = $(this).serialize();
-    //     alert(formData, url);
-    // });
 }
 function observeDisplayChanges(triggerElement, targetElement) {
     const observer = new MutationObserver(() => {
