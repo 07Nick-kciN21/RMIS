@@ -72,4 +72,22 @@
         public bool Delete { get; set; }
         public bool Export { get; set; }
     }
+
+    public class CreateRoleView
+    {
+        public string RoleName { get; set; }
+        public bool Status { get; set; }
+        public List<CreatePermission> Permissions { get; set; }
+    }
+
+    public class CreatePermission
+    {
+        public int PermissionId { get; set; }
+        public string PermissionName { get; set; }
+        public bool Read { get; set; }
+        public bool Create { get; set; }
+        public bool Update { get; set; }
+        public bool Delete { get; set; }
+        public bool Export { get; set; }
+    }
 }

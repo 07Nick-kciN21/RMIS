@@ -5,26 +5,16 @@ $(document).ready(function () {
         let formData = new FormData();
 
         // 添加 RoleId 和 RoleName
-        formData.append("RoleId", $('input[name="RoleId"]').val());
-        formData.append("RoleName", $('input[name="RoleName"]').val());
+        formData.append("Id", $('input[name="Id"]').val());
+        formData.append("Name", $('input[name="Name"]').val());
 
         // 取得選中的 Status
         let status = $('input[name="Status"]:checked').val();
         formData.append("Status", status ? status : '');
 
-        // 遍歷權限表格
-        $('#permissionBody tr').each(function (index) {
-            let permissionId = $(this).find('input[name^="Permissions"][type="hidden"]').val();
-            formData.append(`Permissions[${index}].PermissionId`, permissionId);
-
-            $(this).find('input[type="checkbox"]').each(function () {
-                let fieldName = $(this).attr('name').match(/\.(\w+)$/)[1]; // 取得欄位名稱 (Read, Create, Update, Delete, Export)
-                formData.append(`Permissions[${index}].${fieldName}`, $(this).is(':checked'));
-            });
-        });
         console.log(formData);
         $.ajax({
-            url: '/Account/Role/Update',
+            url: '/Account/Permission/Update',
             type: 'POST',
             processData: false,
             contentType: false,
@@ -33,6 +23,7 @@ $(document).ready(function () {
                 withCredentials: true // 確保攜帶 Cookie
             },
             success: function (response) {
+                console.log(response);
                 alert('提交成功');
                 console.log(response);
                 window.opener.postMessage(
@@ -53,3 +44,5 @@ $(document).ready(function () {
         });
     });
 });
+
+

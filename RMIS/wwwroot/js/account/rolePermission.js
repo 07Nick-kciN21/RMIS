@@ -11,6 +11,8 @@ $(document).ready(function () {
             url: '/Account/RolePermissions/Get',
             type: 'GET',
             data: { roleName: selectedRole },
+            processData: false,
+            contentType: false,
             xhrFields: {
                 withCredentials: true // 確保攜帶 Cookie
             },

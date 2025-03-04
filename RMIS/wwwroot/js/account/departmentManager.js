@@ -1,115 +1,28 @@
 $(document).ready(function () {
     initDepartmentTable();
-
-    $('#departmentTable').on('click', '.edit-department', function () {
-        var row = $(this).closest('tr');
-        // 存儲原始值（如果沒有，才存儲，避免重複進入編輯模式覆蓋原始值）
-        row.find(".name-cell, .status-cell").each(function () {
-            var cell = $(this);
-            var input = cell.find("input.edit");
     
-            // 存儲原始值（如果沒有，才存儲，避免重複進入編輯模式覆蓋原始值）
-            if (!input.attr("data-original")) {
-                input.attr("data-original", input.val());
-            }
-    
-            // 進入編輯模式
-            cell.find(".read").addClass("d-none");
-            input.removeClass("d-none");
-        });
-
-        row.find('.read').addClass('d-none');
-        row.find('.edit').removeClass('d-none');
-    });
-
-    // 使用事件委派綁定 `.save-user`
-    $("#departmentTable").on("click", ".save-department", function () {
-        // 結束編輯模式，read 顯示，edit 隱藏
-        var row = $(this).closest("tr");
-        var departmentId = row.data("department-id");
-        
-        // 取得所有 class 為 edit 的 input
-        var editInputs = row.find(".edit");
-        // 取得editInputs中 class department, name, role, status的值
-        var name = editInputs.filter(".name").val();
-        var status = editInputs.filter(".status").prop("checked");
-
-        var formdata = new FormData();
-        formdata.append("Id", departmentId);
-        formdata.append("Name", name);
-        formdata.append("Status", status);
-        $.ajax({
-            url: "/Account/Department/Update",
-            type: "POST",
-            processData: false,
-            contentType: false,
-            xhrFields: {
-                withCredentials: true // 確保攜帶 Cookie
-            },
-            data: formdata,
-            success: function (data) {
-                if (data.success) {
-                    console.log(data);
-                    location.reload();
-                }
-            },
-            error: function (xhr) {
-                console.log("API 錯誤:", xhr.status);
-            }
-        });
-
-        row.find(".read").removeClass("d-none");
-        row.find(".edit").addClass("d-none");
-    });
-    
-    // 使用事件委派綁定 `.delete-user`
-    $("#departmentTable").on("click", ".delete-department", function () {
-        var row = $(this).closest("tr");
-        var departmentId = row.data("department-id");
-        console.log(`/Account/Department/Delete?departmentId=${departmentId}`);
-        if (confirm("確定要刪除部門？")) {
-            $.ajax({
-                url: `/Account/Department/Delete?departmentId=${departmentId}`,
-                type: "POST",
-                xhrFields: {
-                    withCredentials: true // 確保攜帶 Cookie
-                },
-                success: function (data) {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    }
-                    else{
-                        alert(data.message);
-                    }
-                },
-                error: function (xhr) {
-                    console.log("API 錯誤:", xhr.status);
-                }
-            });
+    $("#departmentSelector").on("change", function () {
+        var selectedDepartmentId = $(this).val();
+        if(selectedDepartmentId == 0){
+            updateDepartmentTable(allDepartments);
         }
-    });    
-    
-    // 使用事件委派綁定 `.cancel-user`，取消編輯，並且把所有的edit input值還原
-    $("#departmentTable").on("click", ".cancel-department", function () {
-        var row = $(this).closest("tr");
+        else{
+            var filteredDepartments = allDepartments.filter((department) => {
+                return department.id == selectedDepartmentId;
+            });
+            updateDepartmentTable(filteredDepartments);
+        }
+    });
 
-        row.find(".name-cell, status-cell").each(function () {
-            var cell = $(this);
-            var input = cell.find("input.edit");
-
-            // 還原原始值
-            if (input.attr("data-original") !== undefined) {
-                input.val(input.attr("data-original"));
-            }
-
-            // 隱藏編輯模式
-            input.addClass("d-none");
-            cell.find(".read").removeClass("d-none");
-        });
-
-        row.find(".read").removeClass("d-none");
-        row.find(".edit").addClass("d-none");
+    window.addEventListener('message', function(event) {
+        if (event.origin !== window.location.origin) return; // 安全性驗證
+        const message = JSON.parse(event.data);
+        if(message.success){
+            console.log("message.success");
+            // 重整頁面
+            initDepartmentTable();
+        }
+        console.log(message.success);
     });
 });
 
@@ -117,6 +30,8 @@ function initDepartmentTable(){
     $.ajax({
         url: "/Account/Department/Get/ManagerData",
         type: "POST",
+        processData: false,
+        contentType: false,
         xhrFields: {
             withCredentials: true // 確保攜帶 Cookie
         },
@@ -125,6 +40,7 @@ function initDepartmentTable(){
                 console.log(data);
                 var managerData = data.departmentManager;
                 allDepartments = managerData.departments;
+                initDepartmentFilter(allDepartments);
                 updateDepartmentTable(allDepartments);
             }
         },
@@ -134,23 +50,66 @@ function initDepartmentTable(){
     });
 }
 
+function initDepartmentFilter(allDepartments){
+    var departmentFilter = $("#departmentSelector");
+    departmentFilter.empty();
+    departmentFilter.append(`<option value="0" selected>全部</option>`);
+    allDepartments.forEach((department) => {
+        departmentFilter.append(`<option value="${department.id}">${department.name}</option>`);
+    });
+}
+
+
 function updateDepartmentTable(departments){
     var table = $("#departmentTable");
     table.empty();
 
-    departments.forEach(function(department){
+    departments.forEach((department) => {
         var row = $("<tr></tr>").attr("data-department-id", department.id);
+        var updateBtn = $(`<button class="btn btn-primary update-department read">編輯</button>`).on("click", function () {
+            var windowWidth = 800;
+            var windowHeight = 600;
+            // 獲取螢幕的寬高
+            var screenWidth = window.screen.width;
+            var screenHeight = window.screen.height;
+            // 計算彈出視窗的位置
+            var left = 0 - (screenWidth + windowWidth) / 2;
+            var top = (screenHeight - windowHeight) / 2;
+            newWindow = window.open(`/Account/Department/Update?id=${department.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        });
+        var deleteBtn = $(`<button class="btn btn-danger delete-department read">刪除</button>`).on("click", function () {
+            console.log(`/Account/Department/Delete?departmentId=${department.id}`);
+            if (confirm("確定要刪除部門？")) {
+                $.ajax({
+                    url: `/Account/Department/Delete?departmentId=${department.id}`,
+                    type: "POST",
+                    xhrFields: {
+                        withCredentials: true // 確保攜帶 Cookie
+                    },
+                    success: function (data) {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        }
+                        else{
+                            alert(data.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log("API 錯誤:", xhr.status);
+                    }
+                });
+            }
+        });
         row.append($(`<td class="name-cell">
                         <span class="read">${department.name}</span>
-                        <input class="edit d-none form-control name" type="text" value="${department.name}">
                       </td>`));
         // 狀態根據status顯示啟用或停用
         row.append(`<td class="status-cell">
-            ${department.status ? 
-                '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
-            }
-            <input class="edit d-none form-check-input status" type="checkbox" role="switch" ${department.status ? 'checked' : ''}>
-        </td>`);
+                    ${department.status ? 
+                        '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
+                    }
+                </td>`);
 
         var createAt = department.createAt.split("T");
         var createAtDate = createAt[0];
@@ -158,13 +117,9 @@ function updateDepartmentTable(departments){
         row.append(`<td>${createAtDate} ${createAtTime}</td>`);
         // 建立按鈕
         var actionTd = $("<td class='action-cell'></td>");
-        var editButton = $('<button class="btn btn-primary edit-department read">編輯</button>');
-        var saveButton = $('<button class="btn btn-success save-department edit d-none">儲存</button>');
-        var deleteButton = $(`<button class="btn btn-danger delete-department read">刪除</button>`);
-        var cancelButton = $(`<button class="btn btn-secondary cancel-department edit d-none">取消</button>`);
 
         // 將按鈕 append 進 td，再 append 到 tr
-        actionTd.append(editButton, saveButton, deleteButton, cancelButton);
+        actionTd.append(updateBtn, deleteBtn);
         row.append(actionTd);
 
         table.append(row);

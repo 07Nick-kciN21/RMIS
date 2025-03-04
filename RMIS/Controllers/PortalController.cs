@@ -80,15 +80,7 @@ namespace RMIS.Controllers
             if (!ModelState.IsValid)
                 return View(user);
 
-            var createUser = new CreateUser
-            {
-                DisplayName = user.DisplayName,
-                Account = user.Account,
-                Password = user.Password,
-                Email = user.Email,
-                Phone = user.Phone
-            };
-            var result = await _accountInterface.CreateUserAsync(createUser);
+            var result = await _accountInterface.CreateUserAsync(user);
 
             if (result.Success)
             {

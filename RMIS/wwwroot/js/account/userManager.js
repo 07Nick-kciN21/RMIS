@@ -19,123 +19,25 @@ $(document).ready(function () {
         updateUserTable(filteredUsers);
         console.log(selectedDepartment, filteredUsers);
     });
-    
-    // 使用事件委派綁定 `.edit-user`
-    $("#userTable").on("click", ".edit-user", function () {
-        var row = $(this).closest("tr");
-
-        row.find(".department-cell, .name-cell, .role-cell, .status-cell, .email-cell, .phone-cell").each(function () {
-            var cell = $(this);
-            var input = cell.find("input.edit");
-    
-            // 存儲原始值（如果沒有，才存儲，避免重複進入編輯模式覆蓋原始值）
-            if (!input.attr("data-original")) {
-                input.attr("data-original", input.val());
-            }
-    
-            // 進入編輯模式
-            cell.find(".read").addClass("d-none");
-            input.removeClass("d-none");
-        });
-        // 進入編輯模式，read 隱藏，edit 顯示，delete 隱藏 cancel 顯示
-        row.find(".read").addClass("d-none");
-        row.find(".edit").removeClass("d-none");
+    $("#createUser").on("click", function () {
+        var windowWidth = 800;
+        var windowHeight = 600;
+        // 獲取螢幕的寬高
+        var screenWidth = window.screen.width;
+        var screenHeight = window.screen.height;
+        // 計算彈出視窗的位置
+        var left = 0 - (screenWidth + windowWidth) / 2;
+        var top = (screenHeight - windowHeight) / 2;
+        newWindow = window.open("/Account/User/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
-    
-    // 使用事件委派綁定 `.save-user`
-    $("#userTable").on("click", ".save-user", function () {
-        // 結束編輯模式，read 顯示，edit 隱藏
-        var row = $(this).closest("tr");
-        var userId = row.data("user-id");
-        
-        // 取得所有 class 為 edit 的 input
-        var editInputs = row.find(".edit");
-        // 取得editInputs中 class department, name, role, status的值
-        var department = editInputs.filter(".department").val();
-        var name = editInputs.filter(".name").val();
-        var role = editInputs.filter(".role").val();
-        var status = editInputs.filter(".status").prop("checked");
-        var email = editInputs.filter(".email").val();
-        var phone = editInputs.filter(".phone").val();
-
-        console.log(department, name, role, status);
-        var formdata = new FormData();
-        formdata.append("UserId", userId);
-        formdata.append("DepartmentId", department);
-        formdata.append("UserName", name);
-        formdata.append("RoleId", role);
-        formdata.append("Status", status);
-        formdata.append("Email", email);
-        formdata.append("Phone", phone);
-        $.ajax({
-            url: "/Account/User/Update",
-            type: "POST",
-            processData: false,
-            contentType: false,
-            xhrFields: {
-                withCredentials: true // 確保攜帶 Cookie
-            },
-            data: formdata,
-            success: function (data) {
-                if (data.success) {
-                    console.log(data);
-                    location.reload();
-                }
-            },
-            error: function (xhr) {
-                console.log("API 錯誤:", xhr.status);
-            }
-        });
-
-        row.find(".read").removeClass("d-none");
-        row.find(".edit").addClass("d-none");
-    });
-    
-    // 使用事件委派綁定 `.delete-user`
-    $("#userTable").on("click", ".delete-user", function () {
-        var row = $(this).closest("tr");
-        var userId = row.data("user-id");
-        if (confirm("確定要刪除使用者？")) {
-            $.ajax({
-                url: `/Account/User/Delete?UserId=${userId}`,
-                type: "POST",
-                xhrFields: {
-                    withCredentials: true // 確保攜帶 Cookie
-                },
-                success: function (data) {
-                    if (data.success) {
-                        console.log(data);
-                        location.reload();
-                    }
-                },
-                error: function (xhr) {
-                    console.log("API 錯誤:", xhr.status);
-                }
-            });
+    window.addEventListener('message', function(event) {
+        if (event.origin !== window.location.origin) return; // 安全性驗證
+        const message = JSON.parse(event.data);
+        if(message.success){
+            console.log("message.success");
+            initUserTable();
         }
-    });    
-    
-    // 使用事件委派綁定 `.cancel-user`，取消編輯，並且把所有的edit input值還原
-    $("#userTable").on("click", ".cancel-user", function () {
-        var row = $(this).closest("tr");
-
-        row.find(".department-cell, .name-cell, .role-cell, .status-cell, .email-cell, .phone-cell").each(function () {
-            var cell = $(this);
-            var input = cell.find("input.edit");
-
-            // 還原原始值
-            if (input.attr("data-original") !== undefined) {
-                input.val(input.attr("data-original"));
-            }
-
-            // 隱藏編輯模式
-            input.addClass("d-none");
-            cell.find(".read").removeClass("d-none");
-        });
-        
-
-        row.find(".read").removeClass("d-none");
-        row.find(".edit").addClass("d-none");
+        console.log(message.success);
     });
 });
 
@@ -143,6 +45,8 @@ function initUserTable(){
     $.ajax({
         url: "/Account/User/Get/ManagerData",
         type: "POST",
+        processData: false,
+        contentType: false,
         xhrFields: {
             withCredentials: true // 確保攜帶 Cookie
         },
@@ -171,23 +75,6 @@ function initDepartmentFilter(){
     });
 }
 
-function initDepartmentSelector(departmentId){
-    departmentSelect = '<select class="edit form-select d-none department">';
-    allDepartments.forEach((department) => {
-        departmentSelect += `<option value="${department.id}" ${department.id == departmentId ? "selected" : ""}>${department.name}</option>`;
-    });
-    departmentSelect += '</select>';
-    return departmentSelect;
-}
-
-function initRoleSelect(roleId){
-    var roleSelect = '<select class="edit form-select d-none role">';
-    allRoles.forEach((role) => {
-        roleSelect += `<option value="${role.id}" ${role.id == roleId ? "selected" : ""}>${role.name}</option>`;
-    });
-    roleSelect += '</select>';
-    return roleSelect;
-}
 
 function updateUserTable(users){
     var tbody = $("#userTable");
@@ -198,47 +85,76 @@ function updateUserTable(users){
             "data-user-id": user.id,
             "data-user-role": user.role
         });
+
+        var updateBtn = $(`<button class="btn btn-primary update-user read">編輯</button>`).on("click", function () {
+            var windowWidth = 800;
+            var windowHeight = 600;
+            // 獲取螢幕的寬高
+            var screenWidth = window.screen.width;
+            var screenHeight = window.screen.height;
+            // 計算彈出視窗的位置
+            var left = 0 - (screenWidth + windowWidth) / 2;
+            var top = (screenHeight - windowHeight) / 2;
+            newWindow = window.open(`/Account/User/Update?id=${user.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        });
+
+        var deleteBtn = $(`<button class="btn btn-danger delete-user read">刪除</button>`).on("click", function () {
+            if (confirm("確定要刪除使用者？")) {
+                $.ajax({
+                    url: `/Account/User/Delete?UserId=${user.id}`,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    xhrFields: {
+                        withCredentials: true // 確保攜帶 Cookie
+                    },
+                    success: function (data) {
+                        if (data.success) {
+                            console.log(data);
+                            location.reload();
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log("API 錯誤:", xhr.status);
+                    }
+                });
+            }
+        });
+
         // 選取框
         row.append(`<td class="department-cell">
                         <span class="read">${user.department}</span>
-                        ${initDepartmentSelector(user.departmentId)}
                     </td>`);
-        row.append(`<td class="name-cell">
-                        <span class="read">${user.name}</span>
-                        <input class="edit d-none name" value="${user.name}"/>
+        row.append(`<td class="display-cell">
+                        <span class="read">${user.displayName}</span>
+                    </td>`);
+        row.append(`<td class="user-cell">
+                        <span class="read">${user.userName}</span>
                     </td>`);
         row.append(`<td class="role-cell">
                         <span class="read">${user.role}</span>
-                        ${initRoleSelect(user.roleId)}
                     </td>`)
         // 狀態根據status顯示啟用或停用
         row.append(`<td class="status-cell">
                         ${user.status ? 
                             '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
                         }
-                        <input class="edit d-none form-check-input status" type="checkbox" role="switch" ${user.status ? 'checked' : ''}>
                     </td>`);
         // 信箱 遮蔽@前面第一個字元之後
         row.append(`<td class="email-cell">
-            <span class="read">${maskEmail(user.email)}</span>
-            <input class="edit d-none email" value="${user.email ?? ''}"/>
-        </td>`);
+                        <span class="read">${maskEmail(user.email)}</span>
+                    </td>`);
 
         row.append(`<td class="phone-cell">
-                    <span class="read">${maskPhone(user.phone)}</span>
-                    <input class="edit d-none phone" value="${user.phone ?? ''}"/>
-                </td>`);
+                        <span class="read">${maskPhone(user.phone)}</span>
+                    </td>`);
         row.append(`<td class="createAt-cell">${convertDate(user.createAt)}</td>`);
 
         // 建立操作按鈕
         var actionTd = $("<td class='action-cell'></td>");
-        var editButton = $('<button class="btn btn-primary edit-user read">編輯</button>');
-        var saveButton = $('<button class="btn btn-success save-user edit d-none">儲存</button>');
-        var deleteButton = $(`<button class="btn btn-danger delete-user read">刪除</button>`);
-        var cancelButton = $(`<button class="btn btn-secondary cancel-user edit d-none">取消</button>`);
 
         // 將按鈕 append 進 td，再 append 到 tr
-        actionTd.append(editButton, saveButton, deleteButton, cancelButton);
+        actionTd.append(updateBtn, deleteBtn);
         row.append(actionTd);
 
         tbody.append(row);

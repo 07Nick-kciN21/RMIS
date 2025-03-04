@@ -1,10 +1,41 @@
+let allRoles = [];
+
 $(document).ready(function () {
     initRoleTable();
 
+    $('#roleSelector').on('change', function () {
+        var selectedRoleId = $(this).val();
+        if(selectedRoleId == 0){
+            initRoleTable(allRoles);
+        }
+        else{
+            var filteredRoles = allRoles.filter((role) => {
+                return role.id == selectedRoleId;
+            });
+            updateRoleTable(filteredRoles);
+        }
+    });
+
+    $('#createRole').on('click', function () {
+        var windowWidth = 800;
+        var windowHeight = 600;
+        // 獲取螢幕的寬高
+        var screenWidth = window.screen.width;
+        var screenHeight = window.screen.height;
+        // 計算彈出視窗的位置
+        var left = 0 - (screenWidth + windowWidth) / 2;
+        var top = (screenHeight - windowHeight) / 2;
+        newWindow = window.open("/Account/Role/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+    });
     window.addEventListener('message', function(event) {
         if (event.origin !== window.location.origin) return; // 安全性驗證
         const message = JSON.parse(event.data);
-        console.log(message);
+        if(message.success){
+            console.log("message.success");
+            // 重整頁面
+            initRoleTable();
+        }
+        console.log(message.success);
     });
 });
 
@@ -20,6 +51,7 @@ function initRoleTable(){
                 var managerData = data.roleManager;
                 allRoles = managerData.roles;
                 updateRoleTable(allRoles);
+                updateRoleFilter(allRoles);
             }
         },
         error: function (xhr) {
@@ -28,10 +60,19 @@ function initRoleTable(){
     });
 }
 
+function updateRoleFilter(allRoles){
+    console.log(allRoles);
+    $('#roleSelector').empty();
+    $('#roleSelector').append(`<option value="0" selected>全部</option>`);
+    allRoles.forEach((role) => {
+        $('#roleSelector').append(`<option value="${role.id}"}>${role.name}</option>`);
+    });
+}
+
 function updateRoleTable(roles){
     var tbody = $('#roleTable');
     tbody.empty();
-    roles.forEach((role, index) => {
+    roles.forEach((role) => {
         var moreBtn = $(`<button class="btn btn-primary more-role read">more</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
@@ -57,6 +98,34 @@ function updateRoleTable(roles){
             newWindow = window.open(`/Account/Role/Update?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
+        var deleteBtn = $(`<button class="btn btn-danger delete-role read">刪除</button>`).on("click", function () {
+            if(confirm("確定要刪除身分？")){
+                // 刪除角色
+                $.ajax({
+                    url: `/Account/Role/Delete?id=${role.id}`,
+                    type: 'POST',
+                    processData: false,
+                    contentType: false,
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success: function (data) {
+                        if (data.success) {
+                            console.log("刪除成功");
+                            alert(data.message);
+                            location.reload();
+                        }
+                        else{
+                            console.log("刪除失敗");
+                            alert(data.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log("刪除失敗:", xhr.status);
+                    }
+                });
+            }
+        });
         var row = $("<tr>").attr({
             "data-role-id": role.id,
         });
@@ -74,13 +143,9 @@ function updateRoleTable(roles){
         
         row.append($(`<td class="permission-cell"></td>`).append(moreBtn));
         // 建立操作按鈕
-        var actionTd = $("<td class='action-cell'></td>");
-        var saveButton = $('<button class="btn btn-success save-role edit d-none">儲存</button>');
-        var deleteButton = $(`<button class="btn btn-danger delete-role read">刪除</button>`);
-        var cancelButton = $(`<button class="btn btn-secondary cancel-role edit d-none">取消</button>`);
-        
+        var actionTd = $("<td class='action-cell'></td>");        
         // 將按鈕 append 進 td，再 append 到 tr
-        actionTd.append(updateBtn, saveButton, deleteButton, cancelButton);
+        actionTd.append(updateBtn, deleteBtn);
         row.append(actionTd);
         tbody.append(row);
     });

@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Models.Account.Departments;
 using RMIS.Models.Account.Permissions;
@@ -91,56 +92,109 @@ namespace RMIS.Repositories
             return result.Succeeded;
         }
 
-        public async Task<bool> UpdateUserAsync(UpdateUser updateUser)
+        public async Task<(bool Success, string Message)> UpdateUserAsync(UpdateUserView updateUser)
         {
             try
             {
                 var user = await _userManager.FindByIdAsync(updateUser.UserId);
-                // 切換role
-                var currentRole = await _userManager.GetRolesAsync(user);
+                if (user == null)
+                {
+                    return (false, $"找不到 ID 為 {updateUser.UserId} 的使用者");
+                }
+
+                // 取得使用者當前的角色
+                var currentRoles = await _userManager.GetRolesAsync(user);
+                var existingRole = currentRoles.FirstOrDefault(); // 避免 First() 取不到值拋錯
+
+                // 取得新角色
                 var role = await _roleManager.FindByIdAsync(updateUser.RoleId);
-                await _userManager.RemoveFromRoleAsync(user, currentRole.First());
-                await _userManager.AddToRoleAsync(user, role.Name);
+                Console.WriteLine(role);
+                if (role == null)
+                {
+                    return (false, $"找不到 ID 為 {updateUser.RoleId} 的角色");
+                }
+
+                // 確保角色存在
+                if (!await _roleManager.RoleExistsAsync(role.Name))
+                {
+                    return (false, $"角色 {role.Name} 不存在，請先創建角色");
+                }
+
+                // 移除舊角色（如果有的話）
+                if (!string.IsNullOrEmpty(existingRole))
+                {
+                    var removeResult = await _userManager.RemoveFromRoleAsync(user, existingRole);
+                    if (!removeResult.Succeeded)
+                    {
+                        return (false, $"無法移除角色 {existingRole}，錯誤: {string.Join(", ", removeResult.Errors.Select(e => e.Description))}");
+                    }
+                }
+
+                // 新增新角色
+                var addResult = await _userManager.AddToRoleAsync(user, role.Name);
+                if (!addResult.Succeeded)
+                {
+                    return (false, $"無法新增角色 {role.Name}，錯誤: {string.Join(", ", addResult.Errors.Select(e => e.Description))}");
+                }
+
+                // **檢查角色是否切換成功**
+                var updatedRoles = await _userManager.GetRolesAsync(user);
+                if (!updatedRoles.Contains(role.Name))
+                {
+                    return (false, $"角色切換失敗，使用者未成功加入角色 {role.Name}");
+                }
+
+                Console.WriteLine($"角色切換成功！使用者 {user.UserName} 目前的角色為: {string.Join(", ", updatedRoles)}");
+
 
                 // 修改使用者資料
                 user.UserName = updateUser.UserName;
-                user.NormalizedUserName = updateUser.UserName.ToUpper();
+                user.NormalizedUserName = updateUser.UserName.ToUpperInvariant();
+                user.DisplayName = updateUser.DisplayName;
                 user.DepartmentId = updateUser.DepartmentId; // 確保 User 類別有 `DepartmentId`
                 user.Status = updateUser.Status; // 確保 User 類別有 `Status` 欄位
                 user.PhoneNumber = updateUser.Phone;
                 user.Email = updateUser.Email;
                 user.NormalizedEmail = updateUser.Email?.ToUpper();
                 var result = await _userManager.UpdateAsync(user);
-                return result.Succeeded;
+                if (result.Succeeded)
+                {
+                    Console.WriteLine("使用者修改成功");
+                    return (true, "使用者修改成功");
+                }
+                else
+                {
+                    return (false, "使用者修改失敗");
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return false;
+                return (false, $"使用者修改失敗: {ex}");
             }
         }
 
-        public async Task<(bool Success, string Message)> CreateUserAsync(CreateUser createUser)
+        public async Task<(bool Success, string Message)> CreateUserAsync(RegisterUser user)
         {
             try
             {
-                var user = new ApplicationUser
+                var createUser = new ApplicationUser
                 {
-                    DisplayName = createUser.DisplayName,
-                    UserName = createUser.Account,
-                    PhoneNumber = createUser.Phone,
-                    Email = createUser.Email,
+                    DisplayName = user.DisplayName,
+                    UserName = user.Account,
+                    PhoneNumber = user.Phone,
+                    Email = user.Email,
                     EmailConfirmed = true, // ✅ 預設 Email 已確認
                     DepartmentId = 4
                 };
 
-                var result = await _userManager.CreateAsync(user, createUser.Password);
+                var result = await _userManager.CreateAsync(createUser, user.Password);
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "使用者");
+                    await _userManager.AddToRoleAsync(createUser, "管理者");
                     await _authDbContext.SaveChangesAsync();
-                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    await _signInManager.SignInAsync(createUser, isPersistent: false);
 
                     return (true, "使用者建立成功");
                 }
@@ -178,22 +232,58 @@ namespace RMIS.Repositories
             };
             return updateRole;
         }
-        public async Task<bool> DeletePermissionAsync(int PermissionId)
+        public async Task<(bool Success, string Message)> DeletePermissionAsync(int PermissionId)
         {
             // 刪除與role的關聯
             var permissions = await _authDbContext.RolePermissions.Where(rp => rp.PermissionId == PermissionId).ToListAsync();
+            if(permissions.Count == 0)
+            {
+                return (false, "找不到與身分的關聯");
+            }
             _authDbContext.RolePermissions.RemoveRange(permissions);
 
             // 刪除Permission
             var permission = await _authDbContext.Permissions.FindAsync(PermissionId);
+            if(permission == null)
+            {
+                return (false, "權限不存在");
+            }
             _authDbContext.Permissions.Remove(permission);
             await _authDbContext.SaveChangesAsync();
-            return true;
+            return (true, "權限刪除成功");
         }
 
-        public Task<bool> DeleteRoleAsync(string RoleId)
+        public async Task<(bool Success, string Message)> DeleteRoleAsync(string RoleId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var role = await _roleManager.FindByIdAsync(RoleId);
+
+                var roleUsers = await _userManager.GetUsersInRoleAsync(role.Name);
+
+                if(roleUsers.Count > 0)
+                {
+                    return (false, "該身分還有使用者無法刪除");
+                }
+                var permissions = await _authDbContext.RolePermissions.Where(rp => rp.RoleId == RoleId).ToListAsync();
+                if(permissions == null)
+                {
+                    return (false, "身分沒有權限可刪除");
+                }
+                _authDbContext.RemoveRange(permissions);
+                await _authDbContext.SaveChangesAsync();
+                
+                if(role == null)
+                {
+                    return (false, "身分不存在，無法刪除");
+                }
+                await _roleManager.DeleteAsync(role);
+                return (true, "身分刪除成功");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"身分刪除失敗{ex}");
+            }
         }
 
         public async Task<List<DepartmentUser>> GetAllUser()
@@ -223,7 +313,8 @@ namespace RMIS.Repositories
                     Id = u.Id,
                     DepartmentId = u.DepartmentId,
                     Department = u.Department.Name,
-                    Name = u.UserName,
+                    UserName = u.UserName,
+                    DisplayName = u.DisplayName,
                     Email = u.Email,
                     Phone = u.PhoneNumber,
                     RoleId = _authDbContext.UserRoles
@@ -282,24 +373,27 @@ namespace RMIS.Repositories
             return DepartmentManagerData;
         }
 
-        public async Task<bool> UpdateDepartmentAsync(UpdateDepartment updateDepartment)
+        public async Task<(bool Success, string Message)> UpdateDepartmentAsync(UpdateDepartmentView updateDepartment)
         {
             try
             {
                 var department = await _authDbContext.Departments.FindAsync(updateDepartment.Id);
-
+                if(department == null)
+                {
+                    return (false, "部門不存在");
+                }
                 // 修改使用者資料
                 department.Name = updateDepartment.Name;
-                department.Status = updateDepartment.Status; // 確保 User 類別有 `Status` 欄位
+                department.Status = updateDepartment.Status;
                 _authDbContext.Departments.Update(department);
-                int changes = await _authDbContext.SaveChangesAsync(); // 🚀 儲存變更
+                await _authDbContext.SaveChangesAsync();
 
-                return changes > 0;
+                return (true, "部門修改成功");
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                return false;
+                return (false, "部門修改失敗");
             }
         }
 
@@ -312,7 +406,6 @@ namespace RMIS.Repositories
                 {
                     return (false, "該部門不存在");
                 }
-                var c = department.Users.Count;
                 if (department.Users.Count > 0)
                 {
                     return (false, "無法刪除部門，請先移除或轉移所有關聯的使用者");
@@ -419,7 +512,8 @@ namespace RMIS.Repositories
                 var rolePermission = await _authDbContext.RolePermissions.Where(p => p.RoleId == input.RoleId).ToListAsync();
                 role.Status = input.Status;
                 role.Name = input.RoleName;
-                foreach(var permission in input.Permissions)
+                role.NormalizedName = input.RoleName.ToUpperInvariant();
+                foreach (var permission in input.Permissions)
                 {
                     var oldPermission = rolePermission.FirstOrDefault(p => p.PermissionId == permission.PermissionId);
                     oldPermission.Read = permission.Read;
@@ -434,6 +528,109 @@ namespace RMIS.Repositories
             catch(Exception ex)
             {
                 return (false, $"身分更新失敗: {ex}");
+            }
+        }
+
+        public async Task<UpdateUserView> UpdateUserViewAsync(string id)
+        {
+            var user = await _authDbContext.Users.Include(u => u.Department).FirstAsync(u => u.Id == id);
+            var roles = await _authDbContext.Roles.ToListAsync();
+            var departments = await _authDbContext.Departments.ToListAsync();
+            var userData = new UpdateUserView
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                DisplayName = user.DisplayName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                RoleId = _authDbContext.UserRoles
+                            .Where(ur => ur.UserId == user.Id)
+                            .Select(ur => ur.RoleId)
+                            .First(),
+                Roles = new List<SelectListItem>
+                {
+                    new SelectListItem { Value = "", Text = "請選擇角色", Disabled = true, Selected = true }
+                }
+                .Concat(roles.Select(r => new SelectListItem
+                {
+                    Value = r.Id,
+                    Text = r.Name
+                })),
+                DepartmentId = user.DepartmentId,
+                Departments = new List<SelectListItem>
+                {
+                    new SelectListItem { Value = "", Text = "請選擇部門", Disabled = true, Selected = true }
+                }
+                .Concat(departments.Select(d => new SelectListItem
+                {
+                    Value = d.Id.ToString(),
+                    Text = d.Name.ToString()
+                })),
+                Status = user.Status
+            };
+            return userData;
+        }
+
+        public async Task<UpdateDepartmentView> UpdateDepartmentViewAsync(int id)
+        {
+            var department = await _authDbContext.Departments.FindAsync(id);
+            var departmentData = new UpdateDepartmentView
+            {
+                Id = department.Id,
+                Name = department.Name,
+                Status = department.Status
+            };
+            return departmentData;
+        }
+
+        public async Task<PermissionManager> GetPermissionManagerDataAsync()
+        {
+            var permissions = await _authDbContext.Permissions
+                .OrderBy(p => p.Order)
+                .Select(p => new PermissionData
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Status = p.Status
+                }).ToListAsync();
+            var PermissionData = new PermissionManager
+            {
+                Permissions = permissions
+            };
+            return PermissionData;
+        }
+
+        public async Task<UpdatePermissionView> UpdatePermissionViewAsync(int id)
+        {
+            var permission = await _authDbContext.Permissions.FindAsync(id);
+            var permissionData = new UpdatePermissionView
+            {
+                Id = permission.Id,
+                Name = permission.Name,
+                Status = permission.Status
+            };
+            return permissionData;
+        }
+
+        public async Task<(bool Success, string Message)> UpdatePermissionAsync(UpdatePermissionView updatePermission)
+        {
+            try
+            {
+                var permission = await _authDbContext.Permissions.FindAsync(updatePermission.Id);
+                if (permission == null)
+                {
+                    return (false, "權限不存在");
+                }
+                permission.Name = updatePermission.Name;
+                permission.Status = updatePermission.Status;
+                _authDbContext.Permissions.Update(permission);
+                await _authDbContext.SaveChangesAsync();
+                return (true, "權限更新成功");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return (false, $"權限更新失敗 {ex}");
             }
         }
     }

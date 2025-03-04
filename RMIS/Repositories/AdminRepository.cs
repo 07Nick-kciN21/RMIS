@@ -1005,7 +1005,6 @@ namespace RMIS.Repositories
             }
         }
 
-
         // rangePoints: ["24.949975, 121.225981", "24.949483, 121.226059", "24.949483, 121.226059", "24.950167, 121.226609"]
         private async Task<List<Point>> addRangePointsAsync(Guid areaId, List<string> rangePoints, RoadProjectExcelFormat projectExcel)
         {
