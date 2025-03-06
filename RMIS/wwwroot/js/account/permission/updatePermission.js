@@ -14,7 +14,7 @@ $(document).ready(function () {
 
         console.log(formData);
         $.ajax({
-            url: '/Account/Department/Update',
+            url: '/Account/Permission/Update',
             type: 'POST',
             processData: false,
             contentType: false,
@@ -22,14 +22,17 @@ $(document).ready(function () {
             xhrFields: {
                 withCredentials: true // 確保攜帶 Cookie
             },
-            success: function (response) {
-                alert('提交成功');
-                console.log(response);
-                window.opener.postMessage(
-                    JSON.stringify({ success: true }), 
-                    window.location.origin,
-                );
-                window.close();
+            success: function (data) {
+                if (data.success) {
+                    alert(data.message);
+                    window.opener.postMessage(JSON.stringify({ success: true }), window.location.origin);
+                    window.close();
+                }
+                else{
+                    alert(data.message);
+                    window.opener.postMessage(JSON.stringify({ success: false }), window.location.origin);
+                    window.close();
+                }
             },
             error: function (xhr, status, error) {
                 alert('提交失敗');
@@ -42,4 +45,9 @@ $(document).ready(function () {
             }
         });
     });
+    $("#cancel").on("click", function () {
+        window.close();
+    });
 });
+
+

@@ -1,5 +1,8 @@
-﻿@model RMIS.Models.Account.Departments.UpdateDepartmentView;
+﻿@model RMIS.Models.Account.Permissions.CreatePermissionView;
 
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
 @{
     Layout = null;
 }
@@ -11,27 +14,24 @@
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/js/account/updateDepartment.js"></script>
+    <script src="~/js/account/permission/createPermission.js"></script>
 </head>
 <body>
     <form>
-        <div>
-            <input type="hidden" class="form-control" asp-for="Id" readonly>
-        </div>
         <div class="form-group">
             <label asp-for="Name">部門名稱</label>
             <input type="text" class="form-control" asp-for="Name">
         </div>
         <div class="form-group">
             <label>
-                <input type="radio" asp-for="Status" value="true" asp-for="Status" /> 啟用
+                <input type="radio" asp-for="Status" value="true" /> 啟用
             </label>
             <label>
-                <input type="radio" asp-for="Status" value="false" asp-for="Status" /> 禁止
+                <input type="radio" asp-for="Status" value="false"/> 禁止
             </label>
         </div>
         <button id="submit" class="btn btn-primary">儲存</button>
-        <button type="button" class="btn btn-secondary">取消</button>
+        <button id="cancel" class="btn btn-secondary">取消</button>
     </form>
 </body>
 </html>

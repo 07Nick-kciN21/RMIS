@@ -2,19 +2,19 @@
 using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RMIS.Data;
 using RMIS.Middleware;
+using RMIS.ViewEngines;
 using RMIS.Models.Auth;
 using RMIS.Repositories;
 using Serilog;
 
 
 var builder = WebApplication.CreateBuilder(args);
-
-
 
 builder.Host.UseSerilog((context, services, configuration) =>
 {
@@ -65,8 +65,12 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredUniqueChars = 0; // 不要求最少不同字元數
 });
 
-// 註冊 Controllers
-builder.Services.AddControllersWithViews();
+// 註冊 Controllers、ViewLocationExpander
+builder.Services.AddControllersWithViews()
+    .AddRazorOptions(options =>
+    {
+        options.ViewLocationExpanders.Add(new CustomViewLocationExpander());
+    });
 
 // 註冊 MapDBContext
 builder.Services.AddDbContext<MapDBContext>(options =>

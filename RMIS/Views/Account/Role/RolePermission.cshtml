@@ -1,0 +1,58 @@
+﻿@model RMIS.Models.Account.Roles.ReadRolePermission
+
+@{
+    ViewData["Title"] = "身分權限管理";
+    Layout = null;
+}
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/account/rolePermission.css" />
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/js/account/role/rolePermission.js"></script>        
+    </head>
+    <body>
+        <h2>@Model.RoleName 權限列表</h2>
+
+        <form asp-action="UpdateRolePermission" method="post">
+            <table class="table table-bordered permissionTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th style="width: 400px">權限名稱</th>
+                        <th style="width: 70px">查看</th>
+                        <th style="width: 70px">新增</th>
+                        <th style="width: 70px">修改</th>
+                        <th style="width: 70px">刪除</th>
+                        <th style="width: 70px">匯出</th>
+                    </tr>
+                </thead>
+                <tbody id="permissionBody">
+                    @for (int i = 0; i < Model.Permissions.Count; i++)
+                    {
+                        <tr>
+                            <td class="permissionName">@Model.Permissions[i].PermissionName</td>
+                            <!-- 隱藏 input，確保未勾選時仍有值 -->
+                            <td>
+                                <input type="checkbox" name="Permissions[@i].Read" value="true" @(Model.Permissions[i].Read ? "checked" : "") disabled>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="Permissions[@i].Create" value="true" @(Model.Permissions[i].Create ? "checked" : "") disabled>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="Permissions[@i].Update" value="true" @(Model.Permissions[i].Update ? "checked" : "") disabled>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="Permissions[@i].Delete" value="true" @(Model.Permissions[i].Delete ? "checked" : "") disabled>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="Permissions[@i].Export" value="true" @(Model.Permissions[i].Export ? "checked" : "") disabled>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </form>
+    </body>
+</html>

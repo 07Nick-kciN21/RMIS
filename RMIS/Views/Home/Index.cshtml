@@ -181,13 +181,13 @@
                             </div>
                         </div>
                     }
-                    @if (Model["正攝影像"].Read)
+                    @if (Model.ContainsKey("正攝影像") && Model["正攝影像"].Read)
                     {
                         <div class="nav-item dropdown">
                             <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
                         </div>
                     }
-                    @if (Model["業務圖資"].Read)
+                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Read)
                     {
                         <div class="nav-item dropdown">
                             <button id="imageDataBtn" class="dropdown-button" data-target="imageDataContent">業務圖資</button>
@@ -255,19 +255,19 @@
         <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
         <span id="tb-painterPanel" class="mobileTool" title="繪圖板"></span>
         <span id="tb-propEnabled" title="屬性資料"></span>
-        @if (Model["屬性搜尋"].Read)
+        @if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read)
         {
             <span id="tb-searchPropPanel" class="mobileTool" title="屬性搜尋"></span>
         }
-        @if (Model["權管土地"].Read)
+        @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read)
         {
             <span id="tb-flagPanel" title="權管土地"></span>
         }
-        @if (Model["養工焦點"].Read)
+        @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read)
         {
             <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
         }
-        @if (Model["交通事故"].Read)
+        @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read)
         {
             <span id="tb-accidentPanel" title="交通事故"></span>
         }

@@ -30,24 +30,30 @@ $(document).ready(function () {
             xhrFields: {
                 withCredentials: true // 確保攜帶 Cookie
             },
-            success: function (response) {
-                alert('提交成功');
-                window.opener.postMessage(
-                    JSON.stringify({ success: true}), 
-                    window.location.origin,
-                );
-                console.log(response);
-                window.close();
+            success: function (data) {
+                if (data.success) {
+                    alert(data.message);
+                    window.opener.postMessage(JSON.stringify({ success: true }), window.location.origin);
+                    window.close();
+                }
+                else{
+                    alert(data.message);
+                    window.opener.postMessage(JSON.stringify({ success: false }), window.location.origin);
+                    window.close();
+                }
             },
             error: function (xhr, status, error) {
-                alert(`${status}提交失敗: ${status}`);
+                alert('提交失敗');
+                console.error(error);
                 window.opener.postMessage(
-                    JSON.stringify({ success: false}), 
+                    JSON.stringify({ success: false }), 
                     window.location.origin,
                 );
-                console.log(response);
-                console.error(error);
+                window.close();
             }
         });
+    });
+    $("#cancel").on("click", function () {
+        window.close();
     });
 });

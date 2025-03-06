@@ -80,7 +80,7 @@ namespace RMIS.Controllers
             if (!ModelState.IsValid)
                 return View(user);
 
-            var result = await _accountInterface.CreateUserAsync(user);
+            var result = await _accountInterface.RegisterAsync(user);
 
             if (result.Success)
             {

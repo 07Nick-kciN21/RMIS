@@ -17,19 +17,21 @@ namespace RMIS.Repositories
         Task<ReadRolePermission> GetRolePermissionsAsync(string id);
         Task<RolePermission> GetUserPermission(string userName, string permissionName);
         Task<GetRolePermission> GetRolePermissionAsync(string roleName);
-        Task<bool> CreatePermissionAsync(NewPermission newPermission);
+        Task<(bool Success, string Message)> CreatePermissionAsync(CreatePermissionView createPermission);
         Task<(bool Success, string Message)> CreateRoleAsync(CreateRoleView createRole);
         Task<bool> DeleteUserAsync(string UserId);
         Task<(bool Success, string Message)> DeletePermissionAsync(int PermissionId);
         Task<(bool Success, string Message)> DeleteRoleAsync(string RoleId);        
         Task<(bool Success, string Message)> DeleteDepartmentAsync(int departmentId);
-        Task<(bool Success, string Message)> CreateUserAsync(RegisterUser createUser);
+        Task<(bool Success, string Message)> CreateUserAsync(CreateUserView createUser);
+        Task<(bool Success, string Message)> RegisterAsync(RegisterUser createUser);
         Task<UpdateUserView> UpdateUserViewAsync(string id);
         Task<(bool Success, string Message)> UpdateUserAsync(UpdateUserView updateUser);
         Task<UpdateRoleView> UpdateRoleViewAsync(string id);
         Task<(bool Success, string Message)> UpdateRoleAsync(UpdateRoleView input);
         Task<UpdateDepartmentView> UpdateDepartmentViewAsync(int id);
         Task<(bool Success, string Message)> UpdateDepartmentAsync(UpdateDepartmentView updateDepartment);
+        Task<(bool Success, string Message)> CreateDepartmentAsync(CreateDepartmentView createDepartment);
         Task<UpdatePermissionView> UpdatePermissionViewAsync(int id);
         Task<(bool Success, string Message)> UpdatePermissionAsync(UpdatePermissionView updatePermission);
     }

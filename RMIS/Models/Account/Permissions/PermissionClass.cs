@@ -24,4 +24,10 @@ namespace RMIS.Models.Account.Permissions
     {
         public string Name { get; set; }
     }
+
+    public class CreatePermissionView
+    {
+        public string Name { get; set; }
+        public bool Status { get; set; }
+    }
 }

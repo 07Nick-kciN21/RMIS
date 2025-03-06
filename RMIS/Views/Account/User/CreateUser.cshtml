@@ -1,0 +1,62 @@
+﻿@model RMIS.Models.Account.Users.CreateUserView;
+
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/account/rolePermission.css" />
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/js/account/user/createUser.js"></script>
+</head>
+<body>
+    <form>
+        <div>
+            <label asp-for="DisplayName">名稱</label>
+            <input type="text" class="form-control" asp-for="DisplayName">
+        </div>
+        <div>
+            <label asp-for="Account">帳號</label>
+            <input type="text" class="form-control" asp-for="Account">
+        </div>
+        <div>
+            <label asp-for="Password">密碼</label>
+            <input type="text" class="form-control" asp-for="Password">
+        </div>
+        <div class="form-group">
+            <label asp-for="RoleId">身分</label>
+            @Html.DropDownListFor(model => model.RoleId, Model.Roles, new { @class = "form-control" })
+        </div>
+        <div class="form-group">
+            <label asp-for="DepartmentId">部門</label>
+            @Html.DropDownListFor(model => model.DepartmentId, Model.Departments, new { @class = "form-control" })
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="radio" asp-for="Status" value="true" /> 啟用
+            </label>
+            <label>
+                <input type="radio" asp-for="Status" value="false" /> 禁止
+            </label>
+        </div>
+        <div class="form-group">
+            <label asp-for="Email">信箱</label>
+            <input type="text" class="form-control" asp-for="Email">
+        </div>
+        <div class="form-group">
+            <label asp-for="Phone">電話</label>
+            <input type="text" class="form-control" asp-for="Phone">
+        </div>
+
+        <button id="submit" class="btn btn-primary">儲存</button>
+        <button id="cancel" class="btn btn-secondary">取消</button>
+    </form>
+</body>
+</html>

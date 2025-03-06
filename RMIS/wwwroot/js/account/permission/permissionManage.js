@@ -3,6 +3,16 @@ var allPermissions = [];
 $(document).ready(function () {
     initPermissionTable();
     
+    $("#createPermission").on("click", function () {
+        var windowWidth = 800;
+        var windowHeight = 600;
+        var screenWidth = window.screen.width;
+        var screenHeight = window.screen.height;
+        var left = 0 - (screenWidth + windowWidth) / 2;
+        var top = (screenHeight - windowHeight) / 2;
+        newWindow = window.open('/Account/Permission/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+    });
+
     $("#permissionSelector").on("change", function () {
         var selectedPermissionId = $(this).val();
         if(selectedPermissionId == 0){

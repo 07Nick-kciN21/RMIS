@@ -5,7 +5,6 @@ $(document).ready(function () {
         let formData = new FormData();
 
         // 添加 RoleId 和 RoleName
-        formData.append("Id", $('input[name="Id"]').val());
         formData.append("Name", $('input[name="Name"]').val());
 
         // 取得選中的 Status
@@ -14,7 +13,7 @@ $(document).ready(function () {
 
         console.log(formData);
         $.ajax({
-            url: '/Account/Permission/Update',
+            url: '/Account/Department/Create',
             type: 'POST',
             processData: false,
             contentType: false,
@@ -22,15 +21,17 @@ $(document).ready(function () {
             xhrFields: {
                 withCredentials: true // 確保攜帶 Cookie
             },
-            success: function (response) {
-                console.log(response);
-                alert('提交成功');
-                console.log(response);
-                window.opener.postMessage(
-                    JSON.stringify({ success: true }), 
-                    window.location.origin,
-                );
-                window.close();
+            success: function (data) {
+                if (data.success) {
+                    alert(data.message);
+                    window.opener.postMessage(JSON.stringify({ success: true }), window.location.origin);
+                    window.close();
+                }
+                else{
+                    alert(data.message);
+                    window.opener.postMessage(JSON.stringify({ success: false }), window.location.origin);
+                    window.close();
+                }
             },
             error: function (xhr, status, error) {
                 alert('提交失敗');
@@ -43,6 +44,7 @@ $(document).ready(function () {
             }
         });
     });
+    $("#cancel").on("click", function () {
+        window.close();
+    });
 });
-
-

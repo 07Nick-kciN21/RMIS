@@ -14,7 +14,7 @@
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/js/account/updateUser.js"></script>
+    <script src="~/js/account/user/updateUser.js"></script>
 </head>
 <body>
     <form>
@@ -39,10 +39,10 @@
         </div>
         <div class="form-group">
             <label>
-                <input type="radio" asp-for="Status" value="true" asp-for="Status" /> 啟用
+                <input type="radio" asp-for="Status" value="true" /> 啟用
             </label>
             <label>
-                <input type="radio" asp-for="Status" value="false" asp-for="Status" /> 禁止
+                <input type="radio" asp-for="Status" value="false" /> 禁止
             </label>
         </div>
         <div class="form-group">
@@ -55,7 +55,7 @@
         </div>
 
         <button id="submit" class="btn btn-primary">儲存</button>
-        <button type="button" class="btn btn-secondary">取消</button>
+        <button id="cancel" class="btn btn-secondary">取消</button>
     </form>
 </body>
 </html>
