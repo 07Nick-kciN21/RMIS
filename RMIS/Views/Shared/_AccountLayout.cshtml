@@ -3,8 +3,9 @@
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="~/css/account/rolePermission.css" />
-
+        <link rel="stylesheet" href="~/css/account/_accountLayout.css" />
+        <link rel="stylesheet" href="~/css/account/_sidebar.css" />
+        <link rel="stylesheet" href="~/css/account/body.css" />
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="~/lib/jquery/dist/jquery.js"></script>
 
@@ -14,32 +15,79 @@
 
     </head>
     <body>
+        <header class=" bg-light">
+            <div id="col1">
+                <div id="left-nav" style="display: flex;">
+                    <div class="head-logo-box navbar-toggle">
+                        <div class="head-logo">權限管理平台</div>
+                    </div>
+                </div>
+            </div>
+            <div id="col2" style="margin-left:auto">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <div class="container-fluid">
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                                <li>
+                                    <div class="user-icon ms-2"></div>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">                                    
+                                        @ViewBag.Username
+                                    </a>
+                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                        <li>
+                                            <a class="nav-link menu-title" href="/Portal/Logout">
+                                                <h5>登出</h5>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="nav-link menu-title" href="/Account/User/List">
+                                                <h5>權限管理</h5>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
         <div style="display:flex">
             <div style="width:20%">
                 <ul>
                     <li>
                         <a class="nav-link menu-title" href="/Home/Index">
-                            <h4>協作平台</h4>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/Role/List">
-                            <h4>身分列表</h4>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/Permission/List">
-                            <h4>權限列表</h4>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/Department/List">
-                            <h4>部門列表</h4>
+                            <span id="home" class="account-menu-icon"></span>
+                            <span>協作平台</span>
                         </a>
                     </li>
                     <li>
                         <a class="nav-link menu-title" href="/Account/User/List">
-                            <h4>使用者列表</h4>
+                            <span id="user" class="account-menu-icon"></span>
+                            <span>使用者列表</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link menu-title" href="/Account/Role/List">
+                            <span id="role" class="account-menu-icon"></span>
+                            <span>身分列表</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link menu-title" href="/Account/Permission/List">
+                            <span id="permission" class="account-menu-icon"></span>
+                            <span>權限列表</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link menu-title" href="/Account/Department/List">
+                            <span id="department" class="account-menu-icon"></span>
+                            <span>部門列表</span>
                         </a>
                     </li>
                 </ul>

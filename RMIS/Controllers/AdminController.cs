@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,8 +9,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RMIS.Data;
 using RMIS.Models.Admin;
+using RMIS.Models.Auth;
 using RMIS.Models.sql;
 using RMIS.Repositories;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -22,18 +25,35 @@ namespace RMIS.Controllers
     public class AdminController : Controller
     {
         private readonly AdminInterface _adminInterface;
+        private readonly AccountInterface _accountInterface;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<AdminController> _logger;
 
-        public AdminController(AdminInterface adminInterface, ILogger<AdminController> logger)
+        public AdminController(AdminInterface adminInterface, 
+                               AccountInterface accountInterface,
+                               UserManager<ApplicationUser> userManager, 
+                               ILogger<AdminController> logger)
         {
             _adminInterface = adminInterface;
+            _accountInterface = accountInterface;
+            _userManager = userManager;
             _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> AddPipeline()
         {
-            var input = await _adminInterface.getPipelineInput();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var department = await _accountInterface.GetUserDemartment(currentUser);
+            var input = await _adminInterface.getPipelineInput(department);
             _logger.LogInformation("已載入新增管線頁面");
             return View(input);
         }

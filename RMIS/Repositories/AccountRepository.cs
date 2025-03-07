@@ -46,6 +46,16 @@ namespace RMIS.Repositories
             return permission ?? new RolePermission { Read = false, Create = false, Delete = false, Export = false, Update = false }; // 默認無權限
         }
 
+        public async Task<string> GetUserDemartment(ApplicationUser user)
+        {
+
+            var department = await _authDbContext.Departments
+                .Where(d => d.Id == user.DepartmentId)
+                .Select(d => d.Name)
+                .FirstAsync();
+            return department;
+        }
+
         public async Task<(bool Success, string Message)> CreatePermissionAsync(CreatePermissionView createPermission)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();

@@ -1,3 +1,33 @@
+#role{
+    background-image: url("/svg/account/role.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+#user{
+    background-image: url("/svg/account/user.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+#permission{
+    background-image: url("/svg/account/permission.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+#department{
+    background-image: url("/svg/account/department.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+#home{
+    background-image: url("/svg/account/home.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
 .d-none {
     display: none;
 }
@@ -52,4 +82,16 @@
 
 .selector{
     width: 30%;
+}
+
+.account-menu-icon{
+    font-size: 1.75rem;
+    text-align: center;
+    float: left;
+    width: 39px;
+    height: 39px;
+    line-height: 42px;
+    cursor: pointer;
+    background-size: cover;
+    background-repeat: no-repeat;
 }

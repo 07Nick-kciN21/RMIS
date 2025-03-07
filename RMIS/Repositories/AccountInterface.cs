@@ -10,6 +10,7 @@ namespace RMIS.Repositories
     public interface AccountInterface
     {
         Task<List<DepartmentUser>> GetAllUser();
+        Task<string> GetUserDemartment(ApplicationUser user);
         Task<UserManager> GetUserManagerDataAsync();
         Task<RoleManager> GetRoleManagerDataAsync();
         Task<DepartmentManager> GetDepartmentManagerDataAsync();

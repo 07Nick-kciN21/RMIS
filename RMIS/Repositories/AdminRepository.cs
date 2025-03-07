@@ -29,9 +29,21 @@ namespace RMIS.Repositories
             _logger = loger;
         }
 
-        public async Task<AddPipelineInput> getPipelineInput()
+        public async Task<AddPipelineInput> getPipelineInput(string department)
         {
-            var _Categories = await _mapDBContext.Categories.ToListAsync();
+            // 先從資料庫查詢 "道路挖掘科"
+            var rootCategory = await _mapDBContext.Categories.FirstOrDefaultAsync(c => c.Name == "道路挖掘科");
+
+            List<Category> _Categories = new List<Category>();
+
+            if (rootCategory != null)
+            {
+                // 查詢 "道路挖掘科" 及其所有子類別
+                _Categories = await _mapDBContext.Categories
+                    .Where(c => c.ParentId == rootCategory.Id || c.Id == rootCategory.Id)
+                    .ToListAsync();
+            }
+
             var _GeometryTypes = await _mapDBContext.GeometryTypes.OrderBy(gt => gt.OrderId).ToListAsync();
 
             // 英文 Kind 對應到 中文 Key
@@ -50,9 +62,10 @@ namespace RMIS.Repositories
                 { "plane", new SelectListGroup { Name = "面" } },
                 { "arrowline", new SelectListGroup { Name = "箭頭" } }
             };
+
             var input = new AddPipelineInput
             {
-                Category = BuildCategorySelectList(_Categories, null),
+                Category = BuildCategorySelectList(_Categories, rootCategory?.Id),
                 GeometryTypes = _GeometryTypes.Select(g =>
                 {
                     return new SelectListItem
@@ -79,21 +92,35 @@ namespace RMIS.Repositories
         {
             // 初始化一個列表來存放結果
             var result = new List<SelectListItem>();
-            // 選擇所有符合當前 parentId 的分類 (表示當前層級的父類別)
-            var categoryList = categories
-                .Where(c => c.ParentId == parentId).ToList();
 
-            // 對於每個分類，繼續遞迴其子分類
-            foreach (var category in categories.Where(c => c.ParentId == parentId).OrderBy(c => c.OrderId))
+            // 確保 "道路挖掘科" 本身在結果中
+            if (level == 0 && parentId != null)
+            {
+                var rootCategory = categories.FirstOrDefault(c => c.Id == parentId);
+                if (rootCategory != null)
+                {
+                    result.Add(new SelectListItem
+                    {
+                        Text = rootCategory.Name,
+                        Value = rootCategory.Id.ToString()
+                    });
+                }
+            }
+
+            // 取得當前層級的子類別
+            var categoryList = categories.Where(c => c.ParentId == parentId).OrderBy(c => c.OrderId).ToList();
+
+            foreach (var category in categoryList)
             {
                 result.Add(new SelectListItem
                 {
-                    Text = new string('*', level * 2) + " " + category.Name,
+                    Text = new string('*', level * 2) + " " + category.Name, // 加上縮排
                     Value = category.Id.ToString()
                 });
-                // 然後遞迴調用，添加子分類
+
+                // 遞迴處理子類別
                 var childCategories = BuildCategorySelectList(categories, category.Id, level + 1);
-                result.AddRange(childCategories);  // 確保子分類緊跟在父分類後面
+                result.AddRange(childCategories);
             }
 
             return result;

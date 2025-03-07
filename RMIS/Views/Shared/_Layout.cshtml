@@ -6,7 +6,6 @@
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/RMIS.styles.css" asp-append-version="true" />
     
     <link rel="stylesheet" href="~/css/index/_layout.css" />
     <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
@@ -41,7 +40,20 @@
                 @RenderSection("HomeHeaderNavList", required: false)
             }
         </header>
+        
         @RenderBody()
+
+        @RenderSection("painterPanel", required: false)
+        @RenderSection("searchPropPanel", required: false)
+        @RenderSection("flagPanel", required: false)
+        @RenderSection("focusPanel", required: false)
+        @RenderSection("measurePanel", required: false)
+        @RenderSection("metaDataPanel", required: false)
+        @RenderSection("projectPanel", required: false)
+        @RenderSection("roadMaintPanel", required: false)
+        @RenderSection("searchPanel", required: false)
+        @RenderSection("accidentPanel", required: false)
+        
     </div>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

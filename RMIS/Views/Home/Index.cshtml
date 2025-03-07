@@ -29,25 +29,18 @@
     }
 </style>
 
-<link rel="stylesheet" href="~/css/index/measureTool.css" />
+
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
 <link rel="stylesheet" href="~/css/index/offcanvas.css" />
 <link rel="stylesheet" href="~/css/index/menu.css" />
 <link rel="stylesheet" href="~/css/index/svg_list.css" />
 <link rel="stylesheet" href="~/css/index/popup.css" />
-<link rel="stylesheet" href="~/css//index/searchPropPanel.css"/>
-<link rel="stylesheet" href="~/css/index/searchPanel.css" />
 <link rel="stylesheet" href="~/css/index/drawtool.css" />
 <link rel="stylesheet" href="~/css/index/panel.css" />
-<link rel="stylesheet" href="~/css/index/painterPanel.css"/>
 <link rel="stylesheet" href="~/css/index/maptool.css" />
 <link rel="stylesheet" href="~/css/index/modal.css" />
 <link rel="stylesheet" href="~/css/index/pointEdit.css" />
-<link rel="stylesheet" href="~/css/index/flagPanel.css" />
-<link rel="stylesheet" href="~/css/index/focusPanel.css" />
-<link rel="stylesheet" href="~/css/index/projectPanel.css" />
-<link rel="stylesheet" href="~/css/index/metaDataPanel.css" />
-<link rel="stylesheet" href="~/css/index/accidentPanel.css" />
+
 <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
@@ -71,8 +64,6 @@
 <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-pip@latest/leaflet-pip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.10.3/src/leaflet.geometryutil.min.js"></script>
-
-
 <script src="~/lib/proj4.js"></script>
 
 
@@ -91,14 +82,12 @@
             </div>
             <div class="head-logo-box navbar-toggle">
                 <div class="head-logo">桃園市養護工程處整合協作平台</div>
-              
             </div>
-            
         </nav>
     </div>
     
     <div id="col2" style="margin-left:auto">
-        <nav id="head-nav" class="navbar-toggle"  style="padding: 0;">
+        <nav id="head-nav" class="navbar-toggle" style="padding: 0;">
             <div class="container-fluid ">
                 <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
                     <div id="userMenuBtn" class="user-logo-box" data-target="userMenuContent">
@@ -126,7 +115,7 @@
                             </ul>
                         </div>
                     </div>
-                    @if (User.IsInRole("超級管理員"))
+                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Create)
                     {
                         <div class="nav-item dropdown">
                             <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
@@ -167,11 +156,6 @@
                                             <h4>上傳道路專案</h4>
                                         </a>
                                     </li>
-                                                @* <li>
-                                <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructionNotice">
-                                    <h4>新增施工通報</h4>
-                                </a>
-                            </li> *@
                                     <li>
                                         <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
                                             <h4>上傳施工通報</h4>
@@ -255,6 +239,9 @@
         <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
         <span id="tb-painterPanel" class="mobileTool" title="繪圖板"></span>
         <span id="tb-propEnabled" title="屬性資料"></span>
+        <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
+        <span id="tb-location" class="mobileTool" title="目前位置"></span>
+        <span id="tb-streetView" class="mobileTool" title="google街景"></span>
         @if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read)
         {
             <span id="tb-searchPropPanel" class="mobileTool" title="屬性搜尋"></span>
@@ -271,10 +258,11 @@
         {
             <span id="tb-accidentPanel" title="交通事故"></span>
         }
-        <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
-        <span id="tb-location" class="mobileTool" title="目前位置"></span>
-        <span id="tb-streetView" class="mobileTool" title="google街景"></span>
-        <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
+        @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read){
+            <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
+        }
+        
+        
     </div>
     <div class="map-footer">
         <div id="scale-control" class="footer-tip"></div>
@@ -322,256 +310,58 @@
     </div>
 </div>
 
-@* 快搜面板 *@
-<div id="searchPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            道路快搜
-        </span>
-        <button id="search_Close" class="closeButton">&times;</button>
-    </div>
-    <div class="panelInput">
-        <input type="text" class="searchPanelInput" placeholder="搜尋道路">
-        <button class="searchPanelBtn"></button>
-    </div>
-    <div class="panelFooter">
-        <ul id="searchList" class="panelList" style="max-height:150px">
-        </ul>
-    </div>
-</div>
 
-@* 繪圖面板 *@
-<div id="painterPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            繪圖板
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-    <div id="drawTool" style="display:flex">
-        <div id="drawClear" class="drawMenu dtBtn" title="橡皮擦"></div>
-        <div id="drawUndo" class="drawMenu" title="復原"></div>
-        <div id="drawRedo" class="drawMenu" title="取消復原"></div>
-        <div id="drawEdit" class="drawMenu dtBtn" title="編輯"></div>
-        <div id="drawPolyline" class="drawMenu dtBtn" title="繪製線段"></div>
-        <div id="drawPolygon" class="drawMenu dtBtn" title="繪製多邊形"></div>
-        <div id="drawRectangle" class="drawMenu dtBtn" title="繪製矩形"></div>
-        <div id="drawCircle" class="drawMenu dtBtn" title="繪製圓形"></div>
-        <div id="drawCircleMarker" class="drawMenu dtBtn" title="繪製圓形標記"></div>
-        <div id="drawMarker" class="drawMenu dtBtn" title="繪製標記"></div>
-        <div id="drawText" class="drawMenu dtBtn" title="繪製文字"></div>
-        <div id="drawIO" class="drawMenu dtBtn finalTool" title="匯入/匯出">
-            <ul id="ptbInOut">
-                <li id="ptbIO_0" aria-expanded="true">匯入Json</li>
-                <li id="ptbIO_1">匯出Json</li>
-            </ul>
-        </div>
-    </div>
-    <div class="panelInput" style="display:block">
-        <div id="colorPicker" class="colorPickers">
-            <div id="colorPickerContent">
-            </div>
-            <div>
-                <button class="goDraw">繪製</button>
-            </div>
-        </div>
-    </div>
-    <div class="panelFooter">
-        <ul id="painterList" class="panelList" style="height:130px; max-height:130px">
-        </ul>
-    </div>
-</div>
+@section searchPanel {
+    @Html.Partial("~/Views/Home/Partials/_searchPanel.cshtml")
+}
 
-@* 屬性搜尋面板 *@
-<div id="searchPropPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            屬性搜尋
-        </span>
-        <div>
-            <button class="closeButton">&times;</button>
-        </div>
-    </div>
-    <ul class="panelInput panelRadio" role="group" aria-label="Basic radio toggle button group">
-        <li style="width: 25%">
-            <input type="radio" class="btn-check" name="propradio" id="propradio1" autocomplete="off" checked />
-            <label class="btn" for="propradio1">依屬性</label>
-        </li>
-        <li style="width: 25%">
-            <input type="radio" class="btn-check" name="propradio" id="propradio2" autocomplete="off" />
-            <label class="btn" for="propradio2">依空間</label>
-        </li>
-        <li style="width: 25%; visibility: hidden;">
-            <input type="radio" class="btn-check" name="propradio" id="propradio3" autocomplete="off" />
-            <label class="btn" for="propradio3">結果</label>
-        </li>
-        <li style="width: 25%; visibility: hidden;">
-            <input type="radio" class="btn-check" name="propradio" id="propradio4" autocomplete="off" />
-            <label class="btn" for="propradio4">統計</label>
-        </li>
-    </ul>
-    <div id="prop1" class="panelBody" style="display: block">
-        <div class="form-group" style="display: flex; align-items: center;">
-            <select id="pFeatSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                <option value="-1">請選擇圖層</option>
-            </select>
-        </div>
-        <div id="propQuery" class="panelList" style="height:200px; max-height:200px; clear:both;">
-        </div>
-        <div class="form-group" style="clear:both;">
-            <button class="btn js-modal-toggle" id="propClear">清除</button>
-            <button class="btn js-modal-toggle" id="propGoFilter">進行篩選</button>
-        </div>
-    </div>
-    <div id="prop2" class="panelBody" style="display: none">
-        <div class="form-group" style="display: flex; align-items: center;">
-            <select id="gFeatSelect" class="form-select" style="flex-grow: 1;">
-                <option value="-1">請選擇圖層</option>
-            </select>
-        </div>
-        <div id="shapeGroup" class="hide">
-            <div id="propGeoCustom" style="height:100px; max-height:100px; clear:both;">
-                <button id="propRect" type="button">
-                    <img src="/img/prop/rectangle.png">
-                </button>
-                <button id="propCircle" type="button">
-                    <img src="/img/prop/circle.png">
-                </button>
-                <button id="propPolygon" type="button">
-                    <img src="/img/prop/polygon.png">
-                </button>
-            </div>
-            <div class="form-group" style="clear:both;">
-                <button class="btn js-modal-toggle" id="geoClear">清除</button>
-                <button class="btn js-modal-toggle" id="geoGoFilter">進行篩選</button>
-            </div>
-        </div>
-    </div>
-    <div id="prop3" class="panelBody" style="padding-bottom: 0.2rem; display: none;">
-        <div class="propResultTitle">
-            <span style="width:50px; height:30px; margin:0px">圖層:</span>
-            <span id="propResultLayer" style="margin:0px"></span>
-        </div>
-        <div class="propResultTitle">
-            <span style="width:50px; height:30px; margin:0px">條件:</span>
-            <span id="propResultCond" style="margin:0px"></span>
-        </div>
-        <div class="propResultTitle">
-            <span style="margin-top:4px">結果列表</span>
-            <span id="totalCount"></span>
-            <a id="exportExcel1" class="exportExcel" style="float:right">匯出Excel</a>
-        </div>
-        <div class="propResultDiv" style="width:100%; height:280px; max-height:280px; overflow:auto;">
-            <table id="propResult" class="propTable">
-                <thead id="propThead"></thead>
-                <tbody id="propTbody"></tbody>
-            </table>
-        </div>
-        <div class="tablePage">
-            <span style="float:left">每頁最多</span>
-            <select id="propPageSize" style="float:left">
-                <option value="10">10</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="200">200</option>
-            </select>
-            <span style="float:left"> 筆</span>
-            <span id="propPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
-            </span>
-        </div>
-    </div>
-    <div id="prop4" class="panelBody" style="padding-bottom: 2rem; display: none;">
-        <div class="propResultTitle" style="height:30px;">
-            <span style="width:50px; height:30px; margin:0px">圖層:</span>
-            <span id="analysisResultLayer" style="margin:0px"></span>
-        </div>
-        <div id="analysisContent">
-            <div class="form-group" style="width:45%; float: left">
-                <label style="vertical-align: text-top;margin: 0px">屬性欄位(可複選)</label>
-                <div class="listResult" style="height:120px;">
-                    <ul id="anaFieldList" class="panelList">
-                    </ul>
-                </div>
-            </div>
-            <div class="form-group" style="width:45%; margin-left: 2px; float: right">
-                <label style="vertical-align: text-top;margin: 0px">已選欄位</label>
-                <div class="listBox" style="margin: 0px">
-                    <div class="listResult" style="height:120px">
-                        <ul id="anaSelList" class="panelList">
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group mb-2">
-                <label class="form-label mb-2">統計方式:</label>
-                <div class="d-flex flex-wrap" style="font-size: 10px;">
-                    <div class="form-check me-3">
-                        <input class="form-check-input anaI" type="checkbox" id="anaSum" name="anaSum" value="sum">
-                        <label class="form-check-label" for="anaSum">加總</label>
-                    </div>
-                    <div class="form-check me-3">
-                        <input class="form-check-input anaI" type="checkbox" id="anaAvg" name="anaAvg" value="avg">
-                        <label class="form-check-label" for="anaAvg">平均</label>
-                    </div>
-                    <div class="form-check me-3">
-                        <input class="form-check-input anaI" type="checkbox" id="anaMax" name="anaMax" value="max">
-                        <label class="form-check-label" for="anaMax">最大值</label>
-                    </div>
-                    <div class="form-check me-3">
-                        <input class="form-check-input anaI" type="checkbox" id="anaMin" name="anaMin" value="min">
-                        <label class="form-check-label" for="anaMin">最小值</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="anaAll" name="anaAll" value="all">
-                        <label class="form-check-label" for="anaAll">全選</label>
-                    </div>
-                </div>
-            </div>
+@section painterPanel {
+    @Html.Partial("~/Views/Home/Partials/_painterPanel.cshtml")
+}
 
-            <div class="form-group" style="clear:both; width:100%; margin-left:auto; margin-right:auto; text-align:center;">
-                <button id="anaGoResult" class="goResult btn js-modal-toggle">顯示結果</button>
-            </div>
+@if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read)
+{
+    @section searchPropPanel {
+        @Html.Partial("~/Views/Home/Partials/_searchPropPanel.cshtml")
+    }
+}
 
-            <div id="anaResultDiv" style="display:none">
-                <div class="form-group resultListTitle" style="margin: 2px 0px 2px; clear: both;">
-                    <span style="vertical-align: text-top; margin: 0px;">數值統計結果</span>
-                    <a id="exportExcel2" class="exportExcel" style="float: right;">匯出Excel</a>
-                </div>
-                <div class="propResultDiv" style="max-height: 114px; overflow-y: auto;">
-                    <table id="propAnaResult" class="propTable" style="width: 100%;">
-                        <thead>
-                            <tr id="anaHdr" role="row" class="propRow">
-                            </tr>
-                        </thead>
-                        <tbody id="anaBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+ @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read)
+{
+    @section focusPanel {
+        @Html.Partial("~/Views/Home/Partials/_focusPanel.cshtml")
+    }
+}
+ @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read)
+{
+    @section projectPanel {
+        @Html.Partial("~/Views/Home/Partials/_projectPanel.cshtml")
+    }
+}
+ @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read)
+{
+    @section accidentPanel {
+        @Html.Partial("~/Views/Home/Partials/_accidentPanel.cshtml")
+    }
+}
+ @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read)
+{
+    @section flagPanel {
+        @Html.Partial("~/Views/Home/Partials/_flagPanel.cshtml")
+    }
+}
 
-@*  測量面板 *@
-<div id="measurePanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            測量
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-    <div id="measureTool" class="panelFooter" style="display:flex; padding-bottom: 0;">
-        <div id="measurePolyline" class="drawMenu mBtn" title="路線測量"></div>
-        <div id="measurePolygon" class="drawMenu mBtn" title="面積測量"></div>
-        <div id="measureEraser" class="drawMenu mBtn finalTool" title="清除全部"></div>
-    </div>
-    <div class="panelFooter" style="display:flex; padding-bottom: 0;">
-        <div id="showLine" class="drawMenu mBtn eyeOpen" title="顯示邊長"></div>
-        <div id="showTotal" class="drawMenu mBtn eyeOpen" title="顯示總和"></div>
-    </div>
-</div>
+@section measurePanel {
+    @Html.Partial("~/Views/Home/Partials/_measurePanel.cshtml")
+}
 
-<div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
-<div id="measureTip" class="tip" style="display: none;"></div>
+@section metaDataPanel {
+    @Html.Partial("~/Views/Home/Partials/_metaDataPanel.cshtml")
+}
+
+@section roadMaintPanel {
+    @Html.Partial("~/Views/Home/Partials/_roadMaintPanel.cshtml")
+}
 
 <div id="customModal" class="modal-overlay hidden">
     <div class="modal-content">
@@ -584,595 +374,9 @@
         </div>
     </div>
 </div>
-@* 權管土地 *@
-<div id="flagPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            權管土地
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-    @* 滾動條 *@
-    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
-        <div class="panelBody">
-            @* 行政區 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>行政區</label>
-                <select id="adminSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇</option>
-                    <option value="0">桃園區</option>
-                    <option value="1">大溪區</option>
-                    <option value="2">中壢區</option>
-                    <option value="3">楊梅區</option>
-                    <option value="4">蘆竹區</option>
-                    <option value="5">大園區</option>
-                    <option value="6">龜山區</option>
-                    <option value="7">八德區</option>
-                    <option value="8">龍潭區</option>
-                    <option value="9">平鎮區</option>
-                    <option value="10">新屋區</option>
-                    <option value="11">觀音區</option>
-                    <option value="12">復興區</option>
-                </select>
-            </div>
-            @* 管理單位 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>管理單位</label>
-                <select id="manageSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇管理單位</option>
-                    <option value="0">桃園市政府養護工程處</option>
-                    <option value="1">公園綠地科</option>
-                    <option value="2">道路行政科</option>
-                    <option value="3">秘書室</option>
-                </select>
-            </div>
-            @* 疑似占用 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>疑似占用</label>
-                <div class="fieldset-radio" style="width: 70%;">
-                    <label class="inline-block">
-                        <input type="radio" name="locOcc" value="1" checked="">占用
-                    </label>
-                    <label class="inline-block">
-                        <input type="radio" name="locOcc" value="0">未占用
-                    </label>
-                    <label class="inline-block">
-                        <input type="radio" name="locOcc" value="-1">全部
-                    </label>
-                </div>
-            </div>
-            @* 疑似占用類型 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>占用類型</label>
-                <select id="suspectTypeSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇疑似占用類型</option>
-                    <option value="1">第一類-荒廢未管理之地</option>
-                    <option value="2">第二類-民眾種植有價作物</option>
-                    <option value="3">第三類-鐵皮、柵欄或其他可移動式之臨時設施</option>
-                    <option value="4">第四類-永久建築物</option>
-                </select>
-            </div>
-            @* 地段 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>地段</label>
-                <select id="landSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇地段</option>
-                    <option value="龍壽段">龍壽段</option>
-                    <option value="雙龍段">雙龍段</option>
-                </select>
-            </div>
-            @* 地號 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>地號</label>
-                <div class="boxList">
-                    <div class="boxHeader">
-                        <input type="text" id="landNo" class="form-control" style="flex-grow: 1;border-radius:0;" placeholder="搜尋地號">
-                    </div>
-                    <div class="boxBody">
-                        <ul id="locOccList">
-                            <li class="panelResult">1001</li>
-                            <li class="panelResult">1002</li>
-                            <li class="panelResult">1003</li>
-                            <li class="panelResult">1004</li>
-                            <li class="panelResult">1005</li>
-                            <li class="panelResult">1006</li>
-                            <li class="panelResult">1007</li>
-                            <li class="panelResult">1008</li>
-                            <li class="panelResult">1009</li>
-                            <li class="panelResult">1010</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            @* 年度 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>年度</label>
-                <select id="yearSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">全部</option>
-                    <option value="105">105年</option>
-                    <option value="106">106年</option>
-                    <option value="107">107年</option>
-                    <option value="108">108年</option>
-                    <option value="109">109年</option>
-                    <option value="110">110年</option>
-                    <option value="111">111年</option>
-                    <option value="112">112年</option>
-                    <option value="113">113年</option>
-                </select>
-            </div>
-            @* 使用分區 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>使用分區</label>
-                <select id="useSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">全部</option>
-                </select>
-            </div>
-            @* 案件狀況 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                <label>案件狀況</label>
-                <select id="caseSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇案件狀況</option>
-                    @* 發文通知 *@
-                    <option value="0">發文通知</option>
-                    @* 未處理 *@
-                    <option value="1">未處理</option>
-                    @* 已處理 *@
-                    <option value="2">已處理</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-            <button id="flagGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
-        </div>
-        <div style="margin: 0% 15px;">
-            <span style="margin-top:4px">結果列表</span>
-            <span id="flagCount" class="totalCount"></span>
-            <a id="flagExcel" class="exportExcel" style="float:right">匯出Excel</a>
-        </div>
-        <div id="flagResultDiv" class="panelList">
-            <table id="flagTable" class="propTable">
-                <thead id="flagThead">
-                    <tr id="Occdr" role="row">
-                        <th style="width:100px"></th>
-                        <th style="width:100px">案號</th>
-                        <th style="width:120px">清查年度</th>
-                        <th style="width:120px">疑似占用</th>
-                        <th style="width:100px">勘查表</th>
-                        <th style="width:120px">案件狀態</th>
-                        <th style="width:100px">備註</th>
-                        <th style="width:65px">附件</th>
-                    </tr>
-                </thead>
-                <tbody id="flagTbody"></tbody>
-            </table>
-        </div>
-        <div class="tablePage" style="margin: 15px;">
-            <span style="float:left">每頁最多</span>
-            <select id="flagPageSize" style="float:left">
-                <option value="10">10</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="200">200</option>
-            </select>
-            <span style="float:left"> 筆</span>
-            <span id="flagPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
-            </span>
-        </div>
-    </div>
-</div>
 
-@* 養工焦點 *@
-<div id="focusPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            養工焦點
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
-        <ul class="panelInput panelRadio" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
-            <li style="width: 25%">
-                <input type="radio" class="btn-check" name="focusradio" id="focus1" autocomplete="off" checked />
-                <label class="btn select" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
-            </li>
-        </ul>
-        <div class="panelBody" style="display: block">
-            <div class="form-group">
-                @* 日期範圍 *@
-                <label>日期範圍</label>
-                <input type="text" id="focusStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
-                ⇔
-                <input type="text" id="focusEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
-            </div>
-            <div class="form-group">
-                @* 道路借用類型 *@
-                <label>借用類型</label>
-                <select id="ofType" class="form-select">
-                    <option value="0">請選擇</option>
-                    <option value="1">臨時道路借用(範圍)</option>
-                    <option value="2">臨時道路借用(路線)</option>
-                    <option value="3">施工通報(道路挖掘)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                @* 路名 *@
-                <label>路名</label>
-                <input type="text" id="focusRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
-            </div>
-        </div>
-        <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-            <button id="focusGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
-        </div>
-        <div class="form-group resultListTitle" style="margin: 0 15px; clear: both;">
-            <span style="vertical-align: text-top; margin: 0px;">結果列表</span>
-            <span id="focusTotalCount"></span>
-            <a id="focusExcel" class="exportExcel" style="float: right; margin-left: auto;">匯出Excel</a>
-        </div>
-        <div id="focusResultDiv" class="panelList">
-            <table id="focusTable" class="propTable">
-                <thead id="focusThead">
-                    <tr id="focusHdr" role="row">
-                        <th style="width:60px">操作</th>
-                        @* 日期 *@
-                        <th style="width:100px">日期</th>
-                        @* 地點 *@
-                        <th style="width:100px">地點</th>
-                        @* 借用類型 *@
-                        <th style="width:100px">借用類型</th>
-                    </tr>
-                </thead>
-                <tbody id="focusTbody"></tbody>
-            </table>
-        </div>
-        <div class="tablePage" style="margin: 0 15px;">
-            <span style="float:left">每頁最多</span>
-            <select id="focusPageSize" style="float:left">
-                <option value="10">10</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="200">200</option>
-            </select>
-            <span style="float:left"> 筆</span>
-            <span id="focusPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
-            </span>
-        </div>
-    </div>
-    
-</div>
-
-@* 專案查詢 *@
-<div id="projectPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            專案查詢
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
-        <div class="panelBody">
-            @* 提案人 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                @* 行政區 *@
-                <label>行政區</label>
-                <select id="projectAdmin" class="form-select" style="">
-                    <option value="-1">請選擇</option>
-                    <option value="0">桃園區</option>
-                    <option value="1">大溪區</option>
-                    <option value="2">中壢區</option>
-                    <option value="3">楊梅區</option>
-                    <option value="4">蘆竹區</option>
-                    <option value="5">大園區</option>
-                    <option value="6">龜山區</option>
-                    <option value="7">八德區</option>
-                    <option value="8">龍潭區</option>
-                    <option value="9">平鎮區</option>
-                    <option value="10">新屋區</option>
-                    <option value="11">觀音區</option>
-                    <option value="12">復興區</option>
-                </select>
-            </div>
-
-            @* 起點 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                @* 終點 *@
-                <label>起點</label>
-                <input type="text" id="projectStartPoint" class="form-control">
-            </div>
-
-            @* 終點 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                @* 終點 *@
-                <label>終點</label>
-                <input type="text" id="projectEndPoint" class="form-control">  
-            </div>
-
-            @* 道路長度 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                @* 道路長度 *@
-                <label>道路長度</label>
-                <input type="text" id="projectRoadLength" class="form-control">
-            </div>
-
-            @* 現況路寬 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                @* 現況路寬 *@
-                <label>現況路寬</label>
-                <input type="text" id="projectCurrentRoadWidth" class="form-control">
-            </div>
-
-            @* 計畫路寬 *@
-            <div class="form-group" style="display: flex; align-items: center;">
-                @* 計畫路寬 *@
-                <label>計畫路寬</label>
-                <input type="text" id="projectPlannedRoadWidth" class="form-control">
-            </div>
-
-            @* 工程經費(比較單一值) *@
-            <div id="budgetDiv">
-                <div class="form-group">
-                    <label style="margin-right: auto;">工程經費</label>
-                    @* 比較運算選項(> < =) *@
-                    <select id="constructionBudgetOption" class="form-select">
-                        <option value="-1">請選擇</option>
-                        <option value="1">大於</option>
-                        <option value="2">小於</option>
-                        <option value="3">等於</option>
-                    </select>
-                    <input type="text" id="constructionBudget" class="form-control">
-                    <label style="width: 5%;">萬</label>
-                </div>
-                @* 用地經費 *@
-                <div class="form-group">
-                    <label style="margin-right: auto;">用地經費</label>
-                    @* 比較運算選項(> < =) *@
-                    <select id="landAcquisitionBudgetOption" class="form-select">
-                        <option value="-1">請選擇</option>
-                        <option value="1">大於</option>
-                        <option value="2">小於</option>
-                        <option value="3">等於</option>
-                    </select>
-                    <input type="text" id="landAcquisitionBudget" class="form-control">
-                    <label style="width: 5%;">萬</label>
-                </div>
-                @* 補償經費 *@
-                <div class="form-group">
-                    <label style="margin-right: auto;">補償經費</label>
-                    @* 比較運算選項(> < =) *@
-                    <select id="compensationBudgetOption" class="form-select">
-                        <option value="-1">請選擇</option>
-                        <option value="1">大於</option>
-                        <option value="2">小於</option>
-                        <option value="3">等於</option>
-                    </select>
-                    <input type="text" id="compensationBudget" class="form-control">
-                    <label style="width: 5%;">萬</label>
-                </div>
-                <div class="form-group totalBudget">
-                    @* 合計經費(範圍) *@
-                    <label style="margin-right: auto;">經費範圍</label>
-                    <input type="text" id="totalBudgetStart" class="form-control">
-                    <label style="width: 5%; width: 5%; align-items: center; justify-content: center; display: flex;">⇔</label>
-                    <input type="text" id="totalBudgetEnd" class="form-control">
-                    <label style="width: 5%;">萬</label>
-                </div>
-            </div>
-        </div>
-        <div class="form-group" style="clear: both; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-            <button id="projectGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
-        </div>
-        <div class="resultListTitle" style="margin: 0 15px;">
-            <span style="margin-top:4px">結果列表</span>
-            <span id="projectTotalCount"></span>
-            <a id="exportProjectExcel" class="exportExcel" style="float:right">匯出Excel</a>
-        </div>
-        <div id="projectResultDiv" class="panelList">
-            <table id="projectTable" class="propTable">
-                <thead id="projectThead">
-                    <tr id="projectHdr" role="row">
-                        <th style="width:100px">定位</th>
-                        <th style="width:100px">操作</th>
-                        <th style="width:120px">申請人</th>
-                        <th style="width:120px">行政區</th>
-                        <th style="width:120px">起訖位置</th>
-                        <th style="width:120px">道路長度</th>
-                        <th style="width:120px">目前路寬</th>
-                        <th style="width:120px">計畫路寬</th>
-                        <th style="width:120px">公有土地</th>
-                        <th style="width:120px">私有土地</th>
-                        <th style="width:120px">公私土地</th>
-                        <th style="width:120px">工程經費</th>
-                        <th style="width:120px">用地經費</th>
-                        <th style="width:120px">補償經費</th>
-                        <th style="width:120px">總經費</th>
-                        <th style="width:120px">備註</th>
-                    </tr>
-                </thead>
-                <tbody id="projectTbody"></tbody>
-            </table>
-        </div>
-        <div class="tablePage" style="margin: 0 15px;">
-            <span style="float:left">每頁最多</span>
-            <select id="protectPageSize" style="float:left">
-                <option value="10">10</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="200">200</option>
-            </select>
-            <span style="float:left"> 筆</span>
-            <span id="protectPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
-            </span>
-        </div>
-    </div>
-</div>
-
-@* 詮釋資料 *@
-<div id="metaDataPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            詮釋資料
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
-        <div class="panelBody" style="display: block">
-        </div>
-    </div>
-</div>
-
-@* 交通事故 *@
-<div id="accidentPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            交通事故
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
-        <ul class="panelInput panelRadio" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
-            <li style="width: 25%">
-                <input type="radio" class="btn-check" name="accradio" id="accident1" autocomplete="off" checked />
-                <label class="btn" for="accident1">圖層開關</label>
-            </li>
-            <li style="width: 25%">
-                <input type="radio" class="btn-check" name="accradio" id="accident2" autocomplete="off"/>
-                <label class="btn" for="accident2">簡易查詢</label>
-            </li>
-            <li style="width: 25%">
-                <input type="radio" class="btn-check" name="accradio" id="accident3" autocomplete="off"/>
-                <label class="btn" for="accident3">資料匯出</label>
-            </li>
-        </ul>
-        <div id="acc1" class="panelBody" style="display: block">
-            <div class="form-group">
-                <label class="sw-label">
-                    <input type="checkbox" name="" id="accCluster" class="sw-chk">
-                    <span class="sw-box">
-                        <span class="sw-btn"></span>
-                    </span>
-                    <span>叢集模組</span>
-                </label>
-            </div>
-            <div class="form-group">
-                <label class="sw-label">
-                    <input type="checkbox" name="" id="accTimeline" class="sw-chk">
-                    <span class="sw-box">
-                        <span class="sw-btn"></span>
-                    </span>
-                    <span>A1A2熱區時間軸</span>
-                </label>
-            </div>
-            <div class="form-group">
-                <label class="sw-label">
-                    <input type="checkbox" name="" id="accTowCmp" class="sw-chk">
-                    <span class="sw-box">
-                        <span class="sw-btn"></span>
-                    </span>
-                    <span>前後期比對</span>
-                </label>
-            </div>
-        </div>
-        <div id="acc2" class="panelBody" style="display: none">
-            <div class="form-group">
-                @* 日期範圍 *@
-                <label>日期範圍</label>
-                <input type="text" id="accStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
-                ⇔
-                <input type="text" id="accEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
-            </div>
-            <div class="form-group">
-                <label>行政區</label>
-                <select id="acc2AdminDict" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇</option>
-                    <option value="0">桃園區</option>
-                    <option value="1">大溪區</option>
-                    <option value="2">中壢區</option>
-                    <option value="3">楊梅區</option>
-                    <option value="4">蘆竹區</option>
-                    <option value="5">大園區</option>
-                    <option value="6">龜山區</option>
-                    <option value="7">八德區</option>
-                    <option value="8">龍潭區</option>
-                    <option value="9">平鎮區</option>
-                    <option value="10">新屋區</option>
-                    <option value="11">觀音區</option>
-                    <option value="12">復興區</option>
-                </select>
-            </div>
-            <div class="form-group">
-                @* 路名 *@
-                <label>路名</label>
-                <input type="text" id="accRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
-            </div>
-            <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-                <button id="acc2GoResult" class="btn js-modal-toggle goResult">進行篩選</button>
-            </div>
-            <div id="accidentResultDiv" class="panelList">
-                <table id="accidentTable" class="propTable">
-                <thead id="accidentThead">
-                    <th>事故類型</th>
-                    <th>事故發生</th>
-                    <th>行政區</th>
-                    <th>事故地點</th>
-                    <th>死亡人數</th>
-                    <th>受傷人數</th>
-                    <th>事故車種</th>
-                    <th>經度</th>
-                    <th>緯度</th>
-                </thead>
-                <tbody id="accidentTbody">
-                </tbody>
-            </table>
-            </div>
-        </div>
-
-        <div id="acc3" class="panelBody" style="display: none">
-            <div class="form-group">
-                <label>行政區</label>
-                <select id="acc3AdminDict" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇</option>
-                    <option value="0">桃園區</option>
-                    <option value="1">大溪區</option>
-                    <option value="2">中壢區</option>
-                    <option value="3">楊梅區</option>
-                    <option value="4">蘆竹區</option>
-                    <option value="5">大園區</option>
-                    <option value="6">龜山區</option>
-                    <option value="7">八德區</option>
-                    <option value="8">龍潭區</option>
-                    <option value="9">平鎮區</option>
-                    <option value="10">新屋區</option>
-                    <option value="11">觀音區</option>
-                    <option value="12">復興區</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>年分</label>
-                <select id="acc3Year" class="form-select">
-                        <option value="108">108</option>
-                        <option value="109">109</option>
-                        <option value="110">110</option>
-                        <option value="111">111</option>
-                        <option value="112">112</option>
-                        <option value="113">113</option>
-                        <option value="114">114</option>
-                </select>
-            </div>
-            <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-                <button id="acc3GoResult" class="btn js-modal-toggle goResult">匯出</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@* 管養道路 *@
-<div id="roadMaintPanel" class="panel hide">
-    <div class="panelHeading">
-        <span>
-            管養道路
-        </span>
-        <button class="closeButton">&times;</button>
-    </div>
-</div>
+<div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
+<div id="measureTip" class="tip" style="display: none;"></div>
 
 @section Scripts {
     <script type="text/javascript">

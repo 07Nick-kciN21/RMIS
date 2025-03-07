@@ -32,6 +32,7 @@
         $('.modal-body').html('<p>正在加载...</p>');
 
         $.get(url, function (data) {
+            console.log("get data");
             $('.modal-body').html(data);
             $('.modal-body form').on('submit', function (e) {
                 e.preventDefault(); // 阻止默認行為

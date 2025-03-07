@@ -1,0 +1,49 @@
+.navbar-toggle {
+    display: block;
+}
+
+.head-logo {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.head-logo-box {
+    height: 51.5px;
+    color: #43413d;
+    line-height: 51.5px;
+    float: left;
+    padding-left:32px;
+}
+
+.user-icon {
+    background-image: url('/svg/user.svg');
+    background-size: 90%;
+    background-position: center;
+    width: 36px;
+    height: 36px;
+    margin: 8px;
+}
+
+a > span {
+    color: black;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+header { 
+    display: flex;
+}
+
+#col2{
+    margin-left: auto;
+}
+
+li{
+    list-style-type: none;
+}
+
+@media (min-width: 900px) {
+    .head-logo {
+        margin-left: 25px;
+    }
+}

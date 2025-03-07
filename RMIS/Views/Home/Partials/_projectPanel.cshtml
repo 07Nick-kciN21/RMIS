@@ -1,0 +1,165 @@
+@* 專案查詢 *@
+<link rel="stylesheet" href="~/css/index/projectPanel.css" />
+<div id="projectPanel" class="panel hide">
+    <div class="panelHeading">
+        <span>
+            專案查詢
+        </span>
+        <button class="closeButton">&times;</button>
+    </div>
+    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
+        <div class="panelBody">
+            @* 提案人 *@
+            <div class="form-group" style="display: flex; align-items: center;">
+                @* 行政區 *@
+                <label>行政區</label>
+                <select id="projectAdmin" class="form-select" style="">
+                    <option value="-1">請選擇</option>
+                    <option value="0">桃園區</option>
+                    <option value="1">大溪區</option>
+                    <option value="2">中壢區</option>
+                    <option value="3">楊梅區</option>
+                    <option value="4">蘆竹區</option>
+                    <option value="5">大園區</option>
+                    <option value="6">龜山區</option>
+                    <option value="7">八德區</option>
+                    <option value="8">龍潭區</option>
+                    <option value="9">平鎮區</option>
+                    <option value="10">新屋區</option>
+                    <option value="11">觀音區</option>
+                    <option value="12">復興區</option>
+                </select>
+            </div>
+
+            @* 起點 *@
+            <div class="form-group" style="display: flex; align-items: center;">
+                @* 終點 *@
+                <label>起點</label>
+                <input type="text" id="projectStartPoint" class="form-control">
+            </div>
+
+            @* 終點 *@
+            <div class="form-group" style="display: flex; align-items: center;">
+                @* 終點 *@
+                <label>終點</label>
+                <input type="text" id="projectEndPoint" class="form-control">  
+            </div>
+
+            @* 道路長度 *@
+            <div class="form-group" style="display: flex; align-items: center;">
+                @* 道路長度 *@
+                <label>道路長度</label>
+                <input type="text" id="projectRoadLength" class="form-control">
+            </div>
+
+            @* 現況路寬 *@
+            <div class="form-group" style="display: flex; align-items: center;">
+                @* 現況路寬 *@
+                <label>現況路寬</label>
+                <input type="text" id="projectCurrentRoadWidth" class="form-control">
+            </div>
+
+            @* 計畫路寬 *@
+            <div class="form-group" style="display: flex; align-items: center;">
+                @* 計畫路寬 *@
+                <label>計畫路寬</label>
+                <input type="text" id="projectPlannedRoadWidth" class="form-control">
+            </div>
+
+            @* 工程經費(比較單一值) *@
+            <div id="budgetDiv">
+                <div class="form-group">
+                    <label style="margin-right: auto;">工程經費</label>
+                    @* 比較運算選項(> < =) *@
+                    <select id="constructionBudgetOption" class="form-select">
+                        <option value="-1">請選擇</option>
+                        <option value="1">大於</option>
+                        <option value="2">小於</option>
+                        <option value="3">等於</option>
+                    </select>
+                    <input type="text" id="constructionBudget" class="form-control">
+                    <label style="width: 5%;">萬</label>
+                </div>
+                @* 用地經費 *@
+                <div class="form-group">
+                    <label style="margin-right: auto;">用地經費</label>
+                    @* 比較運算選項(> < =) *@
+                    <select id="landAcquisitionBudgetOption" class="form-select">
+                        <option value="-1">請選擇</option>
+                        <option value="1">大於</option>
+                        <option value="2">小於</option>
+                        <option value="3">等於</option>
+                    </select>
+                    <input type="text" id="landAcquisitionBudget" class="form-control">
+                    <label style="width: 5%;">萬</label>
+                </div>
+                @* 補償經費 *@
+                <div class="form-group">
+                    <label style="margin-right: auto;">補償經費</label>
+                    @* 比較運算選項(> < =) *@
+                    <select id="compensationBudgetOption" class="form-select">
+                        <option value="-1">請選擇</option>
+                        <option value="1">大於</option>
+                        <option value="2">小於</option>
+                        <option value="3">等於</option>
+                    </select>
+                    <input type="text" id="compensationBudget" class="form-control">
+                    <label style="width: 5%;">萬</label>
+                </div>
+                <div class="form-group totalBudget">
+                    @* 合計經費(範圍) *@
+                    <label style="margin-right: auto;">經費範圍</label>
+                    <input type="text" id="totalBudgetStart" class="form-control">
+                    <label style="width: 5%; width: 5%; align-items: center; justify-content: center; display: flex;">⇔</label>
+                    <input type="text" id="totalBudgetEnd" class="form-control">
+                    <label style="width: 5%;">萬</label>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" style="clear: both; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+            <button id="projectGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
+        </div>
+        <div class="resultListTitle" style="margin: 0 15px;">
+            <span style="margin-top:4px">結果列表</span>
+            <span id="projectTotalCount"></span>
+            <a id="exportProjectExcel" class="exportExcel" style="float:right">匯出Excel</a>
+        </div>
+        <div id="projectResultDiv" class="panelList">
+            <table id="projectTable" class="propTable">
+                <thead id="projectThead">
+                    <tr id="projectHdr" role="row">
+                        <th style="width:100px">定位</th>
+                        <th style="width:100px">操作</th>
+                        <th style="width:120px">申請人</th>
+                        <th style="width:120px">行政區</th>
+                        <th style="width:120px">起訖位置</th>
+                        <th style="width:120px">道路長度</th>
+                        <th style="width:120px">目前路寬</th>
+                        <th style="width:120px">計畫路寬</th>
+                        <th style="width:120px">公有土地</th>
+                        <th style="width:120px">私有土地</th>
+                        <th style="width:120px">公私土地</th>
+                        <th style="width:120px">工程經費</th>
+                        <th style="width:120px">用地經費</th>
+                        <th style="width:120px">補償經費</th>
+                        <th style="width:120px">總經費</th>
+                        <th style="width:120px">備註</th>
+                    </tr>
+                </thead>
+                <tbody id="projectTbody"></tbody>
+            </table>
+        </div>
+        <div class="tablePage" style="margin: 0 15px;">
+            <span style="float:left">每頁最多</span>
+            <select id="protectPageSize" style="float:left">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select>
+            <span style="float:left"> 筆</span>
+            <span id="protectPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
+            </span>
+        </div>
+    </div>
+</div>

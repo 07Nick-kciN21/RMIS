@@ -1,0 +1,78 @@
+@* 養工焦點 *@
+<link rel="stylesheet" href="~/css/index/focusPanel.css" />
+<div id="focusPanel" class="panel hide">
+    <div class="panelHeading">
+        <span>
+            養工焦點
+        </span>
+        <button class="closeButton">&times;</button>
+    </div>
+    <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
+        <ul class="panelInput panelRadio" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
+            <li style="width: 25%">
+                <input type="radio" class="btn-check" name="focusradio" id="focus1" autocomplete="off" checked />
+                <label class="btn select" style="width: 100%; border-radius: 0" for="focus1">簡易查詢</label>
+            </li>
+        </ul>
+        <div class="panelBody" style="display: block">
+            <div class="form-group">
+                @* 日期範圍 *@
+                <label>日期範圍</label>
+                <input type="text" id="focusStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
+                ⇔
+                <input type="text" id="focusEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
+            </div>
+            <div class="form-group">
+                @* 道路借用類型 *@
+                <label>借用類型</label>
+                <select id="ofType" class="form-select">
+                    <option value="0">請選擇</option>
+                    <option value="1">臨時道路借用(範圍)</option>
+                    <option value="2">臨時道路借用(路線)</option>
+                    <option value="3">施工通報(道路挖掘)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                @* 路名 *@
+                <label>路名</label>
+                <input type="text" id="focusRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
+            </div>
+        </div>
+        <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+            <button id="focusGoResult" class="btn js-modal-toggle goResult">顯示結果</button>
+        </div>
+        <div class="form-group resultListTitle" style="margin: 0 15px; clear: both;">
+            <span style="vertical-align: text-top; margin: 0px;">結果列表</span>
+            <span id="focusTotalCount"></span>
+            <a id="focusExcel" class="exportExcel" style="float: right; margin-left: auto;">匯出Excel</a>
+        </div>
+        <div id="focusResultDiv" class="panelList">
+            <table id="focusTable" class="propTable">
+                <thead id="focusThead">
+                    <tr id="focusHdr" role="row">
+                        <th style="width:60px">操作</th>
+                        @* 日期 *@
+                        <th style="width:100px">日期</th>
+                        @* 地點 *@
+                        <th style="width:100px">地點</th>
+                        @* 借用類型 *@
+                        <th style="width:100px">借用類型</th>
+                    </tr>
+                </thead>
+                <tbody id="focusTbody"></tbody>
+            </table>
+        </div>
+        <div class="tablePage" style="margin: 0 15px;">
+            <span style="float:left">每頁最多</span>
+            <select id="focusPageSize" style="float:left">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select>
+            <span style="float:left"> 筆</span>
+            <span id="focusPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
+            </span>
+        </div>
+    </div>
+</div>

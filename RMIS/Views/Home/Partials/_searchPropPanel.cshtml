@@ -1,0 +1,169 @@
+@* 屬性搜尋 *@
+<link rel="stylesheet" href="~/css//index/searchPropPanel.css"/>
+<div id="searchPropPanel" class="panel hide">
+    <div class="panelHeading">
+        <span>
+            屬性搜尋
+        </span>
+        <div>
+            <button class="closeButton">&times;</button>
+        </div>
+    </div>
+    <ul class="panelInput panelRadio" role="group" aria-label="Basic radio toggle button group">
+        <li style="width: 25%">
+            <input type="radio" class="btn-check" name="propradio" id="propradio1" autocomplete="off" />
+            <label class="btn" for="propradio1">依屬性</label>
+        </li>
+        <li style="width: 25%">
+            <input type="radio" class="btn-check" name="propradio" id="propradio2" autocomplete="off" />
+            <label class="btn" for="propradio2">依空間</label>
+        </li>
+        <li style="width: 25%; visibility: hidden;">
+            <input type="radio" class="btn-check" name="propradio" id="propradio3" autocomplete="off" />
+            <label class="btn" for="propradio3">結果</label>
+        </li>
+        <li style="width: 25%; visibility: hidden;">
+            <input type="radio" class="btn-check" name="propradio" id="propradio4" autocomplete="off" />
+            <label class="btn" for="propradio4">統計</label>
+        </li>
+    </ul>
+    <div id="prop1" class="panelBody" style="display: block">
+        <div class="form-group" style="display: flex; align-items: center;">
+            <select id="pFeatSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
+                <option value="-1">請選擇圖層</option>
+            </select>
+        </div>
+        <div id="propQuery" class="panelList" style="height:200px; max-height:200px; clear:both;">
+        </div>
+        <div class="form-group" style="clear:both;">
+            <button class="btn js-modal-toggle" id="propClear">清除</button>
+            <button class="btn js-modal-toggle" id="propGoFilter">進行篩選</button>
+        </div>
+    </div>
+    <div id="prop2" class="panelBody" style="display: none">
+        <div class="form-group" style="display: flex; align-items: center;">
+            <select id="gFeatSelect" class="form-select" style="flex-grow: 1;">
+                <option value="-1">請選擇圖層</option>
+            </select>
+        </div>
+        <div id="shapeGroup" class="hide">
+            <div id="propGeoCustom" style="height:100px; max-height:100px; clear:both;">
+                <button id="propRect" type="button">
+                    <img src="/img/prop/rectangle.png">
+                </button>
+                <button id="propCircle" type="button">
+                    <img src="/img/prop/circle.png">
+                </button>
+                <button id="propPolygon" type="button">
+                    <img src="/img/prop/polygon.png">
+                </button>
+            </div>
+            <div class="form-group" style="clear:both;">
+                <button class="btn js-modal-toggle" id="geoClear">清除</button>
+                <button class="btn js-modal-toggle" id="geoGoFilter">進行篩選</button>
+            </div>
+        </div>
+    </div>
+    <div id="prop3" class="panelBody" style="padding-bottom: 0.2rem; display: none;">
+        <div class="propResultTitle">
+            <span style="width:50px; height:30px; margin:0px">圖層:</span>
+            <span id="propResultLayer" style="margin:0px"></span>
+        </div>
+        <div class="propResultTitle">
+            <span style="width:50px; height:30px; margin:0px">條件:</span>
+            <span id="propResultCond" style="margin:0px"></span>
+        </div>
+        <div class="propResultTitle">
+            <span style="margin-top:4px">結果列表</span>
+            <span id="totalCount"></span>
+            <a id="exportExcel1" class="exportExcel" style="float:right">匯出Excel</a>
+        </div>
+        <div class="propResultDiv" style="width:100%; height:280px; max-height:280px; overflow:auto;">
+            <table id="propResult" class="propTable">
+                <thead id="propThead"></thead>
+                <tbody id="propTbody"></tbody>
+            </table>
+        </div>
+        <div class="tablePage">
+            <span style="float:left">每頁最多</span>
+            <select id="propPageSize" style="float:left">
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select>
+            <span style="float:left"> 筆</span>
+            <span id="propPages" class="pageList" style="height:63px; width:50%; float:right;overflow-x: hidden; overflow-y: auto;">
+            </span>
+        </div>
+    </div>
+    <div id="prop4" class="panelBody" style="padding-bottom: 2rem; display: none;">
+        <div class="propResultTitle" style="height:30px;">
+            <span style="width:50px; height:30px; margin:0px">圖層:</span>
+            <span id="analysisResultLayer" style="margin:0px"></span>
+        </div>
+        <div id="analysisContent">
+            <div class="form-group" style="width:45%; float: left">
+                <label style="vertical-align: text-top;margin: 0px">屬性欄位(可複選)</label>
+                <div class="listResult" style="height:120px;">
+                    <ul id="anaFieldList" class="panelList">
+                    </ul>
+                </div>
+            </div>
+            <div class="form-group" style="width:45%; margin-left: 2px; float: right">
+                <label style="vertical-align: text-top;margin: 0px">已選欄位</label>
+                <div class="listBox" style="margin: 0px">
+                    <div class="listResult" style="height:120px">
+                        <ul id="anaSelList" class="panelList">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group mb-2">
+                <label class="form-label mb-2">統計方式:</label>
+                <div class="d-flex flex-wrap" style="font-size: 10px;">
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaSum" name="anaSum" value="sum">
+                        <label class="form-check-label" for="anaSum">加總</label>
+                    </div>
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaAvg" name="anaAvg" value="avg">
+                        <label class="form-check-label" for="anaAvg">平均</label>
+                    </div>
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaMax" name="anaMax" value="max">
+                        <label class="form-check-label" for="anaMax">最大值</label>
+                    </div>
+                    <div class="form-check me-3">
+                        <input class="form-check-input anaI" type="checkbox" id="anaMin" name="anaMin" value="min">
+                        <label class="form-check-label" for="anaMin">最小值</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="anaAll" name="anaAll" value="all">
+                        <label class="form-check-label" for="anaAll">全選</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="clear:both; width:100%; margin-left:auto; margin-right:auto; text-align:center;">
+                <button id="anaGoResult" class="goResult btn js-modal-toggle">顯示結果</button>
+            </div>
+
+            <div id="anaResultDiv" style="display:none">
+                <div class="form-group resultListTitle" style="margin: 2px 0px 2px; clear: both;">
+                    <span style="vertical-align: text-top; margin: 0px;">數值統計結果</span>
+                    <a id="exportExcel2" class="exportExcel" style="float: right;">匯出Excel</a>
+                </div>
+                <div class="propResultDiv" style="max-height: 114px; overflow-y: auto;">
+                    <table id="propAnaResult" class="propTable" style="width: 100%;">
+                        <thead>
+                            <tr id="anaHdr" role="row" class="propRow">
+                            </tr>
+                        </thead>
+                        <tbody id="anaBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

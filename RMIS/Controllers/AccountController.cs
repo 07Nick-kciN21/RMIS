@@ -53,6 +53,7 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
+            ViewBag.Username = currentUser.UserName;
             return View();
         }
 
@@ -67,6 +68,8 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
+
+            ViewBag.Username = currentUser.UserName;
             return View();
         }
 
@@ -81,6 +84,8 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
+
+            ViewBag.Username = currentUser.UserName;
             return View();
         }
 
@@ -95,6 +100,8 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
+
+            ViewBag.Username = currentUser.UserName;
             return View();
         }
         [HttpGet("[controller]/Role/Read/Permission")]

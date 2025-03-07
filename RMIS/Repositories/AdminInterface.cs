@@ -6,7 +6,7 @@ namespace RMIS.Repositories
 {
     public interface AdminInterface
     {
-        Task<AddPipelineInput> getPipelineInput();
+        Task<AddPipelineInput> getPipelineInput(string department);
         Task<int> AddPipelineAsync(AddPipelineInput pipelineInput);
         Task<AddRoadInput> getRoadInput();
         Task<int> AddRoadAsync(AddRoadInput roadInput);

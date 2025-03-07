@@ -52,6 +52,7 @@ namespace RMIS.Controllers
 
             if (result.Succeeded)
             {
+                ViewBag.Username = model.UserName;
                 return RedirectToLocal(returnUrl);
             }
             else
