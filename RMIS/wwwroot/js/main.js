@@ -1,6 +1,6 @@
 ﻿// main.js
 import { initMap } from './index/map.js';
-import { generateMenu, bindMenuEvents } from './index/ctrlMap/menu.js';
+import { initMenu } from './index/ctrlMap/menu.js';
 import { initCommonLink } from './index/commonLink.js';
 import { initPanel } from './index/panel.js';
 import { initSearchPanel } from './index/searchPanel.js'
@@ -17,10 +17,7 @@ import { initAccidentPanel } from './index/accidentPanel.js';
 $(document).ready(function () {
     // 初始化地图
     initMap("indexMap");
-
-    // 生成選單
-    var menuHtml = generateMenu(MenuData, "", 0);
-    $('#imageDataContent').html(menuHtml);
+    initMenu();
     initCommonLink();
     initModal();
     initPanel("metaDataPanel");
@@ -41,6 +38,4 @@ $(document).ready(function () {
     initFocusPanel();
     initProjectPanel();
     initAccidentPanel();
-    
-    bindMenuEvents();
 });

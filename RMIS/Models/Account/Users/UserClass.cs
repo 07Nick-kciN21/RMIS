@@ -3,6 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RMIS.Models.Account.Users
 {
+    public class UserAuthInfo
+    {
+        public string roleId { get; set; }
+        public string roleName { get; set; }
+        public bool roleStatus { get; set; }
+        public int departmentId { get; set; }
+        public string departmentName { get; set; }
+        public bool deptStatus { get; set; }
+    }
+
     public class UpdateUser
     {
         public string UserId { get; set; }
@@ -91,5 +101,13 @@ namespace RMIS.Models.Account.Users
         public int? DepartmentId { get; set; }
         public IEnumerable<SelectListItem> Departments { get; set; }
         public bool Status { get; set; }
+    }
+    public class PermissionDetail
+    {
+        public bool Read { get; set; }
+        public bool Create { get; set; }
+        public bool Update { get; set; }
+        public bool Delete { get; set; }
+        public bool Export { get; set; }
     }
 }

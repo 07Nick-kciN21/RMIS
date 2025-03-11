@@ -1,4 +1,6 @@
-﻿namespace RMIS.Models.sql
+﻿using RMIS.Models.Auth;
+
+namespace RMIS.Models.sql
 {
     public class Pipeline
     {
@@ -10,6 +12,8 @@
         public Guid CategoryId { get; set; } // 管線Id
         public Category Category { get; set; } // 管線階層
         public ICollection<Layer> Layers { get; set; } // 多個圖層
+        // 允許存取的部門 (可多個)
+        public List<int> DepartmentIds { get; set; } = new();
         public Guid MetaId { get; set; } // 圖資Id
         public MetaData? MetaData { get; set; } // 圖資
     }

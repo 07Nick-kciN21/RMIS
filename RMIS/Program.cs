@@ -132,13 +132,15 @@ foreach (var path in staticFilePaths)
 
 app.Use(async (context, next) =>
 {
+    var path = context.Request.Path.ToString().ToLower(); // 確保小寫比較
     if (!context.User.Identity.IsAuthenticated &&
-        !context.Request.Path.StartsWithSegments("/Portal/Login") &&
-        !context.Request.Path.StartsWithSegments("/Portal/Register") &&
-        !context.Request.Path.StartsWithSegments("/css") &&
-        !context.Request.Path.StartsWithSegments("/js") &&
-        !context.Request.Path.StartsWithSegments("/images") &&
-        !context.Request.Path.StartsWithSegments("/favicon.ico"))
+        !path.StartsWith("/portal/login") &&
+        !path.StartsWith("/portal/register") &&
+        !path.StartsWith("/api/test/") &&  // 確保匹配 /api/Test/ 及其子路徑
+        !path.StartsWith("/css") &&
+        !path.StartsWith("/js") &&
+        !path.StartsWith("/images") &&
+        !path.Equals("/favicon.ico"))
     {
         context.Response.Redirect("/Portal/Login");
         return;

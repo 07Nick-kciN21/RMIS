@@ -4,6 +4,25 @@ import { add2List, remove2List} from './list.js';
 
 export let layerList = {};
 
+export function initMenu() {
+    $.ajax({
+        url: "/Home/BuildTreeData",
+        type: "GET",
+        success: function (data) {
+            console.log(data.menuData);
+            var menuHtml = generateMenu(data.menuData, "", 0);
+            $('#imageDataContent').html(menuHtml);
+            bindMenuEvents();
+            return menuHtml;
+        },
+        error: function (xhr, status, error) {
+            console.log(xhr);
+            console.log(status);
+            console.log(error);
+        }
+    });
+}
+
 // 業務圖資下拉選單控制
 export function generateMenu(data, parent_name, index) {
     let html = '<ul';

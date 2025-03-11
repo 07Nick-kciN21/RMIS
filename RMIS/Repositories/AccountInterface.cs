@@ -4,13 +4,16 @@ using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
 using RMIS.Models.Portal;
+using static RMIS.Controllers.HomeController;
 
 namespace RMIS.Repositories
 {
     public interface AccountInterface
     {
         Task<List<DepartmentUser>> GetAllUser();
+        Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId);
         Task<string> GetUserDemartment(ApplicationUser user);
+        Task<UserAuthInfo> GetUserAuthInfo(ApplicationUser user);
         Task<UserManager> GetUserManagerDataAsync();
         Task<RoleManager> GetRoleManagerDataAsync();
         Task<DepartmentManager> GetDepartmentManagerDataAsync();

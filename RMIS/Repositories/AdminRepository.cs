@@ -9,11 +9,14 @@ using RMIS.Data;
 using RMIS.Models.Admin;
 using RMIS.Models.API;
 using RMIS.Models.sql;
+using RMIS.Models.Account.Users;
 using RMIS.Utils;
 using AutoMapper;
 using CsvHelper;
 using OfficeOpenXml;
 using System.Linq;
+using System.Data;
+using System.Runtime.ConstrainedExecution;
 
 
 namespace RMIS.Repositories
@@ -29,21 +32,12 @@ namespace RMIS.Repositories
             _logger = loger;
         }
 
-        public async Task<AddPipelineInput> getPipelineInput(string department)
+        public async Task<AddPipelineInput> getPipelineInput(UserAuthInfo userAuthInfo)
         {
-            // 先從資料庫查詢 "道路挖掘科"
-            var rootCategory = await _mapDBContext.Categories.FirstOrDefaultAsync(c => c.Name == "道路挖掘科");
-
-            List<Category> _Categories = new List<Category>();
-
-            if (rootCategory != null)
-            {
-                // 查詢 "道路挖掘科" 及其所有子類別
-                _Categories = await _mapDBContext.Categories
-                    .Where(c => c.ParentId == rootCategory.Id || c.Id == rootCategory.Id)
-                    .ToListAsync();
-            }
-
+            // 取得所有圖資根結點
+            var allCategories = _mapDBContext.Categories.Where(c => c.DepartmentIds.Contains(userAuthInfo.departmentId)).ToList();
+            // 篩選具有讀取權限的根節點，或者部門為超級管理員，或身分管理者，則全部讀取
+            var _Categories = BuildCategorySelectList(allCategories, 0);
             var _GeometryTypes = await _mapDBContext.GeometryTypes.OrderBy(gt => gt.OrderId).ToListAsync();
 
             // 英文 Kind 對應到 中文 Key
@@ -65,7 +59,7 @@ namespace RMIS.Repositories
 
             var input = new AddPipelineInput
             {
-                Category = BuildCategorySelectList(_Categories, rootCategory?.Id),
+                Category = _Categories,
                 GeometryTypes = _GeometryTypes.Select(g =>
                 {
                     return new SelectListItem
@@ -88,41 +82,23 @@ namespace RMIS.Repositories
             return input;
         }
 
-        private IEnumerable<SelectListItem> BuildCategorySelectList(IEnumerable<Category> categories, Guid? parentId, int level = 0)
+        private IEnumerable<SelectListItem> BuildCategorySelectList(List<Category> categories, int level = 0)
         {
             // 初始化一個列表來存放結果
             var result = new List<SelectListItem>();
-
-            // 確保 "道路挖掘科" 本身在結果中
-            if (level == 0 && parentId != null)
+            foreach (var category in categories)
             {
-                var rootCategory = categories.FirstOrDefault(c => c.Id == parentId);
-                if (rootCategory != null)
-                {
-                    result.Add(new SelectListItem
-                    {
-                        Text = rootCategory.Name,
-                        Value = rootCategory.Id.ToString()
-                    });
-                }
-            }
-
-            // 取得當前層級的子類別
-            var categoryList = categories.Where(c => c.ParentId == parentId).OrderBy(c => c.OrderId).ToList();
-
-            foreach (var category in categoryList)
-            {
+                // 創造節點
                 result.Add(new SelectListItem
                 {
                     Text = new string('*', level * 2) + " " + category.Name, // 加上縮排
                     Value = category.Id.ToString()
                 });
-
-                // 遞迴處理子類別
-                var childCategories = BuildCategorySelectList(categories, category.Id, level + 1);
-                result.AddRange(childCategories);
+                // 獲取該分類下的所有子分類
+                var currentCategories = categories.Where(p => p.ParentId == category.Id).ToList();             
+                var subCategories = BuildCategorySelectList(currentCategories, level + 1);
+                result.AddRange(subCategories);
             }
-
             return result;
         }
 
@@ -161,7 +137,7 @@ namespace RMIS.Repositories
             return rowsAffected;
         }
 
-        public async Task<AddRoadInput> getRoadInput()
+        public async Task<AddRoadInput> getRoadInput(UserAuthInfo userAuthInfo)
         {
             var _AdminDists = await _mapDBContext.AdminDist.OrderBy(ad => ad.orderId).ToListAsync();
             var _Pipelines = await _mapDBContext.Pipelines.ToListAsync();
@@ -212,19 +188,63 @@ namespace RMIS.Repositories
             int rowsAffected = await _mapDBContext.SaveChangesAsync();
             return rowsAffected;
         }
-        public async Task<AddRoadByCSVInput> getRoadByCSVInput()
+        public async Task<AddRoadByCSVInput> getRoadByCSVInput(UserAuthInfo userAuthInfo)
         {
-            var _Categories = await _mapDBContext.Categories.ToListAsync();
-            var _Pipelines = await _mapDBContext.Pipelines.ToListAsync();
+            // 找到根 Category
+            var rootCategory = await _mapDBContext.Categories
+                .FirstOrDefaultAsync(c => c.Name == userAuthInfo.departmentName && c.ParentId == null);
+
+            if (rootCategory == null)
+            {
+                return new AddRoadByCSVInput { Pipelines = new List<SelectListItem>() };
+            }
+
+            // 遞迴獲取所有子 Categories
+            var allCategories = GetAllChildCategories(rootCategory.Id);
+
+            // 取得這些 Categories 對應的 Pipelines
+            var pipelines = await _mapDBContext.Pipelines
+                .Where(p => allCategories.Contains(p.CategoryId))
+                .ToListAsync();
+
+            // 建立 SelectListItem
             var model = new AddRoadByCSVInput
             {
-                Pipelines = _Pipelines.Select(p => new SelectListItem
+                Pipelines = pipelines.Select(p => new SelectListItem
                 {
-                    Text = buildPipelinePath(p.CategoryId) + "/" + p.Name,
+                    Text = buildCategoryPath(p.CategoryId) + "/" + p.Name,
                     Value = p.Id.ToString()
-                })
+                }).ToList()
             };
+
             return model;
+        }
+        // 取得所有子 Categories（包含自己）
+        private List<Guid> GetAllChildCategories(Guid categoryId)
+        {
+            var categoryIds = new List<Guid> { categoryId };
+            var childCategories = _mapDBContext.Categories
+                .Where(c => c.ParentId == categoryId)
+                .ToList();
+
+            foreach (var child in childCategories)
+            {
+                categoryIds.AddRange(GetAllChildCategories(child.Id));
+            }
+
+            return categoryIds;
+        }
+        // 取得 Category 的完整層級路徑
+        private string buildCategoryPath(Guid? categoryId)
+        {
+            var category = _mapDBContext.Categories.FirstOrDefault(c => c.Id == categoryId);
+            if (category == null) return string.Empty;
+
+            if (category.ParentId == null)
+            {
+                return category.Name;
+            }
+            return buildCategoryPath(category.ParentId) + "/" + category.Name;
         }
         private string buildPipelinePath(Guid? parentId)
         {
@@ -347,12 +367,21 @@ namespace RMIS.Repositories
                 throw;
             }
         }
-        public async Task<AddCategoryInput> getCategoryInput()
+        public async Task<AddCategoryInput> getCategoryInput(UserAuthInfo userAuthInfo)
         {
+            // 取得所有圖資根結點
+            var allCategories = _mapDBContext.Categories.Where(c => c.Name != "街道" && c.ParentId == null).ToList();
+            // 篩選具有讀取權限的根節點，或者身分為超級管理員，則全部讀取
+            List<Category> allowedCategories = userAuthInfo.departmentName == "超級管理員"
+                ? allCategories :
+                allCategories.Where(c => c.Name == userAuthInfo.departmentName).ToList();
+
+            var _Categories = BuildCategorySelectList(allowedCategories, 0);
+
             var parentCategories = await _mapDBContext.Categories.ToListAsync();
             var CategoryInput = new AddCategoryInput
             {
-                parentCategories = BuildCategorySelectList(parentCategories, null)
+                parentCategories = _Categories
             };
 
             return CategoryInput;

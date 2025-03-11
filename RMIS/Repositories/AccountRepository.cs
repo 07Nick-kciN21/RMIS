@@ -8,6 +8,7 @@ using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
 using RMIS.Models.Portal;
+using static RMIS.Controllers.HomeController;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RMIS.Repositories
@@ -26,12 +27,60 @@ namespace RMIS.Repositories
             _roleManager = roleManager;
             _authDbContext = authDbContext;
         }
+        public async Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId)
+        {
+            var permissions = await _authDbContext.RolePermissions
+                .Where(rp => rp.RoleId == roleId)
+                .Select(rp => new
+                {
+                    rp.Permission.Name,
+                    rp.Read,
+                    rp.Create,
+                    rp.Update,
+                    rp.Delete,
+                    rp.Export
+                })
+                .ToListAsync();
 
+            return permissions.ToDictionary(
+                p => p.Name,
+                p => new PermissionDetail
+                {
+                    Read = p.Read,
+                    Create = p.Create,
+                    Update = p.Update,
+                    Delete = p.Delete,
+                    Export = p.Export
+                });
+        }
+
+        public async Task<UserAuthInfo> GetUserAuthInfo(ApplicationUser user)
+        {
+            var department = await _authDbContext.Departments
+                .Where(d => d.Id == user.DepartmentId)
+                .FirstAsync();
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var roleName = roles.First();
+            var role = await _roleManager.FindByNameAsync(roleName);
+            var result = new UserAuthInfo
+            {
+                departmentId = department.Id,
+                departmentName = department.Name,
+                deptStatus = department.Status,
+                roleId = role.Id,
+                roleName = role.Name,
+                roleStatus = role.Status
+            };
+            
+            return result;
+        }
         public async Task<RolePermission> GetUserPermission(string userId, string permissionName)
         {
             var user = await _userManager.FindByIdAsync(userId);
             var roles = await _userManager.GetRolesAsync(user);
             var roleName = roles.First();
+            var role = await _roleManager.FindByNameAsync(roleName);
             if (roleName == null)
             {
                 return new RolePermission { Read = false, Create = false, Delete = false, Export = false, Update = false }; // 默認無權限

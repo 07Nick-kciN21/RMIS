@@ -145,7 +145,6 @@ export function initFlagPanel(){
         console.log(locOccVal, landSelect, adminVal, suspectVal, manageVal, caseStatusVal, yearVal);
         console.log(locOccs[locOccVal], adminDists[adminVal], suspectTypes[suspectVal], manages[manageVal], caseStatus[caseStatusVal], yearVal);
         const flagProps = layerProps['827acad2-6e1d-4343-bc1c-82b68f87a65b'];
-        console.log(flagProps);
         filterFlags = flagProps.filter(function(item){
             return (locOccVal == -1 || item['疑似占用'] == locOccs[locOccVal]) && 
                    (landSelect == -1 || item['地段-名'] == landSelect) && 

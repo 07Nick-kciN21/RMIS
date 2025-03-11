@@ -43,7 +43,6 @@ namespace RMIS.Controllers
         [HttpGet]
         public async Task<IActionResult> AddPipeline()
         {
-
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
@@ -52,167 +51,349 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限新增" });
             }
-            var department = await _accountInterface.GetUserDemartment(currentUser);
-            var input = await _adminInterface.getPipelineInput(department);
-            _logger.LogInformation("已載入新增管線頁面");
-            return View(input);
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+            if (userInfo.roleStatus && userInfo.deptStatus)
+            {
+                var input = await _adminInterface.getPipelineInput(userInfo);
+                _logger.LogInformation("已載入新增管線頁面");
+                return View(input);
+            }
+            else
+            {
+                return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> AddPipeline(AddPipelineInput input)
         {
-            var rowsAffected = await _adminInterface.AddPipelineAsync(input);
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
-            if (rowsAffected > 0)
+            if (!currentUserPermission.Create)
             {
-                _logger.LogInformation($"已新增 {rowsAffected} 筆管線資料到資料庫");
-                return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆管線資料到資料庫" });
+                _logger.LogInformation($"{currentUser.DisplayName} 無權限新增");
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+
+            if(userInfo.roleStatus && userInfo.deptStatus)
+            {
+                // 檢查輸入的管線資料是否有問題
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogInformation("輸入的管線資料有誤");
+                    return BadRequest(ModelState);
+                }
+                var rowsAffected = await _adminInterface.AddPipelineAsync(input);
+
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation($"已新增 {rowsAffected} 筆管線資料到資料庫");
+                    return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆管線資料到資料庫" });
+                }
+                else
+                {
+                    _logger.LogInformation("未對資料庫進行任何變更");
+                    return Json(new { success = false, message = "未對資料庫進行任何變更" }); ;
+                }
             }
             else
             {
-                _logger.LogInformation("未對資料庫進行任何變更");
-                return BadRequest("未對資料庫進行任何變更");
+                return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
             }
         }
 
         [HttpGet]
         public async Task<IActionResult> AddRoad()
         {
-            var input = await _adminInterface.getRoadInput();
-            return View(input);
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
+
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+            if(userInfo.roleStatus && userInfo.deptStatus)
+            {
+                var input = await _adminInterface.getRoadInput(userInfo);
+                return View(input);
+            }
+            return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
         }
 
         [HttpPost]
         public async Task<IActionResult> AddRoad(AddRoadInput input)
         {
-            var rowsAffected = await _adminInterface.AddRoadAsync(input);
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
-            if (rowsAffected > 0)
+            if (!currentUserPermission.Create)
             {
-                _logger.LogInformation($"已新增 {rowsAffected} 筆道路資料到資料庫");
-                return Ok(new { success = true, message = $"已從CSV新增 {rowsAffected} 筆道路資料到資料庫" });
+                return Json(new { success = false, message = "無權限新增" });
+            }
+
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+
+            if (userInfo.roleStatus && userInfo.deptStatus)
+            {
+                // 檢查輸入的道路資料是否有問題
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                // 新增道路資料(含管線資料
+                var rowsAffected = await _adminInterface.AddRoadAsync(input);
+
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation($"已新增 {rowsAffected} 筆道路資料到資料庫");
+                    return Ok(new { success = true, message = $"已從CSV新增 {rowsAffected} 筆道路資料到資料庫" });
+                }
+                else
+                {
+                    _logger.LogInformation("未對資料庫進行任何變更");
+                    return Json(new { success = false, message = "未對資料庫進行任何變更" });
+                }
             }
             else
             {
-                _logger.LogInformation("未對資料庫進行任何變更");
-                return BadRequest("未對資料庫進行任何變更");
+                return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
             }
         }
 
         [HttpGet]
         public async Task<IActionResult> AddRoadByCSV()
         {
-            var input = await _adminInterface.getRoadByCSVInput();
-            return View(input);
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+            if(userInfo.roleStatus && userInfo.deptStatus)
+            {
+                var input = await _adminInterface.getRoadByCSVInput(userInfo);
+                return View(input);
+            }
+            return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
         }
 
         [HttpPost]
         public async Task<IActionResult> AddRoadByCSV(AddRoadByCSVInput input)
         {
-            var rowsAffected = await _adminInterface.AddRoadByCSVAsync(input);
-            if (rowsAffected > 0)
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
             {
-                _logger.LogInformation($"已從CSV新增 {rowsAffected} 筆道路資料到資料庫");
-                return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆類別資料到資料庫" });
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+
+            if (userInfo.roleStatus && userInfo.deptStatus)
+            {
+                // 檢查輸入的道路資料是否有問題
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                // 新增道路資料(含管線資料
+                var rowsAffected = await _adminInterface.AddRoadByCSVAsync(input);
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation($"已從CSV新增 {rowsAffected} 筆道路資料到資料庫");
+                    return Json(new { success = true, message = $"已新增 {rowsAffected} 筆類別資料到資料庫" });
+                }
+                else
+                {
+                    _logger.LogInformation("未對資料庫進行任何變更");
+                    return Json(new { success = false, message = "未對資料庫進行任何變更" });
+                }
             }
             else
             {
-                _logger.LogInformation("未對資料庫進行任何變更");
-                return BadRequest("未對資料庫進行任何變更");
+                return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
             }
         }
 
         [HttpGet]
         public async Task<IActionResult> AddCategory()
         {
-            var input = await _adminInterface.getCategoryInput();
-            return View(input);
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+            if (userInfo.roleStatus && userInfo.deptStatus)
+            {
+                var input = await _adminInterface.getCategoryInput(userInfo);
+                return View(input);
+            }
+            return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
         }
 
         [HttpPost]
         public async Task<IActionResult> AddCategory(AddCategoryInput input)
         {
-            var rowsAffected = await _adminInterface.AddCategoryAsync(input);
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
-            if (rowsAffected > 0)
+            if (!currentUserPermission.Create)
             {
-                _logger.LogInformation($"已新增 {rowsAffected} 筆類別資料到資料庫");
-                return Ok($"已新增 {rowsAffected} 筆類別資料到資料庫");
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+            if (userInfo.roleStatus && userInfo.deptStatus)
+            {
+                // 檢查輸入的類別資料是否有問題
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                // 新增類別資料(含管線資料
+                var rowsAffected = await _adminInterface.AddCategoryAsync(input);
+
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation($"已新增 {rowsAffected} 筆類別資料到資料庫");
+                    return Json(new { success = true, message = $"已新增 {rowsAffected} 筆類別資料到資料庫" });
+                }
+                else
+                {
+                    _logger.LogInformation("未對資料庫進行任何變更");
+                    return Json(new { success = false, message = "未對資料庫進行任何變更" });
+                }
             }
             else
             {
-                _logger.LogInformation("未對資料庫進行任何變更");
-                return BadRequest("未對資料庫進行任何變更");
+                return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
             }
         }
 
         [HttpGet]
-        public IActionResult AddMapSource()
+        public async Task<IActionResult> AddMapSource()
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> AddMapSource(AddMapSourceInput input)
         {
-            var rowsAffected = await _adminInterface.AddMapSourceAsync(input);
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
-            if (rowsAffected > 0)
+            if (!currentUserPermission.Create)
             {
-                _logger.LogInformation($"已新增 {rowsAffected} 筆地圖來源資料到資料庫");
-                return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆地圖來源資料到資料庫" });
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+            if (userInfo.roleStatus && userInfo.deptStatus)
+            {
+                var rowsAffected = await _adminInterface.AddMapSourceAsync(input);
+
+                if (rowsAffected > 0)
+                {
+                    _logger.LogInformation($"已新增 {rowsAffected} 筆地圖來源資料到資料庫");
+                    return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆地圖來源資料到資料庫" });
+                }
+                else
+                {
+                    _logger.LogInformation("未對資料庫進行任何變更");
+                    return Json(new { success = false, message = "未對資料庫進行任何變更"});
+                }
             }
             else
             {
-                _logger.LogInformation("未對資料庫進行任何變更");
-                return BadRequest("未對資料庫進行任何變更");
+                return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
             }
         }
 
         [HttpGet]
         public IActionResult AddCategoryByJson()
         {
+            
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> AddCategoryByJson(AddCategoryByJsonInput input)
         {
-            if (input?.categoryWithpipeline == null || input.categoryWithpipeline.Length == 0)
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
             {
-                ModelState.AddModelError("categoryWithpipeline", "請上傳有效的 JSON 檔案。");
-                return BadRequest("請上傳有效的 JSON 檔案。");
+                return Json(new { success = false, message = "無權限新增" });
             }
+            var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
 
-            using (var stream = input.categoryWithpipeline.OpenReadStream())
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            if(userInfo.roleStatus && userInfo.deptStatus)
             {
-                var jsonContent = await reader.ReadToEndAsync();
-                var jsonToken = JToken.Parse(jsonContent);
-
-                (int categoryCount, int pipelineCount) result = (0, 0);
-
-                if (jsonToken is JObject jObject)
+                if (input?.categoryWithpipeline == null || input.categoryWithpipeline.Length == 0)
                 {
-                    result = await _adminInterface.AddCategoryByJsonAsync(jObject);
+                    ModelState.AddModelError("categoryWithpipeline", "請上傳有效的 JSON 檔案。");
+                    return BadRequest("請上傳有效的 JSON 檔案。");
                 }
 
-                if (result.categoryCount > 0 || result.pipelineCount > 0)
+                using (var stream = input.categoryWithpipeline.OpenReadStream())
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
                 {
-                    _logger.LogInformation($"已從JSON檔案新增 {result.categoryCount} 筆類別及 {result.pipelineCount} 筆管線資料到資料庫");
-                    return Ok($"上傳{result.categoryCount}筆類別, {result.pipelineCount}筆項目");
+                    var jsonContent = await reader.ReadToEndAsync();
+                    var jsonToken = JToken.Parse(jsonContent);
+
+                    (int categoryCount, int pipelineCount) result = (0, 0);
+
+                    if (jsonToken is JObject jObject)
+                    {
+                        result = await _adminInterface.AddCategoryByJsonAsync(jObject);
+                    }
+
+                    if (result.categoryCount > 0 || result.pipelineCount > 0)
+                    {
+                        _logger.LogInformation($"已從JSON檔案新增 {result.categoryCount} 筆類別及 {result.pipelineCount} 筆管線資料到資料庫");
+                        return Ok($"上傳{result.categoryCount}筆類別, {result.pipelineCount}筆項目");
+                    }
+                    else if (result.categoryCount == -1 && result.pipelineCount == -1)
+                    {
+                        _logger.LogError("處理JSON檔案時發生錯誤，所有變更已被捨棄。");
+                        ModelState.AddModelError("categoryWithpipeline", "發生錯誤，所有變更已被捨棄。");
+                        return Json(new { success = false, message = ModelState });
+                    }
+                    else
+                    {
+                        _logger.LogInformation("未對資料庫進行任何變更");
+                        return Json(new { success = false, message = "沒有輸入資料" });
+                    }
                 }
-                else if (result.categoryCount == -1 && result.pipelineCount == -1)
-                {
-                    _logger.LogError("處理JSON檔案時發生錯誤，所有變更已被捨棄。");
-                    ModelState.AddModelError("categoryWithpipeline", "發生錯誤，所有變更已被捨棄。");
-                    return BadRequest(ModelState);
-                }
-                else
-                {
-                    _logger.LogInformation("未對資料庫進行任何變更");
-                    return BadRequest("沒有輸入資料");
-                }
+            }
+            else
+            {
+                return Json(new { success = false, message = "該使用者身分或部門遭到限制" });
             }
         }
 

@@ -1,4 +1,4 @@
-﻿@model Dictionary<string, RMIS.Controllers.HomeController.PermissionDetail>
+﻿@model Dictionary<string, RMIS.Models.Account.Users.PermissionDetail>
 @{
     ViewData["Title"] = "桃園市養護工程處整合協作平台";
 }
@@ -380,7 +380,6 @@
 
 @section Scripts {
     <script type="text/javascript">
-        var MenuData = @Html.Raw(Json.Serialize(ViewBag.JsTreeData));
         // 查看是否加到圖資清單
         let layerList = {};
         // 圖層管理
