@@ -63,9 +63,9 @@ namespace RMIS.Controllers
             {
                 // 取得所有具有部門代號的根Categories
                 var allCategories = await _mapDBContext.Categories
-                    .Where(c => c.DepartmentIds
-                        .Contains(userInfo.departmentId))
-                    .ToListAsync();
+                    .Where(c => 
+                        c.DepartmentIds.Contains(userInfo.departmentId)
+                     ).ToListAsync();
                 var jsTreeData = BuildJsTreeData(allCategories, null, userInfo.departmentId);
                 return Json(new { menuData = jsTreeData});
             }
@@ -89,7 +89,9 @@ namespace RMIS.Controllers
                 };
 
                 // 獲取該分類下的所有管道
-                var currentPipelines = _mapDBContext.Pipelines.Where(p => p.CategoryId == category.Id).ToList();
+                var currentPipelines = _mapDBContext.Pipelines
+                    .Where(p => p.CategoryId == category.Id && 
+                           p.DepartmentIds.Contains(deptId)).ToList();
                 foreach (var pipeline in currentPipelines)
                 {
                     // 為每個管道創建節點
@@ -106,11 +108,8 @@ namespace RMIS.Controllers
                     ((List<object>)categoryNode.children).Add(pipelineNode);
                 }
 
-                var next_category = allCategories
-                    .Where(c => c.ParentId == category.Id 
-                           && c.DepartmentIds.Contains(deptId)).ToList();
                 // 處理該分類的子分類
-                var childCategories = BuildJsTreeData(next_category, category.Id, deptId);
+                var childCategories = BuildJsTreeData(allCategories, category.Id, deptId);
                 if (childCategories.Any())
                 {
                     ((List<object>)categoryNode.children).AddRange(childCategories);

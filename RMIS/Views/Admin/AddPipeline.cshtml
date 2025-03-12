@@ -13,8 +13,8 @@
         <span asp-validation-for="ManagementUnit" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label asp-for="Category">類別</label>
-        <select asp-for="CategoryId" asp-items="@Model.Category" class="form-control">
+        <label asp-for="CategoryId">類別</label>
+        <select asp-for="CategoryId" asp-items="@Model.Categories" class="form-control">
             <option value="">-- None --</option>
         </select>
     </div>
@@ -23,18 +23,9 @@
         <input asp-for="Name" class="form-control" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label asp-for="KindGroup">種類</label>
-        <select id="KindGroup" asp-for="Kind" class="form-control" onchange="getGeometryTypes()">
-            @foreach (var kind in Model.KindGroup)
-            {
-                <option value="@kind.Value">@kind.Text</option>
-            }
-        </select>
-    </div>
-    <div class="form-group">
-        <label asp-for="GeometryTypes">圖層</label>
-            <select asp-for="GeometryTypes" asp-items="@Model.GeometryTypes" class="form-control" multiple>
+    <div style="height:140px" class="form-group">
+        <label asp-for="selectedGeometryTypes">圖層</label>
+        <select asp-for="selectedGeometryTypes" asp-items="@Model.GeometryTypes" class="form-control" multiple>
         </select>
     </div>
     <div class="form-group">

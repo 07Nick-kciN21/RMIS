@@ -37,17 +37,8 @@ namespace RMIS.Repositories
             // 取得所有圖資根結點
             var allCategories = _mapDBContext.Categories.Where(c => c.DepartmentIds.Contains(userAuthInfo.departmentId)).ToList();
             // 篩選具有讀取權限的根節點，或者部門為超級管理員，或身分管理者，則全部讀取
-            var _Categories = BuildCategorySelectList(allCategories, 0);
+            var _Categories = BuildCategorySelectList(allCategories, null, 0);
             var _GeometryTypes = await _mapDBContext.GeometryTypes.OrderBy(gt => gt.OrderId).ToListAsync();
-
-            // 英文 Kind 對應到 中文 Key
-            var kindMapping = new Dictionary<string, string>
-            {
-                { "point", "點" },
-                { "line", "線" },
-                { "plane", "面" },
-                { "arrowline", "箭頭" }
-            };
 
             // 建立 SelectListGroup 字典
             var groupDictionary = new Dictionary<string, SelectListGroup>{
@@ -59,34 +50,27 @@ namespace RMIS.Repositories
 
             var input = new AddPipelineInput
             {
-                Category = _Categories,
+                Categories = _Categories,
                 GeometryTypes = _GeometryTypes.Select(g =>
                 {
                     return new SelectListItem
                     {
                         Text = g.Name,                 // 顯示項目名稱
-                        Value = g.Kind,                // 保留英文作為 Value
+                        Value = g.Id.ToString(),                // 保留英文作為 Value
                         Group = groupDictionary[g.Kind] // 群組名稱是中文
                     };
                 }).ToList(),
-
-                // 將 Keys 轉換成 SelectListItem
-                KindGroup = kindMapping
-                    .Select(kind => new SelectListItem
-                    {
-                        Text = kind.Value,
-                        Value = kind.Key
-                    }).ToList()
             };
             // KindGroup依照點線面
             return input;
         }
 
-        private IEnumerable<SelectListItem> BuildCategorySelectList(List<Category> categories, int level = 0)
+        private IEnumerable<SelectListItem> BuildCategorySelectList(List<Category> allCategories, Guid? ParentId, int deptId, int level = 0)
         {
             // 初始化一個列表來存放結果
             var result = new List<SelectListItem>();
-            foreach (var category in categories)
+            var currentCategories = allCategories.Where(c => c.ParentId == ParentId).ToList();
+            foreach (var category in currentCategories)
             {
                 // 創造節點
                 result.Add(new SelectListItem
@@ -95,8 +79,8 @@ namespace RMIS.Repositories
                     Value = category.Id.ToString()
                 });
                 // 獲取該分類下的所有子分類
-                var currentCategories = categories.Where(p => p.ParentId == category.Id).ToList();             
-                var subCategories = BuildCategorySelectList(currentCategories, level + 1);
+                           
+                var subCategories = BuildCategorySelectList(allCategories, category.Id, deptId, level + 1);
                 result.AddRange(subCategories);
             }
             return result;
@@ -110,9 +94,7 @@ namespace RMIS.Repositories
                 Id = pipelineId,
                 Name = pipelineInput.Name,
                 ManagementUnit = pipelineInput.ManagementUnit,
-                // Color = pipelineInput.Color,
                 CategoryId = Guid.Parse(pipelineInput.CategoryId),
-                // Kind = pipelineInput.Kind
             };
 
             // 將新管線添加到資料庫
@@ -150,7 +132,8 @@ namespace RMIS.Repositories
                 }),
                 Pipelines = _Pipelines.Select(p => new SelectListItem
                 {
-                    Text = buildPipelinePath(p.CategoryId) + "/" + p.Name,
+                    //Text = buildPipelinePath(p.CategoryId) + "/" + p.Name,
+                    Text = p.Name,
                     Value = p.Id.ToString()
                 })
             };
@@ -190,70 +173,49 @@ namespace RMIS.Repositories
         }
         public async Task<AddRoadByCSVInput> getRoadByCSVInput(UserAuthInfo userAuthInfo)
         {
-            // 找到根 Category
-            var rootCategory = await _mapDBContext.Categories
-                .FirstOrDefaultAsync(c => c.Name == userAuthInfo.departmentName && c.ParentId == null);
+            // 找到所有符合的pipeline
+            var allPipelines = await _mapDBContext.Pipelines
+                .Where(c => c.DepartmentIds
+                    .Contains(userAuthInfo.departmentId))
+                .ToListAsync();
+            var allCategory = await _mapDBContext.Categories
+                .Where(c => c.DepartmentIds
+                    .Contains(userAuthInfo.departmentId))
+                .ToListAsync();
 
-            if (rootCategory == null)
+            if (allPipelines == null)
             {
                 return new AddRoadByCSVInput { Pipelines = new List<SelectListItem>() };
             }
 
-            // 遞迴獲取所有子 Categories
-            var allCategories = GetAllChildCategories(rootCategory.Id);
-
-            // 取得這些 Categories 對應的 Pipelines
-            var pipelines = await _mapDBContext.Pipelines
-                .Where(p => allCategories.Contains(p.CategoryId))
-                .ToListAsync();
-
+            // 建立 SelectListItem
+            var pipelineSelectList = new List<SelectListItem>();
+            buildPipelinePath(pipelineSelectList, allCategory, allPipelines, null, "");
             // 建立 SelectListItem
             var model = new AddRoadByCSVInput
             {
-                Pipelines = pipelines.Select(p => new SelectListItem
-                {
-                    Text = buildCategoryPath(p.CategoryId) + "/" + p.Name,
-                    Value = p.Id.ToString()
-                }).ToList()
+                Pipelines = pipelineSelectList
             };
 
             return model;
         }
-        // 取得所有子 Categories（包含自己）
-        private List<Guid> GetAllChildCategories(Guid categoryId)
+        private void buildPipelinePath(List<SelectListItem> pipelineSelectList, List<Category> allCategory, List<Pipeline> allPipeline, Guid? parentId, string path)
         {
-            var categoryIds = new List<Guid> { categoryId };
-            var childCategories = _mapDBContext.Categories
-                .Where(c => c.ParentId == categoryId)
-                .ToList();
-
-            foreach (var child in childCategories)
+            var currentCategories = allCategory.Where(ac => ac.ParentId == parentId).OrderBy(ac => ac.OrderId).ToList();
+            foreach (var category in currentCategories)
             {
-                categoryIds.AddRange(GetAllChildCategories(child.Id));
+                var pipelines = allPipeline.Where(ap => ap.CategoryId == category.Id).ToList();
+                var next_path = path + "/" + category.Name;
+                foreach (var pipeline in pipelines)
+                {
+                    pipelineSelectList.Add(new SelectListItem
+                    {
+                        Text = next_path + "/" + pipeline.Name,
+                        Value = pipeline.Id.ToString()
+                    });
+                }
+                buildPipelinePath(pipelineSelectList, allCategory, allPipeline, category.Id, next_path);
             }
-
-            return categoryIds;
-        }
-        // 取得 Category 的完整層級路徑
-        private string buildCategoryPath(Guid? categoryId)
-        {
-            var category = _mapDBContext.Categories.FirstOrDefault(c => c.Id == categoryId);
-            if (category == null) return string.Empty;
-
-            if (category.ParentId == null)
-            {
-                return category.Name;
-            }
-            return buildCategoryPath(category.ParentId) + "/" + category.Name;
-        }
-        private string buildPipelinePath(Guid? parentId)
-        {
-            var parentCategory = _mapDBContext.Categories.FirstOrDefault(p => p.Id == parentId);
-            if (parentCategory.ParentId == null)
-            {
-                return parentCategory.Name;
-            }
-            return buildPipelinePath(parentCategory.ParentId) + "/" + parentCategory.Name;
         }
 
         private class road_pile
@@ -370,15 +332,8 @@ namespace RMIS.Repositories
         public async Task<AddCategoryInput> getCategoryInput(UserAuthInfo userAuthInfo)
         {
             // 取得所有圖資根結點
-            var allCategories = _mapDBContext.Categories.Where(c => c.Name != "街道" && c.ParentId == null).ToList();
-            // 篩選具有讀取權限的根節點，或者身分為超級管理員，則全部讀取
-            List<Category> allowedCategories = userAuthInfo.departmentName == "超級管理員"
-                ? allCategories :
-                allCategories.Where(c => c.Name == userAuthInfo.departmentName).ToList();
-
-            var _Categories = BuildCategorySelectList(allowedCategories, 0);
-
-            var parentCategories = await _mapDBContext.Categories.ToListAsync();
+            var allCategories = _mapDBContext.Categories.Where(c => c.DepartmentIds.Contains(userAuthInfo.departmentId)).ToList();
+            var _Categories = BuildCategorySelectList(allCategories, null, userAuthInfo.departmentId, 0);
             var CategoryInput = new AddCategoryInput
             {
                 parentCategories = _Categories
