@@ -1,6 +1,6 @@
 ﻿import { layerList } from './menu.js';
 import { removePipeline, addPipeline } from './pipeline.js';
-import { addLayer2Map, layers } from './layers.js';
+import { layers } from './layers.js';
 import { getIndexMap } from '../map.js';
 import { layerEditor } from './layerEdit/layerEditor.js';
 import { opacityLayer } from './opacityCtrl.js';

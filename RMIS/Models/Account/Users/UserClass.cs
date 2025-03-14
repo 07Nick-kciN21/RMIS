@@ -42,6 +42,7 @@ namespace RMIS.Models.Account.Users
         public string Phone { get; set; }
         public string RoleId { get; set; }
         public string Role { get; set; }
+        public int Order { get; set; }
         public bool Status { get; set; }
         public DateTime CreateAt { get; set; }
     }
@@ -78,13 +79,13 @@ namespace RMIS.Models.Account.Users
         public string DisplayName { get; set; }
 
         [Required(ErrorMessage = "帳號是必填欄位")]
-        [StringLength(20, MinimumLength = 6, ErrorMessage = "帳號長度不合規定(6~20)")]
-        [RegularExpression(@"^[a-zA-Z0-9_]+$", ErrorMessage = "使用者名稱只能包含英文字母、數字和底線")]
+        [StringLength(20, MinimumLength = 8, ErrorMessage = "帳號長度不合規定(8~20)")]
+        [RegularExpression(@"^[a-zA-Z0-9]+$", ErrorMessage = "使用者名稱只能包含英文字母、數字")]
         public string Account { get; set; }
 
         [Required(ErrorMessage = "密碼是必填欄位")]
-        [StringLength(20, MinimumLength = 6, ErrorMessage = "密碼長度不合規定(6~20)")]
-        [RegularExpression(@"^[a-zA-Z0-9_]+$", ErrorMessage = "使用者名稱只能包含英文字母、數字和底線")]
+        [StringLength(20, MinimumLength = 8, ErrorMessage = "密碼長度不合規定(8~20)")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$", ErrorMessage = "密碼必須包含至少 1 個大寫字母、1 個小寫字母和 1 個數字")]
         public string Password { get; set; }
 
         [Required(ErrorMessage = "Email 是必填欄位")]
@@ -105,6 +106,7 @@ namespace RMIS.Models.Account.Users
     public class PermissionDetail
     {
         public bool Read { get; set; }
+        public bool Status { get; set; }
         public bool Create { get; set; }
         public bool Update { get; set; }
         public bool Delete { get; set; }

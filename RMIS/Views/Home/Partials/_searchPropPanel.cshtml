@@ -12,7 +12,7 @@
     <ul class="panelInput panelRadio" role="group" aria-label="Basic radio toggle button group">
         <li style="width: 25%">
             <input type="radio" class="btn-check" name="propradio" id="propradio1" autocomplete="off" />
-            <label class="btn" for="propradio1">依屬性</label>
+            <label class="btn select" for="propradio1">依屬性</label>
         </li>
         <li style="width: 25%">
             <input type="radio" class="btn-check" name="propradio" id="propradio2" autocomplete="off" />
@@ -76,7 +76,10 @@
         <div class="propResultTitle">
             <span style="margin-top:4px">結果列表</span>
             <span id="totalCount"></span>
-            <a id="exportExcel1" class="exportExcel" style="float:right">匯出Excel</a>
+            @if(Model["業務圖資"].Export){
+                <a id="exportExcel1" class="exportExcel" style="float:right">匯出Excel</a>
+            }
+            
         </div>
         <div class="propResultDiv" style="width:100%; height:280px; max-height:280px; overflow:auto;">
             <table id="propResult" class="propTable">
@@ -152,7 +155,9 @@
             <div id="anaResultDiv" style="display:none">
                 <div class="form-group resultListTitle" style="margin: 2px 0px 2px; clear: both;">
                     <span style="vertical-align: text-top; margin: 0px;">數值統計結果</span>
-                    <a id="exportExcel2" class="exportExcel" style="float: right;">匯出Excel</a>
+                    @if(Model["業務圖資"].Export){
+                        <a id="exportExcel2" class="exportExcel" style="float: right;">匯出Excel</a>
+                    }
                 </div>
                 <div class="propResultDiv" style="max-height: 114px; overflow-y: auto;">
                     <table id="propAnaResult" class="propTable" style="width: 100%;">

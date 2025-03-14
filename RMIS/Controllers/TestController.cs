@@ -166,11 +166,11 @@ namespace RMIS.Controllers
         {
             var pipeline = _mapDBContext.Pipelines.Find(pipeId);
             pipeline.DepartmentIds.Add(deptId);
-            searchParentCat(pipeline.CategoryId, deptId);
+            searchParentCategory(pipeline.CategoryId, deptId);
             _mapDBContext.SaveChanges();
             return Ok("更新完成");
         }
-        private void searchParentCat(Guid? id, int deptId)
+        private void searchParentCategory(Guid? id, int deptId)
         {
             var parentCat = _mapDBContext.Categories.First(c => c.Id == id);
             if (!parentCat.DepartmentIds.Contains(deptId))
@@ -180,7 +180,7 @@ namespace RMIS.Controllers
             }
             if(parentCat.ParentId != null)
             {
-                searchParentCat(parentCat.ParentId, deptId);
+                searchParentCategory(parentCat.ParentId, deptId);
             }
         }
         [HttpPost("Get/getRoadByCSV")]
@@ -241,5 +241,22 @@ namespace RMIS.Controllers
                 buildPipelinePath(pipelineSelectList, allCategory, allPipeline, category.Id, next_path);
             }
         }
+
+        [HttpPost("Update/Category")]
+        public async Task<IActionResult> UpdateCategoryAsync(Guid CateId, Guid newId)
+        {
+            try
+            {
+                var Category = await _mapDBContext.Categories.FirstAsync(c => c.Id == CateId);
+                Category.ParentId = newId;
+                await _mapDBContext.SaveChangesAsync();
+                return Ok(new { success = true, message = "更新成功" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"更新失敗 {ex}" });
+            }
+        }
+
     }
 }

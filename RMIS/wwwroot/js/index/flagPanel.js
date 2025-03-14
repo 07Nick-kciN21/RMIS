@@ -1,4 +1,6 @@
-import { layerProps } from './ctrlMap/layers.js';
+import { addPipeline } from './ctrlMap/pipeline.js';
+import { getLayerProps, addLayer2Map } from './ctrlMap/layers.js';
+import { add2List } from './ctrlMap/list.js';
 import { getIndexMap } from './map.js';
 
 
@@ -109,22 +111,26 @@ export function initFlagPanel(){
             }
         }
     });
-    $('#tb-flagPanel').on('click', function(){
-        fetch('/api/MapAPI/GetFlaggedPipelines', {method: 'POST'})
-        .then(response => response.json())
-        .then(data => {
-            console.log(data['pipelines']);
-            for(let i=0; i<data['pipelines'].length; i++){
-                const pipeline = data['pipelines'][i].toLowerCase();
-                if($(`#switch-${pipeline}`).hasClass('switch-off')){
-                    $(`#${pipeline}`).click();
-                    // console.log(`#${pipeline} click`);
-                }
-                console.log(`#${pipeline} click`);
-            };
-            
-        });
-    });
+    // $('#tb-flagPanel').on('click', function(){
+    //     fetch('/api/MapAPI/GetFlaggedPipelines', {method: 'POST'})
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         console.log(data['flaggedPipelines']);
+    //         var pipelines = data['flagPanelInput']['flaggedPipelines'];
+    //         // addLayer2Map();
+    //         for(let i=0; i<pipelines.length; i++){
+    //             const id = pipelines[i].id;
+    //             const name = pipelines[i].name;
+    //             addPipeline(id).then(result => {
+    //                 var { metaData, layers } = result;
+    //                 layerList[id] = true;
+    //                 add2List(id, name, layers, metaData);
+    //                 addLayer2Map(id, layers);
+    //             });
+    //             console.log(`#${id} ${name} click`);
+    //         };
+    //     });
+    // });
 
     $('#flagGoResult').on('click', function(){
         // 疑似占用
@@ -141,21 +147,45 @@ export function initFlagPanel(){
         const caseStatusVal = $('#caseSelect').val();
         // 年度
         const yearVal = $('#yearSelect').val();
-
-        console.log(locOccVal, landSelect, adminVal, suspectVal, manageVal, caseStatusVal, yearVal);
-        console.log(locOccs[locOccVal], adminDists[adminVal], suspectTypes[suspectVal], manages[manageVal], caseStatus[caseStatusVal], yearVal);
-        const flagProps = layerProps['827acad2-6e1d-4343-bc1c-82b68f87a65b'];
-        filterFlags = flagProps.filter(function(item){
-            return (locOccVal == -1 || item['疑似占用'] == locOccs[locOccVal]) && 
-                   (landSelect == -1 || item['地段-名'] == landSelect) && 
-                   (adminVal == -1 || item['鄉鎮市區'] == adminDists[adminVal]) && 
-                   (suspectVal == -1 || item['疑似占用類型'] == suspectVal) &&
-                   (manageVal == -1 || item['管理單位'] == manages[manageVal]) &&
-                   (caseStatusVal == -1 || item['案件狀態'] == caseStatus[caseStatusVal]) &&
-                   (yearVal == -1 || item['清查年度'] == yearVal);
+        let flagProps = [];
+        fetch('/api/MapAPI/GetFlaggedPipelines', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            console.log(data['flaggedPipelines']);
+            var pipelines = data['flagPanelInput']['flaggedPipelines'];
+            let promises = pipelines.map(pipeline => {
+                console.log(pipeline);
+                var {id, name} = pipeline;
+                return addPipeline(id).then(result => {
+                    var { metaData, layers } = result;
+                    layerList[id] = true;
+                    add2List(id, name, layers, metaData);
+                    addLayer2Map(id, layers);
+                });
+            });
+            console.log("flagProp 2");
+            return Promise.all(promises);
+        })
+        .then(() => {
+            getLayerProps("827acad2-6e1d-4343-bc1c-82b68f87a65b")
+            .then(flagProps => {
+                filterFlags = flagProps.filter(function(item){
+                    return (locOccVal == -1 || item['疑似占用'] == locOccs[locOccVal]) && 
+                        (landSelect == -1 || item['地段-名'] == landSelect) && 
+                        (adminVal == -1 || item['鄉鎮市區'] == adminDists[adminVal]) && 
+                        (suspectVal == -1 || item['疑似占用類型'] == suspectVal) &&
+                        (manageVal == -1 || item['管理單位'] == manages[manageVal]) &&
+                        (caseStatusVal == -1 || item['案件狀態'] == caseStatus[caseStatusVal]) &&
+                        (yearVal == -1 || item['清查年度'] == yearVal);
+                });
+                console.log(`(總數：${filterFlags.length})`);
+                $("#flagCount").text(`(總數：${filterFlags.length})`);
+                updateFlagTable();
+            })
+            .catch(err => {
+                console.error(err);
+            });
         });
-        $("#flagCount").text(`(總數：${filterFlags.length})`);
-        updateFlagTable();
     });
 
     $('#flagPageSize').on('change', function () {

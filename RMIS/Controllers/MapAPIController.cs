@@ -7,6 +7,8 @@ using System.Linq;
 using RMIS.Models.API;
 using RMIS.Models.sql;
 using RMIS.Repositories;
+using Microsoft.AspNetCore.Identity;
+using RMIS.Models.Auth;
 
 
 namespace RMIS.Controllers
@@ -16,12 +18,16 @@ namespace RMIS.Controllers
     public class MapAPIController : ControllerBase
     {
         private readonly AdminInterface _adminInterface;
+        private readonly AccountInterface _accountInterface;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly MapDBContext _mapDBContext;
 
-        public MapAPIController(AdminInterface adminInterface, MapDBContext mapDBContext)
+        public MapAPIController(AdminInterface adminInterface, MapDBContext mapDBContext, AccountInterface accountInterface, UserManager<ApplicationUser> userManager)
         {
             _adminInterface = adminInterface;
             _mapDBContext = mapDBContext;
+            _accountInterface = accountInterface;
+            _userManager = userManager;
         }
 
         [HttpGet("GetLayers")]
@@ -40,6 +46,14 @@ namespace RMIS.Controllers
         {
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                // 檢查權限
+                var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+                if (!currentUserPermission.Read)
+                {
+                    return new LayersByPipeline();
+                }
                 var layers = await _mapDBContext.Layers
                     .Include(l => l.GeometryType)
                     .OrderBy(l => l.GeometryType.OrderId)
@@ -302,11 +316,21 @@ namespace RMIS.Controllers
         {
             try
             {
-                var pipelines = await _adminInterface.GetFlaggedPipelinesAsync();
+                var currentUser = await _userManager.GetUserAsync(User);
+                // 檢查權限
+                var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "權管土地");
 
-                if (pipelines != null)
+                if (!currentUserPermission.Read)
                 {
-                    return Ok(new { success = true, pipelines });
+                    return StatusCode(500, new { success = false, message = "無權限查看" });
+                }
+
+                var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+                var flagPanelInput = await _adminInterface.GetFlaggedPipelinesAsync(userInfo);
+
+                if (flagPanelInput != null)
+                {
+                    return Ok(new { success = true, flagPanelInput });
                 }
                 else
                 {
@@ -412,6 +436,21 @@ namespace RMIS.Controllers
             {
                 return StatusCode(500, new { success = false, message = "取得養工焦點圖資失敗" });
             }
+        }
+
+        [HttpPost("Get/Flag/LayerData")]
+        public async Task<IActionResult> GetFlaggedLayerData(Guid id)
+        {
+            try
+            {
+
+                return Ok(new { success = true, messgae = "取得權管土地資料", data = "取得權管土地資料" });
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "取得權管土地資料失敗", error = ex.Message });
+            }
+            
         }
     }
 }

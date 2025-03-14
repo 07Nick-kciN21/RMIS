@@ -15,5 +15,7 @@ namespace RMIS.Models.Admin
         [BindNever]
         public IEnumerable<SelectListItem> GeometryTypes { get; set; }
         public string[] selectedGeometryTypes { get; set; }
+        public IEnumerable<SelectListItem> Departments { get; set; }
+        public List<int> selectedDepartmentIds { get; set; }
     }
 }

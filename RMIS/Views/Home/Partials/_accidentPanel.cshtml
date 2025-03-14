@@ -10,17 +10,20 @@
     <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
         <ul class="panelInput panelRadio" style="list-style: none; display: flex;" role="group" aria-label="Basic radio toggle button group">
             <li style="width: 25%">
-                <input type="radio" class="btn-check" name="accradio" id="accident1" autocomplete="off" checked />
-                <label class="btn" for="accident1">圖層開關</label>
+                <input type="radio" class="btn-check" name="accradio" id="accident1" autocomplete="off"/>
+                <label class="btn select" for="accident1">圖層開關</label>
             </li>
             <li style="width: 25%">
                 <input type="radio" class="btn-check" name="accradio" id="accident2" autocomplete="off"/>
                 <label class="btn" for="accident2">簡易查詢</label>
             </li>
-            <li style="width: 25%">
-                <input type="radio" class="btn-check" name="accradio" id="accident3" autocomplete="off"/>
-                <label class="btn" for="accident3">資料匯出</label>
-            </li>
+
+            @if (Model["交通事故"].Export){
+                <li style="width: 25%">
+                    <input type="radio" class="btn-check" name="accradio" id="accident3" autocomplete="off"/>
+                    <label class="btn" for="accident3">資料匯出</label>
+                </li>
+            }
         </ul>
         <div id="acc1" class="panelBody" style="display: block">
             <div class="form-group">
@@ -104,42 +107,43 @@
             </table>
             </div>
         </div>
-
-        <div id="acc3" class="panelBody" style="display: none">
-            <div class="form-group">
-                <label>行政區</label>
-                <select id="acc3AdminDict" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇</option>
-                    <option value="0">桃園區</option>
-                    <option value="1">大溪區</option>
-                    <option value="2">中壢區</option>
-                    <option value="3">楊梅區</option>
-                    <option value="4">蘆竹區</option>
-                    <option value="5">大園區</option>
-                    <option value="6">龜山區</option>
-                    <option value="7">八德區</option>
-                    <option value="8">龍潭區</option>
-                    <option value="9">平鎮區</option>
-                    <option value="10">新屋區</option>
-                    <option value="11">觀音區</option>
-                    <option value="12">復興區</option>
-                </select>
+        @if (Model["交通事故"].Export){
+            <div id="acc3" class="panelBody" style="display: none">
+                <div class="form-group">
+                    <label>行政區</label>
+                    <select id="acc3AdminDict" class="form-select" style="flex-grow: 1;border-radius:0;">
+                        <option value="-1">請選擇</option>
+                        <option value="0">桃園區</option>
+                        <option value="1">大溪區</option>
+                        <option value="2">中壢區</option>
+                        <option value="3">楊梅區</option>
+                        <option value="4">蘆竹區</option>
+                        <option value="5">大園區</option>
+                        <option value="6">龜山區</option>
+                        <option value="7">八德區</option>
+                        <option value="8">龍潭區</option>
+                        <option value="9">平鎮區</option>
+                        <option value="10">新屋區</option>
+                        <option value="11">觀音區</option>
+                        <option value="12">復興區</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>年分</label>
+                    <select id="acc3Year" class="form-select">
+                            <option value="108">108</option>
+                            <option value="109">109</option>
+                            <option value="110">110</option>
+                            <option value="111">111</option>
+                            <option value="112">112</option>
+                            <option value="113">113</option>
+                            <option value="114">114</option>
+                    </select>
+                </div>
+                <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
+                    <button id="acc3GoResult" class="btn js-modal-toggle goResult">匯出</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>年分</label>
-                <select id="acc3Year" class="form-select">
-                        <option value="108">108</option>
-                        <option value="109">109</option>
-                        <option value="110">110</option>
-                        <option value="111">111</option>
-                        <option value="112">112</option>
-                        <option value="113">113</option>
-                        <option value="114">114</option>
-                </select>
-            </div>
-            <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
-                <button id="acc3GoResult" class="btn js-modal-toggle goResult">匯出</button>
-            </div>
-        </div>
+        }
     </div>
 </div>

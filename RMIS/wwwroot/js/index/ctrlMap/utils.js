@@ -1,5 +1,4 @@
 ﻿import { getIndexMap, popupEnabled } from '../map.js'; 
-import { getCookie } from '../../admin/UserRole.js'
 
 let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null; // 用於保存當前的線段
@@ -32,10 +31,10 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             maxHeight: 350
         });
         marker.on('click', function (e) {
-            console.log("Marker Clicked",popupEnabled);
             if(popupEnabled){
                 if(name == "施工地點"){
-                    let latlngs = JSON.parse(prop["施工範圍"]);
+                    let p = JSON.parse(prop);
+                    let latlngs =  JSON.parse(p["施工範圍"]);
                     // 歷遍施工範圍的座標，並將其轉換成L.polygon
                     latlngs.forEach(function (latlng) {
                         let polygon = L.polygon(latlng.map(function (point) {
@@ -317,8 +316,7 @@ function getInverseColor(color) {
 }
 
 function popupPhoto(prop){
-    let url = prop;
-    console.log(url);
+    let url = JSON.parse(prop);
     // 創建 popupContent
     let popupContent = document.createElement('div');
     popupContent.id = 'photoPopup';
@@ -333,67 +331,66 @@ function popupPhoto(prop){
 
     // 編輯按鈕 => 選擇圖片 => 顯示圖片 => 儲存
     // 如果用戶角色為 Admin，添加編輯按鈕和文件輸入框
-    if (getCookie('UserRole') === 'Admin') {
-        let editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-primary';
-        editBtn.innerText = '編輯圖片';
-        editBtn.addEventListener('click', () => {
-            // 編輯按鈕
-            document.getElementById(`photoEdit`).click();
-        });
+    let editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-primary';
+    editBtn.innerText = '編輯圖片';
+    editBtn.addEventListener('click', () => {
+        // 編輯按鈕
+        document.getElementById(`photoEdit`).click();
+    });
 
-        let fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.id = `photoEdit`;
-        fileInput.style.display = 'none';
-        // 選擇圖片
-        fileInput.addEventListener('change', event => {
-            const file = event.target.files[0];
-            if (file) {
-                // 把img的src改成file的url
-                img.src = URL.createObjectURL(file);
-                editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-block';
-                cancelBtn.style.display = 'inline-block';
-            }
-        });
-        
-        let saveBtn = document.createElement('button');
-        saveBtn.className = 'btn btn-success';
-        saveBtn.innerText = '儲存';
+    let fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.id = `photoEdit`;
+    fileInput.style.display = 'none';
+    // 選擇圖片
+    fileInput.addEventListener('change', event => {
+        const file = event.target.files[0];
+        if (file) {
+            // 把img的src改成file的url
+            img.src = URL.createObjectURL(file);
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'inline-block';
+        }
+    });
+    
+    let saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-success';
+    saveBtn.innerText = '儲存';
+    saveBtn.style.display = 'none';
+    saveBtn.addEventListener('click', () => {
+        if(confirm('是否修改圖片')){
+            console.log('修改圖片');
+            var formData = new FormData();
+            formData.append('Photo', fileInput.files[0]);
+            formData.append('PhotoName', url["url"]);
+            fetch(`/api/AdminAPI/updateProjectPhoto`, {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                img.src = `${src}?v=${new Date().getTime()}`;
+                saveBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                editBtn.style.display = 'inline-block';
+            });
+        } 
+    });
+    let cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.innerText = '取消';
+    cancelBtn.style.display = 'none';
+    cancelBtn.addEventListener('click', () => {
+        img.src = src;
         saveBtn.style.display = 'none';
-        saveBtn.addEventListener('click', () => {
-            if(confirm('是否修改圖片')){
-                console.log('修改圖片');
-                var formData = new FormData();
-                formData.append('Photo', fileInput.files[0]);
-                formData.append('PhotoName', url["url"]);
-                fetch(`/api/AdminAPI/updateProjectPhoto`, {
-                    method: 'POST',
-                    body: formData
-                }).then(response => {
-                    img.src = `${src}?v=${new Date().getTime()}`;
-                    saveBtn.style.display = 'none';
-                    cancelBtn.style.display = 'none';
-                    editBtn.style.display = 'inline-block';
-                });
-            } 
-        });
-        let cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-secondary';
-        cancelBtn.innerText = '取消';
         cancelBtn.style.display = 'none';
-        cancelBtn.addEventListener('click', () => {
-            img.src = src;
-            saveBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-            editBtn.style.display = 'inline-block';
-        });
-        popupContent.appendChild(editBtn);
-        popupContent.appendChild(saveBtn);
-        popupContent.appendChild(cancelBtn);
-        popupContent.appendChild(fileInput);
-    }
+        editBtn.style.display = 'inline-block';
+    });
+    popupContent.appendChild(editBtn);
+    popupContent.appendChild(saveBtn);
+    popupContent.appendChild(cancelBtn);
+    popupContent.appendChild(fileInput);
+    
     return popupContent;
 }
 
@@ -417,7 +414,7 @@ function popupFormat(prop, name){
             圖層：${name}
         </text>
         <div>
-            ${name == "施工地點" ? popupConstruct(prop) : popUpForm(formProp)}
+            ${name == "施工地點" ? popupConstruct(formProp) : popUpForm(formProp)}
         </div> 
     </div>`;
 }

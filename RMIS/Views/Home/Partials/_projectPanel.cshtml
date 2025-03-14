@@ -122,7 +122,9 @@
         <div class="resultListTitle" style="margin: 0 15px;">
             <span style="margin-top:4px">結果列表</span>
             <span id="projectTotalCount"></span>
-            <a id="exportProjectExcel" class="exportExcel" style="float:right">匯出Excel</a>
+            @if(Model["專案查詢"].Export){
+                <a id="exportProjectExcel" class="exportExcel" style="float:right">匯出Excel</a>
+            }
         </div>
         <div id="projectResultDiv" class="panelList">
             <table id="projectTable" class="propTable">

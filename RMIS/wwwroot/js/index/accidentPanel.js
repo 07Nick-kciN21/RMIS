@@ -3,7 +3,9 @@
 export function initAccidentPanel(){
     $('input[name="accradio"]').on('change', function () {
         console.log('radio change');
-        $('label.btn').removeClass('select');
+        $('input[name="accradio"]').each(function () {
+            $(this).next('label').removeClass('select');
+        });
         $(this).next('label').addClass('select');
         const selectedLabel = $(this).next('label').text();
         $('#acc1, #acc2, #acc3').css('display', 'none');

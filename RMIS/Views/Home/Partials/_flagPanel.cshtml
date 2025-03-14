@@ -142,7 +142,9 @@
         <div style="margin: 0% 15px;">
             <span style="margin-top:4px">結果列表</span>
             <span id="flagCount" class="totalCount"></span>
-            <a id="flagExcel" class="exportExcel" style="float:right">匯出Excel</a>
+            @if(Model["權管土地"].Export){
+                <a id="flagExcel" class="exportExcel" style="float:right">匯出Excel</a>
+            }
         </div>
         <div id="flagResultDiv" class="panelList">
             <table id="flagTable" class="propTable">

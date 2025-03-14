@@ -19,7 +19,9 @@ export function addLayer2Map(id ,LayerData) {
         layerProps[pipelineId] = [];
         console.log(`layerProps[${pipelineId}]： is null`);
     }
-    layerProps[pipelineId].length = 0;
+    if (!layerProps[pipelineId]) {
+        layerProps[pipelineId] = [];
+    }
     const ajaxCalls = LayerData.map(function (Ldata) {
         return $.ajax({
             url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
@@ -190,5 +192,27 @@ export function addFocusLayer2Map(id, ofType, LayerData, startDate, endDate){
                 console.error('Add Layer Fail', err)
             }
         });
+    });
+}
+
+export function getLayerProps(id) {
+    return new Promise((resolve, reject) => {
+        // 檢查 layerProps 是否已經有數據
+        if (layerProps[id] && layerProps[id].length > 0) {
+            resolve(layerProps[id]);
+        } else {
+            // 監聽 layerProps 的變化（使用 setTimeout 模擬非同步輪詢）
+            let attempts = 0;
+            const interval = setInterval(() => {
+                if (layerProps[id] && layerProps[id].length > 0) {
+                    clearInterval(interval);
+                    resolve(layerProps[id]);
+                }
+                if (++attempts > 20) { // 最多等待 2 秒 (100ms * 20)
+                    clearInterval(interval);
+                    reject(new Error(`超時：未能獲取 layerProps[${id}]`));
+                }
+            }, 100);
+        }
     });
 }

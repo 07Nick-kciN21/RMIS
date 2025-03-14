@@ -45,7 +45,7 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
-<script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
 <!-- Leaflet Draw Script -->
@@ -64,6 +64,7 @@
 <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-pip@latest/leaflet-pip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.10.3/src/leaflet.geometryutil.min.js"></script>
+<script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
 <script src="~/lib/proj4.js"></script>
 
 
@@ -115,7 +116,7 @@
                             </ul>
                         </div>
                     </div>
-                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Create)
+                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status)
                     {
                         <div class="nav-item dropdown">
                             <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
@@ -165,13 +166,13 @@
                             </div>
                         </div>
                     }
-                    @if (Model.ContainsKey("正攝影像") && Model["正攝影像"].Read)
+                    @if (Model.ContainsKey("正攝影像") && Model["正攝影像"].Read && Model["正攝影像"].Status)
                     {
                         <div class="nav-item dropdown">
                             <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
                         </div>
                     }
-                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Read)
+                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Read && Model["業務圖資"].Status)
                     {
                         <div class="nav-item dropdown">
                             <button id="imageDataBtn" class="dropdown-button" data-target="imageDataContent">業務圖資</button>
@@ -242,23 +243,23 @@
         <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
         <span id="tb-location" class="mobileTool" title="目前位置"></span>
         <span id="tb-streetView" class="mobileTool" title="google街景"></span>
-        @if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read)
+        @if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read && Model["屬性搜尋"].Status)
         {
             <span id="tb-searchPropPanel" class="mobileTool" title="屬性搜尋"></span>
         }
-        @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read)
+        @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
         {
             <span id="tb-flagPanel" title="權管土地"></span>
         }
-        @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read)
+        @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
         {
             <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
         }
-        @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read)
+        @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
         {
             <span id="tb-accidentPanel" title="交通事故"></span>
         }
-        @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read){
+        @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status){
             <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
         }
         
@@ -319,32 +320,32 @@
     @Html.Partial("~/Views/Home/Partials/_painterPanel.cshtml")
 }
 
-@if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read)
+@if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read && Model["屬性搜尋"].Status)
 {
     @section searchPropPanel {
         @Html.Partial("~/Views/Home/Partials/_searchPropPanel.cshtml")
     }
 }
 
- @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read)
+ @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
 {
     @section focusPanel {
         @Html.Partial("~/Views/Home/Partials/_focusPanel.cshtml")
     }
 }
- @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read)
+ @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status)
 {
     @section projectPanel {
         @Html.Partial("~/Views/Home/Partials/_projectPanel.cshtml")
     }
 }
- @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read)
+ @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
 {
     @section accidentPanel {
         @Html.Partial("~/Views/Home/Partials/_accidentPanel.cshtml")
     }
 }
- @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read)
+ @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
 {
     @section flagPanel {
         @Html.Partial("~/Views/Home/Partials/_flagPanel.cshtml")

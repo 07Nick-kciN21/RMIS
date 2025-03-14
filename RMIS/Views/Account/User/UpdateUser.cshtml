@@ -1,61 +1,124 @@
 ﻿@model RMIS.Models.Account.Users.UpdateUserView;
 
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
 @{
     Layout = null;
 }
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/account/rolePermission.css" />
+    <head>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/js/account/user/updateUser.js"></script>
+    </head>
+    <body>
+        <form>
+            <div>
+                <input type="hidden" class="form-control" asp-for="UserId" readonly>
+            </div>
+            <div class="form-group">
+                <label asp-for="DisplayName">名稱</label>
+                <input type="text" class="form-control" asp-for="DisplayName">
+            </div>
+            <div class="form-group">
+                <label asp-for="UserName">帳號</label>
+                <label class="form-control" asp-for="UserName"></label>
+            </div>
+            <div class="form-group">
+                <label>密碼</label>
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#resetPassword">重設密碼</button>
+            </div>
+            <div class="form-group">
+                <label asp-for="RoleId">身分</label>
+                @Html.DropDownListFor(model => model.RoleId, Model.Roles, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                <label asp-for="DepartmentId">部門</label>
+                @Html.DropDownListFor(model => model.DepartmentId, Model.Departments, new { @class = "form-control" })
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="radio" asp-for="Status" value="true" /> 啟用
+                </label>
+                <label>
+                    <input type="radio" asp-for="Status" value="false" /> 禁止
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email">信箱</label>
+                <input type="text" class="form-control" asp-for="Email">
+            </div>
+            <div class="form-group">
+                <label asp-for="Phone">電話</label>
+                <input type="text" class="form-control" asp-for="Phone">
+            </div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/js/account/user/updateUser.js"></script>
-</head>
-<body>
-    <form>
-        <div>
-            <input type="hidden" class="form-control" asp-for="UserId" readonly>
+            <button id="submit" class="btn btn-primary">儲存</button>
+            <button id="cancel" class="btn btn-secondary">取消</button>
+        </form>
+        <div class="modal fade" id="resetPassword" tabindex="-1" aria-labelledby="resetPassword" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">修改密碼</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form form-horizontal" method="post">
+                    <input type="hidden" name="AccID" id="hfAccID" value="110">
+                    <div class="form-body">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="form-group row">
+                                    <label class="col-md-2 label-control" style="padding-top:0.75em;text-align:right">原密碼</label>
+                                    <div class="col-md-10">
+                                        <input type="password" id="OrgMima" class="form-control border-primary" placeholder="原密碼">
+                                        <div class="form-control-position" style="right: 15px;">
+                                            <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Org"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="form-group row">
+                                    <label class="col-md-2 label-control" style="padding-top:0.75em;text-align:right">新密碼</label>
+                                    <div class="col-md-10">
+                                        <input type="password" id="NewMima" class="form-control border-primary" placeholder="新密碼">
+                                        <div class="form-control-position" style="right: 15px;">
+                                            <i class="fa fa-eye fa-eye-slash mimaShow" data-id="New"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="form-group row">
+                                    <label class="col-md-2 label-control" style="padding-top:0.75em;text-align:right">確認新密碼</label>
+                                    <div class="col-md-10">
+                                        <input type="password" id="CheckMima" class="form-control border-primary" placeholder="確認新密碼">
+                                        <div class="form-control-position" style="right: 15px;">
+                                            <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Check"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-10">
+                                <div class="form-group row">
+                                    <label class="col-md-2 label-control" style="padding-top:0.75em;text-align:right"></label>
+                                    <div class="col-md-10 ">
+                                        <label class="text-danger" style="margin-top:10px">密碼規格：8字元以上、包含大寫字母、小寫字母、數字且不可與帳號相同。</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 m-auto">
+                                <button type="button" class="btn btn-block btn-min-width btn-info mtop" onclick="EditMima()"><i class="ft-save"></i> 儲存</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div>
-            <label asp-for="DisplayName">名稱</label>
-            <input type="text" class="form-control" asp-for="DisplayName">
-        </div>
-        <div>
-            <label asp-for="UserName">帳號</label>
-            <input type="text" class="form-control" asp-for="UserName">
-        </div>
-        <div class="form-group">
-            <label asp-for="RoleId">身分</label>
-            @Html.DropDownListFor(model => model.RoleId, Model.Roles, new { @class = "form-control" })
-        </div>
-        <div class="form-group">
-            <label asp-for="DepartmentId">部門</label>
-            @Html.DropDownListFor(model => model.DepartmentId, Model.Departments, new { @class = "form-control" })
-        </div>
-        <div class="form-group">
-            <label>
-                <input type="radio" asp-for="Status" value="true" /> 啟用
-            </label>
-            <label>
-                <input type="radio" asp-for="Status" value="false" /> 禁止
-            </label>
-        </div>
-        <div class="form-group">
-            <label asp-for="Email">信箱</label>
-            <input type="text" class="form-control" asp-for="Email">
-        </div>
-        <div class="form-group">
-            <label asp-for="Phone">電話</label>
-            <input type="text" class="form-control" asp-for="Phone">
-        </div>
-
-        <button id="submit" class="btn btn-primary">儲存</button>
-        <button id="cancel" class="btn btn-secondary">取消</button>
-    </form>
-</body>
+    </body> 
 </html>

@@ -47,7 +47,7 @@ namespace RMIS.Controllers
             }
         }
 
-        [HttpPost("deleteCategory")]
+        [HttpGet("deleteCategory")]
         public async Task<IActionResult> DeleteCategory(Guid? categoryId)
         {
             try

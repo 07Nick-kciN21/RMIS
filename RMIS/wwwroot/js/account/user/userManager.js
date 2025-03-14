@@ -148,6 +148,7 @@ function updateUserTable(users){
         row.append(`<td class="phone-cell">
                         <span class="read">${maskPhone(user.phone)}</span>
                     </td>`);
+
         row.append(`<td class="createAt-cell">${convertDate(user.createAt)}</td>`);
 
         // 建立操作按鈕

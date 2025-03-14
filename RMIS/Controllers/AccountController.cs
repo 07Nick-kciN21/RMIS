@@ -51,6 +51,7 @@ namespace RMIS.Controllers
 
             if (!currentUserPermission.Read)
             {
+                return RedirectToAction("Login", "Portal");
                 return Json(new { success = false, message = "無權限查看" });
             }
             ViewBag.Username = currentUser.UserName;

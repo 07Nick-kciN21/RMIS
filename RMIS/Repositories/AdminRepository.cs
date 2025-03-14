@@ -17,6 +17,7 @@ using OfficeOpenXml;
 using System.Linq;
 using System.Data;
 using System.Runtime.ConstrainedExecution;
+using RMIS.Models.Auth;
 
 
 namespace RMIS.Repositories
@@ -24,12 +25,14 @@ namespace RMIS.Repositories
     public class AdminRepository : AdminInterface
     {
         private readonly MapDBContext _mapDBContext;
+        private readonly AuthDbContext _authDbContext;
         private readonly ILogger<AdminRepository> _logger;
 
-        public AdminRepository(MapDBContext mapDBContext, ILogger<AdminRepository> loger)
+        public AdminRepository(MapDBContext mapDBContext, ILogger<AdminRepository> loger, AuthDbContext authDbContext)
         {
             _mapDBContext = mapDBContext;
             _logger = loger;
+            _authDbContext = authDbContext;
         }
 
         public async Task<AddPipelineInput> getPipelineInput(UserAuthInfo userAuthInfo)
@@ -48,6 +51,19 @@ namespace RMIS.Repositories
                 { "arrowline", new SelectListGroup { Name = "箭頭" } }
             };
 
+            List<Department> _Departments;
+
+            if (userAuthInfo.departmentId == 2)
+            {
+                _Departments = await _authDbContext.Departments.ToListAsync();
+            }
+            else
+            {
+                _Departments = await _authDbContext.Departments
+                    .Where(d => d.Id == userAuthInfo.departmentId)
+                    .ToListAsync();
+            }
+
             var input = new AddPipelineInput
             {
                 Categories = _Categories,
@@ -60,6 +76,14 @@ namespace RMIS.Repositories
                         Group = groupDictionary[g.Kind] // 群組名稱是中文
                     };
                 }).ToList(),
+                Departments = _Departments.Select(d =>
+                {
+                    return new SelectListItem
+                    {
+                        Text = d.Name,
+                        Value = d.Id.ToString()
+                    };
+                }).ToList()
             };
             // KindGroup依照點線面
             return input;
@@ -89,12 +113,14 @@ namespace RMIS.Repositories
         public async Task<int> AddPipelineAsync(AddPipelineInput pipelineInput)
         {
             var pipelineId = Guid.NewGuid();
+            searchParentCategory(Guid.Parse(pipelineInput.CategoryId), pipelineInput.selectedDepartmentIds);
             var pipeItem = new Pipeline
             {
                 Id = pipelineId,
                 Name = pipelineInput.Name,
                 ManagementUnit = pipelineInput.ManagementUnit,
                 CategoryId = Guid.Parse(pipelineInput.CategoryId),
+                DepartmentIds = pipelineInput.selectedDepartmentIds,
             };
 
             // 將新管線添加到資料庫
@@ -118,7 +144,34 @@ namespace RMIS.Repositories
             int rowsAffected = await _mapDBContext.SaveChangesAsync();
             return rowsAffected;
         }
+        private void searchParentCategory(Guid? id, List<int> deptIds)
+        {
+            if (id == null) return;
 
+            var parentCat = _mapDBContext.Categories.FirstOrDefault(c => c.Id == id);
+            if (parentCat == null) return;
+
+            bool isUpdated = false;
+
+            foreach (int deptId in deptIds)
+            {
+                if (!parentCat.DepartmentIds.Contains(deptId))
+                {
+                    parentCat.DepartmentIds.Add(deptId);
+                    isUpdated = true;
+                }
+            }
+
+            if (isUpdated)
+            {
+                _mapDBContext.SaveChanges();
+            }
+
+            if (parentCat.ParentId != null)
+            {
+                searchParentCategory(parentCat.ParentId, deptIds);
+            }
+        }
         public async Task<AddRoadInput> getRoadInput(UserAuthInfo userAuthInfo)
         {
             var _AdminDists = await _mapDBContext.AdminDist.OrderBy(ad => ad.orderId).ToListAsync();
@@ -727,13 +780,21 @@ namespace RMIS.Repositories
             return categoriesToDelete;
         }
 
-        public async Task<List<string>> GetFlaggedPipelinesAsync()
+        public async Task<FlagPanelInput> GetFlaggedPipelinesAsync(UserAuthInfo userAuthInfo)
         {
             var flaggedPipelines = await _mapDBContext.Pipelines
                 .Where(p => p.Name.Contains("權管土地"))
-                .Select(p => p.Id.ToString())
+                .Select(p => new pipelineItem 
+                { 
+                    Id = p.Id,
+                    Name = p.Name
+                })
                 .ToListAsync();
-            return flaggedPipelines;
+            var result = new FlagPanelInput
+            {
+                FlaggedPipelines = flaggedPipelines,
+            };
+            return result;
         }
 
         public async Task<FocusedData> GetFocusDataAsync(GetFocusDataInput input)

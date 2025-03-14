@@ -44,7 +44,9 @@
         <div class="form-group resultListTitle" style="margin: 0 15px; clear: both;">
             <span style="vertical-align: text-top; margin: 0px;">結果列表</span>
             <span id="focusTotalCount"></span>
-            <a id="focusExcel" class="exportExcel" style="float: right; margin-left: auto;">匯出Excel</a>
+            @if(Model["養工焦點"].Export){
+                <a id="focusExcel" class="exportExcel" style="float: right; margin-left: auto;">匯出Excel</a>
+            }
         </div>
         <div id="focusResultDiv" class="panelList">
             <table id="focusTable" class="propTable">

@@ -1,5 +1,4 @@
 import { getIndexMap } from './map.js'
-import { getCookie } from '../admin/UserRole.js'
 
 const adminDists = [
     "桃園區",  // value: 1

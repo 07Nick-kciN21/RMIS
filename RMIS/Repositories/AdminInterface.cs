@@ -16,7 +16,7 @@ namespace RMIS.Repositories
         // Pipeline (管線)
         Task<int> AddPipelineAsync(AddPipelineInput pipelineInput);
         Task<AddPipelineInput> getPipelineInput(UserAuthInfo userAuthInfo);
-        Task<List<string>> GetFlaggedPipelinesAsync();
+        Task<FlagPanelInput> GetFlaggedPipelinesAsync(UserAuthInfo userAuthInfo);
         Task<int> DeletePipelineAsync(Guid? pipelineId);
 
         // Road (道路)

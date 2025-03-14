@@ -30,22 +30,15 @@ namespace RMIS.Repositories
         public async Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId)
         {
             var permissions = await _authDbContext.RolePermissions
+                .Include(rp => rp.Permission)
                 .Where(rp => rp.RoleId == roleId)
-                .Select(rp => new
-                {
-                    rp.Permission.Name,
-                    rp.Read,
-                    rp.Create,
-                    rp.Update,
-                    rp.Delete,
-                    rp.Export
-                })
                 .ToListAsync();
 
             return permissions.ToDictionary(
-                p => p.Name,
+                p => p.Permission.Name,
                 p => new PermissionDetail
                 {
+                    Status = p.Permission.Status,
                     Read = p.Read,
                     Create = p.Create,
                     Update = p.Update,
@@ -481,6 +474,7 @@ namespace RMIS.Repositories
                                 .Select(ur => ur.RoleId)
                                 .First(),
                     Role = _userManager.GetRolesAsync(u).Result.First(),
+                    Order = u.Order,
                     Status = u.Status,
                     CreateAt = u.CreatedAt
                 }).ToListAsync();
