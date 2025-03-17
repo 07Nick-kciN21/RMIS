@@ -229,7 +229,8 @@ namespace RMIS.Repositories
             // 找到所有符合的pipeline
             var allPipelines = await _mapDBContext.Pipelines
                 .Where(c => c.DepartmentIds
-                    .Contains(userAuthInfo.departmentId))
+                    .Contains(userAuthInfo.departmentId) && 
+                       c.IsGeneralPipeline)
                 .ToListAsync();
             var allCategory = await _mapDBContext.Categories
                 .Where(c => c.DepartmentIds

@@ -216,3 +216,15 @@ export function getLayerProps(id) {
         }
     });
 }
+
+export function deleteLayerProps(id) {
+    return new Promise((resolve, reject) => {
+        if (layerProps[id]) {
+            delete layerProps[id];
+            console.log(`layerProps[${id}] 已刪除`);
+            resolve(`layerProps[${id}] 刪除成功`);
+        } else {
+            resolve(`layerProps[${id}] 不存在`);
+        }
+    });
+}

@@ -139,7 +139,7 @@ export function bindMenuEvents() {
         if ($switch.hasClass('switch-on')) {
             removePipeline(id).then(result => {
                 layerList[id] = false;
-                console.log("Remove from List");
+                console.log("Remove from Menu");
                 remove2List(id);
                 $switch.removeClass('switch-on').addClass('switch-off');
             });

@@ -176,10 +176,13 @@ function popUpPhoto(prop){
     img.style.width = '450px';
     img.style.height = '300px';
     popupContent.appendChild(img);
-
+    // 設定
     // 編輯按鈕 => 選擇圖片 => 顯示圖片 => 儲存
     // 如果用戶角色為 Admin，添加編輯按鈕和文件輸入框
-    if (getCookie('UserRole') === 'Admin') {
+    // 取得 id="projectExport的 data-edit
+    var updateRole = $('#projectExport').data('update');
+    
+    if (updateRole === 'True') {
         let editBtn = document.createElement('button');
         editBtn.className = 'btn btn-primary';
         editBtn.innerText = '編輯圖片';
@@ -217,11 +220,15 @@ function popUpPhoto(prop){
                 fetch(`/api/AdminAPI/updateProjectPhoto`, {
                     method: 'POST',
                     body: formData
-                }).then(response => {
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
                     img.src = `${src}?v=${new Date().getTime()}`;
                     saveBtn.style.display = 'none';
                     cancelBtn.style.display = 'none';
                     editBtn.style.display = 'inline-block';
+                    alert(data.message);
                 });
             } 
         });
@@ -306,6 +313,7 @@ function updateProjectTable(){
 function renderTableBody(pageData){
     const projectTbody = $('#projectTbody');
     projectTbody.empty();
+    var updateRole = $('#projectExport').data('update');
     pageData.forEach(project => {
         const tableRow = $('<tr></tr>');
         const targetBtn = $('<button>目標</button>').on('click', function () {
@@ -319,6 +327,7 @@ function renderTableBody(pageData){
         });
         // 預設儲存按鈕不顯示
         // 編輯與儲存交替顯示
+        
         const editBtn = $('<button>編輯</button>').on('click', function () {
             if (currentRow) {
                 currentRow.removeClass('selectRow');
@@ -455,21 +464,17 @@ function renderTableBody(pageData){
             for (var pair of updateForm.entries()) {
                 console.log(pair[0]+ ', ' + pair[1]); 
             }
-
-
             // 取得更新後的所有值
             // 透過/api/AdminAPI/UpdateRoadProject更新資料
             fetch(`/api/AdminAPI/updateProjectData`, {  
                 method: 'POST',
                 body: updateForm
             })
-            .then(res => {
-            return res.json().then(data => ({ status: res.status, body: data }));
-        })
-        .then(({ status, body }) => {
-            console.log(status, body);
-        });
-
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                alert(data.message);
+            });
             $(this).hide();
             $(this).siblings('button:contains("編輯")').show();
         }).hide();
@@ -495,7 +500,9 @@ function renderTableBody(pageData){
                 <td>${project['remarks']}</td>
                 `
         tableRow.append($('<td></td>').append(targetBtn));
-        tableRow.append($('<td></td>').append(editBtn, saveBtn));
+        if(updateRole === 'True') {
+            tableRow.append($('<td></td>').append(editBtn, saveBtn));
+        }
         tableRow.append(projectRow);
         projectTbody.append(tableRow);
     });

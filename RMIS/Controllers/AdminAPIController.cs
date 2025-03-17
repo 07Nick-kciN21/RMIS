@@ -5,6 +5,8 @@ using RMIS.Models.sql;
 using RMIS.Repositories;
 using RMIS.Models.Admin;
 using RMIS.Models.API;
+using Microsoft.AspNetCore.Identity;
+using RMIS.Models.Auth;
 
 
 namespace RMIS.Controllers
@@ -15,10 +17,14 @@ namespace RMIS.Controllers
     {
 
         private readonly AdminInterface _adminInterface;
+        private readonly AccountInterface _accountInterface;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AdminAPIController(AdminInterface adminInterface)
+        public AdminAPIController(AdminInterface adminInterface, AccountInterface accountInterface, UserManager<ApplicationUser> userManager)
         {
             _adminInterface = adminInterface;
+            _accountInterface = accountInterface;
+            _userManager = userManager;
         }
 
         [HttpPost("deletePipeline")]
@@ -26,7 +32,6 @@ namespace RMIS.Controllers
         {
             try
             {
-                // 调用服务层进行删除操作
                 var rowsAffected = await _adminInterface.DeletePipelineAsync(
                     pipelineId: pipelineId
                 );
@@ -100,6 +105,14 @@ namespace RMIS.Controllers
         {
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                // 檢查權限
+                var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "專案查詢");
+
+                if (!currentUserPermission.Update)
+                {
+                    return Ok(new { success = false, message = "無權限更新資料" });
+                }
                 var updated = await _adminInterface.UpdateProjectDataAsync(projectData);
                 if (updated)
                 {
@@ -122,6 +135,14 @@ namespace RMIS.Controllers
         {
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                // 檢查權限
+                var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "專案查詢");
+
+                if (!currentUserPermission.Update)
+                {
+                    return Ok(new { success = false, message = "無權限更新照片" });
+                }
                 var updated = await _adminInterface.UpdateProjectPhotoAsync(projectPhoto);
                 if (updated)
                 {

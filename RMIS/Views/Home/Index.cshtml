@@ -116,52 +116,68 @@
                             </ul>
                         </div>
                     </div>
-                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status)
+                    @if ((Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status) ||
+                         (Model.ContainsKey("養工焦點") && Model["養工焦點"].Create && Model["養工焦點"].Status) ||
+                         (Model.ContainsKey("專案查詢") && Model["專案查詢"].Create && Model["專案查詢"].Status))
                     {
                         <div class="nav-item dropdown">
                             <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
                             <div id="adminMenuContent" class="dropdown-content">
                                 <ul id="adminMenu" class="menu-background">
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
-                                            <h4>新增圖源</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
-                                            <h4>新增類別</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
-                                            <h4>新增管線</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
-                                            <h4>上傳路線資料</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
-                                            <h4>上傳圖資類別</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
-                                            <h4>新增道路專案</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
-                                            <h4>上傳道路專案</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
-                                            <h4>上傳施工通報</h4>
-                                        </a>
-                                    </li>
+                                    @* 業務圖資 *@
+                                    @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status)
+                                    {
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
+                                                <h4>新增圖源</h4>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
+                                                <h4>新增類別</h4>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
+                                                <h4>新增管線</h4>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
+                                                <h4>上傳圖資類別</h4>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
+                                                <h4>上傳路線資料</h4>
+                                            </a>
+                                        </li>
+                                    }
+
+                                    @* 專案查詢 *@
+                                    @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Create && Model["專案查詢"].Status)
+                                    {
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
+                                                <h4>新增道路專案</h4>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
+                                                <h4>上傳道路專案</h4>
+                                            </a>
+                                        </li>
+                                    }
+
+                                    @* 養工焦點 *@
+                                    @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Create && Model["養工焦點"].Status)
+                                    {
+                                        <li>
+                                            <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
+                                                <h4>上傳施工通報</h4>
+                                            </a>
+                                        </li>
+                                    }
                                 </ul>
                             </div>
                         </div>
@@ -320,11 +336,8 @@
     @Html.Partial("~/Views/Home/Partials/_painterPanel.cshtml")
 }
 
-@if (Model.ContainsKey("屬性搜尋") && Model["屬性搜尋"].Read && Model["屬性搜尋"].Status)
-{
-    @section searchPropPanel {
-        @Html.Partial("~/Views/Home/Partials/_searchPropPanel.cshtml")
-    }
+@section searchPropPanel {
+    @Html.Partial("~/Views/Home/Partials/_searchPropPanel.cshtml")
 }
 
  @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)

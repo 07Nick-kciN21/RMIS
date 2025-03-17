@@ -7,6 +7,7 @@ namespace RMIS.Models.sql
         public Guid Id { get; set; } // 唯一識別碼
         public string Name { get; set; } // 管線名稱
         public string ManagementUnit { get; set; } // 管理單位
+        public bool IsGeneralPipeline { get; set; } // 是否為通用管線
         // public string Kind { get; set; } // 點、線、面
         // public string? Color { get; set; } // 顏色
         public Guid CategoryId { get; set; } // 管線Id
