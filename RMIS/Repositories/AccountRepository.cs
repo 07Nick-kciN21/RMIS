@@ -721,6 +721,23 @@ namespace RMIS.Repositories
                 return (false, $"身分更新失敗: {ex}");
             }
         }
+        public async Task<UserProfileView> GetUserProfileDataAsync(string id)
+        {
+            var user = await _authDbContext.Users.Include(u => u.Department).FirstAsync(u => u.Id == id);
+            var roles = await _authDbContext.Roles.ToListAsync();
+            var departments = await _authDbContext.Departments.ToListAsync();
+            var userData = new UserProfileView
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                DisplayName = user.DisplayName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                Role = _userManager.GetRolesAsync(user).Result.First(),
+                Department = user.Department.Name,
+            };
+            return userData;
+        }
 
         public async Task<UpdateUserView> UpdateUserViewAsync(string id)
         {
@@ -979,6 +996,44 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 _authDbContext.ChangeTracker.Clear();
                 return (false, $"使用者建立失敗: {ex}");
+            }
+        }
+
+        public async Task<(bool Success, string Message)> UpdateUserPasswordAsync(UpdateUserPassword updateUserPassword)
+        {
+            using var transaction = await _authDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var existUser = await _userManager.FindByIdAsync(updateUserPassword.UserId);
+                if(existUser == null)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"帳號不存在");
+                }
+                bool isOldPasswordCorrect = await _userManager.CheckPasswordAsync(existUser, updateUserPassword.OriginPassword);
+                if (!isOldPasswordCorrect)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, "舊密碼輸入錯誤");
+                }
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existUser);
+                var resetResult = await _userManager.ResetPasswordAsync(existUser, resetToken, updateUserPassword.NewPassword);
+                if (!resetResult.Succeeded)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, "密碼修改失敗：" + string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+                }
+
+                await transaction.CommitAsync();
+                return (true, "密碼修改成功");
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _authDbContext.ChangeTracker.Clear();
+                return (false, $"密碼修改失敗: {ex.Message}");
             }
         }
     }

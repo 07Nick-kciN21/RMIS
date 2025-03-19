@@ -182,6 +182,5 @@ function maskEmail(email) {
 // 處理電話遮蔽（中間 6 碼）
 function maskPhone(phone) {
     if (!phone) return ""; // 若為 null 或 undefined 則回傳空字串
-    console.log(phone.replace(/(\d{3})\d{6}(\d{2})/, "$1******$2"));
     return phone.replace(/(\d{2})\d{6}(\d{2})/, "$1******$2");
 }

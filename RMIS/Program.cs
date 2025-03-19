@@ -16,6 +16,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 設定log
 builder.Host.UseSerilog((context, services, configuration) =>
 {
     configuration
@@ -41,6 +42,14 @@ builder.Host.UseSerilog((context, services, configuration) =>
                 ); // 根據 Controller與日期分檔
             }
         );
+});
+
+// 設定身份驗證 Cookie 的過期時間
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Portal/Login";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    options.SlidingExpiration = false;
 });
 
 //  註冊 AuthDbContext

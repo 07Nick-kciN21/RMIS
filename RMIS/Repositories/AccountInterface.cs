@@ -14,6 +14,7 @@ namespace RMIS.Repositories
         Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId);
         Task<string> GetUserDemartment(ApplicationUser user);
         Task<UserAuthInfo> GetUserAuthInfo(ApplicationUser user);
+        Task<UserProfileView> GetUserProfileDataAsync(string id);
         Task<UserManager> GetUserManagerDataAsync();
         Task<RoleManager> GetRoleManagerDataAsync();
         Task<DepartmentManager> GetDepartmentManagerDataAsync();
@@ -31,6 +32,7 @@ namespace RMIS.Repositories
         Task<(bool Success, string Message)> RegisterAsync(RegisterUser createUser);
         Task<UpdateUserView> UpdateUserViewAsync(string id);
         Task<(bool Success, string Message)> UpdateUserAsync(UpdateUserView updateUser);
+        Task<(bool Success, string Message)> UpdateUserPasswordAsync(UpdateUserPassword updateUserPassword);
         Task<UpdateRoleView> UpdateRoleViewAsync(string id);
         Task<(bool Success, string Message)> UpdateRoleAsync(UpdateRoleView input);
         Task<UpdateDepartmentView> UpdateDepartmentViewAsync(int id);

@@ -25,10 +25,6 @@
                 <input type="text" class="form-control" asp-for="UserName" readonly></input>
             </div>
             <div class="form-group">
-                <label>密碼</label>
-                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#resetPassword">重設密碼</button>
-            </div>
-            <div class="form-group">
                 <label asp-for="RoleId">身分</label>
                 @Html.DropDownListFor(model => model.RoleId, Model.Roles, new { @class = "form-control" })
             </div>
@@ -71,7 +67,7 @@
                                         <div class="form-group row">
                                             <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">原密碼</label>
                                             <div class="col-md-8">
-                                                <input type="password" id="OrgMima" class="form-control border-primary" placeholder="原密碼">
+                                                <input type="password" id="OriginPassword" name="OriginPassword" class="form-control border-primary" placeholder="原密碼">
                                                 <div class="form-control-position" style="right: 15px;">
                                                     <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Org"></i>
                                                 </div>
@@ -82,7 +78,7 @@
                                         <div class="form-group row">
                                             <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">新密碼</label>
                                             <div class="col-md-8">
-                                                <input type="password" id="NewMima" class="form-control border-primary" placeholder="新密碼">
+                                                <input type="password" id="NewPassword" name="NewPassword" class="form-control border-primary" placeholder="新密碼">
                                                 <div class="form-control-position" style="right: 15px;">
                                                     <i class="fa fa-eye fa-eye-slash mimaShow" data-id="New"></i>
                                                 </div>
@@ -93,7 +89,7 @@
                                         <div class="form-group row">
                                             <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">確認新密碼</label>
                                             <div class="col-md-8">
-                                                <input type="password" id="CheckMima" class="form-control border-primary" placeholder="確認新密碼">
+                                                <input type="password" id="CheckPassword" name="CheckPassword" class="form-control border-primary" placeholder="確認新密碼">
                                                 <div class="form-control-position" style="right: 15px;">
                                                     <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Check"></i>
                                                 </div>
@@ -110,7 +106,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-4 m-auto">
-                                        <button type="button" class="btn btn-block btn-min-width btn-info mtop" onclick="EditMima()"><i class="ft-save"></i> 儲存</button>
+                                        <button id="password-Save" type="button" class="btn btn-block btn-min-width btn-info mtop" ><i class="ft-save"></i> 儲存</button>
                                     </div>
                                 </div>
                             </div>

@@ -48,10 +48,14 @@ namespace RMIS.Controllers
                 return View(model);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, lockoutOnFailure: false);
 
             if (result.Succeeded)
             {
+                var expireTime = DateTime.UtcNow.AddMinutes(30);
+                Response.Cookies.Append("LoginExpireTime", expireTime.ToString("o"),
+                       new CookieOptions { Expires = expireTime, HttpOnly = false });
+
                 ViewBag.Username = model.UserName;
                 return RedirectToLocal(returnUrl);
             }
@@ -101,6 +105,22 @@ namespace RMIS.Controllers
                 return Redirect(returnUrl);
             else
                 return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ExtendSession()
+        {
+            if (User.Identity.IsAuthenticated)
+            {
+                var newExpireTime = DateTime.UtcNow.AddMinutes(10); // 設定新的過期時間
+                Response.Cookies.Append("LoginExpireTime", newExpireTime.ToString("o"),
+                    new CookieOptions { Expires = newExpireTime, HttpOnly = false });
+                var currentUser = await _userManager.GetUserAsync(User);
+                _signInManager.SignInAsync(currentUser, isPersistent: true).Wait(); // 重新設定身份驗證
+
+                return Ok(new { expiresUtc = newExpireTime });
+            }
+            return Unauthorized();
         }
     }
 }

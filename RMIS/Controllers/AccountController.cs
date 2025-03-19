@@ -52,7 +52,6 @@ namespace RMIS.Controllers
             if (!currentUserPermission.Read)
             {
                 return RedirectToAction("Login", "Portal");
-                return Json(new { success = false, message = "無權限查看" });
             }
             ViewBag.Username = currentUser.UserName;
             return View();
@@ -125,6 +124,17 @@ namespace RMIS.Controllers
 
             return Json(rolePermissions);
         }
+        [HttpGet("[controller]/User/Profile")]
+        public async Task<IActionResult> UserProfile()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if(currentUser == null)
+            {
+                return NotFound();
+            }
+            var userProfile = await _accountInterface.GetUserProfileDataAsync(currentUser.Id);
+            return View(userProfile);
+        }
 
         [HttpPost("[controller]/User/Get/ManagerData")]
         public async Task<IActionResult> GetUserManagerData()
@@ -180,6 +190,22 @@ namespace RMIS.Controllers
                 return Json(new { success = updated.Success, message = updated.Message });
             }
 
+        }
+
+        [HttpPost("[controller]/User/UpdatePassword")]
+        public async Task<IActionResult> UpdateUserPassword([FromForm] UpdateUserPassword updateUserPassword)
+        {
+            //var currentUser = await _userManager.GetUserAsync(User);
+            //// 檢查權限
+            //var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            //if (!currentUserPermission.Update)
+            //{
+            //    return Json(new { success = false, message = "無權限修改" });
+            //}
+
+            var updated = await _accountInterface.UpdateUserPasswordAsync(updateUserPassword);
+            return Json(new { success = updated.Success, message = updated.Message });
         }
 
         [HttpPost("[controller]/User/Delete")]
