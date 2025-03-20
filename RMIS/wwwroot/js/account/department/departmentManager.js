@@ -1,3 +1,7 @@
+import { initPage } from "../Pagination.js";
+
+let allDepartments = [];
+
 $(document).ready(function () {
     initDepartmentTable();
     
@@ -50,8 +54,9 @@ function initDepartmentTable(){
                 console.log(data);
                 var managerData = data.departmentManager;
                 allDepartments = managerData.departments;
+                initPage("departmentPage", updateDepartmentTable, allDepartments);
                 initDepartmentFilter(allDepartments);
-                updateDepartmentTable(allDepartments);
+                // updateDepartmentTable(allDepartments);
             }
         },
         error: function (xhr) {
@@ -76,7 +81,7 @@ function updateDepartmentTable(departments){
 
     departments.forEach((department) => {
         var row = $("<tr></tr>").attr("data-department-id", department.id);
-        var updateBtn = $(`<button class="btn btn-primary update-department read">編輯</button>`).on("click", function () {
+        var updateBtn = $(`<button class="update-department read">編輯</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
             // 獲取螢幕的寬高
@@ -87,7 +92,7 @@ function updateDepartmentTable(departments){
             var top = (screenHeight - windowHeight) / 2;
             newWindow = window.open(`/Account/Department/Update?id=${department.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
-        var deleteBtn = $(`<button class="btn btn-danger delete-department read">刪除</button>`).on("click", function () {
+        var deleteBtn = $(`<button class="delete-department read">刪除</button>`).on("click", function () {
             console.log(`/Account/Department/Delete?departmentId=${department.id}`);
             if (confirm("確定要刪除部門？")) {
                 $.ajax({

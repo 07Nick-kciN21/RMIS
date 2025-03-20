@@ -1,4 +1,6 @@
-var allPermissions = [];
+import { initPage } from "../Pagination.js";
+
+let allPermissions = [];
 
 $(document).ready(function () {
     initPermissionTable();
@@ -49,7 +51,8 @@ function initPermissionTable(){
             if (data.success) {
                 var permissionData = data.permissionManager;
                 allPermissions = permissionData.permissions;
-                updatePermissionTable(allPermissions);
+                initPage("permissionPage", updatePermissionTable, allPermissions);
+                // updatePermissionTable(allPermissions);
                 updatePermissionFilter(allPermissions);
             }
         },
@@ -64,7 +67,7 @@ function updatePermissionTable(permissions){
     tbody.empty();
     permissions.forEach((permission) => {
         var row = $("<tr></tr>").attr("data-permission-id", permission.id);
-        var updateBtn = $(`<button class="btn btn-primary update-permission read">編輯</button>`).on("click", function () {
+        var updateBtn = $(`<button class="update-permission read">編輯</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
             var screenWidth = window.screen.width;
@@ -73,7 +76,7 @@ function updatePermissionTable(permissions){
             var top = (screenHeight - windowHeight) / 2;
             newWindow = window.open(`/Account/Permission/Update?id=${permission.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
-        var deleteBtn = $(`<button class="btn btn-danger delete-permission read">刪除</button>`).on("click", function () {
+        var deleteBtn = $(`<button class="delete-permission read">刪除</button>`).on("click", function () {
             if (confirm("確定要刪除權限？")) {
                 $.ajax({
                     url: `/Account/Permission/Delete?permissionId=${permission.id}`,

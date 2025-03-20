@@ -60,10 +60,18 @@
 
 .permissionTable{
     font-size: 20px;
-    margin: auto;
-    width: 100%;
 }
 
+.permissionTable th, 
+.permissionTable td {
+    word-break: break-word; /* 讓長字串自動換行 */
+    white-space: normal; /* 允許文字換行 */
+    overflow: hidden;
+}
+
+.permissionTable thead{
+    background-color: #f2f2f2;
+}
 .permissionTable tbody{
     vertical-align: middle;
 }
@@ -74,10 +82,6 @@
 .edit{
     width: 100%;
     justify-items: center;
-}
-
-.action-cell button{
-    width: 50%;
 }
 
 .selector{

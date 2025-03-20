@@ -112,7 +112,7 @@ namespace RMIS.Controllers
         {
             if (User.Identity.IsAuthenticated)
             {
-                var newExpireTime = DateTime.UtcNow.AddMinutes(10); // 設定新的過期時間
+                var newExpireTime = DateTime.UtcNow.AddMinutes(30); // 設定新的過期時間
                 Response.Cookies.Append("LoginExpireTime", newExpireTime.ToString("o"),
                     new CookieOptions { Expires = newExpireTime, HttpOnly = false });
                 var currentUser = await _userManager.GetUserAsync(User);

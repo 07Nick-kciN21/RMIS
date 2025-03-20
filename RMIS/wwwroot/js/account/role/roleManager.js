@@ -1,3 +1,5 @@
+import { initPage } from "../Pagination.js";
+
 let allRoles = [];
 
 $(document).ready(function () {
@@ -50,7 +52,8 @@ function initRoleTable(){
             if (data.success) {
                 var managerData = data.roleManager;
                 allRoles = managerData.roles;
-                updateRoleTable(allRoles);
+                initPage("rolePage", updateRoleTable, allRoles);
+                // updateRoleTable(allRoles);
                 updateRoleFilter(allRoles);
             }
         },
@@ -73,7 +76,7 @@ function updateRoleTable(roles){
     var tbody = $('#roleTable');
     tbody.empty();
     roles.forEach((role) => {
-        var moreBtn = $(`<button class="btn btn-primary more-role read">more</button>`).on("click", function () {
+        var moreBtn = $(`<button class="more-role read">more</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
             // 獲取螢幕的寬高
@@ -86,7 +89,7 @@ function updateRoleTable(roles){
             newWindow = window.open(`/Account/Role/Read/Permission?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
-        var updateBtn = $(`<button class="btn btn-primary update-role read">編輯</button>`).on("click", function () {
+        var updateBtn = $(`<button class="update-role read">編輯</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
             // 獲取螢幕的寬高
@@ -98,7 +101,7 @@ function updateRoleTable(roles){
             newWindow = window.open(`/Account/Role/Update?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
-        var deleteBtn = $(`<button class="btn btn-danger delete-role read">刪除</button>`).on("click", function () {
+        var deleteBtn = $(`<button class="delete-role read">刪除</button>`).on("click", function () {
             if(confirm("確定要刪除身分？")){
                 // 刪除角色
                 $.ajax({

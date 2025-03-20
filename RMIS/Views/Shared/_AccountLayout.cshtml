@@ -4,18 +4,28 @@
         <meta charset="UTF-8">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
         <link rel="stylesheet" href="~/css/account/_accountLayout.css" />
+        <link rel="stylesheet" href="~/css/_layout.css" />
         <link rel="stylesheet" href="~/css/account/_sidebar.css" />
-        <link rel="stylesheet" href="~/css/account/body.css" />
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/js/sessionManager.js"></script>
-        <title>
-            @ViewData["Title"]
-        </title>
+        <script type="module" src="~/js/account/Pagination.js"></script>
 
+        <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .content-wrapper {
+            height: 100%;
+            display: flex;
+        }
+        </style>
     </head>
     <body>
-        <header class=" bg-light">
+        <title>權限管理平台</title>
+        <header>
             <div id="col1">
                 <div id="left-nav" style="display: flex;">
                     <div class="head-logo-box navbar-toggle">
@@ -57,8 +67,8 @@
                 </nav>
             </div>
         </header>
-        <div style="display:flex">
-            <div style="width:20%">
+        <div class="content-wrapper" style="display: flex;">
+            <div class="sidebar" style="width:300px">
                 <ul>
                     <li>
                         <a class="nav-link menu-title" href="/Home/Index">
@@ -92,7 +102,7 @@
                     </li>
                 </ul>
             </div>
-            <div style="display:block; width:100%">
+            <div style="width:calc(100% - 300px)">
                 @RenderBody()
             </div>
         </div>

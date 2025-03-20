@@ -24,6 +24,10 @@
     margin: 8px;
 }
 
+.sidebar{
+    background-color: #f6f5dd;
+}
+
 a > span {
     color: black;
     font-size: 24px;
@@ -32,6 +36,7 @@ a > span {
 
 header { 
     display: flex;
+    background-color: #f0d984;
 }
 
 #col2{

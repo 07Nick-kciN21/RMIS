@@ -3,29 +3,36 @@
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
-<script src="~/js/account/user/userManager.js"></script>
+<script type="module" src="~/js/account/user/userManager.js"></script>
 <h2>使用者列表</h2>
 <div style="display: flex;">
     <select id="departmentSelector" class="selector form-select">
     </select>
-    <button id ="createUser" class="btn btn-primary">新增使用者</button>
+    <button id ="createUser">新增使用者</button>
+</div>
+<div>
+    <table class="table table-bordered text-center permissionTable">
+        <thead>
+            <tr>
+                <th style="width: auto">部門</th>
+                <th style="width: 150px; max-width: 150px;">使用者</th>
+                <th style="width: 150px; max-width: 150px;">帳號</th>
+                <th style="width: 150px; max-width: 150px;">身分</th>
+                <th style="width: 100px; max-width: 100px;">狀態</th>
+                <th style="width: 250px">信箱</th>
+                <th style="width: 150px">電話</th>
+                <th style="width: 300px; max-width: 300px;">創建日期</th>
+                <th style="width: 140px; max-width: 140px;">操作</th>
+            </tr>
+        </thead>
+        <tbody id="userTable">
+        </tbody>
+    </table>
+    @* 共[]條 下拉式選擇顯示條目 < [] > 前往[]頁 共[]頁 *@
+    <div id="userPage">
+
+    </div>
+    
 </div>
 
-<table class="table table-bordered text-center permissionTable">
-    <thead class="table-primary">
-        <tr>
-            <th style="width: 200px; max-width: 200px;">部門</th>
-            <th style="width: 200px; max-width: 200px;">使用者</th>
-            <th style="width: 200px; max-width: 200px;">帳號</th>
-            <th style="width: 200px; max-width: 200px;">身分</th>
-            <th style="width: 100px; max-width: 100px;">狀態</th>
-            <th style="width: 200px; max-width: 200px;">信箱</th>
-            <th style="width: 200px; max-width: 200px;">電話</th>
-            <th style="width: 200px; max-width: 200px;">創建日期</th>
-            <th style="width: 140px; max-width: 140px;">操作</th>
-        </tr>
-    </thead>
-    <tbody id="userTable">
-    </tbody>
-</table>
 

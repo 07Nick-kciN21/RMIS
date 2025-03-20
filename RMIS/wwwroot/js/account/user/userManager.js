@@ -1,22 +1,26 @@
+import { initPage } from "../Pagination.js";
 
 var departmentSelect = "";
 var allUsers = [];
 var allRoles = [];
 var allDepartments = [];
-
+let newWindow;
+let totalRecords = 0; // 總條數
+let pageSize = 10; // 每頁顯示條數
+let currentPage = 1; // 當前頁數
 $(document).ready(function () {
     initUserTable();
     $("#departmentSelector").on("change", function () {
         var selectedDepartment = $(this).val();
         if(selectedDepartment == 0){
-            updateUserTable(allUsers);
+            initPage("userPage", updateUserTable, allUsers);
             return;
         }
         // 透過 selectedDepartment 過濾 allUsers
         var filteredUsers = allUsers.filter((user) => {
             return user.departmentId == selectedDepartment;
         });
-        updateUserTable(filteredUsers);
+        initPage("userPage", updateUserTable, filteredUsers);
         console.log(selectedDepartment, filteredUsers);
     });
     $("#createUser").on("click", function () {
@@ -56,14 +60,28 @@ function initUserTable(){
                 allUsers = managerData.users;
                 allRoles = managerData.roles;
                 allDepartments = managerData.departments;
+                initPage("userPage", updateUserTable, allUsers);
+                // initPage("userPage", updateUserTable, allUsers);
+                // updateTablePage();
                 initDepartmentFilter(allDepartments);
-                updateUserTable(allUsers);
+                // updateUserTable(allUsers);
             }
         },
         error: function (xhr) {
             console.log("取得資料失敗:", xhr.status);
         }
     });
+}
+
+function updateTablePage(){
+    // 實作上可能需要設定一個接口，給入(物件id, 跳轉頁數的事件，資料列表)
+
+    var totalRecords =  allUsers.length;
+    $("#totalPages").text(Math.ceil(totalRecords / pageSize));
+    $("#totalRecords").text(allUsers.length);
+    // 設定gotoPage的最大值
+    $("#gotoPage").attr("max", Math.ceil(totalRecords / pageSize));
+    $("#gotoPage").attr("min", 1);
 }
 
 function initDepartmentFilter(){
@@ -75,7 +93,6 @@ function initDepartmentFilter(){
     });
 }
 
-
 function updateUserTable(users){
     var tbody = $("#userTable");
     console.log(users);
@@ -86,7 +103,7 @@ function updateUserTable(users){
             "data-user-role": user.role
         });
 
-        var updateBtn = $(`<button class="btn btn-primary update-user read">編輯</button>`).on("click", function () {
+        var updateBtn = $(`<button class="update-user read">編輯</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
             // 獲取螢幕的寬高
@@ -98,7 +115,7 @@ function updateUserTable(users){
             newWindow = window.open(`/Account/User/Update?id=${user.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
 
-        var deleteBtn = $(`<button class="btn btn-danger delete-user read">刪除</button>`).on("click", function () {
+        var deleteBtn = $(`<button class="delete-user read">刪除</button>`).on("click", function () {
             if (confirm("確定要刪除使用者？")) {
                 $.ajax({
                     url: `/Account/User/Delete?UserId=${user.id}`,
@@ -184,3 +201,4 @@ function maskPhone(phone) {
     if (!phone) return ""; // 若為 null 或 undefined 則回傳空字串
     return phone.replace(/(\d{2})\d{6}(\d{2})/, "$1******$2");
 }
+

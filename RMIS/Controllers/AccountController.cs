@@ -195,14 +195,6 @@ namespace RMIS.Controllers
         [HttpPost("[controller]/User/UpdatePassword")]
         public async Task<IActionResult> UpdateUserPassword([FromForm] UpdateUserPassword updateUserPassword)
         {
-            //var currentUser = await _userManager.GetUserAsync(User);
-            //// 檢查權限
-            //var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
-
-            //if (!currentUserPermission.Update)
-            //{
-            //    return Json(new { success = false, message = "無權限修改" });
-            //}
 
             var updated = await _accountInterface.UpdateUserPasswordAsync(updateUserPassword);
             return Json(new { success = updated.Success, message = updated.Message });

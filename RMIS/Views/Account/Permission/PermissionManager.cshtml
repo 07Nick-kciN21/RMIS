@@ -3,21 +3,25 @@
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
-<script src="~/js/account/permission/permissionManage.js"></script>
+<script type="module" src="~/js/account/permission/permissionManage.js"></script>
 <h2>權限列表</h2>
 <div style="display: flex;">
     <select id="permissionSelector" class="selector form-select">
     </select>
     <button id="createPermission" class="btn btn-primary">新增權限</button>
 </div>
-<table class="table table-bordered text-center permissionTable">
-    <thead class="table-primary">
-        <tr>
-            <th>權限名稱</th>
-            <th>狀態</th>
-            <th style="width: 140px; max-width: 140px;">操作</th>
-        </tr>
-    </thead>
-    <tbody id="permissionTable">
-    </tbody>
-</table>
+<div>
+    <table class="table table-bordered text-center permissionTable">
+        <thead>
+            <tr>
+                <th>權限名稱</th>
+                <th>狀態</th>
+                <th style="width: 140px; max-width: 140px;">操作</th>
+            </tr>
+        </thead>
+        <tbody id="permissionTable">
+        </tbody>
+    </table>
+    <div id="permissionPage">
+    </div>
+</div>
