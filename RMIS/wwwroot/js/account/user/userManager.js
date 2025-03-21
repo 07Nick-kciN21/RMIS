@@ -1,13 +1,8 @@
 import { initPage } from "../Pagination.js";
 
-var departmentSelect = "";
 var allUsers = [];
 var allRoles = [];
 var allDepartments = [];
-let newWindow;
-let totalRecords = 0; // 總條數
-let pageSize = 10; // 每頁顯示條數
-let currentPage = 1; // 當前頁數
 $(document).ready(function () {
     initUserTable();
     $("#departmentSelector").on("change", function () {
@@ -32,7 +27,7 @@ $(document).ready(function () {
         // 計算彈出視窗的位置
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        newWindow = window.open("/Account/User/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        window.open("/Account/User/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     window.addEventListener('message', function(event) {
         if (event.origin !== window.location.origin) return; // 安全性驗證
@@ -73,17 +68,6 @@ function initUserTable(){
     });
 }
 
-function updateTablePage(){
-    // 實作上可能需要設定一個接口，給入(物件id, 跳轉頁數的事件，資料列表)
-
-    var totalRecords =  allUsers.length;
-    $("#totalPages").text(Math.ceil(totalRecords / pageSize));
-    $("#totalRecords").text(allUsers.length);
-    // 設定gotoPage的最大值
-    $("#gotoPage").attr("max", Math.ceil(totalRecords / pageSize));
-    $("#gotoPage").attr("min", 1);
-}
-
 function initDepartmentFilter(){
     var departmentFilter = $("#departmentSelector");
     departmentFilter.empty();
@@ -112,7 +96,7 @@ function updateUserTable(users){
             // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            newWindow = window.open(`/Account/User/Update?id=${user.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            window.open(`/Account/User/Update?id=${user.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
 
         var deleteBtn = $(`<button class="delete-user read">刪除</button>`).on("click", function () {
@@ -151,12 +135,7 @@ function updateUserTable(users){
         row.append(`<td class="role-cell">
                         <span class="read">${user.role}</span>
                     </td>`)
-        // 狀態根據status顯示啟用或停用
-        row.append(`<td class="status-cell">
-                        ${user.status ? 
-                            '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
-                        }
-                    </td>`);
+        
         // 信箱 遮蔽@前面第一個字元之後
         row.append(`<td class="email-cell">
                         <span class="read">${maskEmail(user.email)}</span>
@@ -166,10 +145,17 @@ function updateUserTable(users){
                         <span class="read">${maskPhone(user.phone)}</span>
                     </td>`);
 
+        // 狀態根據status顯示啟用或停用
+        row.append(`<td class="status-cell">
+            ${user.status ? 
+                '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
+            }
+        </td>`);
+        
         row.append(`<td class="createAt-cell">${convertDate(user.createAt)}</td>`);
 
         // 建立操作按鈕
-        var actionTd = $("<td class='action-cell'></td>");
+        var actionTd = $(`<td class="action-cell"></td>`);
 
         // 將按鈕 append 進 td，再 append 到 tr
         actionTd.append(updateBtn, deleteBtn);

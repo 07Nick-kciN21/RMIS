@@ -58,8 +58,29 @@
         border-bottom: 1px solid #dee2e6 !important;
     }
 
+.tbody-scroll {
+    max-height: 550px; /* 你想要的固定高度 */
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.tbody-scroll table {
+    margin: 0;
+}
+
+.table-container{
+    border: solid 1px;
+    height: 600px;
+    overflow-y: auto;
+}
+    
+.table-container table{
+    width: 100%;
+    height: 40px;
+    margin-bottom: 0;
+}
 .permissionTable{
-    font-size: 20px;
+    font-size: 18px;
 }
 
 .permissionTable th, 

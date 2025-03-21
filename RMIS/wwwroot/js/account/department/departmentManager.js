@@ -2,6 +2,7 @@ import { initPage } from "../Pagination.js";
 
 let allDepartments = [];
 
+
 $(document).ready(function () {
     initDepartmentTable();
     
@@ -12,7 +13,7 @@ $(document).ready(function () {
         var screenHeight = window.screen.height;
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        newWindow = window.open('/Account/Department/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        window.open('/Account/Department/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
 
     $("#departmentSelector").on("change", function () {
@@ -90,7 +91,7 @@ function updateDepartmentTable(departments){
             // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            newWindow = window.open(`/Account/Department/Update?id=${department.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            window.open(`/Account/Department/Update?id=${department.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
         var deleteBtn = $(`<button class="delete-department read">刪除</button>`).on("click", function () {
             console.log(`/Account/Department/Delete?departmentId=${department.id}`);
@@ -126,10 +127,7 @@ function updateDepartmentTable(departments){
                     }
                 </td>`);
 
-        var createAt = department.createAt.split("T");
-        var createAtDate = createAt[0];
-        var createAtTime = createAt[1].split(".")[0];
-        row.append(`<td>${createAtDate} ${createAtTime}</td>`);
+        row.append(`<td class="createAt-cell">${convertDate(department.createAt)}</td>`);
         // 建立按鈕
         var actionTd = $("<td class='action-cell'></td>");
 
@@ -139,4 +137,11 @@ function updateDepartmentTable(departments){
 
         table.append(row);
     });
+}
+
+function convertDate(createAt){
+    var createAt = createAt.split("T");
+    var createAtDate = createAt[0];
+    var createAtTime = createAt[1].split(".")[0];
+    return `${createAtDate} ${createAtTime}`;
 }

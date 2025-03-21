@@ -803,7 +803,8 @@ namespace RMIS.Repositories
                 {
                     Id = p.Id,
                     Name = p.Name,
-                    Status = p.Status
+                    Status = p.Status,
+                    CreateAt = p.CreatedAt
                 }).ToListAsync();
             var PermissionData = new PermissionManager
             {

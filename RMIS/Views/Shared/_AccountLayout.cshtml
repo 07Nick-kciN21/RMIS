@@ -12,15 +12,19 @@
         <script type="module" src="~/js/account/Pagination.js"></script>
 
         <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        .content-wrapper {
-            height: 100%;
-            display: flex;
-        }
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .content-wrapper {
+                height: calc(100% - 51.5px);
+                display: flex;
+            }
+            .select .page-link{
+                background-color: #e4b867;
+                color: white;
+            }
         </style>
     </head>
     <body>
@@ -33,19 +37,22 @@
                     </div>
                 </div>
             </div>
-            <div id="col2" style="margin-left:auto">
+            <div id="col2">
                 <nav class="navbar navbar-expand-lg navbar-light">
                     <div class="container-fluid">
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                        </button>
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <div class="collapse navbar-collapse" id="userMenuContent">
                             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                                 <li>
                                     <div class="user-icon ms-2"></div>
                                 </li>
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">                                    
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center justify-content-center" 
+                                        href="#" 
+                                        id="navbarDropdown" 
+                                        role="button" 
+                                        data-bs-toggle="dropdown" 
+                                        aria-expanded="false" 
+                                        style="height: 100%;">
                                         @ViewBag.Username
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -68,8 +75,8 @@
             </div>
         </header>
         <div class="content-wrapper" style="display: flex;">
-            <div class="sidebar" style="width:300px">
-                <ul>
+            <div class="sidebar" style="width:300px;">
+                <ul style="margin-top: 20px;">
                     <li>
                         <a class="nav-link menu-title" href="/Home/Index">
                             <span id="home" class="account-menu-icon"></span>
@@ -102,7 +109,7 @@
                     </li>
                 </ul>
             </div>
-            <div style="width:calc(100% - 300px)">
+            <div style="width:calc(100% - 300px); padding: 15px;">
                 @RenderBody()
             </div>
         </div>

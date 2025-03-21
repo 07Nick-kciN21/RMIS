@@ -27,7 +27,7 @@ $(document).ready(function () {
         // 計算彈出視窗的位置
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        newWindow = window.open("/Account/Role/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        window.open("/Account/Role/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     window.addEventListener('message', function(event) {
         if (event.origin !== window.location.origin) return; // 安全性驗證
@@ -76,7 +76,7 @@ function updateRoleTable(roles){
     var tbody = $('#roleTable');
     tbody.empty();
     roles.forEach((role) => {
-        var moreBtn = $(`<button class="more-role read">more</button>`).on("click", function () {
+        var moreBtn = $(`<a class="more-role read">more</a>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
             // 獲取螢幕的寬高
@@ -98,7 +98,7 @@ function updateRoleTable(roles){
             // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            newWindow = window.open(`/Account/Role/Update?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            window.open(`/Account/Role/Update?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
         var deleteBtn = $(`<button class="delete-role read">刪除</button>`).on("click", function () {
@@ -135,6 +135,7 @@ function updateRoleTable(roles){
         row.append($(`<td class="name-cell">
                         <span class="read">${role.name}</span>
                     </td>`));
+        row.append($(`<td class="permission-cell"></td>`).append(moreBtn));
         // 狀態根據status顯示啟用或停用
         row.append(`<td class="status-cell">
             ${role.status ? 
@@ -144,7 +145,6 @@ function updateRoleTable(roles){
         </td>`);
         row.append(`<td class="createAt-cell">${convertDate(role.createAt)}</td>`);
         
-        row.append($(`<td class="permission-cell"></td>`).append(moreBtn));
         // 建立操作按鈕
         var actionTd = $("<td class='action-cell'></td>");        
         // 將按鈕 append 進 td，再 append 到 tr

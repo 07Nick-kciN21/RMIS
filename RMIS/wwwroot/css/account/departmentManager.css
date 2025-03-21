@@ -1,0 +1,15 @@
+.d-none {
+    display: none;
+}
+.status-cell{
+    width: 100px; 
+    max-width: 100px;
+}
+.createAt-cell{
+    width: 300px; 
+    max-width: 300px;
+}
+.action-cell{
+    width: 140px; 
+    max-width: 140px;
+}

@@ -2,12 +2,8 @@
     ViewData["Title"] = "使用者管理";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
-<style>
-    .d-none {
-        display: none;
-    }
-</style>
 
+<link rel="stylesheet" href="~/css/Account/departmentManager.css" />
 <script type="module" src="~/js/account/department/departmentManager.js"></script>
 
 <h2>部門列表</h2>
@@ -16,19 +12,25 @@
     </select>
     <button id="createDepartment">新增部門</button>
 </div>
-<div>
+<div class="table-container">
     <table class="table table-bordered text-center permissionTable">
         <thead>
             <tr>
                 <th>部門名稱</th>
-                <th>狀態</th>
-                <th style="width: 300px; max-width: 300px;">創建日期</th>
-                <th style="width: 140px; max-width: 140px;">操作</th>
+                <th class="status-cell">狀態</th>
+                <th class="createAt-cell">創建日期</th>
+                <th class="action-cell">操作</th>
             </tr>
         </thead>
-        <tbody id="departmentTable">
-        </tbody>
     </table>
-    <div id="departmentPage">
+    <!-- tbody 放在獨立容器中滾動 -->
+    <div class="tbody-scroll">
+        <table class="table table-bordered text-center permissionTable mb-0">
+            <tbody id="departmentTable">
+                <!-- 資料動態插入 -->
+            </tbody>
+        </table>
     </div>
+</div>
+<div id="departmentPage" class="d-flex justify-content-center mt-2">
 </div>

@@ -3,36 +3,42 @@
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
+<link rel="stylesheet" href="~/css/Account/userManager.css" />
 <script type="module" src="~/js/account/user/userManager.js"></script>
+
 <h2>使用者列表</h2>
 <div style="display: flex;">
     <select id="departmentSelector" class="selector form-select">
     </select>
     <button id ="createUser">新增使用者</button>
 </div>
-<div>
+<div class="table-container">
     <table class="table table-bordered text-center permissionTable">
         <thead>
             <tr>
-                <th style="width: auto">部門</th>
-                <th style="width: 150px; max-width: 150px;">使用者</th>
-                <th style="width: 150px; max-width: 150px;">帳號</th>
-                <th style="width: 150px; max-width: 150px;">身分</th>
-                <th style="width: 100px; max-width: 100px;">狀態</th>
-                <th style="width: 250px">信箱</th>
-                <th style="width: 150px">電話</th>
-                <th style="width: 300px; max-width: 300px;">創建日期</th>
-                <th style="width: 140px; max-width: 140px;">操作</th>
+                <th class="department-cell">部門</th>
+                <th class="display-cell">使用者</th>
+                <th class="user-cell">帳號</th>
+                <th class="role-cell">身分</th>
+                <th class="email-cell">信箱</th>
+                <th class="phone-cell">電話</th>
+                <th class="status-cell">狀態</th>
+                <th class="createAt-cell">創建日期</th>
+                <th class="action-cell">操作</th>
             </tr>
         </thead>
-        <tbody id="userTable">
-        </tbody>
     </table>
-    @* 共[]條 下拉式選擇顯示條目 < [] > 前往[]頁 共[]頁 *@
-    <div id="userPage">
-
+    <!-- tbody 放在獨立容器中滾動 -->
+    <div class="tbody-scroll">
+        <table class="table table-bordered text-center permissionTable mb-0">
+            <tbody id="userTable">
+                <!-- 資料動態插入 -->
+            </tbody>
+        </table>
     </div>
-    
+</div>
+
+<div id="userPage" class="d-flex justify-content-center mt-2">
 </div>
 
 

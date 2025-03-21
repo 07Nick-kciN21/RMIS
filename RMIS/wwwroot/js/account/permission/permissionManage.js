@@ -12,7 +12,7 @@ $(document).ready(function () {
         var screenHeight = window.screen.height;
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        newWindow = window.open('/Account/Permission/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        window.open('/Account/Permission/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
 
     $("#permissionSelector").on("change", function () {
@@ -74,7 +74,7 @@ function updatePermissionTable(permissions){
             var screenHeight = window.screen.height;
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            newWindow = window.open(`/Account/Permission/Update?id=${permission.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            window.open(`/Account/Permission/Update?id=${permission.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
         var deleteBtn = $(`<button class="delete-permission read">刪除</button>`).on("click", function () {
             if (confirm("確定要刪除權限？")) {
@@ -109,11 +109,20 @@ function updatePermissionTable(permissions){
             }
             <input class="edit d-none form-check-input status" type="checkbox" role="switch" ${permission.status ? 'checked' : ''}>
         </td>`);
+        row.append(`<td class="createAt-cell">${convertDate(permission.createAt)}</td>`);
+
         var actionTd = $("<td class='action-cell'></td>");
         actionTd.append(updateBtn, deleteBtn);
         row.append(actionTd);
         tbody.append(row);
     });
+}
+
+function convertDate(createAt){
+    var createAt = createAt.split("T");
+    var createAtDate = createAt[0];
+    var createAtTime = createAt[1].split(".")[0];
+    return `${createAtDate} ${createAtTime}`;
 }
 
 function updatePermissionFilter(allPermissions){
@@ -123,5 +132,5 @@ function updatePermissionFilter(allPermissions){
         var option = $(`<option value="${permission.id}">${permission.name}</option>`);
         $("#permissionSelector").append(option);
     });
-
 }
+

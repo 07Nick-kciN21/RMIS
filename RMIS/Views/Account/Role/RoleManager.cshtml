@@ -3,31 +3,37 @@
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
+<link rel="stylesheet" href="~/css/Account/roleManager.css" />
 <script type="module" src="~/js/account/role/roleManager.js"></script>
+
 <h2>身分列表</h2>
 <div style="display: flex;">
     <select id="roleSelector" class="selector form-select">
     </select>
     <button id="createRole">新增身分</button>
 </div>
-
-<div>
+<div class="table-container">
     <table class="table table-bordered text-center permissionTable">
         <thead>
             <tr>
                 <th style="width: auto;">身分名稱</th>
-                <th style="width: 100px; max-width: 100px;">狀態</th>
-                <th style="width: 300px; max-width: 300px;">創建日期</th>
-                <th style="width: 100px; max-width: 100px;">權限</th>
-                <th style="width: 140px; max-width: 140px;">操作</th>
+                <th class="permission-cell">權限</th>
+                <th class="status-cell">狀態</th>
+                <th class="createAt-cell">創建日期</th>
+                <th class="action-cell">操作</th>
             </tr>
         </thead>
-        <tbody id="roleTable">
-        </tbody>
     </table>
-    <div id="rolePage">
-
+    <!-- tbody 放在獨立容器中滾動 -->
+    <div class="tbody-scroll">
+        <table class="table table-bordered text-center permissionTable mb-0">
+            <tbody id="roleTable">
+                <!-- 資料動態插入 -->
+            </tbody>
+        </table>
     </div>
+</div>
+<div id="rolePage" class="d-flex justify-content-center mt-2">
 </div>
 
 
