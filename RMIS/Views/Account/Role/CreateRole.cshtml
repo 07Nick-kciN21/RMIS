@@ -5,68 +5,83 @@
 }
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/account/rolePermission.css" />
+    <style>
+        label {
+            cursor: pointer;
+            user-select: none;
+        }
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/js/account/role/createRole.js"></script>
-</head>
-<body>
-    <form>
-        <div class="form-group">
-            <label asp-for="RoleName">身分名稱</label>
-            <input type="text" class="form-control" asp-for="RoleName">
-        </div>
-        <div class="form-group">
-            <label>
-                <input type="radio" asp-for="Status" value="true" /> 啟用
-            </label>
-            <label>
-                <input type="radio" asp-for="Status" value="false" /> 禁止
-            </label>
-        </div>
-        <table class="table table-bordered permissionTable">
-            <thead class="table-primary">
-                <tr>
-                    <th style="width: 400px">權限名稱</th>
-                    <th style="width: 70px">查看</th>
-                    <th style="width: 70px">新增</th>
-                    <th style="width: 70px">修改</th>
-                    <th style="width: 70px">刪除</th>
-                    <th style="width: 70px">匯出</th>
-                </tr>
-            </thead>
-            <tbody id="permissionBody">
-                @for (int i = 0; i < Model.Permissions.Count; i++)
-                {
+        input[type="checkbox"] {
+            transform: scale(1.3); /* 放大 checkbox */
+            cursor: pointer;
+            margin-right: 5px;
+        }
+    </style>
+    <head>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/js/account/role/createRole.js"></script>
+    </head>
+    <body>
+        <form>
+            <div class="form-group">
+                <label asp-for="RoleName">身分名稱</label>
+                <input type="text" class="form-control" asp-for="RoleName">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="radio" asp-for="Status" value="true" /> 啟用
+                </label>
+                <label>
+                    <input type="radio" asp-for="Status" value="false" /> 禁止
+                </label>
+            </div>
+            <table class="table table-bordered permissionTable">
+                <thead class="table-primary">
                     <tr>
-                        <td class="permissionName">
-                            @Model.Permissions[i].PermissionName
-                            <input type="hidden" asp-for="Permissions[@i].PermissionId" />
-                        </td>
-                        <td>
-                            <input type="checkbox" asp-for="Permissions[@i].Read" value="true">
-                        </td>
-                        <td>
-                            <input type="checkbox" asp-for="Permissions[@i].Create" value="true">
-                        </td>
-                        <td>
-                            <input type="checkbox" asp-for="Permissions[@i].Update" value="true">
-                        </td>
-                        <td>
-                            <input type="checkbox" asp-for="Permissions[@i].Delete" value="true">
-                        </td>
-                        <td>
-                            <input type="checkbox" asp-for="Permissions[@i].Export" value="true">
-                        </td>
+                        <th style="width: 400px">權限名稱</th>
+                        <th style="width: 70px">查看</th>
+                        <th style="width: 70px">新增</th>
+                        <th style="width: 70px">修改</th>
+                        <th style="width: 70px">刪除</th>
+                        <th style="width: 70px">匯出</th>
+                        <th style="width: 70px">全部</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-        <button id="submit" class="btn btn-primary">建立</button>
-        <button id="cancel" class="btn btn-secondary">取消</button>
-    </form>
-</body>
+                </thead>
+                <tbody id="permissionBody">
+                    @for (int i = 0; i < Model.Permissions.Count; i++)
+                    {
+                        <tr>
+                            <td class="permissionName">
+                                @Model.Permissions[i].PermissionName
+                                <input type="hidden" asp-for="Permissions[@i].PermissionId" />
+                            </td>
+                            <td>
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Read" value="true" >
+                            </td>
+                            <td>
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Create" value="true" >
+                            </td>
+                            <td>
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Update" value="true" >
+                            </td>
+                            <td>
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Delete" value="true" >
+                            </td>
+                            <td>
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Export" value="true" >
+                            </td>
+                            <td>
+                                <input type="checkbox" class="check-all-row" data-index="@i">
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <button id="submit" class="btn btn-primary">建立</button>
+            <button id="cancel" class="btn btn-secondary">取消</button>
+        </form>
+    </body>
 </html>

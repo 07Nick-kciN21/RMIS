@@ -2,15 +2,18 @@
 
 @{
     ViewData["Title"] = "註冊";
+    Layout = null;
+}
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }
 
 @if (ViewData["ErrorMessage"] != null)
 {
-        <div class="alert alert-danger">
+    <div class="alert alert-danger">
         @ViewData["ErrorMessage"]
-        </div>
+    </div>
 }
-
 <h2 class="text-center">註冊</h2>
 
 <div class="row justify-content-center">

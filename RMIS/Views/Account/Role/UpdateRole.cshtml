@@ -7,6 +7,18 @@
 }
 <!DOCTYPE html>
     <html lang="en">
+    <style>
+        label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.3); /* 放大 checkbox */
+            cursor: pointer;
+            margin-right: 5px;
+        }
+    </style>
     <head>
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
         <link rel="stylesheet" href="~/css/account/rolePermission.css" />
@@ -41,6 +53,7 @@
                         <th style="width: 70px">修改</th>
                         <th style="width: 70px">刪除</th>
                         <th style="width: 70px">匯出</th>
+                        <th style="width: 70px">全部</th>
                     </tr>
                 </thead>
                 <tbody id="permissionBody">
@@ -52,19 +65,22 @@
                                 <input type="hidden" asp-for="Permissions[@i].PermissionId" />
                             </td>
                             <td>
-                                <input type="checkbox" asp-for="Permissions[@i].Read" value="true">
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Read" value="true">
                             </td>
                             <td>
-                                <input type="checkbox" asp-for="Permissions[@i].Create" value="true">
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Create" value="true">
                             </td>
                             <td>
-                                <input type="checkbox" asp-for="Permissions[@i].Update" value="true">
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Update" value="true">
                             </td>
                             <td>
-                                <input type="checkbox" asp-for="Permissions[@i].Delete" value="true">
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Delete" value="true">
                             </td>
                             <td>
-                                <input type="checkbox" asp-for="Permissions[@i].Export" value="true">
+                                <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Export" value="true">
+                            </td>
+                            <td>
+                                <input type="checkbox" class="check-all-row" data-index="@i">
                             </td>
                         </tr>
                     }

@@ -256,7 +256,7 @@ namespace RMIS.Controllers
             return View(createUser);
         }
         [HttpPost("[controller]/User/Create")]
-        public async Task<IActionResult> CreateUser([FromForm] CreateUserView createUser)
+        public async Task<IActionResult> CreateUser([FromForm] CreateUser createUser)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -266,6 +266,20 @@ namespace RMIS.Controllers
                 return Json(new { success = false, message = "無權限新增" });
             }
 
+            if (!ModelState.IsValid)
+            {
+                var errors = typeof(CreateUser)
+                    .GetProperties()
+                    .Select(p => ModelState.ContainsKey(p.Name)
+                        ? ModelState[p.Name]?.Errors.Select(e => e.ErrorMessage)
+                        : Enumerable.Empty<string>())
+                    .SelectMany(e => e) // 扁平化
+                    .Where(msg => !string.IsNullOrEmpty(msg))
+                    .ToList();
+                var errorMessage = string.Join("。", errors) + "。\n";
+                return Json(new { success = false, message = errorMessage });
+            }
+                
             var created = await _accountInterface.CreateUserAsync(createUser);
             return Json(new { success = created.Success, message = created.Message });
         }

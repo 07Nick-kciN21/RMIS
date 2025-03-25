@@ -27,7 +27,6 @@ $(document).ready(function () {
                         let row = `
                         <tr>
                             <td class="permissionName">${perm.permissionName}</td>
-                            
                             <td>
                                 <input type="hidden" name="Permissions[${index}].Read" value="false">
                                 <input type="checkbox" name="Permissions[${index}].Read" value="true" ${perm.read ? 'checked' : ''}>
@@ -48,8 +47,16 @@ $(document).ready(function () {
                                 <input type="hidden" name="Permissions[${index}].Export" value="false">
                                 <input type="checkbox" name="Permissions[${index}].Export" value="true" ${perm.export ? 'checked' : ''}>
                             </td>
+                            <td>
+                                <input type="checkbox" class="check-all-row" data-index="${index}"> 全部
+                            </td>
                         </tr>`;
                         tbody.append(row);
+                    });
+                    $('.check-all-row').on('change', function () {
+                        const index = $(this).data('index');
+                        const isChecked = $(this).prop('checked');
+                        $(`.perm-checkbox[data-index="${index}"]`).prop('checked', isChecked);
                     });
                 }
             },

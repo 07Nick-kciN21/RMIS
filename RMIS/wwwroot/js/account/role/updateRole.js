@@ -1,4 +1,10 @@
 $(document).ready(function () {
+    $('.check-all-row').on('change', function () {
+        const index = $(this).data('index');
+        const isChecked = $(this).prop('checked');
+        console.log(index);
+        $(`.perm-checkbox[data-index="${index}"]`).prop('checked', isChecked);
+    });
     $('#submit').on('click', function (e) {
         e.preventDefault(); // 阻止預設提交行為
 
@@ -17,7 +23,7 @@ $(document).ready(function () {
             let permissionId = $(this).find('input[name^="Permissions"][type="hidden"]').val();
             formData.append(`Permissions[${index}].PermissionId`, permissionId);
 
-            $(this).find('input[type="checkbox"]').each(function () {
+            $(this).find('input[type="checkbox"][name^="Permissions"]').each(function () {
                 let fieldName = $(this).attr('name').match(/\.(\w+)$/)[1]; // 取得欄位名稱 (Read, Create, Update, Delete, Export)
                 formData.append(`Permissions[${index}].${fieldName}`, $(this).is(':checked'));
             });

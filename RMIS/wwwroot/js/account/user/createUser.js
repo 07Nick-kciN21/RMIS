@@ -38,8 +38,6 @@ $(document).ready(function () {
                 }
                 else{
                     alert(data.message);
-                    window.opener.postMessage(JSON.stringify({ success: false }), window.location.origin);
-                    window.close();
                 }
             },
             error: function (xhr, status, error) {

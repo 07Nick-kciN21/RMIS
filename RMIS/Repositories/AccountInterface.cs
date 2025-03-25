@@ -10,6 +10,7 @@ namespace RMIS.Repositories
 {
     public interface AccountInterface
     {
+        Task<bool> CheckStatus(ApplicationUser user);
         Task<List<DepartmentUser>> GetAllUser();
         Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId);
         Task<string> GetUserDemartment(ApplicationUser user);
@@ -28,8 +29,8 @@ namespace RMIS.Repositories
         Task<(bool Success, string Message)> DeletePermissionAsync(int PermissionId);
         Task<(bool Success, string Message)> DeleteRoleAsync(string RoleId);        
         Task<(bool Success, string Message)> DeleteDepartmentAsync(int departmentId);
-        Task<(bool Success, string Message)> CreateUserAsync(CreateUserView createUser);
-        Task<(bool Success, string Message)> RegisterAsync(RegisterUser createUser);
+        Task<(bool Success, string Message)> CreateUserAsync(CreateUser createUser);
+        Task<(bool Success, string Message)> RegisterAsync(RegisterVIew createUser);
         Task<UpdateUserView> UpdateUserViewAsync(string id);
         Task<(bool Success, string Message)> UpdateUserAsync(UpdateUserView updateUser);
         Task<(bool Success, string Message)> UpdateUserPasswordAsync(UpdateUserPassword updateUserPassword);

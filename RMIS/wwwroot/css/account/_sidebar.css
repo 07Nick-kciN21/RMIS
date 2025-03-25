@@ -69,8 +69,7 @@
 }
 
 .table-container{
-    border: solid 1px;
-    height: 600px;
+    height: 80%;
     overflow-y: auto;
 }
     

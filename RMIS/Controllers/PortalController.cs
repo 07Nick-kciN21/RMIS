@@ -41,16 +41,16 @@ namespace RMIS.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _userManager.Users.FirstAsync(u => u.UserName == model.UserName);
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == model.UserName);
             if (user == null)
             {
-                ModelState.AddModelError(string.Empty, "無效的登入嘗試");
+                ModelState.AddModelError(string.Empty, "登入失敗，帳號或密碼錯誤，或著該帳號遭到禁用");
                 return View(model);
             }
 
             var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, lockoutOnFailure: false);
-
-            if (result.Succeeded)
+            var statusCheck = await _accountInterface.CheckStatus(user);
+            if (result.Succeeded && statusCheck)
             {
                 var expireTime = DateTime.UtcNow.AddMinutes(30);
                 Response.Cookies.Append("LoginExpireTime", expireTime.ToString("o"),
@@ -61,7 +61,7 @@ namespace RMIS.Controllers
             }
             else
             {
-                ModelState.AddModelError(string.Empty, "登入失敗，請檢查您的帳號和密碼");
+                ModelState.AddModelError(string.Empty, "登入失敗，帳號或密碼錯誤，或著該帳號遭到禁用");
                 return View(model);
             }
         }
@@ -80,22 +80,29 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterUser user)
+        public async Task<IActionResult> Register(RegisterVIew user)
         {
             if (!ModelState.IsValid)
-                return View(user);
+            {
+                ViewData["ShowRegisterModal"] = "True";
+                return View("Login", new LoginRegisterView
+                {
+                    Register = user,
+                    Login = new LoginView()
+                });
+            }
 
             var result = await _accountInterface.RegisterAsync(user);
 
             if (result.Success)
             {
-                return RedirectToAction("Login", "Portal"); // ✅ 註冊成功跳轉首頁
+                return Json(new { Success = true, Message = "提交申請" });
             }
             else
             {
                 // ✅ 透過 ViewData 讓錯誤訊息顯示在 `Register` View
-                ViewData["ErrorMessage"] = result.Message;
-                return View(user);
+                // ViewData["ErrorMessage"] = result.Message;
+                return Json(new { Success = false, Message = result.Message }); ;
             }
         }
 

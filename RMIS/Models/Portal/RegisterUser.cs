@@ -1,4 +1,5 @@
 ﻿using RMIS.Models.Auth;
+using RMIS.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace RMIS.Models.Portal
@@ -17,6 +18,7 @@ namespace RMIS.Models.Portal
 
         [Required(ErrorMessage = "密碼是必填欄位")]
         [StringLength(20, MinimumLength = 8, ErrorMessage = "密碼長度不合規定(8~20)")]
+        [PasswordNotSameAsAccount("Account", ErrorMessage = "密碼不能與帳號相同")]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$", ErrorMessage = "密碼必須包含至少 1 個大寫字母、1 個小寫字母和 1 個數字")]
         public string Password { get; set; }
 

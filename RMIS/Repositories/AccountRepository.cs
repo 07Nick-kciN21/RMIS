@@ -27,6 +27,21 @@ namespace RMIS.Repositories
             _roleManager = roleManager;
             _authDbContext = authDbContext;
         }
+
+        public async Task<bool> CheckStatus(ApplicationUser user)
+        {
+            var userStatus = user.Status;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var roleName = roles.First();
+            var role = await _roleManager.FindByNameAsync(roleName);
+            var roleStatus = role.Status;
+
+            var department = await _authDbContext.Departments.FindAsync(user.DepartmentId);
+            var deptStatus = department.Status;
+            return (userStatus && roleStatus && deptStatus);
+        }
+
         public async Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId)
         {
             var permissions = await _authDbContext.RolePermissions
@@ -260,7 +275,7 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<(bool Success, string Message)> CreateUserAsync(CreateUserView user)
+        public async Task<(bool Success, string Message)> CreateUserAsync(CreateUser user)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
             try
@@ -301,7 +316,8 @@ namespace RMIS.Repositories
                         _authDbContext.ChangeTracker.Clear();
                         return (false, $"身分賦予失敗");
                     }
-
+                    await _authDbContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
                     return (true, "使用者建立成功");
                 }
                 else
@@ -942,7 +958,7 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<(bool Success, string Message)> RegisterAsync(RegisterUser user)
+        public async Task<(bool Success, string Message)> RegisterAsync(RegisterVIew user)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
             try
@@ -978,7 +994,7 @@ namespace RMIS.Repositories
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(createUser, "使用者");
+                    await _userManager.AddToRoleAsync(createUser, "一般使用者");
                     await _authDbContext.SaveChangesAsync();
                     await _signInManager.SignInAsync(createUser, isPersistent: false);
                     await transaction.CommitAsync();
