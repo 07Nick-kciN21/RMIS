@@ -12,107 +12,50 @@
         <script src="~/js/account/user/updateUser.js"></script>
     </head>
     <body>
-        <form>
-            <div>
-                <input type="hidden" class="form-control" asp-for="UserId" readonly>
-            </div>
-            <div class="form-group">
-                <label asp-for="DisplayName">名稱</label>
-                <input type="text" class="form-control" asp-for="DisplayName">
-            </div>
-            <div class="form-group">
-                <label asp-for="UserName">帳號</label>
-                <input type="text" class="form-control" asp-for="UserName" readonly></input>
-            </div>
-            <div class="form-group">
-                <label asp-for="RoleId">身分</label>
-                @Html.DropDownListFor(model => model.RoleId, Model.Roles, new { @class = "form-control" })
-            </div>
-            <div class="form-group">
-                <label asp-for="DepartmentId">部門</label>
-                @Html.DropDownListFor(model => model.DepartmentId, Model.Departments, new { @class = "form-control" })
-            </div>
-            <div class="form-group">
-                <label>
-                    <input type="radio" asp-for="Status" value="true" /> 啟用
-                </label>
-                <label>
-                    <input type="radio" asp-for="Status" value="false" /> 禁止
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="Email">信箱</label>
-                <input type="text" class="form-control" asp-for="Email">
-            </div>
-            <div class="form-group">
-                <label asp-for="Phone">電話</label>
-                <input type="text" class="form-control" asp-for="Phone">
-            </div>
-
-            <button id="submit" class="btn btn-primary">儲存</button>
-            <button id="cancel" class="btn btn-secondary">取消</button>
-        </form>
-        <div class="modal fade" id="resetPassword" tabindex="-1" aria-labelledby="resetPassword" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">修改密碼</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-header">
+            <h5 class="modal-title" id="registerModalLabel">修改使用者資料</h5>
+        </div>
+        <div class="modal-content">
+            <div class="modal-body">
+                <form>
+                    <div>
+                        <input type="hidden" class="form-control" asp-for="UserId" readonly>
                     </div>
-                    <div class="modal-body">
-                        <div class="form form-horizontal" method="post">
-                            <div class="form-body">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group row">
-                                            <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">原密碼</label>
-                                            <div class="col-md-8">
-                                                <input type="password" id="OriginPassword" name="OriginPassword" class="form-control border-primary" placeholder="原密碼">
-                                                <div class="form-control-position" style="right: 15px;">
-                                                    <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Org"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group row">
-                                            <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">新密碼</label>
-                                            <div class="col-md-8">
-                                                <input type="password" id="NewPassword" name="NewPassword" class="form-control border-primary" placeholder="新密碼">
-                                                <div class="form-control-position" style="right: 15px;">
-                                                    <i class="fa fa-eye fa-eye-slash mimaShow" data-id="New"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <div class="form-group row">
-                                            <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">確認新密碼</label>
-                                            <div class="col-md-8">
-                                                <input type="password" id="CheckPassword" name="CheckPassword" class="form-control border-primary" placeholder="確認新密碼">
-                                                <div class="form-control-position" style="right: 15px;">
-                                                    <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Check"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                            
-                                    <div class="col-md-10">
-                                        <div class="form-group row">
-                                            <label class="col-md-2 label-control" style="padding-top:0.75em;text-align:right"></label>
-                                            <div class="col-md-10 ">
-                                                <label class="text-danger" style="margin-top:10px">密碼規格：8字元以上、包含大寫字母、小寫字母、數字且不可與帳號相同。</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 m-auto">
-                                        <button id="password-Save" type="button" class="btn btn-block btn-min-width btn-info mtop" ><i class="ft-save"></i> 儲存</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="DisplayName">名稱</label>
+                        <input type="text" class="form-control" asp-for="DisplayName">
                     </div>
-                </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="UserName">帳號</label>
+                        <input type="text" class="form-control" asp-for="UserName" readonly>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="RoleId">身分</label>
+                        @Html.DropDownListFor(model => model.RoleId, Model.Roles, new { @class = "form-control" })
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="DepartmentId">部門</label>
+                        @Html.DropDownListFor(model => model.DepartmentId, Model.Departments, new { @class = "form-control" })
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>
+                            <input type="radio" asp-for="Status" value="true" /> 啟用
+                        </label>
+                        <label>
+                            <input type="radio" asp-for="Status" value="false" /> 禁止
+                        </label>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Email">信箱</label>
+                        <input type="text" class="form-control" asp-for="Email">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="Phone">電話</label>
+                        <input type="text" class="form-control" asp-for="Phone">
+                    </div>
+                    <button id="submit" class="btn btn-primary">儲存</button>
+                    <button id="cancel" class="btn btn-secondary">取消</button>
+                </form>
             </div>
         </div>
     </body> 

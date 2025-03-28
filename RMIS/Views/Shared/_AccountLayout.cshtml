@@ -3,14 +3,15 @@
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="~/css/account/_accountLayout.css" />
         <link rel="stylesheet" href="~/css/_layout.css" />
+        <link rel="stylesheet" href="~/css/account/_accountLayout.css" />        
         <link rel="stylesheet" href="~/css/account/_sidebar.css" />
         <link rel="stylesheet" href="~/css/index/dropdown.css" />
         <link rel="stylesheet" href="~/css/index/menu.css" />
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/js/sessionManager.js"></script>
+        
         <script type="module" src="~/js/account/Pagination.js"></script>
 
         <style>
@@ -35,7 +36,7 @@
             <div id="col1">
                 <div id="left-nav" style="display: flex;">
                     <div class="head-logo-box navbar-toggle">
-                        <div class="head-logo">權限管理平台</div>
+                        <div class="head-logo">桃園市養護工程處整合協作平台</div>
                     </div>
                 </div>
             </div>
@@ -71,41 +72,8 @@
                                     </ul>
                                 </div>
                             </div>
-                        </div>
+                        </div>                        
                     </div>
-                    @* <div class="container-fluid">
-                        <div id="userMenuContent" class="collapse navbar-collapse">
-                            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                                <li>
-                                    <div class="user-icon ms-2"></div>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle d-flex align-items-center justify-content-center" 
-                                        href="#" 
-                                        id="navbarDropdown" 
-                                        role="button" 
-                                        data-bs-toggle="dropdown" 
-                                        aria-expanded="false" 
-                                        style="height: 100%;">
-                                        @ViewBag.Username
-                                    </a>
-                                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <li>
-                                            <a class="nav-link menu-title" href="/Portal/Logout">
-                                                <h5>登出</h5>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="nav-link menu-title" href="/Account/User/List">
-                                                <h5>權限管理</h5>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-                    </div> *@
-                    
                 </nav>
             </div>
         </header>
@@ -167,5 +135,4 @@
             });
         });
     </script>
-
 </html>

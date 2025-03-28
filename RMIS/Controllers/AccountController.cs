@@ -268,6 +268,7 @@ namespace RMIS.Controllers
 
             if (!ModelState.IsValid)
             {
+                return View(createUser);
                 var errors = typeof(CreateUser)
                     .GetProperties()
                     .Select(p => ModelState.ContainsKey(p.Name)

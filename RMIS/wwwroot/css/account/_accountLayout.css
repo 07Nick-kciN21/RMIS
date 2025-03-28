@@ -7,14 +7,6 @@
     font-weight: 800;
 }
 
-.head-logo-box {
-    height: 51.5px;
-    color: #43413d;
-    line-height: 51.5px;
-    float: left;
-    padding-left:32px;
-}
-
 .user-icon {
     background-image: url('/svg/user.svg');
     background-size: 90%;
@@ -41,15 +33,13 @@ header {
 
 #col2{
     margin-left: auto;
-    margin-right: 100px;
+    margin-right: 15px;
 }
 
-li{
+#userMenuContent{
+    left:-73px;
+}
+
+li {
     list-style-type: none;
-}
-
-@media (min-width: 900px) {
-    .head-logo {
-        margin-left: 25px;
-    }
 }

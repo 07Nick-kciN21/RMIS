@@ -46,6 +46,7 @@ $(document).ready(function () {
         // 所有欄位驗證通過 → 使用 Ajax 送出
         const formData = $(form).serialize();
         console.log(formData);
+
         $.post('/Portal/Register', formData)
           .done(function (response) {
             if (response.success) {
