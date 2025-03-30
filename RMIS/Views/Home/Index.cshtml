@@ -66,7 +66,7 @@
 <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.10.3/src/leaflet.geometryutil.min.js"></script>
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
 <script src="~/lib/proj4.js"></script>
-
+<script src="~/js/account/userProfilePopup.js"></script>
 
 @section HomeHeaderNavList{
     <div id="col1">
@@ -96,7 +96,7 @@
                         <div id="userMenuContent" class="dropdown-content">
                             <ul class="menu-background">
                                 <li>
-                                    <a class="nav-link menu-title" href="/Account/User/Profile">
+                                    <a id="profileBtn" class="nav-link menu-title">
                                         <h5 id="user-name">@ViewBag.Username</h5>
                                     </a>
                                 </li>

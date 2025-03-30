@@ -15,7 +15,7 @@
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/js/account/user/userProfile.js"></script>
     </head>
-    <header>
+    @* <header>
         <div id="col1">
             <div id="left-nav" style="display: flex;">
                 <div class="head-logo-box navbar-toggle">
@@ -58,50 +58,65 @@
                     </div>
                 </nav>
             </div>
-        </header>
+        </header> *@
     <body>
-        <div class="container-fluid">    
-            <h2 class="text-center">使用者資料</h2>
-            <div class="container">
-                <div class="row justify-content-center mt-3">
-                    <div class="col-md-4">
-                        <form class="container">
-                            <div>
-                                <input type="hidden" class="form-control" asp-for="Id" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="DisplayName">名稱</label>
-                                <input type="text" class="form-control" asp-for="DisplayName">
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="UserName">帳號</label>
-                                <label asp-for="UserName">@Model.UserName</label>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="UserName">密碼</label>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#resetPassword">修改密碼</button>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="Role">身分</label>
-                                <label asp-for="Role">@Model.Role</label>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="Department">部門</label>
-                                <label asp-for="Department">@Model.Department</label>
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="Email">信箱</label>
-                                <input type="text" class="form-control" asp-for="Email">
-                            </div>
-                            <div class="form-group">
-                                <label asp-for="Phone">電話</label>
-                                <input type="text" class="form-control" asp-for="Phone">
-                            </div>
-                            <button id="submit" class="btn btn-primary">儲存</button>
-                            <button id="cancel" class="btn btn-secondary" href="/Home/Index">取消</button>
-                        </form>
+        <div class="modal-header">
+            <h5 class="modal-title" id="registerModalLabel">使用者資料</h5>
+        </div>
+        <div class="modal-content">
+            <div class="modal-body">
+                <form class="container">
+                    <div>
+                        <input type="hidden" class="form-control" asp-for="Id" readonly>
                     </div>
-                </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label asp-for="DisplayName" class="col-sm-2 col-form-label">名稱</label>
+                        <div class="col-sm-10">
+                            <input class="form-control" type="text" asp-for="DisplayName">
+                        </div>
+                        <span asp-validation-for="DisplayName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label asp-for="UserName" class="col-sm-2 col-form-label">帳號</label>
+                        <div class="col-sm-10">
+                            <label asp-for="UserName" class="form-control-plaintext">@Model.UserName</label>
+                        </div>
+                    </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label class="col-sm-2 col-form-label">密碼</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#resetPassword">修改密碼</button>
+                        </div>
+                    </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label asp-for="Role" class="col-sm-2 col-form-label">身分</label>
+                        <div class="col-sm-10">
+                            <label asp-for="Role" class="form-control-plaintext">@Model.Role</label>
+                        </div>
+                    </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label asp-for="Department" class="col-sm-2 col-form-label">部門</label>
+                        <div class="col-sm-10">
+                            <label asp-for="Department" class="form-control-plaintext">@Model.Department</label>
+                        </div>
+                    </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label asp-for="Email" class="col-sm-2 col-form-label">信箱</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" asp-for="Email">
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label asp-for="Phone" class="col-sm-2 col-form-label">電話</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" asp-for="Phone">
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <button id="submit" class="btn btn-primary">儲存</button>
+                    <button id="cancel" class="btn btn-secondary" href="/Home/Index">取消</button>
+                </form>
             </div>
         </div>
         <div class="modal fade" id="resetPassword" tabindex="-1" aria-labelledby="resetPassword" aria-hidden="true">

@@ -21,18 +21,27 @@
     <div class="modal-content">
         <div class="modal-body">
             <form>
-                <div class="form-group">
-                    <label asp-for="Name">部門名稱</label>
-                    <input type="text" class="form-control" asp-for="Name">
+                <div class="form-group row mb-3">
+                    <label asp-for="Name" class="col-sm-2 col-form-label">權限名稱</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" asp-for="Name">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>
-                        <input type="radio" asp-for="Status" value="true" /> 啟用
-                    </label>
-                    <label>
-                        <input type="radio" asp-for="Status" value="false"/> 禁止
-                    </label>
+
+                <div class="form-group row mb-3">
+                    <label class="col-sm-2 col-form-label">狀態</label>
+                    <div class="col-sm-10 d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input type="radio" class="form-check-input" asp-for="Status" value="true" id="statusEnabled">
+                            <label class="form-check-label" for="statusEnabled">啟用</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" asp-for="Status" value="false" id="statusDisabled">
+                            <label class="form-check-label" for="statusDisabled">禁止</label>
+                        </div>
+                    </div>
                 </div>
+
                 <button id="submit" class="btn btn-primary">儲存</button>
                 <button id="cancel" class="btn btn-secondary">取消</button>
             </form>
