@@ -373,7 +373,7 @@ namespace RMIS.Controllers
                     if (result.categoryCount > 0 || result.pipelineCount > 0)
                     {
                         _logger.LogInformation($"已從JSON檔案新增 {result.categoryCount} 筆類別及 {result.pipelineCount} 筆管線資料到資料庫");
-                        return Ok($"上傳{result.categoryCount}筆類別, {result.pipelineCount}筆項目");
+                        return  Json(new { success = true, message = $"上傳{result.categoryCount}筆類別, {result.pipelineCount}筆項目" });
                     }
                     else if (result.categoryCount == -1 && result.pipelineCount == -1)
                     {

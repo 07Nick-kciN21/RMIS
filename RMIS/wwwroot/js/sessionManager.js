@@ -2,7 +2,7 @@ const sessionManager = (() => {
     const COOKIE_NAME = "LoginExpireTime";
     const EXTEND_API_URL = "/Portal/ExtendSession";
     const LOGIN_URL = "/Portal/Login";
-    const TIMEOUT_BEFORE_EXPIRY = 1 * 60 * 1000; // 1 分鐘前顯示提示
+    const TIMEOUT_BEFORE_EXPIRY = 5 * 60 * 1000; // 1 分鐘前顯示提示
 
     function getCookieValue(cookieName) {
         let cookies = document.cookie.split("; ");

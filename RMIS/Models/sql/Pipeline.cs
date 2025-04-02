@@ -15,7 +15,9 @@ namespace RMIS.Models.sql
         public ICollection<Layer> Layers { get; set; } // 多個圖層
         // 允許存取的部門 (可多個)
         public List<int> DepartmentIds { get; set; } = new();
+        public string? dataInfo { get; set; } // 詮釋資料
         public Guid MetaId { get; set; } // 圖資Id
+       
         public MetaData? MetaData { get; set; } // 圖資
     }
 }

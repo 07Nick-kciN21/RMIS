@@ -1,4 +1,6 @@
 $(document).ready(function () {
+    initRegisterModal();
+
     $('#registerForm').on('submit', function (e) {
         e.preventDefault();
   
@@ -47,21 +49,26 @@ $(document).ready(function () {
         const formData = $(form).serialize();
         console.log(formData);
 
-        $.post('/Portal/Register', formData)
-          .done(function (response) {
+        $.ajax({
+          url: '/Portal/Register',
+          type: 'POST',
+          data: formData,
+          success: function (response) {
             if (response.success) {
-              alert('註冊成功');
+              alert('申請提交');
               form.reset();
               $(form).find('.form-control').removeClass('is-valid');
               const modal = bootstrap.Modal.getInstance($('#registerModal')[0]);
               modal.hide();
             } else {
-              alert('註冊失敗：' + response.message);
+              alert('申請提交：' + response.message);
             }
-          })
-          .fail(function () {
+          },
+          error: function () {
             alert('提交失敗，請稍後再試');
-          });
+          }
+        });
+        
     });
     
     $('.close-modal').on('click', function () {
@@ -78,3 +85,28 @@ $(document).ready(function () {
         }
     });
 });
+
+function initRegisterModal() {
+    $.ajax({
+        url: '/Portal/RegisterSelect',
+        type: 'GET',
+        success: function (response) {
+          console.log(response);
+          const departments = response.Departments;
+          const roles = response.Roles;
+          for (const department of departments) {
+              $('#DepartmentId').append(
+                  `<option value="${department.id}">${department.name}</option>`
+              );
+          }
+          for (const role of roles) {
+              $('#RoleId').append(
+                  `<option value="${role.id}">${role.name}</option>`
+              );
+          }
+        },
+        error: function () {
+            alert('無法載入註冊頁面，請稍後再試。');
+        }
+    });
+}

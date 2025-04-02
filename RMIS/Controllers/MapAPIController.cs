@@ -59,12 +59,10 @@ namespace RMIS.Controllers
                     .OrderBy(l => l.GeometryType.OrderId)
                     .Where(l => l.PipelineId == pipelineId)
                     .ToListAsync();
-                var metaId = await _mapDBContext.Pipelines.Where(p => p.Id == pipelineId).Select(p => p.MetaId).FirstOrDefaultAsync();
+                var metaData = await _mapDBContext.Pipelines.Where(p => p.Id == pipelineId).Select(p => p.dataInfo).FirstOrDefaultAsync();
                 var results = new LayersByPipeline
                 {
-                    // 根據 pipelineId 取得的 MetaData
-
-                    metaData = await _mapDBContext.MetaDatas.Where(md => md.Id == metaId).FirstOrDefaultAsync(),
+                    metaData = metaData,
                     layers = layers.Select(l => new LayerByPipe
                     {
                         id = l.Id.ToString(),

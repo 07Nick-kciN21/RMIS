@@ -21,6 +21,9 @@ export function add2List(id, name, datas, metaData) {
         `;
         sections += section;
     });
+    let metaItem = metaData
+        ? `<li id="more_action3_${id}">檢視詮釋資料</li>`
+        : `<li id="more_action3_${id}" style="color: #ccc; cursor: default; pointer-events: none;">檢視詮釋資料</li>`;
     // layer編輯工具
     let layerItem = `
         <div class="layerBar featureLayer-Bg" id="layerBar_${id}">
@@ -36,7 +39,7 @@ export function add2List(id, name, datas, metaData) {
             <div class="more more-off" id="more_${id}">
                 <ul class="moreMenu" >
                     <li id="more_action2_${id}">編輯圖徽</li>
-                    <li id="more_action3_${id}">檢視詮釋資料</li>
+                    ${metaItem}
                     <li id="more_action4_${id}">
                         透明度
                         <input class="layerOpacity" type="text" value="100" placeholder="100">
@@ -63,6 +66,9 @@ export function add2List(id, name, datas, metaData) {
     });
 
     $(`#more_action3_${id}`).on('click', function () {
+        if(metaData == null || metaData == "") {
+            return;
+        };
         openPanel(metaData);
     });
     // 使用透明度不要关闭

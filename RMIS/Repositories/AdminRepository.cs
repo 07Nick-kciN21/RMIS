@@ -532,8 +532,15 @@ namespace RMIS.Repositories
                 }
                 else if (categorys is JArray jArray)
                 {
+                    var mergedDepartments = new HashSet<int>();
+
                     foreach (var item in jArray)
                     {
+                        var departmentIds = item["可用部門"]?.ToObject<List<int>>() ?? new List<int>();
+                        foreach (var id in departmentIds)
+                        {
+                            mergedDepartments.Add(id);
+                        }
                         // 新增Pipeline
                         var pipelineId = Guid.NewGuid();
                         var newPipeline = new Pipeline
@@ -541,19 +548,14 @@ namespace RMIS.Repositories
                             Id = pipelineId,
                             Name = item["名稱"].ToString(),
                             ManagementUnit = item["管理單位"].ToString(),
-                            // Kind = item["種類"].ToString(),
-                            // Color = item["顏色"].ToString(),
-                            
-                            CategoryId = parentId
+                            DepartmentIds = departmentIds,
+                            IsGeneralPipeline = true,
+                            CategoryId = parentId,
+                            dataInfo = item["詮釋資料"]?.ToString()
                         };
                         pipelines.Add(newPipeline);
 
                         _logger.LogInformation("Added Pipeline: {Name}, ParentId: {ParentId}", newPipeline.Name, parentId);
-
-                        //  "屬性": {
-                        //     "租借日期(一個月內)" : "箭頭(棕)",
-                        //     "租借日期(一周內)" : "箭頭(棕黃)"
-                        //     }
                         foreach (var prop in item["屬性"].ToObject<JObject>())
                         {
                             var propName = prop.Key;
@@ -597,6 +599,13 @@ namespace RMIS.Repositories
 
                             _logger.LogInformation("Added Layer: {Name}, PipelineId: {PipelineId}", newLayer.Name, pipelineId);
                         }
+                    }
+                    // 將彙整的部門設回上層 Category
+                    var targetCategory = categories.FirstOrDefault(c => c.Id == parentId);
+                    if (targetCategory != null)
+                    {
+                        targetCategory.DepartmentIds = mergedDepartments.ToList();
+                        _logger.LogInformation("Set DepartmentIds for Category {Name}: [{Ids}]", targetCategory.Name, string.Join(", ", mergedDepartments));
                     }
                 }
                 return true;

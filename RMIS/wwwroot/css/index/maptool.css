@@ -115,7 +115,7 @@
 
 #mapSelect{
     width: 250px;
-    top: -430px;
+    top: -350px;
 }
 
 #coordinateSelect{
@@ -214,6 +214,8 @@
 
 .footerSelect > ul {
     padding-left: 0px;
+    overflow-y: auto;
+    max-height: 135px;
 }
 
 .footerSelect > ul > li {

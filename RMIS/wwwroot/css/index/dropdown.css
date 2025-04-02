@@ -43,8 +43,9 @@
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
     display: none;
-    left:-5px;
+    left: -5px;
     position: absolute;
+    width: 140px;
     z-index: 1;
 }
     .dropdown-content li {

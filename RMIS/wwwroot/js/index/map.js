@@ -349,11 +349,6 @@ function createBaseLayers() {
     };
 
     let currentTileLayer = OpenStreet;
-
-    // 把基本圖層加入#baseMapSelect
-    for(let name in baseMaps){
-        $('#baseMapSelector').append(`<li class="coordinate-item" value="${name}"><span>${name}</span></li>`);
-    };
     // 疊加圖層 (多選)
     var overlayMaps = {};
 
@@ -362,6 +357,7 @@ function createBaseLayers() {
         url: '/api/MapAPI/GetMapSources',
         type: 'POST',
         success: function (mapSources) {
+            console.log('地圖來源資料:', mapSources);
             mapSources.wms.forEach(source => {
                 const layer = L.tileLayer.wms(source.url, {
                     layers: source.sourceId,
@@ -391,11 +387,14 @@ function createBaseLayers() {
                     overlayMaps[source.name] = layer;
                 }
             });
-            
+            // 把基本圖層加入#baseMapSelect
+            for(let name in baseMaps){
+                $('#baseMapSelector').append(`<li class="coordinate-item" value="${name}"><span>${name}</span></li>`);
+            };
             for(let name in overlayMaps){
                 $('#overlayMapSelector').append(`<li class="coordinate-item" value="${name}">${name}</li>`);
             }
-
+            
         },
         error: function (error) {
             console.error('Error fetching map sources:', error);

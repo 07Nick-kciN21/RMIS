@@ -18,13 +18,15 @@ namespace RMIS.Controllers
     public class PortalController : Controller
     {
         private readonly AccountInterface _accountInterface;
+        private readonly PortalInterface _portalInterface;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        public PortalController(AccountInterface accountInterface, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager) 
+        public PortalController(AccountInterface accountInterface, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, PortalInterface portalInterface)
         {
             _accountInterface = accountInterface;
             _signInManager = signInManager;
             _userManager = userManager;
+            _portalInterface = portalInterface;
         }
 
         [HttpGet]
@@ -74,9 +76,10 @@ namespace RMIS.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public async Task<IActionResult> RegisterSelect()
         {
-            return View();
+            var selectList = await _portalInterface.RegisterSelectListAsync();
+            return Json(selectList);
         }
 
         [HttpPost]
@@ -92,7 +95,7 @@ namespace RMIS.Controllers
                 });
             }
 
-            var result = await _accountInterface.RegisterAsync(user);
+            var result = await _portalInterface.RegisterAsync(user);
 
             if (result.Success)
             {

@@ -491,6 +491,21 @@ namespace RMIS.Controllers
             return Ok(new { Success = true, DepartmentManager = DepartmentManagerData });
         }
 
+        [HttpPost("[controller]/Department/Get/PipelineAccess")]
+        public async Task<IActionResult> GetPipelineAccess(int id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限修改" });
+            }
+
+            var PipelineAccess = await _accountInterface.GetPipelineAccessAsync(id);
+            return Json(new { Success = PipelineAccess.Success, Data = PipelineAccess.Data, Message = PipelineAccess.Message });
+        }
         [HttpGet("[controller]/Department/Update")]
         public async Task<IActionResult> UpdateDepartment(int id)
         {

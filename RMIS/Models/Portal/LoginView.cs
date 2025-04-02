@@ -35,10 +35,9 @@ namespace RMIS.Models.Portal
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$", ErrorMessage = "密碼必須包含至少 1 個大寫字母、1 個小寫字母和 1 個數字")]
         public string Password { get; set; }
 
-        [Required(ErrorMessage = "請再次輸入密碼")]
-        [DataType(DataType.Password)]
-        [Compare("Password", ErrorMessage = "確認密碼與密碼不匹配")]
-        public string ConfirmPassword { get; set; }
+        public int DepartmentId { get; set; }
+
+        public string RoleId { get; set; }
 
         [Required(ErrorMessage = "Email 是必填欄位")]
         [DataType(DataType.EmailAddress)]

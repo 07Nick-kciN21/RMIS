@@ -66,7 +66,8 @@ export function generateMenu(data, parent_name, index) {
         }
 
         if (item.tag == "node") {
-            html += `<div class="menu-node">
+            html += `
+                    <div class="menu-node">
                         <span class="menu-icon menu-close" id="menu-${item.id}"></span>
                         <${headingTag} class="${headingClass}">
                             ${item.text}

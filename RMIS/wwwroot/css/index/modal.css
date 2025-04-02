@@ -28,14 +28,13 @@
     z-index: 1100;
 }
 
-
 .modal-content {
     top:8%;
     background-color: #fff;
     border-radius: 10px; /* 圆角 */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* 阴影 */
     padding: 20px;
-    width: 90%; /* 默认宽度 */
+    width: 45%; /* 默认宽度 */
     max-width: 70%; /* 最大宽度 */
     text-align: center; /* 内容居中 */
     animation: modalFadeIn 0.3s ease-out; /* 动画 */
@@ -49,13 +48,19 @@
 }
 
 .modal-body form > div > label{
+    height: 35px;
     width: 40%;
     text-align: left;
 }
 
+.modal-body form > div > select{
+    height: 100%;
+    width: 60%;
+}
+
 .modal-body form > div > input,
-.modal-body form > div > select,
 .modal-body form > div > textarea {
+    height: 35px;
     width: 60%;
 }
 

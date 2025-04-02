@@ -5,7 +5,7 @@ namespace RMIS.Models.API
     public class LayersByPipeline
     {
         public List<LayerByPipe> layers { get; set; }
-        public MetaData metaData { get; set; }
+        public string? metaData { get; set; }
     }
     public class LayerByPipe
     {

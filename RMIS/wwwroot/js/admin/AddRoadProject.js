@@ -108,12 +108,12 @@ $(document).ready(function () {
     // 計算彈出視窗的位置
     const left = 0 - (screenWidth + windowWidth) / 2;
     const top = (screenHeight - windowHeight) / 2;
-    $('#addRangeBtn').on('click', function () {
+    $('#addStreetRangeBtn').on('click', function () {
         newWindow = window.open('/Admin/ExpansionRangeMap', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     
     //#addPhotoBtn 按鈕被點擊時，開啟新視窗
-    $('#addPhotoBtn').on('click', function () {
+    $('#addStreetPhotoBtn').on('click', function () {
         newWindow = window.open('/Admin/StreetViewPhotoMap', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     

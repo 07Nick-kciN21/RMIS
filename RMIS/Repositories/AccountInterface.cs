@@ -30,7 +30,6 @@ namespace RMIS.Repositories
         Task<(bool Success, string Message)> DeleteRoleAsync(string RoleId);        
         Task<(bool Success, string Message)> DeleteDepartmentAsync(int departmentId);
         Task<(bool Success, string Message)> CreateUserAsync(CreateUser createUser);
-        Task<(bool Success, string Message)> RegisterAsync(RegisterVIew createUser);
         Task<UpdateUserView> UpdateUserViewAsync(string id);
         Task<(bool Success, string Message)> UpdateUserAsync(UpdateUserView updateUser);
         Task<(bool Success, string Message)> UpdateUserPasswordAsync(UpdateUserPassword updateUserPassword);
@@ -40,6 +39,7 @@ namespace RMIS.Repositories
         Task<(bool Success, string Message)> UpdateDepartmentAsync(UpdateDepartmentView updateDepartment);
         Task<(bool Success, string Message)> CreateDepartmentAsync(CreateDepartmentView createDepartment);
         Task<UpdatePermissionView> UpdatePermissionViewAsync(int id);
+        Task<(bool Success, string? Data, string? Message)> GetPipelineAccessAsync(int id);
         Task<(bool Success, string Message)> UpdatePermissionAsync(UpdatePermissionView updatePermission);
     }
 }

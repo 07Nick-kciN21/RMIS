@@ -59,9 +59,34 @@
     margin: 8px;
 }
 
-.user-logo-box:hover{
-    background-color: #f8f9fa;
+.username-text {
+    display: flex;
+    align-items: center; /* 垂直置中 */
+    padding-right: 5px; /* 右邊距 5px */
+    gap: 5px; /* 圖標與文字之間的間距 */
 }
+
+    /* 使用者名稱文字樣式 */
+    .username-text h5 {
+        margin: 0; /* 清除預設 margin */
+        font-size: 14px; /* 調整文字大小 */
+        color: #555; /* 文字顏色 */
+        user-select: none; /* 禁止文字選中 */
+        cursor: default; /* 讓滑鼠指標維持默認狀態 */
+    }
+
+        /* 向下三角形樣式 */
+        .username-text h5::after {
+            content: ''; /* 插入一個空內容 */
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-left: 5px;
+            vertical-align: middle;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #555; /* 三角形顏色 */
+        }
 
 .toggle {
     float: right;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using RMIS.Data;
 using RMIS.Models.Account.Departments;
 using RMIS.Models.Account.Permissions;
@@ -8,24 +9,27 @@ using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
 using RMIS.Models.Portal;
+using RMIS.Models.sql;
 using static RMIS.Controllers.HomeController;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RMIS.Repositories
 {
     public class AccountRepository : AccountInterface
-    {
+    {       
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AuthDbContext _authDbContext;
+        private readonly MapDBContext _mapDBContext;
 
-        public AccountRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext)
+        public AccountRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
             _authDbContext = authDbContext;
+            _mapDBContext = mapDBContext;
         }
 
         public async Task<bool> CheckStatus(ApplicationUser user)
@@ -558,15 +562,52 @@ namespace RMIS.Repositories
                 department.Name = updateDepartment.Name;
                 department.Status = updateDepartment.Status;
                 _authDbContext.Departments.Update(department);
-                var update = await _authDbContext.SaveChangesAsync();
-                if (update == 0)
+                
+                int pipelineAdd = 0;
+                int pipelineRemove = 0;
+                var affectedCategories = new HashSet<Guid>();
+                if (updateDepartment.Removed != null)
+                {
+                    foreach (var remove in updateDepartment.Removed)
+                    {
+                        var pipeline = await _mapDBContext.Pipelines.FindAsync(remove);
+                        pipeline.DepartmentIds.Remove(updateDepartment.Id);
+                        _mapDBContext.Pipelines.Update(pipeline);
+                        // 記錄會受影響的父Category
+                        affectedCategories.Add(pipeline.CategoryId);
+                    }
+                    pipelineRemove = await _mapDBContext.SaveChangesAsync();
+                }
+                if (updateDepartment.Added != null)
+                {
+                    _authDbContext.Departments.Update(department);
+                    foreach (var add in updateDepartment.Added)
+                    {
+                        var pipeline = await _mapDBContext.Pipelines.FindAsync(add);
+                        pipeline.DepartmentIds.Add(updateDepartment.Id);
+                        _mapDBContext.Pipelines.Update(pipeline);
+                        // 記錄會受影響的父Category
+                        affectedCategories.Add(pipeline.CategoryId);
+                    }
+                    pipelineAdd = await _mapDBContext.SaveChangesAsync();
+                }
+
+                // 回推：對所有受影響的分類，進行完整上層遞迴修正
+                var visited = new HashSet<Guid>();
+                foreach (var categoryId in affectedCategories)
+                {
+                    await RecalculateCategoryDepartmentsUpward(categoryId, visited);
+                }
+
+                var departmentUpdate = await _authDbContext.SaveChangesAsync();
+                if (departmentUpdate == 0)
                 {
                     await transaction.RollbackAsync();
                     _authDbContext.ChangeTracker.Clear();
-                    return (false, "部門修改失敗");
+                    return (false, $"部門修改失敗");
                 }
                 await transaction.CommitAsync();
-                return (true, "部門修改成功");
+                return (true, $"部門修改成功，新增{pipelineAdd}個、移除{pipelineRemove}個部門權限，");
             }
             catch (Exception ex)
             {
@@ -576,6 +617,49 @@ namespace RMIS.Repositories
                 return (false, "部門修改失敗");
             }
         }
+
+        private async Task<List<int>> RecalculateCategoryDepartmentsUpward(Guid categoryId, HashSet<Guid> visited)
+        {
+            if (visited.Contains(categoryId)) return new List<int>();
+            visited.Add(categoryId);
+
+            var category = await _mapDBContext.Categories.FindAsync(categoryId);
+            if (category == null) return new List<int>();
+            Console.WriteLine($"搜尋類別 {category.Name}");
+            // 🔹 1. 直屬 pipelines 的 departmentIds
+            var pipelines = await _mapDBContext.Pipelines
+                .Where(p => p.CategoryId == categoryId)
+                .ToListAsync();
+
+            var pipelineDeptIds = pipelines
+                .SelectMany(p => p.DepartmentIds)
+                .ToList();
+
+            // 🔹 2. 直屬子 categories 的 departmentIds
+            var childCategories = await _mapDBContext.Categories
+                .Where(c => c.ParentId == categoryId)
+                .ToListAsync();
+
+            var childDeptIds = childCategories
+                .SelectMany(c => c.DepartmentIds)
+                .ToList();
+
+            // 🔹 3. 合併後設回本分類
+            var combined = pipelineDeptIds.Concat(childDeptIds).Distinct().ToList();
+            category.DepartmentIds = combined;
+            _mapDBContext.Categories.Update(category);
+            await _mapDBContext.SaveChangesAsync();
+
+            // 🔼 4. 繼續往上更新 parent
+            if (category.ParentId.HasValue)
+            {
+                await RecalculateCategoryDepartmentsUpward(category.ParentId.Value, visited);
+            }
+
+            return combined;
+        }
+
+
 
         public async Task<(bool Success, string Message)> DeleteDepartmentAsync(int departmentId)
         {
@@ -946,6 +1030,40 @@ namespace RMIS.Repositories
                     Status = createDepartment.Status,
                     Order = maxOrder + 1
                 });
+                int pipelineAdd = 0;
+                int pipelineRemove = 0;
+                var affectedCategories = new HashSet<Guid>();
+                if (createDepartment.Removed != null)
+                {
+                    foreach (var remove in createDepartment.Removed)
+                    {
+                        var pipeline = await _mapDBContext.Pipelines.FindAsync(remove);
+                        pipeline.DepartmentIds.Remove(createDepartment.Id);
+                        _mapDBContext.Pipelines.Update(pipeline);
+                        // 記錄會受影響的父Category
+                        affectedCategories.Add(pipeline.CategoryId);
+                    }
+                    pipelineRemove = await _mapDBContext.SaveChangesAsync();
+                }
+                if (createDepartment.Added != null)
+                {
+                    foreach (var add in createDepartment.Added)
+                    {
+                        var pipeline = await _mapDBContext.Pipelines.FindAsync(add);
+                        pipeline.DepartmentIds.Add(createDepartment.Id);
+                        _mapDBContext.Pipelines.Update(pipeline);
+                        // 記錄會受影響的父Category
+                        affectedCategories.Add(pipeline.CategoryId);
+                    }
+                    pipelineAdd = await _mapDBContext.SaveChangesAsync();
+                }
+
+                // 回推：對所有受影響的分類，進行完整上層遞迴修正
+                var visited = new HashSet<Guid>();
+                foreach (var categoryId in affectedCategories)
+                {
+                    await RecalculateCategoryDepartmentsUpward(categoryId, visited);
+                }
                 await _authDbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return (true, "部門建立成功");
@@ -955,64 +1073,6 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 _authDbContext.ChangeTracker.Clear();
                 return (false, $"部門建立失敗{ex}");
-            }
-        }
-
-        public async Task<(bool Success, string Message)> RegisterAsync(RegisterVIew user)
-        {
-            using var transaction = await _authDbContext.Database.BeginTransactionAsync();
-            try
-            {
-                var existUser = await _userManager.FindByNameAsync(user.Account);
-
-                if(existUser != null)
-                {
-                    await transaction.RollbackAsync();
-                    _authDbContext.ChangeTracker.Clear();
-                    return (false, $"帳號已存在");
-                }
-
-                // 取得最大排序值
-                int maxOrder = await _authDbContext.Users.MaxAsync(u => (int?)u.Order) ?? 0;
-                // 取得"待確認部門"的Id
-                int departmentId = await _authDbContext.Departments
-                    .Where(d => d.Name == "待確認")
-                    .Select(d => d.Id)
-                    .FirstOrDefaultAsync();
-                var createUser = new ApplicationUser
-                {
-                    DisplayName = user.DisplayName,
-                    UserName = user.Account,
-                    PhoneNumber = user.Phone,
-                    Email = user.Email,
-                    EmailConfirmed = true, // ✅ 預設 Email 已確認
-                    DepartmentId = departmentId,
-                    Order = maxOrder + 1,
-                };
-
-                var result = await _userManager.CreateAsync(createUser, user.Password);
-
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(createUser, "一般使用者");
-                    await _authDbContext.SaveChangesAsync();
-                    await _signInManager.SignInAsync(createUser, isPersistent: false);
-                    await transaction.CommitAsync();
-                    return (true, "使用者建立成功");
-                }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _authDbContext.ChangeTracker.Clear();
-                    string errors = string.Join("; ", result.Errors.Select(e => e.Description));
-                    return (false, $"使用者建立失敗: {errors}");
-                }
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _authDbContext.ChangeTracker.Clear();
-                return (false, $"使用者建立失敗: {ex}");
             }
         }
 
@@ -1052,6 +1112,70 @@ namespace RMIS.Repositories
                 _authDbContext.ChangeTracker.Clear();
                 return (false, $"密碼修改失敗: {ex.Message}");
             }
+        }
+
+        public async Task<(bool Success, string? Data, string? Message)> GetPipelineAccessAsync(int id)
+        {
+            var allCategories = await _mapDBContext.Categories.ToListAsync();
+            var jsTreeData = BuildJsTreeData(allCategories, null, id);
+            var json = JsonConvert.SerializeObject(jsTreeData);
+            return (true, json, null); // 成功時回傳 json 資料
+        }
+        private List<object> BuildJsTreeData(List<Category> allCategories, Guid? parentId, int deptId)
+        {
+            var result = new List<object>();
+            var currentCategories = allCategories
+                .Where(c => c.ParentId == parentId)
+                .OrderBy(c => c.OrderId)
+                .ToList();
+
+            foreach (var category in currentCategories)
+            {
+                var categoryNode = new Dictionary<string, object>
+                {
+                    { "id", category.Id.ToString() },
+                    { "text", category.Name },
+                    { "parent", parentId.HasValue ? parentId.Value.ToString() : "#" },
+                    { "children", new List<object>() },
+                    { "tag", "node" }
+                };
+
+                // 查找該分類下所有 pipeline（先拉出再做 Contains）
+                var currentPipelines = _mapDBContext.Pipelines
+                    .Where(p => p.CategoryId == category.Id)
+                    .ToList();
+
+                foreach (var pipeline in currentPipelines)
+                {
+                    var isSelected = pipeline.DepartmentIds.Contains(deptId); // 判斷是否包含該部門
+                    var pipelineNode = new Dictionary<string, object>
+                    {
+                        { "id", pipeline.Id.ToString() },
+                        { "text", pipeline.Name },
+                        { "parent", category.Id.ToString() },
+                        { "children", false },
+                        { "tag", "pipeline" }
+                    };
+
+                    if (isSelected)
+                    {
+                        pipelineNode.Add("selected", true);
+                    }
+
+                    ((List<object>)categoryNode["children"]).Add(pipelineNode);
+                }
+
+                // 遞迴處理子分類
+                var childCategories = BuildJsTreeData(allCategories, category.Id, deptId);
+                if (childCategories.Any())
+                {
+                    ((List<object>)categoryNode["children"]).AddRange(childCategories);
+                }
+
+                result.Add(categoryNode);
+            }
+
+            return result;
         }
     }
 }

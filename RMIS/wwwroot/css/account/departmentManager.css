@@ -1,6 +1,13 @@
 .d-none {
     display: none;
 }
+.name-cell{
+    width: auto; 
+}
+.data-cell{
+    width: 100px; 
+    max-width: 100px;
+}
 .status-cell{
     width: 100px; 
     max-width: 100px;

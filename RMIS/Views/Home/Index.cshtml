@@ -55,15 +55,15 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<script src="https://unpkg.com/leaflet-polylinedecorator"></script>
+<script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.css" />
+<link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.Default.css" />
+<script src="~/lib/leaflet-markercluster/leaflet.markercluster.js"></script>
 
-<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-pip@latest/leaflet-pip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.10.3/src/leaflet.geometryutil.min.js"></script>
+<script src="~/lib/leaflet-gridlayer-googlemutant/Leaflet.GoogleMutant.js"></script>
+<script src="~/lib/leaflet-pip/leaflet-pip.min.js"></script>
+<script src="~/lib/leaflet-geometryutil/leaflet.geometryutil.min.js"></script>
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
 <script src="~/lib/proj4.js"></script>
 <script src="~/js/account/userProfilePopup.js"></script>
@@ -91,13 +91,16 @@
         <nav id="head-nav" class="navbar-toggle">
             <div class="container-fluid ">
                 <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
-                    <div id="userMenuBtn" class="user-logo-box" data-target="userMenuContent">
-                        <div class="user-icon"></div>
+                    <div id="userMenuBtn" class="user-logo-box" data-target="userMenuContent">                        
+                        <div id="username" class="username-text">
+                            <div class="user-icon"></div>
+                            <h5>@ViewBag.Username<span class="caret"></span></h5>
+                        </div>
                         <div id="userMenuContent" class="dropdown-content">
                             <ul class="menu-background">
                                 <li>
                                     <a id="profileBtn" class="nav-link menu-title">
-                                        <h5 id="user-name">@ViewBag.Username</h5>
+                                        <h5 id="userProfile">帳號資料</h5>
                                     </a>
                                 </li>
                                 <li>
@@ -182,12 +185,9 @@
                             </div>
                         </div>
                     }
-                    @if (Model.ContainsKey("正攝影像") && Model["正攝影像"].Read && Model["正攝影像"].Status)
-                    {
-                        <div class="nav-item dropdown">
-                            <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
-                        </div>
-                    }
+                    <div class="nav-item dropdown">
+                        <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
+                    </div>
                     @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Read && Model["業務圖資"].Status)
                     {
                         <div class="nav-item dropdown">

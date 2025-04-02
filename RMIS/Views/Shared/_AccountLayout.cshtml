@@ -11,7 +11,7 @@
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/js/sessionManager.js"></script>
-        
+        <script src="~/js/account/userProfilePopup.js"></script>
         <script type="module" src="~/js/account/Pagination.js"></script>
 
         <style>
@@ -45,15 +45,18 @@
                     <div>
                         <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
                             <!-- 使用者圖示與名稱按鈕 -->
-                            <div id="userMenuBtn" class="user-logo-box">
-                                <div class="user-icon"></div>
+                            <div id="userMenuBtn" class="user-logo-box" data-target="userMenuContent">
+                                <div id="username" class="username-text">
+                                    <div class="user-icon"></div>
+                                    <h5>@ViewBag.Username</h5>
+                                </div>
 
                                 <!-- 下拉選單內容 -->
                                 <div id="userMenuContent" class="dropdown-content" style="width: 140px;">
                                     <ul class="menu-background">
                                         <li>
-                                            <a class="nav-link menu-title" href="/Account/User/Profile">
-                                                <h5 id="user-name">@ViewBag.Username</h5>
+                                            <a id="profileBtn" class="nav-link menu-title">
+                                                <h5 id="userProfile">帳號資料</h5>
                                             </a>
                                         </li>
                                         <li>

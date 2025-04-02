@@ -31,13 +31,9 @@ header {
     background-color: #f0d984;
 }
 
-#col2{
+#col2 {
     margin-left: auto;
-    margin-right: 15px;
-}
-
-#userMenuContent{
-    left:-73px;
+    margin-right: 40px;
 }
 
 li {
