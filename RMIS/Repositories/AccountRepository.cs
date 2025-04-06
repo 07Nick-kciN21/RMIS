@@ -1033,18 +1033,6 @@ namespace RMIS.Repositories
                 int pipelineAdd = 0;
                 int pipelineRemove = 0;
                 var affectedCategories = new HashSet<Guid>();
-                if (createDepartment.Removed != null)
-                {
-                    foreach (var remove in createDepartment.Removed)
-                    {
-                        var pipeline = await _mapDBContext.Pipelines.FindAsync(remove);
-                        pipeline.DepartmentIds.Remove(createDepartment.Id);
-                        _mapDBContext.Pipelines.Update(pipeline);
-                        // 記錄會受影響的父Category
-                        affectedCategories.Add(pipeline.CategoryId);
-                    }
-                    pipelineRemove = await _mapDBContext.SaveChangesAsync();
-                }
                 if (createDepartment.Added != null)
                 {
                     foreach (var add in createDepartment.Added)

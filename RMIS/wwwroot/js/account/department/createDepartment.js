@@ -1,19 +1,17 @@
-let initialSelectedValues = [];
-let currentSelectedValues = [];
+let Added = [];
 $(document).ready(function () {
     initPipelineAccess();
     $('#submit').on('click', function (e) {
         e.preventDefault(); // 阻止預設提交行為
-        currentSelectedValues = $('#pipelineAccess').val() || [];
         let formData = new FormData();
-
+        formData.append("Id", $('input[name="Id"]').val());
+        Added = $('#pipelineAccess').val() || [];
+        Added.forEach(id => formData.append("Added", id)); // 正確附加陣列（多次 append 同一個 key）)
         // 添加 RoleId 和 RoleName
         formData.append("Name", $('input[name="Name"]').val());
-
         // 取得選中的 Status
         let status = $('input[name="Status"]:checked').val();
         formData.append("Status", status ? status : '');
-
         console.log(formData);
         $.ajax({
             url: '/Account/Department/Create',
@@ -93,8 +91,8 @@ function initPipelineAccess(){
                         return data.text;
                     }
                 }).on('select2:open', function () {
-                    if (initialSelectedValues.length === 0) {
-                        initialSelectedValues = $select.val() || [];
+                    if (Added.length === 0) {
+                        Added = $select.val() || [];
                     }
                 });
             } else {

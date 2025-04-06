@@ -6,188 +6,196 @@
 
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="~/css/index/modal.css" />
-        <link rel="stylesheet" href="~/css/portal/login.css" />
-        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-        <script src="~/js/portal/login.js"></script>
-        <title>登入</title>
-    </head>
-    <body class="justify-content-center align-items-center">
-        <div class="system_name">
-            <h2>桃園市養護工程處整合協作平台</h2>
-        </div>
-        <div class="login_page">
-            <div class="container-fluid login">
-                <h2 class="text-center">登入</h2>
-                <div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-md-8">
-                            <form action="/Portal/Login" method="post">
-                                <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                    <div class="col-sm-8">
-                                        <input asp-for="UserName" class="form-control" placeholder="帳號"/>
-                                    </div>
-                                    <span asp-validation-for="UserName" class="text-danger"></span>
+
+<head>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/index/modal.css" />
+    <link rel="stylesheet" href="~/css/portal/login.css" />
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/js/portal/login.js"></script>
+    <title>登入</title>
+</head>
+
+<body class="justify-content-center align-items-center">
+    <div class="system_name">
+        <h2>桃園市養護工程處整合協作平台</h2>
+    </div>
+    <div class="login_page">
+        <div class="container-fluid login">
+            <h2 class="text-center">登入</h2>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <form action="/Portal/Login" method="post">
+                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
+                                <div class="col-sm-8">
+                                    <input asp-for="UserName" class="form-control" placeholder="帳號" />
                                 </div>
-                                <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                    <div class="col-sm-8">
-                                        <input asp-for="Password" type="password" class="form-control" placeholder="密碼"/>
-                                    </div>
-                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                <span asp-validation-for="UserName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
+                                <div class="col-sm-8">
+                                    <input asp-for="Password" type="password" class="form-control" placeholder="密碼" />
                                 </div>
-                                <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                    <div class="col-sm-8">
-                                        <button type="submit" class="btn btn-primary w-100">登入</button>
-                                    </div>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
+                                <div class="col-sm-8">
+                                    <button type="submit" class="btn btn-primary w-100">登入</button>
                                 </div>
-                            </form>
-                            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ContainsKey(string.Empty))
-                            {
+                            </div>
+                        </form>
+                        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ContainsKey(string.Empty))
+                        {
                             var globalErrors = ViewData.ModelState[string.Empty].Errors;
                             if (globalErrors.Count > 0)
                             {
                                 <div class="text-danger text-center mb-2">
-                                @foreach (var error in globalErrors)
-                                {
-                                    <div>@error.ErrorMessage</div>
-                                }
+                                    @foreach (var error in globalErrors)
+                                    {
+                                        <div>@error.ErrorMessage</div>
+                                    }
                                 </div>
                             }
-                            }
-                            <div class="row justify-content-center">
-                                <div class="col-sm-4 mt-2 text-center">
-                                    <a id="registerBtn" data-bs-toggle="modal" data-bs-target="#registerModal">申請帳號</a>
-                                </div>
-                                <div class="col-sm-4 mt-2 text-center">
-                                    <a id="forgetBtn" data-bs-toggle="modal" data-bs-target="#forgetModal">忘記密碼</a>
-                                </div>
-                           </div>
+                        }
+                        <div class="row justify-content-center">
+                            <div class="col-sm-4 mt-2 text-center">
+                                <a id="registerBtn" data-bs-toggle="modal" data-bs-target="#registerModal">申請帳號</a>
+                            </div>
+                            <div class="col-sm-4 mt-2 text-center">
+                                <a id="forgetBtn" data-bs-toggle="modal" data-bs-target="#forgetModal">忘記密碼</a>
+                            </div>
                         </div>
                     </div>
-                </div>   
+                </div>
             </div>
         </div>
-        <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered ">
-                <div class="register-modal">
-                    <form id="registerForm" class="needs-validation" novalidate>
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="registerModalLabel">申請帳號</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+    </div>
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel">
+        <div class="modal-dialog modal-lg modal-dialog-centered ">
+            <div class="modal-content register-modal">
+                <form id="registerForm" class="needs-validation" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="registerModalLabel">申請帳號</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group row mb-3">
+                            <label for="registerDisplayName" class="col-sm-3 col-form-label">使用者名稱</label>
+                            <div class="col-sm-9">
+                                <input id="registerDisplayName" class="form-control" type="text" name="DisplayName"
+                                    required pattern="^[\u4e00-\u9fa5a-zA-Z0-9_]{2,20}$">
+                                <div class="invalid-feedback">
+                                    使用者名稱需為 2~20 字，僅限中英文、數字與底線。
+                                </div>
+                            </div>
                         </div>
-                        <div class="modal-body">
-                            <div class="form-group row mb-3">
-                                <label for="registerDisplayName" class="col-sm-3 col-form-label">使用者名稱</label>
-                                <div class="col-sm-9">
-                                    <input id="registerDisplayName" class="form-control" type="text" name="DisplayName" required pattern="^[\u4e00-\u9fa5a-zA-Z0-9_]{2,20}$">
-                                    <div class="invalid-feedback">
-                                        使用者名稱需為 2~20 字，僅限中英文、數字與底線。
-                                    </div>
+                        <div class="form-group row mb-3">
+                            <label for="registerAccount" class="col-sm-3 col-form-label">帳號</label>
+                            <div class="col-sm-9">
+                                <input id="registerAccount" class="form-control" type="text" name="Account" required
+                                    pattern="^[a-zA-Z0-9]{8,20}$">
+                                <div class="invalid-feedback">
+                                    帳號需為 8~20 字英文或數字。
                                 </div>
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="registerAccount" class="col-sm-3 col-form-label">帳號</label>
-                                <div class="col-sm-9">
-                                    <input id="registerAccount" class="form-control" type="text" name="Account" required pattern="^[a-zA-Z0-9]{8,20}$">
-                                    <div class="invalid-feedback">
-                                        帳號需為 8~20 字英文或數字。
-                                    </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="registerPassword" class="col-sm-3 col-form-label">密碼</label>
+                            <div class="col-sm-9">
+                                <input id="registerPassword" class="form-control" type="password" name="Password"
+                                    required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$">
+                                <div class="invalid-feedback">
+                                    密碼需包含大小寫英文字母與數字，長度 8~20。
                                 </div>
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="registerPassword" class="col-sm-3 col-form-label">密碼</label>
-                                <div class="col-sm-9">
-                                    <input id="registerPassword" class="form-control" type="password" name="Password" required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$">
-                                    <div class="invalid-feedback">
-                                        密碼需包含大小寫英文字母與數字，長度 8~20。
-                                    </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="registerConfirmPassword" class="col-sm-3 col-form-label">確認密碼</label>
+                            <div class="col-sm-9">
+                                <input id="registerConfirmPassword" class="form-control" type="password"
+                                    name="ConfirmPassword" required>
+                                <div class="invalid-feedback">
+                                    請再次輸入密碼。
                                 </div>
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="registerConfirmPassword" class="col-sm-3 col-form-label">確認密碼</label>
-                                <div class="col-sm-9">
-                                    <input id="registerConfirmPassword" class="form-control" type="password" name="ConfirmPassword" required>
-                                    <div class="invalid-feedback">
-                                        請再次輸入密碼。
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group row mb-3">
+                        </div>
+                        <div class="form-group row mb-3">
                             <label for="DepartmentId" class="col-sm-3 col-form-label">部門</label>
-                                <div class="col-sm-9">
+                            <div class="col-sm-9">
                                 <select id="DepartmentId" class="form-control" name="DepartmentId" required>
-                                        <option value="" disabled selected>請選擇部門</option>
-                                    </select>
-                                    <div class="invalid-feedback">
-                                        請選擇部門。
-                                    </div>
+                                    <option value="" disabled selected>請選擇部門</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    請選擇部門。
                                 </div>
                             </div>
-                            <div class="form-group row mb-3">
+                        </div>
+                        <div class="form-group row mb-3">
                             <label for="RoleId" class="col-sm-3 col-form-label">身分</label>
-                                    <div class="col-sm-9">
-                                    <select id="RoleId" class="form-control" name="RoleId" required>
-                                        <option value="" selected disabled>請選擇身分</option>
-                                    </select>
-                                    <div class="invalid-feedback">
-                                        請選擇身分。
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group row mb-3">
-                                <label for="Email" class="col-sm-3 col-form-label">信箱</label>
-                                <div class="col-sm-9">
-                                    <input id="Email" class="form-control" name="Email" type="email" required>
-                                    <div class="invalid-feedback">
-                                        請輸入有效的信箱地址。
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group row mb-3">
-                                <label for="Phone" class="col-sm-3 col-form-label">手機</label>
-                                <div class="col-sm-9">
-                                    <input id="Phone" class="form-control" type="tel" name="Phone" placeholder="09xxxxxxxx" pattern="^09\d{8}$" required>
-                                    <div class="invalid-feedback">
-                                        請輸入有效的台灣手機號碼（09xxxxxxxx）。
-                                    </div>
+                            <div class="col-sm-9">
+                                <select id="RoleId" class="form-control" name="RoleId" required>
+                                    <option value="" selected disabled>請選擇身分</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    請選擇身分。
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">送出</button>
-                    </form>
-                </div>
+                        <div class="form-group row mb-3">
+                            <label for="Email" class="col-sm-3 col-form-label">信箱</label>
+                            <div class="col-sm-9">
+                                <input id="Email" class="form-control" name="Email" type="email" required>
+                                <div class="invalid-feedback">
+                                    請輸入有效的信箱地址。
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="Phone" class="col-sm-3 col-form-label">手機</label>
+                            <div class="col-sm-9">
+                                <input id="Phone" class="form-control" type="tel" name="Phone" placeholder="09xxxxxxxx"
+                                    pattern="^09\d{8}$" required>
+                                <div class="invalid-feedback">
+                                    請輸入有效的台灣手機號碼（09xxxxxxxx）。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">送出</button>
+                </form>
             </div>
         </div>
-        <div class="modal fade" id="forgetModal" tabindex="-1" aria-labelledby="forgetModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <form id="registerForm" class="needs-validation" novalidate>
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="registerModalLabel">忘記密碼</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group row mb-3">
-                                <label for="registerDisplayName" class="col-sm-3 col-form-label">帳號</label>
-                                <div class="col-sm-9">
-                                    <input id="registerDisplayName" class="form-control" type="text" name="DisplayName">
-                                </div>
+    </div>
+    <div class="modal fade" id="forgetModal" tabindex="-1" aria-labelledby="forgetModalLabel">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <form id="forgetForm" class="needs-validation" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="forgetModalLabel">忘記密碼</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group row mb-3">
+                            <label for="forgetDisplayName" class="col-sm-3 col-form-label">帳號</label>
+                            <div class="col-sm-9">
+                                <input id="forgetDisplayName" class="form-control" type="text" name="DisplayName">
                             </div>
+                        </div>
 
-                            <div class="form-group row mb-3">
-                                <label for="registerAccount" class="col-sm-3 col-form-label">信箱</label>
-                                <div class="col-sm-9">
-                                    <input id="registerAccount" class="form-control" type="text" name="Account">
-                                </div>
+                        <div class="form-group row mb-3">
+                            <label for="forgetAccount" class="col-sm-3 col-form-label">信箱</label>
+                            <div class="col-sm-9">
+                                <input id="forgetAccount" class="form-control" type="text" name="Account">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">提交申請</button>
-                    </form>
-                </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交申請</button>
+                </form>
             </div>
         </div>
-    </body>
+    </div>
+</body>
+
 </html>
