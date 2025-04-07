@@ -167,14 +167,18 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<bool> DeleteUserAsync(string UserId)
+        public async Task<(bool Success, string Message)> DeleteUserAsync(string UserId)
         {
             // 檢查被刪除的使用者是否存在
             var user = await _userManager.FindByIdAsync(UserId);
 
             if (user == null)
             {
-                return false;
+                return (false, "使用者不存在或已被刪除" + UserId); // 使用者不存在或已被刪除
+            }
+            if(user.IsSystemProtected)
+            {
+                return (false, $"無法刪除系統保護的使用者 {user.UserName}");
             }
             Console.WriteLine("DeleteUserAsync");
             var roles = await _userManager.GetRolesAsync(user);
@@ -184,7 +188,7 @@ namespace RMIS.Repositories
             }
 
             var result = await _userManager.DeleteAsync(user);
-            return result.Succeeded;
+            return (true, "使用者刪除成功");
         }
 
         public async Task<(bool Success, string Message)> UpdateUserAsync(UpdateUserView updateUser)
@@ -199,7 +203,12 @@ namespace RMIS.Repositories
                     _authDbContext.ChangeTracker.Clear();
                     return (false, $"找不到為 {updateUser.UserName} 的使用者");
                 }
-
+                if(user.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法修改系統保護的使用者 {user.UserName}");
+                }
                 // 取得使用者當前的角色
                 var currentRoles = await _userManager.GetRolesAsync(user);
                 var existingRole = currentRoles.FirstOrDefault(); // 避免 First() 取不到值拋錯
@@ -381,6 +390,12 @@ namespace RMIS.Repositories
 
                 // 刪除Permission
                 var permission = await _authDbContext.Permissions.FindAsync(PermissionId);
+                if (permission.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, "無法刪除由系統保護的權限");
+                }
                 if (permission == null)
                 {
                     await transaction.RollbackAsync();
@@ -406,6 +421,13 @@ namespace RMIS.Repositories
             try
             {
                 var role = await _roleManager.FindByIdAsync(RoleId);
+
+                if(role.IsSystemProtected) 
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法刪除系統保護的身分 {role.Name}");
+                }
 
                 var roleUsers = await _userManager.GetUsersInRoleAsync(role.Name);
 
@@ -558,6 +580,12 @@ namespace RMIS.Repositories
                     _authDbContext.ChangeTracker.Clear();
                     return (false, "部門不存在");
                 }
+                if(department.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法修改系統保護的部門 {department.Name}");
+                }
                 // 修改使用者資料
                 department.Name = updateDepartment.Name;
                 department.Status = updateDepartment.Status;
@@ -659,8 +687,6 @@ namespace RMIS.Repositories
             return combined;
         }
 
-
-
         public async Task<(bool Success, string Message)> DeleteDepartmentAsync(int departmentId)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
@@ -672,6 +698,12 @@ namespace RMIS.Repositories
                     await transaction.RollbackAsync();
                     _authDbContext.ChangeTracker.Clear();
                     return (false, "該部門不存在");
+                }
+                if(department.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法刪除系統保護的部門 {department.Name}");
                 }
                 if (department.Users.Count > 0)
                 {
@@ -796,6 +828,12 @@ namespace RMIS.Repositories
                     await transaction.RollbackAsync();
                     _authDbContext.ChangeTracker.Clear();
                     return (false, $"身分不存在");
+                }
+                if (role.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法修改系統保護的身分 {role.Name}");
                 }
                 var rolePermission = await _authDbContext.RolePermissions.Where(p => p.RoleId == input.RoleId).ToListAsync();
                 role.Status = input.Status;
@@ -937,6 +975,12 @@ namespace RMIS.Repositories
                     _authDbContext.ChangeTracker.Clear();
                     return (false, "權限不存在");
                 }
+                if(permission.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法修改系統保護的權限 {permission.Name}");
+                }
                 permission.Name = updatePermission.Name;
                 permission.Status = updatePermission.Status;
                 _authDbContext.Permissions.Update(permission);
@@ -1075,6 +1119,12 @@ namespace RMIS.Repositories
                     await transaction.RollbackAsync();
                     _authDbContext.ChangeTracker.Clear();
                     return (false, $"帳號不存在");
+                }
+                if(existUser.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法修改系統保護的使用者 {existUser.UserName}");
                 }
                 bool isOldPasswordCorrect = await _userManager.CheckPasswordAsync(existUser, updateUserPassword.OriginPassword);
                 if (!isOldPasswordCorrect)

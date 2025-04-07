@@ -10,6 +10,7 @@ namespace RMIS.Models.Auth
         public bool Status { get; set; } = true;
         public int? DepartmentId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public bool IsSystemProtected { get; set; } = false;
         public Department Department { get; set; }
         public ICollection<IdentityUserRole<string>> UserRoles { get; set; }
     }

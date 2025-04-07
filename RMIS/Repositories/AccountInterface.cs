@@ -25,7 +25,7 @@ namespace RMIS.Repositories
         Task<GetRolePermission> GetRolePermissionAsync(string roleName);
         Task<(bool Success, string Message)> CreatePermissionAsync(CreatePermissionView createPermission);
         Task<(bool Success, string Message)> CreateRoleAsync(CreateRoleView createRole);
-        Task<bool> DeleteUserAsync(string UserId);
+        Task<(bool Success, string Message)> DeleteUserAsync(string UserId);
         Task<(bool Success, string Message)> DeletePermissionAsync(int PermissionId);
         Task<(bool Success, string Message)> DeleteRoleAsync(string RoleId);        
         Task<(bool Success, string Message)> DeleteDepartmentAsync(int departmentId);

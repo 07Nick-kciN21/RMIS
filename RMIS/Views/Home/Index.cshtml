@@ -108,7 +108,7 @@
                                         <h5>登出</h5>
                                     </a>
                                 </li>
-                                @if (User.IsInRole("超級管理員"))
+                                @if (Model.ContainsKey("使用者管理") && Model["使用者管理"].Read && Model["使用者管理"].Status)
                                 {
                                     <li>
                                         <a class="nav-link menu-title" href="/Account/User/List">

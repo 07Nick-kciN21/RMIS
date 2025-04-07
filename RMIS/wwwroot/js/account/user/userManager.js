@@ -112,7 +112,11 @@ function updateUserTable(users){
                     success: function (data) {
                         if (data.success) {
                             console.log(data);
+                            alert(data.message);
                             location.reload();
+                        }
+                        else {
+                            alert(data.message);
                         }
                     },
                     error: function (xhr) {

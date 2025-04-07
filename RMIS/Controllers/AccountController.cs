@@ -170,7 +170,6 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限修改" });
             }
-
             var user = await _accountInterface.UpdateUserViewAsync(id);
             return View(user);
         }
@@ -178,6 +177,14 @@ namespace RMIS.Controllers
         [HttpPost("[controller]/User/Update")]
         public async Task<IActionResult> UpdateUser([FromForm] UpdateUserView updateUser)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限修改" });
+            }
             Console.WriteLine("UserUpdate");
             var updated = await _accountInterface.UpdateUserAsync(updateUser);
 
@@ -208,6 +215,7 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無法刪除自己" });
             }
+
             // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
 
@@ -218,15 +226,7 @@ namespace RMIS.Controllers
             Console.WriteLine("DeleteUser");
             var result = await _accountInterface.DeleteUserAsync(UserId);
 
-            if (result)
-            {
-                Console.WriteLine($"刪除{UserId}成功");
-                return Json(new { success = true });
-            }
-            else
-            {
-                return Json(new { success = false, message = "刪除使用者失敗" });
-            }
+            return Json(new { success = result.Success, message = result.Message });
         }
 
         [HttpGet("[controller]/User/Create")]
@@ -248,6 +248,7 @@ namespace RMIS.Controllers
                     Text = d.Name
                 }).ToListAsync();
             createUser.Roles = await _authDbContext.Roles
+                .OrderBy(r => r.Order)
                 .Select(r => new SelectListItem
                 {
                     Value = r.Id,
@@ -264,21 +265,6 @@ namespace RMIS.Controllers
             if (!currentUserPermission.Create)
             {
                 return Json(new { success = false, message = "無權限新增" });
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return View(createUser);
-                var errors = typeof(CreateUser)
-                    .GetProperties()
-                    .Select(p => ModelState.ContainsKey(p.Name)
-                        ? ModelState[p.Name]?.Errors.Select(e => e.ErrorMessage)
-                        : Enumerable.Empty<string>())
-                    .SelectMany(e => e) // 扁平化
-                    .Where(msg => !string.IsNullOrEmpty(msg))
-                    .ToList();
-                var errorMessage = string.Join("。", errors) + "。\n";
-                return Json(new { success = false, message = errorMessage });
             }
                 
             var created = await _accountInterface.CreateUserAsync(createUser);
@@ -354,8 +340,16 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("[controller]/Role/Create")]
-        public IActionResult CreateRole()
+        public async Task<IActionResult> CreateRole()
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
             var CreateRole = new CreateRoleView();
             CreateRole.Permissions = _authDbContext.Permissions
                 .OrderBy(p => p.Order)
@@ -381,7 +375,7 @@ namespace RMIS.Controllers
 
             if (!currentUserPermission.Create)
             {
-                return Json(new { success = false, message = "無權限查看" });
+                return Json(new { success = false, message = "無權限新增" });
             }
 
             var created = await _accountInterface.CreateRoleAsync(createRole);
@@ -437,8 +431,16 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("[controller]/Permission/Create")]
-        public IActionResult CreatePermission()
+        public async Task<IActionResult> CreatePermission()
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
             return View();
         }
 
@@ -562,8 +564,16 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("[controller]/Department/Create")]
-        public IActionResult CreateDepartment()
+        public async Task<IActionResult> CreateDepartment()
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限刪除" });
+            }
             return View();
         }
         [HttpPost("[controller]/Department/Create")]
