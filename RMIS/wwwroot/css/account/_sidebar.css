@@ -18,7 +18,13 @@
 
 #department{
     background-image: url("/svg/account/department.svg");
-    background-size: 70%;
+    background-size: 90%;
+    background-position: center;
+}
+
+#data{
+    background-image: url("/svg/account/data.svg");
+    background-size: 90%;
     background-position: center;
 }
 

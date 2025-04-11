@@ -35,7 +35,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
                 {
                     throw new InvalidOperationException("環境變數 'HOMEPATH' 無法解析");
                 }
-                var logPath = $"{homePath}/Documents/Logs/{controller}-.log";
+                var logPath = "C:/Users/KingSu/Documents/Logs/{controller}-.log";
+                //var logPath = $"{homePath}/Documents/Logs/{controller}-.log";
                 wt.File(
                     logPath,
                     rollingInterval: RollingInterval.Day
@@ -44,13 +45,13 @@ builder.Host.UseSerilog((context, services, configuration) =>
         );
 });
 
-// 設定身份驗證 Cookie 的過期時間
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Portal/Login";
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-    options.SlidingExpiration = false;
-});
+//// 設定身份驗證 Cookie 的過期時間
+//builder.Services.ConfigureApplicationCookie(options =>
+//{
+//    options.LoginPath = "/Portal/Login";
+//    options.ExpireTimeSpan = TimeSpan.FromMinutes(2);
+//    options.SlidingExpiration = false;
+//});
 
 //  註冊 AuthDbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
@@ -144,8 +145,7 @@ app.Use(async (context, next) =>
 {
     var path = context.Request.Path.ToString().ToLower(); // 確保小寫比較
     if (!context.User.Identity.IsAuthenticated &&
-        !path.StartsWith("/portal/login") &&
-        !path.StartsWith("/portal/register") &&
+        !path.StartsWith("/portal") &&
         !path.StartsWith("/api/test/") &&  // 確保匹配 /api/Test/ 及其子路徑
         !path.StartsWith("/css") &&
         !path.StartsWith("/js") &&

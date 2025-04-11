@@ -21,17 +21,20 @@ namespace RMIS.Controllers
         private readonly PortalInterface _portalInterface;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        public PortalController(AccountInterface accountInterface, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, PortalInterface portalInterface)
+        private readonly ILogger<PortalController> _logger;
+        public PortalController(AccountInterface accountInterface, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, PortalInterface portalInterface, ILogger<PortalController> logger = null)
         {
             _accountInterface = accountInterface;
             _signInManager = signInManager;
             _userManager = userManager;
             _portalInterface = portalInterface;
+            _logger = logger;
         }
 
         [HttpGet]
         public IActionResult Login()
         {
+            _logger.LogInformation("Login");
             Console.WriteLine("Login");
             return View();
         }
@@ -78,8 +81,27 @@ namespace RMIS.Controllers
         [HttpGet]
         public async Task<IActionResult> RegisterSelect()
         {
-            var selectList = await _portalInterface.RegisterSelectListAsync();
-            return Json(selectList);
+            try
+            {
+                _logger.LogInformation("🔍 [RegisterSelect] 開始執行，使用者是否已登入：{IsAuth}", User.Identity.IsAuthenticated);
+
+                var selectList = await _portalInterface.RegisterSelectListAsync();
+
+                if (selectList == null)
+                {
+                    _logger.LogInformation("⚠️ [RegisterSelect] selectList 為 null！");
+                    return BadRequest("selectList is null");
+                }
+
+                _logger.LogInformation("✅ [RegisterSelect] 成功取得資料");
+                
+                return Json(selectList);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex, "❌ [RegisterSelect] 發生例外錯誤");
+                return StatusCode(500, "伺服器錯誤，請稍後再試。");
+            }
         }
 
         [HttpPost]

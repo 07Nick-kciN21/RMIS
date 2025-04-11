@@ -20,12 +20,14 @@ $(document).ready(function () {
         var selectedDepartmentId = $(this).val();
         if(selectedDepartmentId == 0){
             updateDepartmentTable(allDepartments);
+            initPage("departmentPage", updateDepartmentTable, allDepartments);
         }
         else{
             var filteredDepartments = allDepartments.filter((department) => {
                 return department.id == selectedDepartmentId;
             });
             updateDepartmentTable(filteredDepartments);
+            initPage("departmentPage", updateDepartmentTable, filteredDepartments);
         }
     });
 

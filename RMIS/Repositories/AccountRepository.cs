@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RMIS.Data;
 using RMIS.Models.Account.Departments;
+using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Account.Permissions;
 using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
@@ -1108,6 +1109,118 @@ namespace RMIS.Repositories
             }
         }
 
+        public async Task<MapdataManager> GetMapdataManagerDataAsync()
+        {
+            var allCategories = await _mapDBContext.Categories.ToListAsync();
+
+            // 儲存類別順序的清單
+            var categoryOrderList = new List<Guid>();
+
+            var rootCategories = allCategories
+                .Where(c => c.ParentId == null)
+                .OrderBy(c => c.OrderId);
+
+            foreach (var category in rootCategories)
+            {
+                BuildCategoryOrder(category.Id, allCategories, categoryOrderList);
+            }
+
+            var pipelines = await _mapDBContext.Pipelines
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.CategoryId
+                }).ToListAsync();
+
+            // 用 CategoryId 分組 pipelines
+            var pipelinesByCategory = pipelines.GroupBy(p => p.CategoryId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var pipelineData = new List<PipelineData>();
+
+            // 按照 categoryOrderList 順序插入 pipeline
+            foreach (var categoryId in categoryOrderList)
+            {
+                if (pipelinesByCategory.TryGetValue(categoryId, out var pipelist))
+                {
+                    var categoryName = allCategories.First(c => c.Id == categoryId).Name;
+                    foreach (var p in pipelist)
+                    {
+                        pipelineData.Add(new PipelineData
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Category = categoryName,
+                            Status = true
+                        });
+                    }
+                }
+            }
+
+            var managerData = new MapdataManager
+            {
+                PipelineDatas = pipelineData
+            };
+            return managerData;
+        }
+
+        // 這個會將 Category 的 Id 加到順序清單中
+        private void BuildCategoryOrder(Guid id, List<Category> allCategories, List<Guid> orderList)
+        {
+            orderList.Add(id); // 儲存順序
+            var childCate = allCategories.Where(c => c.ParentId == id).OrderBy(c => c.OrderId).ToList();
+            foreach (var c in childCate)
+            {
+                BuildCategoryOrder(c.Id, allCategories, orderList);
+            }
+        }
+
+        public async Task<List<MapdataLayer>> GetMapdataLayersAsync(Guid id)
+        {
+            var layers = await _mapDBContext.Layers
+                .Include(l => l.GeometryType)
+                .Where(l => l.PipelineId == id)
+                .ToListAsync();
+
+            var mapdataLayers = new List<MapdataLayer>();
+
+            foreach (var layer in layers)
+            {
+                var areas = await _mapDBContext.Areas
+                    .Where(a => a.LayerId == layer.Id)
+                    .OrderBy(a => a.Name)
+                    .Select(a=> new MapdataArea
+                    {
+                        Id = a.Id,
+                        Name = a.Name
+                    }).ToListAsync();
+                mapdataLayers.Add(new MapdataLayer
+                {
+                    Kind = layer.GeometryType.Kind,
+                    Name = layer.Name,
+                    Svg = layer.GeometryType.Svg,
+                    Areas = areas
+                });
+            }
+
+            return mapdataLayers;
+        }
+
+        public async Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid areaId)
+        {
+            var points = await _mapDBContext.Points
+                .Where(p => p.AreaId == areaId)
+                .OrderBy(p => p.Index)
+                .Select(p => new MapdataPoint
+                {
+                    Index = p.Index,
+                    Latitude = p.Latitude,
+                    Longitude = p.Longitude,
+                    Property = p.Property
+                }).ToListAsync();
+            return points;
+        }
         public async Task<(bool Success, string Message)> UpdateUserPasswordAsync(UpdateUserPassword updateUserPassword)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();

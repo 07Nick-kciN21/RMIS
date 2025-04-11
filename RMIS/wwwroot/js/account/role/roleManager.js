@@ -8,13 +8,13 @@ $(document).ready(function () {
     $('#roleSelector').on('change', function () {
         var selectedRoleId = $(this).val();
         if(selectedRoleId == 0){
-            initRoleTable(allRoles);
+            initPage("rolePage", updateRoleTable, allRoles);
         }
         else{
             var filteredRoles = allRoles.filter((role) => {
                 return role.id == selectedRoleId;
             });
-            updateRoleTable(filteredRoles);
+            initPage("rolePage", updateRoleTable, filteredRoles);
         }
     });
 
@@ -69,6 +69,11 @@ function updateRoleFilter(allRoles){
     $('#roleSelector').append(`<option value="0" selected>全部</option>`);
     allRoles.forEach((role) => {
         $('#roleSelector').append(`<option value="${role.id}"}>${role.name}</option>`);
+    });
+    $('#roleSelector').select2({
+        width: '30%',
+        placeholder: "請選擇角色",
+        allowClear: true
     });
 }
 

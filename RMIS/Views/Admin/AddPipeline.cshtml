@@ -1,14 +1,14 @@
 ﻿@model RMIS.Models.Admin.AddPipelineInput;
 
 @{
-    ViewData["Title"] = "新增管線";
+    ViewData["Title"] = "新增圖資";
     Layout = null; // 禁用 _Layout.cshtml 加载
 }
 
 
 <form method="post" class="container modal-form">
     <div class="form-group">
-        <label asp-for="Name">管線名稱</label>
+        <label asp-for="Name">圖資名稱</label>
         <input asp-for="Name" class="form-control" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>

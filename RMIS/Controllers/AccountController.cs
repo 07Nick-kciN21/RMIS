@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using RMIS.Data;
 using RMIS.Models.Account.Departments;
+using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Account.Permissions;
 using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
@@ -12,6 +14,7 @@ using RMIS.Models.Portal;
 using RMIS.Repositories;
 using System.Data;
 using System.Security;
+using System.Threading.Tasks;
 
 namespace RMIS.Controllers
 {
@@ -22,16 +25,19 @@ namespace RMIS.Controllers
     public class AccountController : Controller
     {
         private readonly AccountInterface _accountInterface;
+        private readonly AdminInterface _adminInterface;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AuthDbContext _authDbContext;
 
-        public AccountController(AccountInterface accountInterface, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext)
+
+        public AccountController(AccountInterface accountInterface, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, AdminInterface adminInterface)
         {
             _accountInterface = accountInterface;
+            _adminInterface = adminInterface;
             _userManager = userManager;
             _roleManager = roleManager;
-            _authDbContext = authDbContext;
+            _authDbContext = authDbContext;            
         }
 
         private IActionResult RedirectToLocal(string returnUrl)
@@ -104,6 +110,24 @@ namespace RMIS.Controllers
             ViewBag.Username = currentUser.UserName;
             return View();
         }
+
+
+        [HttpGet("[controller]/Mapdata/List")]
+        public async Task<IActionResult> MapdataManager()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+
+            ViewBag.Username = currentUser.UserName;
+            return View();
+        }
+
         [HttpGet("[controller]/Role/Read/Permission")]
         public async Task<IActionResult> RolePermission(string id)
         {
@@ -593,6 +617,90 @@ namespace RMIS.Controllers
             return Json(new {success = result.Success, message = result.Message });
         }
 
+        [HttpPost("[controller]/Mapdata/Get/ManagerData")]
+        public async Task<IActionResult> GetMapdataManagerData()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+
+            var MapdataManagerData = await _accountInterface.GetMapdataManagerDataAsync();
+            return Ok(new { success = true, MapdataManager = MapdataManagerData });
+        }
+
+        [HttpGet("[controller]/Mapdata/Read/Layer")]
+        public IActionResult MapdataLayer(Guid id)
+        {
+            return View();
+        }
+
+        [HttpGet("[controller]/Mapdata/Read/Point")]
+        public IActionResult MapdataPoint(Guid areaId, string kind)
+        {
+            return View();
+        }
+
+        [HttpGet("[controller]/Mapdata/Get/Point")]
+        public async Task<IActionResult> GetMapdataPoint(Guid areaId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+            var MapdataPoints = await _accountInterface.GetMapdataPointsAsync(areaId);
+            if (MapdataPoints == null)
+            {
+                return Json(new { success = false, message = "無圖資" });
+            }
+            return Json(new { success = true, points = MapdataPoints, message = "取得圖資" });
+        }
+
+        [HttpPost("[controller]/Mapdata/Delete")]
+        public async Task<IActionResult> DeleteMapdata(Guid id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Delete)
+            {
+                return Json(new { success = false, message = "無權限刪除" });
+            }
+            var delete = await _adminInterface.DeletePipelineAsync(id);
+            if (delete == 0)
+            {
+                return Json(new { success = false, message = "無圖資" });
+            }
+            return Json(new { success = true, message = "刪除圖資" });
+        }
+
+        [HttpPost("[controller]/Mapdata/Get/Layer")]
+        public async Task<IActionResult> GetMapdataLayer(Guid id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+            var MapdataLayers = await _accountInterface.GetMapdataLayersAsync(id);
+            if (MapdataLayers == null)
+            {
+                return Json(new { success = false, message = "無圖資" });
+            }
+            return Json(new { success = true, layers = MapdataLayers, message = "取得圖資" });
+        }
         // 無權限時
         public IActionResult AccessDenied(string returnUrl = null)
         {

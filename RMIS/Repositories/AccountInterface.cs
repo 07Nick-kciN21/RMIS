@@ -1,4 +1,5 @@
 ﻿using RMIS.Models.Account.Departments;
+using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Account.Permissions;
 using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
@@ -20,6 +21,9 @@ namespace RMIS.Repositories
         Task<RoleManager> GetRoleManagerDataAsync();
         Task<DepartmentManager> GetDepartmentManagerDataAsync();
         Task<PermissionManager> GetPermissionManagerDataAsync();
+        Task<MapdataManager> GetMapdataManagerDataAsync();
+        Task<List<MapdataLayer>> GetMapdataLayersAsync(Guid id);
+        Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid id);
         Task<ReadRolePermission> GetRolePermissionsAsync(string id);
         Task<RolePermission> GetUserPermission(string userName, string permissionName);
         Task<GetRolePermission> GetRolePermissionAsync(string roleName);

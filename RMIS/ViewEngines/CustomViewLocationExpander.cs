@@ -20,6 +20,7 @@ namespace RMIS.ViewEngines
                     "/Views/Account/Role/{0}.cshtml",
                     "/Views/Account/Permission/{0}.cshtml",
                     "/Views/Account/Department/{0}.cshtml",
+                    "/Views/Account/Mapdata/{0}.cshtml",
                 };
             }
             return viewLocations;

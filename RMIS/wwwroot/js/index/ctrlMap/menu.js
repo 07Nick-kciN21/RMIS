@@ -33,7 +33,6 @@ export function generateMenu(data, parent_name, index) {
     }
     html += '>';
     data.forEach(function (item) {
-        console.log(item.text, item.parent);
         let liClass;
         if (index == 0) {
             liClass = 'menu-head';
