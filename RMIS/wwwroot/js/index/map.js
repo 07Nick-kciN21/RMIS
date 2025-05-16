@@ -235,7 +235,7 @@ export function initMap(mapId) {
                 minWidth: 200, // 最小寬度
                 maxHeight: 150, // 最大高度
             })
-            .setLatLng(e.latlng)
+            .setLatLng(latlng)
             .setContent(popupContent)
             .openOn(indexMap);
     });

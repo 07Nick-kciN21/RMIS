@@ -1,9 +1,9 @@
 import { layers } from './layers.js';
-import { getIndexMap } from '../map.js';
+import { Map } from '../map_test.js';
 // opacity: 0~100
 
 export function opacityLayer(opacity, layersId) {
-    var $indexMap = getIndexMap();
+    var $indexMap = Map.getIndexMap();
     opacity = opacity/100;
     console.log("opacityLayer", opacity, layersId);
 

@@ -66,6 +66,8 @@ function initMap(mapdataArea){
     }
     let kind = getQueryParam("kind");
     let svg = getQueryParam("svg");
+    // color : #228b22
+    let color = getQueryParam("color");
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
@@ -79,7 +81,7 @@ function initMap(mapdataArea){
     }).addTo(map);
     
     let latlngs = mapdataArea.map(p => [p.latitude, p.longitude]);
-    console.log(latlngs, kind);
+    console.log(latlngs, kind, color);
     switch (kind) {
         case "point":
             console.log("進入point");
@@ -97,12 +99,12 @@ function initMap(mapdataArea){
     
         case "line":
             console.log("進入line");
-            L.polyline(latlngs, { color: 'blue' }).addTo(map);
+            L.polyline(latlngs, { color: color }).addTo(map);
             break;
     
         case "plane":
             console.log("進入plane");
-            L.polygon(latlngs, { color: 'green', fillOpacity: 0.3 }).addTo(map);
+            L.polygon(latlngs, { color: color, fillOpacity: 0.3 }).addTo(map);
             break;
     
         case "arrowline":
@@ -164,14 +166,13 @@ function initMap(mapdataArea){
                         map.on('click', mapClickHandler);
                     }
                     else {
-                        // popupEnabled為false時，不顯示popup
                         arrowline.closePopup();
                     }
                 });
             }
             let points = latlngs.map((pt, index) => [pt, mapdataArea[index].Property]); // [[latlng, property]]
             let arrowLayer = L.layerGroup().addTo(map);
-            addArrowlineToLayer(points, arrowLayer, 'red', mapdataArea[0]?.Name || 'Arrowline');
+            addArrowlineToLayer(points, arrowLayer, color, mapdataArea[0]?.Name || 'Arrowline');
             break;
     };
     

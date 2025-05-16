@@ -1,21 +1,87 @@
+import { WindowManager } from '../../windowCtl.js';
+
+let importWindow = null;
+let readPointWindow = null;
+let addPointWindow = null;
+const wm = new WindowManager();
 $(document).ready(function () {
-    initMapdataLayerTable();
+    initLayerSelect();
+    // 初始化 select2 並禁用搜尋框
+    $("#mapdataDistSelector").select2({
+        theme: 'bootstrap-5',
+        minimumResultsForSearch: Infinity
+    });
+    $("#mapdataLayerSelector").select2({
+        theme: 'bootstrap-5',
+        minimumResultsForSearch: Infinity
+    });
+    $("#mapdataNameSelector").select2({
+        theme: 'bootstrap-5',
+    });
     $("#mapdataLayerSelector").on("change", function () {
-        var selectedCategory = $(this).val();
-        if(selectedCategory == 0){
-            initPage("mapdataLayerPage", updateMapdataLayerTable, allMapdataLayers);
-        }
-        else{
-            var filteredDepartments = allMapdataLayers.filter((mapdata) => {
-                return mapdata.category == selectedCategory;
-            });
-            initPage("mapdataLayerPage", updateMapdataLayerTable, filteredDepartments);
-        }
+        var selectedAreaId = $(this).val();
+        $.ajax({
+            url: `/Account/Mapdata/Get/Dist?id=${selectedAreaId}`,
+            type: "POST",
+            processData: false,
+            contentType: false,
+            xhrFields: {
+                withCredentials: true // 確保攜帶 Cookie
+            },
+            success: function (data) {
+                if (data.success) {
+                    console.log(data);
+                    // 初始化mapdataDistSelect
+                    var $select = $("#mapdataDistSelector");
+                    $("#mapdataNameSelector").empty();
+                    $select.empty(); // 清空舊內容
+                    $select.append($("<option selected disabled>").val(-1).text("請選擇行政區")); // 添加預設選項
+                    $select.append($("<option>").val(0).text("全部")); // 添加預設選項
+                    $.each(data.dists, function (i, dist) {
+                        $select.append($("<option>").val(dist.id).text(dist.city + dist.town));
+                    });
+                }
+            }
+        })
+    });
+
+    $("#mapdataDistSelector").on("change", function () {
+        var selectedLayerId = $("#mapdataLayerSelector").val();
+        var selectedDistId = $(this).val();
+        $.ajax({
+            url: `/Account/Mapdata/Get/Area?LayerId=${selectedLayerId}&DistId=${selectedDistId}`,
+            type: "POST",
+            processData: false,
+            contentType: false,
+            xhrFields: {
+                withCredentials: true // 確保攜帶 Cookie
+            },
+            
+            success: function (data) {
+                if (data.success) {
+                    console.log(data);
+                    // 初始化mapdataAreaSelect
+                    var $select = $("#mapdataNameSelector");                    
+                    $select.empty(); // 清空舊內容
+                    $select.append($("<option selected disabled>").val(-1).text("請選擇道路")); // 添加預設選項
+                    $.each(data.areas, function (i, area) {
+                        $select.append($("<option>").val(area.id).text(area.name));
+                    });
+                }
+            }
+        })
+    });
+
+    $("#mapdataSearch").on("click", function () {
+        var selectedLayerId = $("#mapdataLayerSelector").val();
+        var selectedDistId = $("#mapdataDistSelector").val();
+        var selectedAreaId = $("#mapdataNameSelector").val();
+        console.log(selectedLayerId, selectedDistId, selectedAreaId);
+        initMapdataLayerTable(selectedLayerId, selectedDistId, selectedAreaId);
     });
 });
 
-
-function initMapdataLayerTable(){
+function initLayerSelect(){
     function getQueryParam(key) {
         let query = window.location.search.substring(1);
         let vars = query.split("&");
@@ -38,65 +104,13 @@ function initMapdataLayerTable(){
         },
         success: function (data) {
             if (data.success) {
+                console.log(data);
                 var layers = data.layers;
-                var $container = $("#layerContainer");
-                console.log(layers);
-                $container.empty(); // 清空舊內容
-    
+                var $select = $("#mapdataLayerSelector");
+                $select.empty(); // 清空舊內容
+                $select.append($("<option selected disabled>").val(-1).text("請選擇圖層")); // 添加預設選項            
                 $.each(layers, function (i, layer) {
-                    var $card = $("<div>").addClass("card mb-4");
-    
-                    var $header = $("<div>")
-                        .addClass("card-header bg-primary text-white")
-                        .html("<strong>" + layer.Name + " 類型：" + layer.Kind + "</strong>");
-    
-                    var $cardBody = $("<div>").addClass("card-body p-0");
-                    var $table = $("<table>").addClass("table table-bordered m-0");
-    
-                    var $thead = $("<thead>").addClass("table-light").append(
-                        $("<tr>").append(
-                            $("<th>").addClass("area-cell").text("區塊名稱"),
-                            $("<th>").addClass("more-cell").text("資料"),
-                            $("<th>").addClass("action-cell").text("操作")
-                        )
-                    );
-    
-                    var $tbody = $("<tbody>");
-    
-                    if (layer.Areas && layer.Areas.length > 0) {
-                        $.each(layer.Areas, function (j, area) {
-                            var $row = $("<tr>").append(
-                                $("<td>").addClass("area-cell").text(area.Name),
-                                $("<td>").addClass("more-cell").append(
-                                    $("<a>")
-                                        .attr("href", "#")
-                                        .text("More")
-                                        .on("click", function (e) {
-                                            e.preventDefault();
-                                            showPointsModal(area.Id, layer.Kind, layer.Svg);
-                                        })
-                                ),
-                                $("<td>").addClass("action-cell").append(
-                                    $("<button>").addClass("update-mapdata read").text("編輯"),
-                                    $("<button>").addClass("delete-mapdata read").text("刪除")
-                                )
-                            );
-                            $tbody.append($row);
-                        });
-                    } else {
-                        var $emptyRow = $("<tr>").append(
-                            $("<td>")
-                                .attr("colspan", 3)
-                                .addClass("text-center text-muted")
-                                .text("No areas available")
-                        );
-                        $tbody.append($emptyRow);
-                    }
-    
-                    $table.append($thead).append($tbody);
-                    $cardBody.append($table);
-                    $card.append($header).append($cardBody);
-                    $container.append($card);
+                    $select.append($("<option>").val(layer.id).text(layer.name));
                 });
             }
         },
@@ -106,16 +120,96 @@ function initMapdataLayerTable(){
     });
 }
 
-function showPointsModal(areaId, kind, svg) {
-    var windowWidth = 800;
-    var windowHeight = 600;
-    // 獲取螢幕的寬高
-    var screenWidth = window.screen.width;
-    var screenHeight = window.screen.height;
-    // 計算彈出視窗的位置
-    var left = 0 - (screenWidth + windowWidth) / 2;
-    var top = (screenHeight - windowHeight) / 2;
-    // 開啟新視窗，顯示角色的權限
-    newWindow = window.open(`/Account/Mapdata/Read/Point?areaId=${areaId}&kind=${kind}&svg=${svg}`, 'PointsWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
-}
+function initMapdataLayerTable(layerId, distId, areaId) {
+    $.ajax({
+        url: `/Account/Mapdata/Search?LayerId=${layerId}&DistId=${distId}&AreaId=${areaId}`,
+        type: "POST",
+        processData: false,
+        contentType: false,
+        xhrFields: {
+            withCredentials: true // 確保攜帶 Cookie
+        },
+        success: function (data) {
+            if (data.success) {
+                var result = data.mapdataSearch;
+                console.log(result);
 
+                const addBtn = $(`<button class="btn btn-primary btn-sm ms-2">新增圖資</button>`)
+                    .on("click", function () {
+                        var windowWidth = 800;
+                        var windowHeight = 600;
+                        const url = `/Account/Mapdata/Import?layerId=${result.id}&name=${result.name}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
+                        wm.open('addPointWindow', url, windowWidth, windowHeight)
+                    });
+
+                // 產生 tbody 內容
+                var $tbody = $("<tbody>");
+                $.each(result.areas, function (i, area) {
+                    var moreBtn = $(`<button class="btn btn-primary btn-sm">更多</button>`).on("click", function () {
+                        var windowWidth = 800;
+                        var windowHeight = 600;
+                        const url = `/Account/Mapdata/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
+                        wm.open('readPipelineWindow', url, windowWidth, windowHeight)
+                        // readPointWindow = openWindow(readPointWindow, `/Account/Mapdata/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`, "readPointWindow", windowWidth, windowHeight);
+                    });
+
+                    var deleteBtn = $(`<button class="delete-mapdata read btn btn-danger btn-sm">刪除</button>`).on("click", function () {
+                        if (confirm("確定要刪除圖資？")) {
+                            $.ajax({
+                                url: `/Account/Mapdata/Delete/Area?id=${area.id}`,
+                                type: "POST",
+                                xhrFields: {
+                                    withCredentials: true
+                                },
+                                success: function (data) {
+                                    if (data.success) {
+                                        alert(data.message);
+                                        location.reload();
+                                    } else {
+                                        alert(data.message);
+                                    }
+                                },
+                                error: function (xhr) {
+                                    console.log("API 錯誤:", xhr.status);
+                                }
+                            });
+                        }
+                    });
+
+                    var $tr = $("<tr>");
+                    $tr.append($("<td>").text(area.name));
+                    $tr.append($("<td>").append(moreBtn));
+                    $tr.append($("<td>").append(deleteBtn));
+                    $tbody.append($tr);
+                });
+
+                // 產生內部 HTML 結構
+                var $innerContent = $(`
+                    <div class="mb-4">
+                        <div id="mapdataHeader" class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <strong id="layerName">${result.name}</strong>
+                        </div>
+                        <table class="table table-bordered text-center permissionTable">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>路名</th>
+                                    <th>資料</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                `);
+
+                $innerContent.find("#mapdataHeader").append(addBtn);
+                $innerContent.find("table").append($tbody);
+
+                // 插入內容並顯示
+                $("#layerContainer").html($innerContent).removeClass("d-none");
+            }
+        },
+        error: function (xhr) {
+            console.log("取得資料失敗:", xhr.status);
+        }
+    });
+}

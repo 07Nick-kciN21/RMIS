@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Taoyuan City Hall - Styled</name>
+
+    <!-- 圖標樣式 -->
+    <Style id="pointStyle">
+      <IconStyle>
+        <scale>1.2</scale>
+        <Icon>
+          <href>/img/2.png</href>
+        </Icon>
+      </IconStyle>
+    </Style>
+
+    <!-- 綠色多邊形樣式 -->
+    <Style id="greenPolygon">
+      <LineStyle>
+        <color>ff0000ff</color> <!-- 紅色邊線 (BGRa) -->
+        <width>3</width>
+      </LineStyle>
+      <PolyStyle>
+        <color>7f00ff00</color> <!-- 半透明綠色填充 (alpha:127) -->
+      </PolyStyle>
+    </Style>
+
+    <!-- 多邊形 -->
+    <Placemark>
+      <name>水池一</name>
+      <property>{"類別碼": 801010203, "識別碼": 8010102030059570, "管理單位": "T4", "作業區分": 1, "設置日期": 1696460000000.0, "人手孔編號": "H42210", "孔蓋種類": 1, "尺寸單位": 3, "蓋部寬度": 0.5, "蓋部長度": 1.0, "地盤高": 139.37, "孔深": 1.06, "孔蓋型態": 2, "使用狀態": 0, "資料狀態": 0, "備註": "已銑鋪下地", "OBJECTID": 181882, "內容物": NaN, "QualityLV": 1}</property>
+      <styleUrl>#greenPolygon</styleUrl>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              121.301588,24.992891,0
+              121.301588,24.993270,0
+              121.302142,24.993270,0
+              121.302142,24.992891,0
+              121.301588,24.992891,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+    <!-- 每個角落加一個圖標點 -->
+    <Placemark>
+      <name>Corner 1</name>
+      <styleUrl>#pointStyle</styleUrl>
+      <Point>
+        <coordinates>121.301588,24.992891,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Corner 2</name>
+      <styleUrl>#pointStyle</styleUrl>
+      <Point>
+        <coordinates>121.301588,24.993270,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Corner 3</name>
+      <styleUrl>#pointStyle</styleUrl>
+      <Point>
+        <coordinates>121.302142,24.993270,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Corner 4</name>
+      <styleUrl>#pointStyle</styleUrl>
+      <Point>
+        <coordinates>121.302142,24.992891,0</coordinates>
+      </Point>
+    </Placemark>
+
+    <!-- 邊線額外加 Polyline -->
+    <Placemark>
+      <name>紅色邊線</name>
+      <Style>
+        <LineStyle>
+          <color>ff0000ff</color> <!-- 紅色 -->
+          <width>3</width>
+        </LineStyle>
+      </Style>
+      <LineString>
+        <coordinates>
+          121.301588,24.992891,0
+          121.301588,24.993270,0
+          121.302142,24.993270,0
+          121.302142,24.992891,0
+          121.301588,24.992891,0
+        </coordinates>
+      </LineString>
+    </Placemark>
+
+  </Document>
+</kml>

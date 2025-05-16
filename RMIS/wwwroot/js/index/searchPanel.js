@@ -1,4 +1,4 @@
-﻿import { getIndexMap } from "./map.js";
+﻿import { Map } from './map_test.js';
 
 let roadlayer;
 export function initSearchPanel() {
@@ -8,7 +8,7 @@ export function initSearchPanel() {
     })
 
     $('#search_Close').on('click', () => {
-        var indexMap = getIndexMap();
+        var indexMap = Map.getIndexMap();
         if (roadlayer) {
             indexMap.removeLayer(roadlayer);
         }
@@ -45,7 +45,7 @@ function handleSearch() {
     }
 }
 function addRoadLayer(id) {
-    var indexMap = getIndexMap();
+    var indexMap = Map.getIndexMap();
     $.ajax({
         url: `/api/MapAPI/GetPointsbyLayerId?LayerId=${id}`,
         method: 'POST',

@@ -1,4 +1,4 @@
-import { getIndexMap } from './map.js'
+import { Map } from './map_test.js';
 
 const adminDists = [
     "桃園區",  // value: 1
@@ -33,7 +33,7 @@ function convertInputValue(value) {
 }
 
 export function initProjectPanel() {
-    $indexMap = getIndexMap();
+    $indexMap = Map.getIndexMap();
     projectLayer.addTo($indexMap);
     $('#projectGoResult').click(function () {
         const formData = {

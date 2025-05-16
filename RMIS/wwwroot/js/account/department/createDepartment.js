@@ -51,11 +51,6 @@ $(document).ready(function () {
 });
 
 function initPipelineAccess(){
-    function getQueryParam(name) {
-        const results = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.href);
-        return results ? decodeURIComponent(results[1].replace(/\+/g, ' ')) : null;
-      }
-    var id = getQueryParam("id");
     $.ajax({
         url: `/Account/Department/Get/PipelineAccess?id=-1`,
         type: 'POST',

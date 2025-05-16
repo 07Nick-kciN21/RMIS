@@ -1,7 +1,8 @@
 ﻿import { layerList } from './menu.js';
 import { removePipeline, addPipeline } from './pipeline.js';
 import { layers } from './layers.js';
-import { getIndexMap } from '../map.js';
+// import { getIndexMap } from '../map.js';
+import { Map } from '../map_test.js';
 import { layerEditor } from './layerEdit/layerEditor.js';
 import { opacityLayer } from './opacityCtrl.js';
 import { openPanel } from '../metaDataPanel.js';
@@ -155,7 +156,8 @@ function displayLayer(id, layersId) {
     layersId.forEach(function (id) {
         if(layers[id]){
             layers[id].eachLayer(function (layer) {
-                var opacity = getIndexMap().getZoom()>15 ?  (layer._originalOpacity || 1) : 0;
+                var mapContent = Map.getIndexMap();
+                var opacity = mapContent.getZoom()>15 ?  (layer._originalOpacity || 1) : 0;
 
                 layer._isVisible = true;
                 if (layer instanceof L.Marker) {

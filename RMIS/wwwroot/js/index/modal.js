@@ -29,12 +29,12 @@
         // xl = 800px
         $('#customModal').fadeIn();
         $('#modalTitle').text(modalTitle);
-        $('.modal-body').html('<p>正在加载...</p>');
+        $('#customModal .modal-body').html('<p>正在加载...</p>');
 
         $.get(url, function (data) {
             console.log("get data");
-            $('.modal-body').html(data);
-            $('.modal-body form').on('submit', function (e) {
+            $('#customModal .modal-body').html(data);
+            $('#customModal .modal-body form').on('submit', function (e) {
                 e.preventDefault(); // 阻止默認行為
                 var method = $(this).attr('method');
                 var formData = new FormData(this);
@@ -57,7 +57,7 @@
                 });
             });
         }).fail(function () {
-            $('.modal-body').html('<p>載入失敗。</p>');
+            $('#customModal .modal-body').html('<p>載入失敗。</p>');
         });
 
         if (!$('.disable-overlay').length) {

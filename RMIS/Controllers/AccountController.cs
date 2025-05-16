@@ -11,6 +11,7 @@ using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
 using RMIS.Models.Portal;
+using RMIS.Models.sql;
 using RMIS.Repositories;
 using System.Data;
 using System.Security;
@@ -327,7 +328,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/Role/Update")]
-        public async Task<IActionResult> UpdateRole([FromForm] UpdateRoleView input)
+        public async Task<IActionResult> UpdateRole([FromForm] UpdateRoleView updaterole)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -338,11 +339,11 @@ namespace RMIS.Controllers
                 return Json(new { success = false, message = "無權限修改" });
             }
             // role : (bool Success, string Message)
-            if(input.RoleId == null)
+            if(updaterole.RoleId == null)
             {
                 return Json(new { success = false, message = "修改失敗" });
             }
-            var updated = await _accountInterface.UpdateRoleAsync(input);
+            var updated = await _accountInterface.UpdateRoleAsync(updaterole);
             return Json(new { success = updated.Success, message = updated.Message });
         }
 
@@ -699,7 +700,180 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無圖資" });
             }
-            return Json(new { success = true, layers = MapdataLayers, message = "取得圖資" });
+            return Json(new { success = true, layers = MapdataLayers, message = "取得圖資列表" });
+        }
+
+        [HttpPost("[controller]/Mapdata/Get/Dist")]
+        public async Task<IActionResult> GetMapdataDist(Guid id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+            var MapdataDists = await _accountInterface.GetMapdataDistsAsync(id);
+            if (MapdataDists == null)
+            {
+                return Json(new { success = false, message = "無圖資行政區" });
+            }
+
+            return Json(new { success = true, dists = MapdataDists, message = "取得圖資行政區列表" });
+        }
+
+        [HttpPost("[controller]/Mapdata/Get/Area")]
+        public async Task<IActionResult> GetMapdataArea(Guid LayerId, Guid DistId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+            var MapdataAreas = await _accountInterface.GetMapdataAreasAsync(LayerId, DistId);
+            if (MapdataAreas == null)
+            {
+                return Json(new { success = false, message = "無圖資道路" });
+            }
+
+            return Json(new { success = true, areas = MapdataAreas, message = "取得圖資道路列表" });
+        }
+
+        [HttpPost("[controller]/Mapdata/Search")]
+        public async Task<IActionResult> GetMapdataSearch(Guid LayerId, Guid DistId, Guid AreaId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+            var MapdataSearch = await _accountInterface.GetMapdataSearchAsync(LayerId, DistId, AreaId);
+            if (MapdataLayer == null)
+            {
+                return Json(new { success = false, message = "無圖資" });
+            }
+            return Json(new { success = true, mapdataSearch = MapdataSearch, message = "取得圖資" });
+        }
+
+        [HttpPost("[controller]/Mapdata/Delete/Area")]
+        public async Task<IActionResult> DeleteMapdataArea(Guid id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Delete)
+            {
+                return Json(new { success = false, message = "無權限刪除" });
+            }
+            var deleteArea = await _accountInterface.DeleteMapdataAreaAsync(id);
+            return Json(new { success = deleteArea.Success, message = deleteArea.Message });
+        }
+
+        [HttpGet("[controller]/Mapdata/Update/Pipeline")]
+        public async Task<IActionResult> UpdateMapdataPipeline(Guid id, Guid categoryId)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限修改" });
+            }
+
+            var pipeline = await _accountInterface.UpdatePupelineViewAsync(id);
+
+            return View(pipeline);
+        }
+
+        [HttpPost("[controller]/Mapdata/Update/Pipeline")]
+        public async Task<IActionResult> UpdateMapdataPipeline(UpdatePipeline updatePipeline)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限修改" });
+            }
+
+            var update = await _accountInterface.UpdatePupelineAsync(updatePipeline);
+
+            return Json(new { success = update.Success, message = update.Message });
+        }
+
+        [HttpPost("[controller]/Mapdata/Get/Datainfo")]
+        public async Task<IActionResult> GetDatainfo(Guid id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+            var datainfo = await _accountInterface.GetDatainfoAsync(id);
+            return Json(new { success = datainfo.Success, datainfo = datainfo.Data, message = datainfo.Message});
+        }
+        [HttpGet("[controller]/Mapdata/Import")]
+        public async Task<IActionResult> ImportMapdata(Guid layerId, string name, string kind, string svg, string color)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            var importMapdata = new ImportMapdataView
+            {
+                LayerId = layerId,
+                LayerName = name,
+                LayerKind = kind,
+                LayerColor = color,
+                LayerSvg = svg
+            };
+            return View(importMapdata);
+        }
+
+        [HttpPost("[controller]/Mapdata/Import")]
+        public async Task<IActionResult> ImportMapdata([FromBody] ImportMapdataView importMapdata)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
+            return Json(new { success = true });
+        }
+
+        [HttpPost("[controller]/Mapdata/Update/Datainfo")]
+        public async Task<IActionResult> UpdateDatainfo([FromForm] UpdateDatainfo updateDatainfo)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Update)
+            {
+                return Json(new { success = false, message = "無權限更新" });
+            }
+            var updated = await _accountInterface.UpdateDatainfoAsync(updateDatainfo);
+            return Json(new { success = updated.Success, message = updated.Message });
         }
         // 無權限時
         public IActionResult AccessDenied(string returnUrl = null)

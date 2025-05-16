@@ -15,50 +15,6 @@
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/js/account/user/userProfile.js"></script>
     </head>
-    @* <header>
-        <div id="col1">
-            <div id="left-nav" style="display: flex;">
-                <div class="head-logo-box navbar-toggle">
-                    <div class="head-logo">桃園市養護工程處整合協作平台</div>
-                </div>
-            </div>
-        </div>
-        <div id="col2">
-            <nav class="navbar-toggle">
-                <div>
-                    <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
-                        <!-- 使用者圖示與名稱按鈕 -->
-                        <div id="userMenuBtn" class="user-logo-box">
-                            <div class="user-icon"></div>
-                            <!-- 下拉選單內容 -->
-                            <div id="userMenuContent" class="dropdown-content" style="width: 140px;">
-                                <ul class="menu-background">
-                                    <li>
-                                        <a class="nav-link menu-title" href="/Account/User/Profile">
-                                            <h5 id="user-name">@Model.UserName</h5>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title" href="/Portal/Logout">
-                                            <h5>登出</h5>
-                                        </a>
-                                    </li>
-                                    @if (User.IsInRole("超級管理員"))
-                                    {
-                                        <li>
-                                            <a class="nav-link menu-title" href="/Account/User/List">
-                                                <h5>權限管理</h5>
-                                            </a>
-                                        </li>
-                                    }
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>                        
-                    </div>
-                </nav>
-            </div>
-        </header> *@
     <body>
         <div class="modal-header">
             <h5 class="modal-title" id="registerModalLabel">使用者資料</h5>
@@ -123,7 +79,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">修改密碼</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">詮釋資料</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -180,26 +136,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                    </div>
             </div>
         </div>
     </body>
-    <script>
-        $(document).ready(function () {
-            $('#userMenuBtn').on('click', function (e) {
-                e.stopPropagation();
-                $('#userMenuContent').toggle();
-            });
-
-            // 點擊外部關閉
-            $(document).on('click', function () {
-                $('#userMenuContent').hide();
-            });
-
-            // 防止點選選單本身也觸發外部點擊事件
-            $('#userMenuContent').on('click', function (e) {
-                e.stopPropagation();
-            });
-        });
-    </script>
 </html>

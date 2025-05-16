@@ -70,11 +70,11 @@ function updateRoleFilter(allRoles){
     allRoles.forEach((role) => {
         $('#roleSelector').append(`<option value="${role.id}"}>${role.name}</option>`);
     });
-    $('#roleSelector').select2({
-        width: '30%',
-        placeholder: "請選擇角色",
-        allowClear: true
-    });
+    // $('#roleSelector').select2({
+    //     width: '30%',
+    //     placeholder: "請選擇角色",
+    //     allowClear: true
+    // });
 }
 
 function updateRoleTable(roles){

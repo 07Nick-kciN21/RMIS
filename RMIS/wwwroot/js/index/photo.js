@@ -1,10 +1,10 @@
-import { getIndexMap } from './map.js'
+import { Map } from './map_test.js';
 
 let $indexMap
 let currentOverlay;
 let isAddPhotoEnabled = false;
 export function initPhoto() {
-    $indexMap = getIndexMap();
+    $indexMap = Map.getIndexMap();
     var $btn = $("#addPhotoBtn");
     $(document).on('mousemove', function (e) {
         $('#tooltip')

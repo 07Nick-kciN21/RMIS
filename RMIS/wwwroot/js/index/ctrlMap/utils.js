@@ -1,4 +1,4 @@
-﻿import { getIndexMap, popupEnabled } from '../map.js'; 
+﻿import { Map } from '../map_test.js';
 
 let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null; // 用於保存當前的線段
@@ -7,7 +7,7 @@ let currentArrow = null; // 用於保存當前的箭頭線段
 let noticeLayer = L.layerGroup();
 // 將標記加入圖層
 export function addMarkersToLayer(points, newLayer, svg, name) {
-    var $indexMap = getIndexMap();
+    var $indexMap = Map.getIndexMap();
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
@@ -31,7 +31,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
             maxHeight: 350
         });
         marker.on('click', function (e) {
-            if(popupEnabled){
+            if(Map.popupEnabled){
                 if(name == "施工地點"){
                     let p = JSON.parse(prop);
                     let latlngs =  JSON.parse(p["施工範圍"]);
@@ -109,7 +109,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
 }
 
 export function addLineToLayer(points, newLayer, color, name) {
-    var $indexMap = getIndexMap();
+    var $indexMap = Map.getIndexMap();
     var zoom = $indexMap.getZoom();
     let segment = null;
     console.log("Create Line");
@@ -131,7 +131,7 @@ export function addLineToLayer(points, newLayer, color, name) {
         });
 
         segment.on('click', function (e) {
-            if(popupEnabled){
+            if(Map.popupEnabled){
                 if (currentLine) {
                     $indexMap.removeLayer(currentLine);
                 }
@@ -167,7 +167,7 @@ export function addLineToLayer(points, newLayer, color, name) {
 }
 
 export function addPolygonToLayer(points, newLayer, color, name) {
-    var $indexMap = getIndexMap();
+    var $indexMap = Map.getIndexMap();
     var pointGroup = [];
     var prop = points[0][1];
 
@@ -198,7 +198,7 @@ export function addPolygonToLayer(points, newLayer, color, name) {
     points = points[0][2].Instance = polygon;
     // 點擊多邊形設為相反色
     polygon.on('click', function () {
-        if(popupEnabled){
+        if(Map.popupEnabled){
             const inverseColor = getInverseColor(color);
             
             // 如果有已記錄的多邊形，重置它的顏色
@@ -233,7 +233,7 @@ export function addPolygonToLayer(points, newLayer, color, name) {
 
 // 添加箭頭線段
 export function addArrowlineToLayer(points, newLayer, color, name) {
-    var $indexMap = getIndexMap();
+    var $indexMap = Map.getIndexMap();
     function addArrowToLine(line, color) {
         var arrow = L.polylineDecorator(line, {
             patterns: [
@@ -277,7 +277,7 @@ export function addArrowlineToLayer(points, newLayer, color, name) {
     // 在尾端添加箭頭
     addArrowToLine(arrowline, color);
     arrowline.on('click', function (e) {
-        if(popupEnabled){
+        if(Map.popupEnabled){
             if(currentArrow){
                 $indexMap.removeLayer(currentArrow);
             }

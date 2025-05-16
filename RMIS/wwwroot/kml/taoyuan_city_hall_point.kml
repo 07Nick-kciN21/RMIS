@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Taoyuan City Hall - Points</name>
+
+    <Folder>
+      <name>桃園設施群組</name>
+      <ExtendedData>
+        <Data name="group-type"><value>Points</value></Data>
+      </ExtendedData>
+
+      <!-- 點：桃園市警察局 -->
+      <Placemark>
+        <name>桃園市警察局</name>
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>121.301562,24.993486,0</coordinates>
+        </Point>
+      </Placemark>
+
+      <!-- 點：桃園市政府 -->
+      <Placemark>
+        <name>桃園市政府</name>
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>121.300526,24.992861,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>測試2</name>
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>121.300826,24.992761,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>桃園設施群組2</name>
+      <ExtendedData>
+        <Data name="group-type"><value>Points</value></Data>
+      </ExtendedData>
+
+      <!-- 點：桃園市警察局 -->
+      <Placemark>
+        <name>桃園市警察局</name>
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>121.302562,24.993486,0</coordinates>
+        </Point>
+      </Placemark>
+
+      <!-- 點：桃園市政府 -->
+      <Placemark>
+        <name>桃園市政府</name>
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>121.302526,24.992861,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>測試2</name>
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Point>
+          <coordinates>121.302826,24.992761,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

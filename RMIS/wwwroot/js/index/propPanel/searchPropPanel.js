@@ -1,6 +1,6 @@
 ﻿// Import required modules
 import { layerProps } from '../ctrlMap/layers.js';
-import { getIndexMap } from '../map.js';
+import { Map } from '../map_test.js';
 import { updatePropQuery, filterPropsByRules, parseRules } from './propQueryBuilder.js';
 import { handleDrawShape, filterPropsByShape, clearShape, getShape } from './shapeSearch.js';
 // Global variables
@@ -336,7 +336,7 @@ function renderTableBody(pageData) {
     const $propTbody = $('#propTbody');
     $propTbody.empty();
 
-    $indexMap = getIndexMap();
+    $indexMap = Map.getIndexMap();
     pageData.forEach(item => {
         const tableRow = $('<tr></tr>');
         const button = $('<button>目標</button>').on('click', function () {
@@ -452,7 +452,7 @@ function getInverseColor(color) {
 
 // 設定地圖點擊事件處理，取消顯示
 function setupMapClickHandler() {
-    $indexMap = getIndexMap();
+    $indexMap = Map.getIndexMap();
     $indexMap.on('click', function () {
         if (highlightRectangle) {
             $indexMap.removeLayer(highlightRectangle);

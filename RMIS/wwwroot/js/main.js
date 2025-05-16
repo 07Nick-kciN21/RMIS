@@ -1,4 +1,5 @@
 ﻿// main.js
+import { Map } from './index/map_test.js'
 import { initMap } from './index/map.js';
 import { initMenu } from './index/ctrlMap/menu.js';
 import { initCommonLink } from './index/commonLink.js';
@@ -17,7 +18,8 @@ import { initAccidentPanel } from './index/accidentPanel.js';
 
 $(document).ready(function () {
     // 初始化地图
-    initMap("indexMap");
+    Map.init("indexMap");
+    // initMap("indexMap");
     initMenu();
     initCommonLink();
     initModal();

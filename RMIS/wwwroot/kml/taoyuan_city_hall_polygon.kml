@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Taoyuan City Hall - Styled</name>
+
+    <Folder>
+    <name>桃園市政府</name>
+      <Placemark>        
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                121.300526,24.992861,0
+                121.301446,24.992875,0
+                121.301395,24.993474,0
+                121.300532,24.993469,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>桃園市警察局</name>
+      <Placemark>
+        <ExtendedData>
+          <Data name="類別碼"><value>801010203</value></Data>
+          <Data name="識別碼"><value>8010102030059570</value></Data>
+          <Data name="管理單位"><value>T4</value></Data>
+          <Data name="作業區分"><value>1</value></Data>
+          <Data name="設置日期"><value>1696460000000</value></Data>
+          <Data name="人手孔編號"><value>H42210</value></Data>
+          <Data name="孔蓋種類"><value>1</value></Data>
+          <Data name="尺寸單位"><value>3</value></Data>
+          <Data name="蓋部寬度"><value>0.5</value></Data>
+          <Data name="蓋部長度"><value>1.0</value></Data>
+          <Data name="地盤高"><value>139.37</value></Data>
+          <Data name="孔深"><value>1.06</value></Data>
+          <Data name="孔蓋型態"><value>2</value></Data>
+          <Data name="使用狀態"><value>0</value></Data>
+          <Data name="資料狀態"><value>0</value></Data>
+          <Data name="備註"><value>已銑鋪下地</value></Data>
+          <Data name="OBJECTID"><value>181882</value></Data>
+          <Data name="內容物"><value>NaN</value></Data>
+          <Data name="QualityLV"><value>1</value></Data>
+        </ExtendedData>
+        <Polygon>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                121.301562,24.993486,0
+                121.301570,24.993055,0
+                121.302111,24.993067,0              
+                121.302098,24.993503,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </Polygon>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

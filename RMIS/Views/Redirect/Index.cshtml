@@ -1,0 +1,25 @@
+﻿@{
+    Layout = null;
+    var encodedTarget = ViewBag.EncodedTarget.ToString();
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+        document.write('<style>body{display:none !important;}</style>');
+
+        // 避免 HTML Entity 被轉義，使用 Html.Raw + JavaScriptStringEncode
+        const encoded = '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(encodedTarget))';
+        const decodedTarget = decodeURIComponent(encoded);
+        const ts = Date.now();
+        const redirectUrl = decodedTarget + (decodedTarget.includes('?') ? '&' : '?') + "ts=" + ts;
+
+        location.replace(redirectUrl);
+    </script>
+</head>
+<body>
+</body>
+</html>

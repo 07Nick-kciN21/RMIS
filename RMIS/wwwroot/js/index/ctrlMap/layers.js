@@ -1,15 +1,21 @@
-﻿import { getIndexMap, popupEnabled } from '../map.js';
+﻿import { Map } from '../map_test.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer, addArrowlineToLayer } from './utils.js';
 
 export let layerProps = {};
 // pipeline下的各種圖層
 export let layers = {};
-let indexMap;
+let _indexMap;
+
+// var layers = {
+//     set: function(map){
+//         _indexMap = map;
+//     }
+// }
 
 // 將圖層加入地圖
 export function addLayer2Map(id ,LayerData) {
-    indexMap = getIndexMap();
-    if (!indexMap) {
+    _indexMap = Map.getIndexMap();
+    if (!_indexMap) {
         console.error('indexMap is not initialized.');
         return;
     }
@@ -32,8 +38,8 @@ export function addLayer2Map(id ,LayerData) {
                     var areas = result.areas;
                     if (areas != null) {
                         var newLayer = createNewLayer(result, pipelineId);
-                        indexMap.addLayer(newLayer);
-                        setPointerEvents(newLayer, popupEnabled);
+                        _indexMap.addLayer(newLayer);
+                        setPointerEvents(newLayer, Map.popupEnabled);
                         layers[result.id] = newLayer;
                     }
                     console.log("Add Layer Success");
@@ -52,7 +58,7 @@ export function addLayer2Map(id ,LayerData) {
 // 建立新物件的圖層
 function createNewLayer(result, pipelineId) {
     var newLayer = L.layerGroup();
-    if (!indexMap) {
+    if (!_indexMap) {
         console.error('indexMap is not initialized.');
         return;
     }
@@ -81,7 +87,7 @@ function createNewLayer(result, pipelineId) {
         }
     });
     // 添加縮放事件來控制圖層顯示
-    indexMap.on('zoomend', function () {
+    _indexMap.on('zoomend', function () {
         newLayer.eachLayer(function (layer) {
             if(!layer._isVisible){
                 return;
@@ -101,7 +107,7 @@ function createNewLayer(result, pipelineId) {
     $("#tb-propEnabled").on('activeChange', (event, isActive) => {
         // 檢查indexMap中有沒有該圖層
         console.log("popupEnabled", isActive);
-        if (indexMap.hasLayer(newLayer)) {
+        if (_indexMap.hasLayer(newLayer)) {
             newLayer.eachLayer(function (layer) {
                 if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
                     const path = layer._path; // 直接取底層 SVG 路徑
@@ -136,13 +142,13 @@ function setPointerEvents(targetLayer, isActive) {
 }
 
 export function removeLayer2Map(id) {
-    if (!indexMap) {
+    if (!_indexMap) {
         console.error('indexMap is not initialized.');
         return;
     }
     console.log(`Remove layer [${id}]`);
     if (layers[id]) {
-        indexMap.removeLayer(layers[id]);
+        _indexMap.removeLayer(layers[id]);
         delete layers[id];
         console.log("Remove layer success", id);
     } else {
@@ -151,8 +157,8 @@ export function removeLayer2Map(id) {
 }
 
 export function addFocusLayer2Map(id, ofType, LayerData, startDate, endDate){
-    indexMap = getIndexMap();
-    if (!indexMap) {
+    _indexMap = Map.getIndexMap();
+    if (!_indexMap) {
         console.error('indexMap is not initialized.');
         return;
     }
@@ -183,7 +189,7 @@ export function addFocusLayer2Map(id, ofType, LayerData, startDate, endDate){
                 if (areas != null) {
                     var newLayer = createNewLayer(result.datas, pipelineId);
                     indexMap.addLayer(newLayer);
-                    setPointerEvents(newLayer, popupEnabled);
+                    setPointerEvents(newLayer, Map.popupEnabled);
                     layers[result.datas.id] = newLayer;
                     console.log("Add Layer Success", result.datas);
                 }

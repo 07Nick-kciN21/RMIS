@@ -1,7 +1,7 @@
 import { addPipeline, removePipeline } from './ctrlMap/pipeline.js';
 import { getLayerProps, deleteLayerProps, addLayer2Map } from './ctrlMap/layers.js';
 import { add2List } from './ctrlMap/list.js';
-import { getIndexMap } from './map.js';
+import { Map } from './map_test.js';
 
 
 const adminDists = [
@@ -229,7 +229,7 @@ function updateFlagTable() {
 function renderTableBody(pageData){
     const flagTbody = $('#flagTbody');
     flagTbody.empty();
-    let $indexMap = getIndexMap();
+    let $indexMap =  Map.getIndexMap();
     pageData.forEach(data => {
         const tableRow = $('<tr></tr>');
         // 目標按鈕，點擊時將地圖視角設置為該標記的座標，並在該位置添加一個方框

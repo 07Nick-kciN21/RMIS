@@ -1,7 +1,6 @@
 let initialSelectedValues = [];
 let currentSelectedValues = [];
 $(document).ready(function () {
-    
     initPipelineAccess();
     $('#submit').on('click', function (e) {
         currentSelectedValues = $('#pipelineAccess').val() || [];
@@ -79,7 +78,7 @@ function initPipelineAccess(){
       }
     var id = getQueryParam("id");
     $.ajax({
-        url: `/Account/Department/Get/PipelineAccess?id=${id}`,
+        url: `/Account/Department/Get/PipelineAccess?id=${CategoryId}`,
         type: 'POST',
         processData: false,
         contentType: false,

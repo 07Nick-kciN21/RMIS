@@ -1,7 +1,9 @@
+import { WindowManager } from "../../windowCtl.js";
 import { initPage } from "../Pagination.js";
 
 let allMapdata = [];
-
+let updatePipelineWindow = null;
+const wm = new WindowManager();
 
 $(document).ready(function () {
     initMapdataTable();
@@ -17,6 +19,17 @@ $(document).ready(function () {
             initPage("mapdataPage", updateMapdataTable, filteredDepartments);
             // updateMapdataTable(filteredDepartments);
         }
+    });
+
+    window.addEventListener('message', function(event) {
+        if (event.origin !== window.location.origin) return; // 安全性驗證
+        const message = JSON.parse(event.data);
+        if(message.success){
+            console.log("message.success");
+            // 重整頁面
+            initMapdataTable();
+        }
+        console.log(message.success);
     });
 });
 
@@ -54,22 +67,19 @@ function updateMapdataTable(mapdatas){
         var row = $("<tr>").attr({
             "data-mapdata-id": mapdata.id,
         });
+        
         var updateBtn = $(`<button class="update-mapdata read">編輯</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
-            // 獲取螢幕的寬高
-            var screenWidth = window.screen.width;
-            var screenHeight = window.screen.height;
-            // 計算彈出視窗的位置
-            var left = 0 - (screenWidth + windowWidth) / 2;
-            var top = (screenHeight - windowHeight) / 2;
-            window.open(`/Account/Mapdata/Update?id=${mapdata.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            const url = `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`;
+            wm.open("updatePipelineWindow", url, windowWidth, windowHeight);
+            // updatePipelineWindow = openWindow(updatePipelineWindow, `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
         });
         var deleteBtn = $(`<button class="delete-mapdata read">刪除</button>`).on("click", function () {
-            console.log(`/Account/Mapdata/Delete?departmentId=${mapdata.id}`);
+            console.log(`/Account/Mapdata/Delete/Pipeline?departmentId=${mapdata.id}`);
             if (confirm("確定要刪除圖資？")) {
                 $.ajax({
-                    url: `/Account/Mapdata/Delete?id=${mapdata.id}`,
+                    url: `/Account/Mapdata/Delete/Pipeline?id=${mapdata.id}`,
                     type: "POST",
                     xhrFields: {
                         withCredentials: true // 確保攜帶 Cookie
@@ -90,17 +100,24 @@ function updateMapdataTable(mapdatas){
             }
         });
         var moreBtn = $(`<a class="more-data read">more</a>`).on("click", function () {
-            var windowWidth = 800;
-            var windowHeight = 600;
+            var width = 800;
+            var height = 600;
+            var url = `/Account/Mapdata/Read/Layer?id=${mapdata.id}`;
+            wm.open("readPipelineWindow", url, width, height);
+            // updatePipelineWindow = openWindow(updatePipelineWindow, url, "readPipelineWindow", width, height);
             // 獲取螢幕的寬高
-            var screenWidth = window.screen.width;
-            var screenHeight = window.screen.height;
-            // 計算彈出視窗的位置
-            var left = 0 - (screenWidth + windowWidth) / 2;
-            var top = (screenHeight - windowHeight) / 2;
-            // 開啟新視窗，顯示角色的權限
-            window.open(`/Account/Mapdata/Read/Layer?id=${mapdata.id}`, 'LayersWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
-            console.log("more");
+            // var screenWidth = window.screen.width;
+            // var screenHeight = window.screen.height;
+            // // 計算彈出視窗的位置
+            // var left = 0 - (screenWidth + width) / 2;
+            // var top = (screenHeight - height) / 2;
+            // const timestamp = Date.now();
+            // if (updatePipelineWindow && !updatePipelineWindow.closed) {
+            //     console.log("關閉舊視窗");
+            //     updatePipelineWindow.close();
+            // }
+            
+            // updatePipelineWindow = window.open(`/Account/Mapdata/Read/Layer?id=${mapdata.id}`, "readPipelineWindow", `width=${width},height=${height}, top=${top}, left=${left}`);
         });
         // 選取框
         row.append(`<td class="category-cell">
@@ -110,12 +127,6 @@ function updateMapdataTable(mapdatas){
                         <span class="read">${mapdata.name}</span>
                     </td>`);
         row.append($(`<td class="more-cell"></td>`).append(moreBtn));
-        // 狀態根據status顯示啟用或停用
-        row.append(`<td class="status-cell">
-            ${mapdata.status ? 
-                '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
-            }
-        </td>`);
         
         // 建立操作按鈕
         var actionTd = $(`<td class="action-cell"></td>`);

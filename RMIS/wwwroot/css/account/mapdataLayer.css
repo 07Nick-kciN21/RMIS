@@ -1,5 +1,10 @@
-.action-cell{
+.more-cell{
     width: 100px;
     max-width: 100px;
+}
+
+.action-cell{
+    width: 140px;
+    max-width: 140px;
     text-align: center;
 }

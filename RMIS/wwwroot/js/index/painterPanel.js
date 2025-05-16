@@ -1,4 +1,4 @@
-﻿import { getIndexMap } from './map.js'
+﻿import { Map } from './map_test.js';
 
 let $indexMap;
 let borderColor = '#FF0000';
@@ -11,7 +11,7 @@ let itemMap = {};
 
 let importJsonData = null;
 export function initPainterPanel() {
-    $indexMap = getIndexMap();
+    $indexMap = Map.getIndexMap();
 
     initDraw();
 
@@ -394,11 +394,11 @@ function draw() {
 function getShapeOption1() {
     const fillColor = $('#cp_fillColor').val();
     const borderColor = $('#cp_borderColor').val();
-    const borderWidth = $('#cp_borderWidth').val();
+    const borderWidth = parseFloat($('#cp_borderWidth').val());
     return {
         color: borderColor,
         fillColor: fillColor,
-        weight: borderWidth
+        weight: isNaN(borderWidth) ? 3 : borderWidth 
     };
 }
 function getShapeOption2() {
@@ -593,7 +593,7 @@ function initEdit() {
 
 function initCircle() {
     // 手動觸發繪圖開始事件
-    $indexMap.fire('draw:drawstart');
+    // $indexMap.fire('draw:drawstart');
 
     // 創建圓形工具
     const circleDrawer = new L.Draw.Circle($indexMap, {
@@ -807,12 +807,16 @@ function handleMenuClickWrapper(event) {
 function handleMenuClick(option) {
     switch (option) {
         case "匯入Json":
-            importGeoJson();
             console.log("匯入Json");
+            importGeoJson();            
             break;
         case "匯出Json":
             console.log("匯出Json");
             exportLayers();
+            break;
+        case "匯入圖資":
+            console.log("匯入圖資");
+            importMapdata();
             break;
         default:
             console.log("nothing");
@@ -845,6 +849,92 @@ function importGeoJson() {
     input.click();
 }
 
+function importMapdata() {
+    console.log("匯入圖資");
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.kml';
+    input.onchange = function (event) {
+        var file = event.target.files[0];
+        $indexMap = Map.getIndexMap();
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const kmlText = e.target.result;
+                    const parser = new DOMParser();
+                    const kmlDoc = parser.parseFromString(kmlText, 'text/xml');
+                    const geojson = toGeoJSON.kml(kmlDoc);
+                    console.log(geojson);
+                    // 清除原圖層（如需要）
+                    if (window.kmlLayer) {
+                        $indexMap.removeLayer(window.kmlLayer);
+                    }
+
+                    // 解析並加到地圖上
+                    // 顯示為 geoJSON 圖層
+                    const geoJsonLayer = L.geoJSON(geojson, {
+                        pointToLayer: function (feature, latlng) {
+                            return L.marker(latlng, {
+                                icon: Map.customIcon || L.icon({
+                                    iconUrl: '/img/2.png',
+                                    iconSize: [32, 32],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -32]
+                                })
+                            }).bindPopup(feature.properties || '地點');
+                        },
+                        style: function (feature) {
+                            const isLine = feature.geometry.type === 'LineString';
+                            const isPolygon = feature.geometry.type === 'Polygon';
+                            if (isLine) {
+                                return {
+                                    color: 'red',
+                                    weight: 3
+                                };
+                            }
+                            if (isPolygon) {
+                                return {
+                                    color: 'red',
+                                    weight: 2,
+                                    fillColor: 'green',
+                                    fillOpacity: 0.5
+                                };
+                            }
+                        },
+                        onEachFeature: function (feature, layer) {
+                            const p = feature.properties;
+                            if (!p) return;
+
+                            // 組合 popup HTML
+                            let html = `<b>${p.name || '未命名圖層'}</b><br><table>`;
+                            for (const key in p) {
+                            if (key !== 'name') {
+                                html += `<tr><td><b>${key}</b></td><td>${p[key]}</td></tr>`;
+                            }
+                            }
+                            html += '</table>';
+                            layer.bindPopup(html);
+                        }
+                    }).addTo($indexMap);
+
+                    // 儲存為全域變數，方便後續移除
+                    window.kmlLayer = geoJsonLayer;
+
+                    if (geoJsonLayer.getBounds && geoJsonLayer.getLayers().length > 0) {
+                        $indexMap.fitBounds(geoJsonLayer.getBounds());
+                    } else {
+                        alert('⚠️ KML 檔案中沒有有效圖形。');
+                    }
+                } catch (error) {
+                    console.error('KML檔案讀取失敗', error);
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
 // 從還原操作中復原json
 function recoverJson(jsonData) {
     let layerCount = 0;

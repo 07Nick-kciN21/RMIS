@@ -20,7 +20,7 @@ $(document).ready(function () {
 
         for (const value of formData.values()) {
             console.log(value);
-          }
+        }
         $.ajax({
             url: '/Account/User/Update',
             type: 'POST',

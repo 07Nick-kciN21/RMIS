@@ -1,4 +1,4 @@
-﻿import { getIndexMap } from './map.js'
+﻿import { Map } from './map_test.js';
 
 let $indexMap;
 let selectTool;
@@ -12,7 +12,7 @@ let measureItem;
 let lineVisible = true;
 let totalVisible = true;
 export function initMeasurePanel() {
-    $indexMap = getIndexMap();
+    $indexMap = Map.getIndexMap();
 
     initMeasure();
     

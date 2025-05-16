@@ -19,8 +19,10 @@ const fieldMapping = {
 
 
 export function openPanel(metaData) {
+    console.log("openPanel", metaData);
     // 把metaData從json字串轉成物件
     metaData = JSON.parse(metaData);
+
     $('#metaDataPanel').removeClass('hide');
     console.log("metaData", metaData);
     // metaDataPanel 下的 class="panelBody" jquery
@@ -32,10 +34,6 @@ export function openPanel(metaData) {
     $table.append($tbody);
     console.log("圖資編號", metaData["圖資編號"]);
     Object.keys(metaData).forEach(key => {
-        // 如果key不在fieldMapping中，則不顯示
-        // if (!fieldMapping[key]) {
-        //     return;
-        // }
         const displayName = key; // 若無對應則顯示原始名稱
         const $tr = $('<tr>');
         const $th = $('<th>').text(displayName + ' : ');

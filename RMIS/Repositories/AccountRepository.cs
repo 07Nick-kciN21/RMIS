@@ -11,6 +11,7 @@ using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
 using RMIS.Models.Portal;
 using RMIS.Models.sql;
+using System.Data;
 using static RMIS.Controllers.HomeController;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -818,12 +819,12 @@ namespace RMIS.Repositories
             
         }
 
-        public async Task<(bool Success, string Message)> UpdateRoleAsync(UpdateRoleView input)
+        public async Task<(bool Success, string Message)> UpdateRoleAsync(UpdateRoleView updaterole)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
             try
             {
-                var role = await _authDbContext.Roles.FindAsync(input.RoleId);
+                var role = await _authDbContext.Roles.FindAsync(updaterole.RoleId);
                 if(role == null)
                 {
                     await transaction.RollbackAsync();
@@ -836,11 +837,11 @@ namespace RMIS.Repositories
                     _authDbContext.ChangeTracker.Clear();
                     return (false, $"無法修改系統保護的身分 {role.Name}");
                 }
-                var rolePermission = await _authDbContext.RolePermissions.Where(p => p.RoleId == input.RoleId).ToListAsync();
-                role.Status = input.Status;
-                role.Name = input.RoleName;
-                role.NormalizedName = input.RoleName.ToUpperInvariant();
-                foreach (var permission in input.Permissions)
+                var rolePermission = await _authDbContext.RolePermissions.Where(p => p.RoleId == updaterole.RoleId).ToListAsync();
+                role.Status = updaterole.Status;
+                role.Name = updaterole.RoleName;
+                role.NormalizedName = updaterole.RoleName.ToUpperInvariant();
+                foreach (var permission in updaterole.Permissions)
                 {
                     var oldPermission = rolePermission.FirstOrDefault(p => p.PermissionId == permission.PermissionId);
                     oldPermission.Read = permission.Read;
@@ -1152,7 +1153,6 @@ namespace RMIS.Repositories
                             Id = p.Id,
                             Name = p.Name,
                             Category = categoryName,
-                            Status = true
                         });
                     }
                 }
@@ -1176,37 +1176,88 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<List<MapdataLayer>> GetMapdataLayersAsync(Guid id)
+        public async Task<MapdataSearch> GetMapdataSearchAsync(Guid LayerId, Guid DistId, Guid AreaId)
         {
-            var layers = await _mapDBContext.Layers
+            var layer = await _mapDBContext.Layers
                 .Include(l => l.GeometryType)
-                .Where(l => l.PipelineId == id)
-                .ToListAsync();
-
-            var mapdataLayers = new List<MapdataLayer>();
-
-            foreach (var layer in layers)
+                .FirstOrDefaultAsync(l => l.Id == LayerId);
+            var mapdataSearch = new MapdataSearch
+            {
+                Id = layer.Id,
+                Name = layer.Name,
+                Kind = layer.GeometryType.Kind,
+                Svg = layer.GeometryType.Svg,
+                Color = layer.GeometryType.Color
+            };
+            if (AreaId == Guid.Empty)
             {
                 var areas = await _mapDBContext.Areas
-                    .Where(a => a.LayerId == layer.Id)
+                    .Where(a => a.AdminDistId == DistId && a.LayerId == LayerId)
                     .OrderBy(a => a.Name)
-                    .Select(a=> new MapdataArea
+                    .Select(a => new MapdataArea
                     {
                         Id = a.Id,
                         Name = a.Name
                     }).ToListAsync();
-                mapdataLayers.Add(new MapdataLayer
-                {
-                    Kind = layer.GeometryType.Kind,
-                    Name = layer.Name,
-                    Svg = layer.GeometryType.Svg,
-                    Areas = areas
-                });
+                mapdataSearch.Areas = areas;
             }
-
-            return mapdataLayers;
+            else
+            {
+                var areas = await _mapDBContext.Areas
+                .Where(a => a.AdminDistId == DistId && a.Id == AreaId)
+                .OrderBy(a => a.Name)
+                .Select(a => new MapdataArea
+                {
+                    Id = a.Id,
+                    Name = a.Name
+                }).ToListAsync();
+                mapdataSearch.Areas = areas;
+            }
+            return mapdataSearch;
         }
 
+        public async Task<List<MapdataLayer>> GetMapdataLayersAsync(Guid id)
+        {
+            var layers = await _mapDBContext.Layers
+                .Where(l => l.PipelineId == id)
+                .Select(l => new MapdataLayer
+                {
+                    Id = l.Id,
+                    Name = l.Name,
+                })
+                .ToListAsync();
+            return layers;
+        }
+
+        public async Task<List<MapdatAdminDist>> GetMapdataDistsAsync(Guid id)
+        {
+            var dists = await _mapDBContext.Areas
+                .Include(a => a.AdminDist)
+                .OrderBy(a => a.AdminDist.orderId)
+                .Where(a => a.LayerId == id)
+                .Select(a => new MapdatAdminDist
+                {
+                    Id = a.AdminDist.Id,
+                    City = a.AdminDist.City,
+                    Town = a.AdminDist.Town
+                })
+                .Distinct()
+                .ToListAsync();
+            return dists;
+        }
+        
+        public async Task<List<MapdataArea>> GetMapdataAreasAsync(Guid LayerId, Guid DistId)
+        {
+            var areas = await _mapDBContext.Areas
+                .Where(a => a.LayerId == LayerId &&
+                       a.AdminDistId == DistId)
+                .OrderBy(a => a.Name)
+                .Select(a => new MapdataArea {
+                    Id = a.Id,
+                    Name = a.Name
+                }).ToListAsync();
+            return areas;
+        }
         public async Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid areaId)
         {
             var points = await _mapDBContext.Points
@@ -1217,7 +1268,7 @@ namespace RMIS.Repositories
                     Index = p.Index,
                     Latitude = p.Latitude,
                     Longitude = p.Longitude,
-                    Property = p.Property
+                    //Property = p.Property
                 }).ToListAsync();
             return points;
         }
@@ -1327,6 +1378,124 @@ namespace RMIS.Repositories
             }
 
             return result;
+        }
+
+        public async Task<(bool Success, string Message)> DeleteMapdataAreaAsync(Guid id)
+        {
+            var points = await _mapDBContext.Points.Where(p => p.AreaId == id).ToListAsync();
+            var area = await _mapDBContext.Areas.FindAsync(id);
+            if(area == null)
+            {
+                return (false, "資料不存在");
+            }
+            _mapDBContext.RemoveRange(points);
+            _mapDBContext.Remove(area);
+            await _mapDBContext.SaveChangesAsync();
+            return (true, "刪除資料");
+        }
+
+        public async Task<UpdatePipelineView> UpdatePupelineViewAsync(Guid id)
+        {
+            var pipeline = await _mapDBContext.Pipelines.FindAsync(id);
+            var pipelineData = new UpdatePipelineView
+            {
+                Id = pipeline.Id,
+                ManagementUnit = pipeline.ManagementUnit,
+                Name = pipeline.Name,
+                CategoryId = pipeline.CategoryId,
+                Categories = new List<SelectListItem>
+                {
+                    new SelectListItem { Value = "", Text = "請選擇部門", Disabled = true, Selected = true }
+                }
+                .Concat(_mapDBContext.Categories
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    })),
+                
+            };
+            return pipelineData;
+        }
+        public async Task<(bool Success, string Message)> UpdatePupelineAsync(UpdatePipeline updatePipeline)
+        {
+            using var transaction = await _authDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var pipeline = await _mapDBContext.Pipelines.FindAsync(updatePipeline.Id);
+                pipeline.Name = updatePipeline.Name;
+                pipeline.CategoryId = updatePipeline.CategoryId;
+                pipeline.ManagementUnit = updatePipeline.ManagementUnit;
+                _mapDBContext.Pipelines.Update(pipeline);
+                await _mapDBContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return (true, "圖資編輯成功");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _mapDBContext.ChangeTracker.Clear();
+                Console.WriteLine(ex);
+                return (false, "部門修改失敗");
+            }
+        }
+
+        public async Task<(bool Success, string? Data, string Message)> GetDatainfoAsync(Guid id)
+        {         
+            var pipeline = await _mapDBContext.Pipelines.FindAsync(id);
+            if (pipeline == null)
+            {
+                return (false, null, "圖資不存在");
+            }
+            if(pipeline.dataInfo == null)
+            {
+                return (true, null, "沒有詮釋資料");
+            }
+            return (true, pipeline.dataInfo, "取得詮釋資料");
+        }
+
+        public async Task<(bool Success, string Message)> ImportMapdataAsync(ImportMapdataView importMapata)
+        {
+            using var transaction = await _authDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                // 從
+                await _mapDBContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return (true, "詮釋資料修改");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _mapDBContext.ChangeTracker.Clear();
+                Console.WriteLine(ex);
+                return (false, "詮釋資料修改失敗");
+            }
+            return (true, "上傳資料");
+        }
+        public async Task<(bool Success, string Message)> UpdateDatainfoAsync(UpdateDatainfo updateDatainfo)
+        {
+            using var transaction = await _authDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var pipeline = await _mapDBContext.Pipelines.FindAsync(updateDatainfo.Id);
+                if (pipeline == null)
+                {
+                    return (false, "圖資不存在");
+                }
+                pipeline.dataInfo = updateDatainfo.Datainfo;
+                _mapDBContext.Pipelines.Update(pipeline);
+                await _mapDBContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return (true, "詮釋資料修改");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _mapDBContext.ChangeTracker.Clear();
+                Console.WriteLine(ex);
+                return (false, "詮釋資料修改失敗");
+            }
         }
     }
 }
