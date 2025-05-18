@@ -9,80 +9,83 @@
 
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/togeojson@0.16/togeojson.js"></script>
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-        <script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
-        <script src="~/js/account/mapdata/importMapdata.js"></script>
-    </head>
-        <body class="p-3">
-            <div class="modal-header">
-                <h5 class="modal-title">匯入圖資</h5>
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/togeojson@0.16/togeojson.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
+    <script src="~/js/account/mapdata/importMapdata.js"></script>
+</head>
+
+<body class="p-3">
+    <div class="modal-header">
+        <h5 class="modal-title">匯入圖資</h5>
+    </div>
+    <div class="modal-content">
+        <div class="container mt-4">
+            <div class="mb-4">
+                <div id="addform"></div>
+                <div>
+                    <input type="hidden" class="form-control" asp-for="LayerId" readonly>
+                    <input type="hidden" class="form-control" asp-for="LayerSvg" readonly>
+                    <input type="hidden" class="form-control" asp-for="LayerColor" readonly>
+                </div>
+                <div>
+                    <label>圖層名稱</label>
+                    <input type="text" class="form-control" asp-for="LayerName" readonly>
+                </div>
+                <div>
+                    <label>圖層類型</label>
+                    <input type="text" class="form-control" asp-for="LayerKind" readonly>
+                </div>
+                <div>
+                    <label>行政區</label>
+                    <select asp-for="District" class="form-select">
+                        <option value="" disabled>請選擇行政區</option>
+                        <option value="桃園區">桃園區</option>
+                        <option value="大溪區">大溪區</option>
+                        <option value="中壢區">中壢區</option>
+                        <option value="楊梅區">楊梅區</option>
+                        <option value="蘆竹區">蘆竹區</option>
+                        <option value="大園區">大園區</option>
+                        <option value="龜山區">龜山區</option>
+                        <option value="八德區">八德區</option>
+                        <option value="龍潭區">龍潭區</option>
+                        <option value="平鎮區">平鎮區</option>
+                        <option value="新屋區">新屋區</option>
+                        <option value="觀音區">觀音區</option>
+                        <option value="復興區">復興區</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>上傳格式</label>
+                    <select id="formatSelect" class="form-select">
+                        <option value="xlsx" selected>Excel(xlsx)</option>
+                        <option value="kml">KML、XML</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>上傳檔案</label>
+                    <input asp-for="Xlsx_or_Kml" type="file" class="form-control" />
+                </div>
             </div>
-            <div class="modal-content">
-                <div class="container mt-4">
-                    <div class="mb-4">
-                        <div id="addform" ></div>
-                        <div>
-                            <input type="hidden" class="form-control" asp-for="LayerId" readonly>
-                            <input type="hidden" class="form-control" asp-for="LayerSvg" readonly>
-                            <input type="hidden" class="form-control" asp-for="LayerColor" readonly>
-                        </div>
-                        <div>
-                            <label>圖層名稱</label>
-                            <input type="text" class="form-control" asp-for="LayerName" readonly>
-                        </div>
-                        <div>
-                            <label>圖層類型</label>
-                            <input type="text" class="form-control" asp-for="LayerKind" readonly>
-                        </div>
-                        <div>
-                            <label>行政區</label>
-                            <select asp-for="District" class="form-select">
-                                <option value="" disabled selected>請選擇行政區</option>
-                                <option value="桃園區">桃園區</option>
-                                <option value="大溪區">大溪區</option>
-                                <option value="中壢區">中壢區</option>
-                                <option value="楊梅區">楊梅區</option>
-                                <option value="蘆竹區">蘆竹區</option>
-                                <option value="大園區">大園區</option>
-                                <option value="龜山區">龜山區</option>
-                                <option value="八德區">八德區</option>
-                                <option value="龍潭區">龍潭區</option>
-                                <option value="平鎮區">平鎮區</option>
-                                <option value="新屋區">新屋區</option>
-                                <option value="觀音區">觀音區</option>
-                                <option value="復興區">復興區</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>上傳格式</label>
-                            <select id="formatSelect" class="form-select">
-                                <option value="xlsx" selected>Excel(xlsx)</option>
-                                <option value="kml">KML、XML</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>上傳檔案</label>
-                            <input asp-for="Xlsx_or_Kml" type="file" class="form-control"/>
-                        </div>
-                    </div>
-                    <div id="showContainer" class="mb-4">
-                        <div id="map" style="height: 400px;">
-                        </div>
-                        <div id="result">
-                        </div>
-                    </div>
-                    <button id="submit" class="btn btn-primary">儲存</button>
-                    <button id="cancel" class="btn btn-secondary">取消</button>
-                </div>                
+            <div id="showContainer" class="mb-4">
+                <div id="map" style="height: 400px;">
+                </div>
+                <div id="result">
+                </div>
             </div>
+            <button id="submit" class="btn btn-primary">儲存</button>
+            <button id="cancel" class="btn btn-secondary">取消</button>
         </div>
-    </body>
+    </div>
+    </div>
+</body>
+
 </html>

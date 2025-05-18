@@ -724,7 +724,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/Mapdata/Get/Area")]
-        public async Task<IActionResult> GetMapdataArea(Guid LayerId, Guid DistId)
+        public async Task<IActionResult> GetMapdataArea(Guid LayerId, string Dist)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -734,7 +734,7 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
-            var MapdataAreas = await _accountInterface.GetMapdataAreasAsync(LayerId, DistId);
+            var MapdataAreas = await _accountInterface.GetMapdataAreasAsync(LayerId, Dist);
             if (MapdataAreas == null)
             {
                 return Json(new { success = false, message = "無圖資道路" });
@@ -744,7 +744,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/Mapdata/Search")]
-        public async Task<IActionResult> GetMapdataSearch(Guid LayerId, Guid DistId, Guid AreaId)
+        public async Task<IActionResult> GetMapdataSearch(Guid LayerId, string Dist, Guid AreaId)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -754,7 +754,7 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
-            var MapdataSearch = await _accountInterface.GetMapdataSearchAsync(LayerId, DistId, AreaId);
+            var MapdataSearch = await _accountInterface.GetMapdataSearchAsync(LayerId, Dist, AreaId);
             if (MapdataLayer == null)
             {
                 return Json(new { success = false, message = "無圖資" });
@@ -826,7 +826,7 @@ namespace RMIS.Controllers
             return Json(new { success = datainfo.Success, datainfo = datainfo.Data, message = datainfo.Message});
         }
         [HttpGet("[controller]/Mapdata/Import")]
-        public async Task<IActionResult> ImportMapdata(Guid layerId, string name, string kind, string svg, string color)
+        public async Task<IActionResult> ImportMapdata(Guid layerId, string name, string dist, string kind, string svg, string color)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -840,6 +840,7 @@ namespace RMIS.Controllers
             {
                 LayerId = layerId,
                 LayerName = name,
+                District = dist,
                 LayerKind = kind,
                 LayerColor = color,
                 LayerSvg = svg
@@ -858,7 +859,9 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限新增" });
             }
-            return Json(new { success = true });
+
+            var imported = await _accountInterface.ImportMapdataAsync(importMapdata);
+            return Json(new { success = imported.Success, message = imported.Message });
         }
 
         [HttpPost("[controller]/Mapdata/Update/Datainfo")]

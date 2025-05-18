@@ -24,8 +24,8 @@ namespace RMIS.Repositories
         Task<MapdataManager> GetMapdataManagerDataAsync();
         Task<List<MapdataLayer>> GetMapdataLayersAsync(Guid id);
         Task<List<MapdatAdminDist>> GetMapdataDistsAsync(Guid id);
-        Task<List<MapdataArea>> GetMapdataAreasAsync(Guid LayerId, Guid DistId);
-        Task<MapdataSearch> GetMapdataSearchAsync(Guid LayerId, Guid DistId, Guid AreaId);
+        Task<List<MapdataArea>> GetMapdataAreasAsync(Guid LayerId, string Dist);
+        Task<MapdataSearch> GetMapdataSearchAsync(Guid LayerId, string Dist, Guid AreaId);
         Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid id);
         Task<ReadRolePermission> GetRolePermissionsAsync(string id);
         Task<RolePermission> GetUserPermission(string userName, string permissionName);

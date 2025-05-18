@@ -62,7 +62,7 @@ $(document).ready(function () {
     $('#submit').on('click', function (e){
         e.preventDefault(); // 阻止預設提交行為
         const payload = {
-            LayerId: "550e8400-e29b-41d4-a716-446655440000",
+            LayerId: $("#LayerId").val(),
             LayerName: $("#LayerName").val(),
             LayerKind: $("#LayerKind").val(),
             LayerSvg: $("#LayerSvg").val(),

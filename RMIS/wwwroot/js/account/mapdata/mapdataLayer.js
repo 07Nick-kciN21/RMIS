@@ -18,38 +18,37 @@ $(document).ready(function () {
     $("#mapdataNameSelector").select2({
         theme: 'bootstrap-5',
     });
-    $("#mapdataLayerSelector").on("change", function () {
-        var selectedAreaId = $(this).val();
-        $.ajax({
-            url: `/Account/Mapdata/Get/Dist?id=${selectedAreaId}`,
-            type: "POST",
-            processData: false,
-            contentType: false,
-            xhrFields: {
-                withCredentials: true // 確保攜帶 Cookie
-            },
-            success: function (data) {
-                if (data.success) {
-                    console.log(data);
-                    // 初始化mapdataDistSelect
-                    var $select = $("#mapdataDistSelector");
-                    $("#mapdataNameSelector").empty();
-                    $select.empty(); // 清空舊內容
-                    $select.append($("<option selected disabled>").val(-1).text("請選擇行政區")); // 添加預設選項
-                    $select.append($("<option>").val(0).text("全部")); // 添加預設選項
-                    $.each(data.dists, function (i, dist) {
-                        $select.append($("<option>").val(dist.id).text(dist.city + dist.town));
-                    });
-                }
-            }
-        })
-    });
+    // $("#mapdataLayerSelector").on("change", function () {
+    //     var selectedAreaId = $(this).val();
+    //     $.ajax({
+    //         url: `/Account/Mapdata/Get/Dist?id=${selectedAreaId}`,
+    //         type: "POST",
+    //         processData: false,
+    //         contentType: false,
+    //         xhrFields: {
+    //             withCredentials: true // 確保攜帶 Cookie
+    //         },
+    //         success: function (data) {
+    //             if (data.success) {
+    //                 console.log(data);
+    //                 // 初始化mapdataDistSelect
+    //                 var $select = $("#mapdataDistSelector");
+    //                 $("#mapdataNameSelector").empty();
+    //                 $select.empty(); // 清空舊內容
+    //                 $select.append($("<option selected disabled>").val(-1).text("請選擇行政區")); // 添加預設選項
+    //                 $.each(data.dists, function (i, dist) {
+    //                     $select.append($("<option>").val(dist.id).text(dist.city + dist.town));
+    //                 });
+    //             }
+    //         }
+    //     })
+    // });
 
     $("#mapdataDistSelector").on("change", function () {
-        var selectedLayerId = $("#mapdataLayerSelector").val();
-        var selectedDistId = $(this).val();
+        var selectedLayer = $("#mapdataLayerSelector").val();
+        var selectedDist = $(this).val();
         $.ajax({
-            url: `/Account/Mapdata/Get/Area?LayerId=${selectedLayerId}&DistId=${selectedDistId}`,
+            url: `/Account/Mapdata/Get/Area?LayerId=${selectedLayer}&Dist=${selectedDist}`,
             type: "POST",
             processData: false,
             contentType: false,
@@ -63,7 +62,9 @@ $(document).ready(function () {
                     // 初始化mapdataAreaSelect
                     var $select = $("#mapdataNameSelector");                    
                     $select.empty(); // 清空舊內容
+                    // 全部的值為guid的0
                     $select.append($("<option selected disabled>").val(-1).text("請選擇道路")); // 添加預設選項
+                    $select.append($("<option>").val('00000000-0000-0000-0000-000000000000').text("全部")); // 添加預設選項
                     $.each(data.areas, function (i, area) {
                         $select.append($("<option>").val(area.id).text(area.name));
                     });
@@ -120,9 +121,10 @@ function initLayerSelect(){
     });
 }
 
-function initMapdataLayerTable(layerId, distId, areaId) {
+function initMapdataLayerTable(layerId, dist, areaId) {
+
     $.ajax({
-        url: `/Account/Mapdata/Search?LayerId=${layerId}&DistId=${distId}&AreaId=${areaId}`,
+        url: `/Account/Mapdata/Search?LayerId=${layerId}&Dist=${dist}&AreaId=${areaId}`,
         type: "POST",
         processData: false,
         contentType: false,
@@ -138,7 +140,7 @@ function initMapdataLayerTable(layerId, distId, areaId) {
                     .on("click", function () {
                         var windowWidth = 800;
                         var windowHeight = 600;
-                        const url = `/Account/Mapdata/Import?layerId=${result.id}&name=${result.name}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
+                        const url = `/Account/Mapdata/Import?layerId=${result.id}&name=${result.name}&dist=${result.dist}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
                         wm.open('addPointWindow', url, windowWidth, windowHeight)
                     });
 
@@ -192,7 +194,7 @@ function initMapdataLayerTable(layerId, distId, areaId) {
                         <table class="table table-bordered text-center permissionTable">
                             <thead class="table-primary">
                                 <tr>
-                                    <th>路名</th>
+                                    <th style="width: 350px;">路名</th>
                                     <th>資料</th>
                                     <th>操作</th>
                                 </tr>

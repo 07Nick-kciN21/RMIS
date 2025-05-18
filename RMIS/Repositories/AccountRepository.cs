@@ -1176,15 +1176,17 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<MapdataSearch> GetMapdataSearchAsync(Guid LayerId, Guid DistId, Guid AreaId)
+        public async Task<MapdataSearch> GetMapdataSearchAsync(Guid LayerId, string Dist, Guid AreaId)
         {
             var layer = await _mapDBContext.Layers
                 .Include(l => l.GeometryType)
                 .FirstOrDefaultAsync(l => l.Id == LayerId);
+            var dist = await _mapDBContext.AdminDist.FirstOrDefaultAsync(ad => ad.Town == Dist);
             var mapdataSearch = new MapdataSearch
             {
                 Id = layer.Id,
                 Name = layer.Name,
+                Dist = dist.Town,
                 Kind = layer.GeometryType.Kind,
                 Svg = layer.GeometryType.Svg,
                 Color = layer.GeometryType.Color
@@ -1192,7 +1194,7 @@ namespace RMIS.Repositories
             if (AreaId == Guid.Empty)
             {
                 var areas = await _mapDBContext.Areas
-                    .Where(a => a.AdminDistId == DistId && a.LayerId == LayerId)
+                    .Where(a => a.AdminDist.Town == Dist && a.LayerId == LayerId)
                     .OrderBy(a => a.Name)
                     .Select(a => new MapdataArea
                     {
@@ -1204,7 +1206,7 @@ namespace RMIS.Repositories
             else
             {
                 var areas = await _mapDBContext.Areas
-                .Where(a => a.AdminDistId == DistId && a.Id == AreaId)
+                .Where(a => a.AdminDist.Town == Dist && a.Id == AreaId)
                 .OrderBy(a => a.Name)
                 .Select(a => new MapdataArea
                 {
@@ -1246,16 +1248,19 @@ namespace RMIS.Repositories
             return dists;
         }
         
-        public async Task<List<MapdataArea>> GetMapdataAreasAsync(Guid LayerId, Guid DistId)
+        public async Task<List<MapdataArea>> GetMapdataAreasAsync(Guid LayerId, string Dist)
         {
             var areas = await _mapDBContext.Areas
-                .Where(a => a.LayerId == LayerId &&
-                       a.AdminDistId == DistId)
-                .OrderBy(a => a.Name)
-                .Select(a => new MapdataArea {
+                .Include(a => a.AdminDist)
+                .Where(a => a.LayerId == LayerId && a.AdminDist.Town == Dist)
+                .Select(a => new MapdataArea
+                {
                     Id = a.Id,
                     Name = a.Name
-                }).ToListAsync();
+                })
+                .Distinct()
+                .OrderBy(a => a.Name) // ✅ 移到 Distinct() 後面
+                .ToListAsync();
             return areas;
         }
         public async Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid areaId)
@@ -1459,10 +1464,49 @@ namespace RMIS.Repositories
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
             try
             {
-                // 從
+                var dist = await _mapDBContext.AdminDist.FirstOrDefaultAsync(ad => ad.Town == importMapata.District);
+                if (dist == null)
+                    return (false, "找不到對應的行政區");
+
+                var layerExists = await _mapDBContext.Layers.AnyAsync(l => l.Id == importMapata.LayerId);
+                if (!layerExists)
+                    return (false, "圖層不存在，無法新增區域");
+
+                foreach (var mapdataArea in importMapata.ImportMapdataAreas)
+                {
+                    if (mapdataArea.MapdataPoints == null || mapdataArea.MapdataPoints.Count == 0)
+                        return (false, $"區域 {mapdataArea.name} 沒有點資料");
+
+                    var areaId = Guid.NewGuid();
+                    var area = new Area
+                    {
+                        Id = areaId,
+                        Name = mapdataArea.name,
+                        LayerId = importMapata.LayerId,
+                        ConstructionUnit = "未填寫",
+                        AdminDistId = dist.Id
+                    };
+
+                    await _mapDBContext.Areas.AddAsync(area);
+
+                    foreach (var point in mapdataArea.MapdataPoints)
+                    {
+                        var newPoint = new Point
+                        {
+                            Id = Guid.NewGuid(),
+                            AreaId = areaId,
+                            Index = point.Index,
+                            Latitude = point.Latitude,
+                            Longitude = point.Longitude,
+                            Property = point.Property
+                        };
+                        await _mapDBContext.Points.AddAsync(newPoint);
+                    }
+                }
+
                 await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return (true, "詮釋資料修改");
+                return (true, "詮釋資料修改成功");
             }
             catch (Exception ex)
             {
@@ -1471,8 +1515,8 @@ namespace RMIS.Repositories
                 Console.WriteLine(ex);
                 return (false, "詮釋資料修改失敗");
             }
-            return (true, "上傳資料");
         }
+
         public async Task<(bool Success, string Message)> UpdateDatainfoAsync(UpdateDatainfo updateDatainfo)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();

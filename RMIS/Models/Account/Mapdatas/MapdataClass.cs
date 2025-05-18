@@ -23,6 +23,7 @@ namespace RMIS.Models.Account.Mapdatas
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public string Dist { get; set; }
         public string Kind { get; set; }
         public string Svg { get; set; }
         public string Color { get; set; }
@@ -65,7 +66,7 @@ namespace RMIS.Models.Account.Mapdatas
     public class ImportMapdataArea
     {
         public string name { get; set; }
-        List<MapdataPoint> MapdataPoints { get; set; }
+        public List<MapdataPoint> MapdataPoints { get; set; }
     }
     public class UpdatePipelineView
     {
