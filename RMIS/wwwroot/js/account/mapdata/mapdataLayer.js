@@ -5,6 +5,13 @@ let readPointWindow = null;
 let addPointWindow = null;
 const wm = new WindowManager();
 $(document).ready(function () {
+    // $(document).ajaxStart(function () {
+    //     showLoading();
+    // });
+
+    // $(document).ajaxStop(function () {
+    //     hideLoading();
+    // });
     initLayerSelect();
     // 初始化 select2 並禁用搜尋框
     $("#mapdataDistSelector").select2({
@@ -18,32 +25,16 @@ $(document).ready(function () {
     $("#mapdataNameSelector").select2({
         theme: 'bootstrap-5',
     });
-    // $("#mapdataLayerSelector").on("change", function () {
-    //     var selectedAreaId = $(this).val();
-    //     $.ajax({
-    //         url: `/Account/Mapdata/Get/Dist?id=${selectedAreaId}`,
-    //         type: "POST",
-    //         processData: false,
-    //         contentType: false,
-    //         xhrFields: {
-    //             withCredentials: true // 確保攜帶 Cookie
-    //         },
-    //         success: function (data) {
-    //             if (data.success) {
-    //                 console.log(data);
-    //                 // 初始化mapdataDistSelect
-    //                 var $select = $("#mapdataDistSelector");
-    //                 $("#mapdataNameSelector").empty();
-    //                 $select.empty(); // 清空舊內容
-    //                 $select.append($("<option selected disabled>").val(-1).text("請選擇行政區")); // 添加預設選項
-    //                 $.each(data.dists, function (i, dist) {
-    //                     $select.append($("<option>").val(dist.id).text(dist.city + dist.town));
-    //                 });
-    //             }
-    //         }
-    //     })
-    // });
 
+    $("#mapdataLayerSelector").on("change", function () {
+        // 將行政區選擇器還原為預設值
+        $("#mapdataDistSelector").val("").trigger("change.select2");
+
+        console.log("#mapdataDistSelector option:first");
+        // 清空 mapdataNameSelector 的所有選項
+        $("#mapdataNameSelector").empty();
+    });
+    
     $("#mapdataDistSelector").on("change", function () {
         var selectedLayer = $("#mapdataLayerSelector").val();
         var selectedDist = $(this).val();
@@ -55,7 +46,6 @@ $(document).ready(function () {
             xhrFields: {
                 withCredentials: true // 確保攜帶 Cookie
             },
-            
             success: function (data) {
                 if (data.success) {
                     console.log(data);
@@ -69,6 +59,9 @@ $(document).ready(function () {
                         $select.append($("<option>").val(area.id).text(area.name));
                     });
                 }
+            },
+            complete: function () {
+                hideLoading();
             }
         })
     });
@@ -77,9 +70,9 @@ $(document).ready(function () {
         var selectedLayerId = $("#mapdataLayerSelector").val();
         var selectedDistId = $("#mapdataDistSelector").val();
         var selectedAreaId = $("#mapdataNameSelector").val();
-        console.log(selectedLayerId, selectedDistId, selectedAreaId);
         initMapdataLayerTable(selectedLayerId, selectedDistId, selectedAreaId);
     });
+
 });
 
 function initLayerSelect(){
@@ -95,6 +88,10 @@ function initLayerSelect(){
         return null;
     }
     var id = getQueryParam("id");
+    const savedLayer = sessionStorage.getItem("mapdataLayerSelector");
+    const savedDist = sessionStorage.getItem("mapdataDistSelector");
+    const savedName = sessionStorage.getItem("mapdataNameSelector");
+    showLoading();
     $.ajax({
         url: `/Account/Mapdata/Get/Layer?id=${id}`,
         type: "POST",
@@ -113,16 +110,60 @@ function initLayerSelect(){
                 $.each(layers, function (i, layer) {
                     $select.append($("<option>").val(layer.id).text(layer.name));
                 });
+                if (savedLayer && savedDist && savedName) {
+                    $select.val(savedLayer).trigger("change");
+
+                    // 等行政區載入後再選擇行政區
+                    setTimeout(() => {
+                        $("#mapdataDistSelector").val(savedDist).trigger("change");
+
+                        // 再等道路載入後選擇道路並執行查詢
+                        setTimeout(() => {
+                            $.ajax({
+                                url: `/Account/Mapdata/Get/Area?LayerId=${savedLayer}&Dist=${savedDist}`,
+                                type: "POST",
+                                processData: false,
+                                contentType: false,
+                                xhrFields: {
+                                    withCredentials: true
+                                },
+                                success: function (data) {
+                                    if (data.success) {
+                                        const $nameSelect = $("#mapdataNameSelector");
+                                        $nameSelect.empty();
+                                        $nameSelect.append($("<option selected disabled>").val(-1).text("請選擇道路"));
+                                        $nameSelect.append($("<option>").val('00000000-0000-0000-0000-000000000000').text("全部"));
+                                        $.each(data.areas, function (i, area) {
+                                            $nameSelect.append($("<option>").val(area.id).text(area.name));
+                                        });
+
+                                        $nameSelect.val(savedName).trigger("change");
+
+                                        // 查詢並清除快取
+                                        $("#mapdataSearch").click();
+                                        sessionStorage.removeItem("mapdataLayerSelector");
+                                        sessionStorage.removeItem("mapdataDistSelector");
+                                        sessionStorage.removeItem("mapdataNameSelector");
+                                    }
+                                }
+                            });
+                        }, 300);
+                    }, 300);
+                }
+                console.log("載入圖層選擇器完成");
             }
         },
         error: function (xhr) {
             console.log("取得資料失敗:", xhr.status);
+        },
+        complete: function () {
+            hideLoading();
         }
     });
 }
 
 function initMapdataLayerTable(layerId, dist, areaId) {
-
+    showLoading();
     $.ajax({
         url: `/Account/Mapdata/Search?LayerId=${layerId}&Dist=${dist}&AreaId=${areaId}`,
         type: "POST",
@@ -138,20 +179,21 @@ function initMapdataLayerTable(layerId, dist, areaId) {
 
                 const addBtn = $(`<button class="btn btn-primary btn-sm ms-2">新增圖資</button>`)
                     .on("click", function () {
-                        var windowWidth = 800;
-                        var windowHeight = 600;
                         const url = `/Account/Mapdata/Import?layerId=${result.id}&name=${result.name}&dist=${result.dist}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
-                        wm.open('addPointWindow', url, windowWidth, windowHeight)
+                        sessionStorage.setItem('mapdataLayerSelector', $("#mapdataLayerSelector").val());
+                        sessionStorage.setItem('mapdataDistSelector', $("#mapdataDistSelector").val());
+                        sessionStorage.setItem('mapdataNameSelector', $("#mapdataNameSelector").val());
+                        // wm.open('addPointWindow', url, windowWidth, windowHeight)
+                        window.location.href = url;
                     });
 
                 // 產生 tbody 內容
                 var $tbody = $("<tbody>");
                 $.each(result.areas, function (i, area) {
                     var moreBtn = $(`<button class="btn btn-primary btn-sm">更多</button>`).on("click", function () {
-                        var windowWidth = 800;
-                        var windowHeight = 600;
                         const url = `/Account/Mapdata/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
-                        wm.open('readPipelineWindow', url, windowWidth, windowHeight)
+                        // wm.open('readPipelineWindow', url, windowWidth, windowHeight);
+                        window.location.href = url;
                         // readPointWindow = openWindow(readPointWindow, `/Account/Mapdata/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`, "readPointWindow", windowWidth, windowHeight);
                     });
 
@@ -209,9 +251,23 @@ function initMapdataLayerTable(layerId, dist, areaId) {
                 // 插入內容並顯示
                 $("#layerContainer").html($innerContent).removeClass("d-none");
             }
+            else{
+                alert(data.message);
+            }
         },
         error: function (xhr) {
             console.log("取得資料失敗:", xhr.status);
+        },
+        complete: function () {
+            hideLoading();
         }
     });
+}
+
+function showLoading() {
+    $(".loadingSpinner").show();
+}
+
+function hideLoading() {
+    $(".loadingSpinner").hide();
 }

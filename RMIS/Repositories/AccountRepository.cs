@@ -1273,7 +1273,7 @@ namespace RMIS.Repositories
                     Index = p.Index,
                     Latitude = p.Latitude,
                     Longitude = p.Longitude,
-                    //Property = p.Property
+                    Property = p.Property
                 }).ToListAsync();
             return points;
         }
@@ -1506,14 +1506,14 @@ namespace RMIS.Repositories
 
                 await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return (true, "詮釋資料修改成功");
+                return (true, "資料匯入成功");
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 _mapDBContext.ChangeTracker.Clear();
                 Console.WriteLine(ex);
-                return (false, "詮釋資料修改失敗");
+                return (false, "資料匯入失敗");
             }
         }
 

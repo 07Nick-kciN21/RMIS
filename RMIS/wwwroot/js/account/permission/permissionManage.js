@@ -1,5 +1,7 @@
 import { initPage } from "../Pagination.js";
+import { WindowManager } from "../../windowCtl.js";
 
+const wm = new WindowManager();
 let allPermissions = [];
 
 $(document).ready(function () {
@@ -12,7 +14,8 @@ $(document).ready(function () {
         var screenHeight = window.screen.height;
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        window.open('/Account/Permission/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        wm.open("createPermissionWindow", "/Account/Permission/Create", windowWidth, windowHeight);
+        // window.open('/Account/Permission/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
 
     $("#permissionSelector").on("change", function () {
@@ -74,7 +77,8 @@ function updatePermissionTable(permissions){
             var screenHeight = window.screen.height;
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            window.open(`/Account/Permission/Update?id=${permission.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            wm.open("updatePermissionWindow", `/Account/Permission/Update?id=${permission.id}`, windowWidth, windowHeight);
+            // window.open(`/Account/Permission/Update?id=${permission.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
         var deleteBtn = $(`<button class="delete-permission read">刪除</button>`).on("click", function () {
             if (confirm("確定要刪除權限？")) {

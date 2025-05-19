@@ -1,5 +1,7 @@
 import { initPage } from "../Pagination.js";
+import { WindowManager } from "../../windowCtl.js";
 
+const wm = new WindowManager();
 let allRoles = [];
 
 $(document).ready(function () {
@@ -27,7 +29,8 @@ $(document).ready(function () {
         // 計算彈出視窗的位置
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        window.open("/Account/Role/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        wm.open("createRoleWindow", "/Account/Role/Create", windowWidth, windowHeight);
+        // window.open("/Account/Role/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     window.addEventListener('message', function(event) {
         if (event.origin !== window.location.origin) return; // 安全性驗證
@@ -91,7 +94,9 @@ function updateRoleTable(roles){
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
             // 開啟新視窗，顯示角色的權限
-            newWindow = window.open(`/Account/Role/Read/Permission?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            wm.open("rolePermissionWindow", `/Account/Role/Read/Permission?id=${role.id}`, windowWidth, windowHeight);
+            
+            // newWindow = window.open(`/Account/Role/Read/Permission?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
         var updateBtn = $(`<button class="update-role read">編輯</button>`).on("click", function () {
@@ -103,7 +108,8 @@ function updateRoleTable(roles){
             // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            window.open(`/Account/Role/Update?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            wm.open("updateRoleWindow", `/Account/Role/Update?id=${role.id}`, windowWidth, windowHeight);
+            // window.open(`/Account/Role/Update?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
         var deleteBtn = $(`<button class="delete-role read">刪除</button>`).on("click", function () {

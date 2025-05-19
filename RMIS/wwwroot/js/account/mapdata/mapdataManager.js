@@ -104,20 +104,6 @@ function updateMapdataTable(mapdatas){
             var height = 600;
             var url = `/Account/Mapdata/Read/Layer?id=${mapdata.id}`;
             wm.open("readPipelineWindow", url, width, height);
-            // updatePipelineWindow = openWindow(updatePipelineWindow, url, "readPipelineWindow", width, height);
-            // 獲取螢幕的寬高
-            // var screenWidth = window.screen.width;
-            // var screenHeight = window.screen.height;
-            // // 計算彈出視窗的位置
-            // var left = 0 - (screenWidth + width) / 2;
-            // var top = (screenHeight - height) / 2;
-            // const timestamp = Date.now();
-            // if (updatePipelineWindow && !updatePipelineWindow.closed) {
-            //     console.log("關閉舊視窗");
-            //     updatePipelineWindow.close();
-            // }
-            
-            // updatePipelineWindow = window.open(`/Account/Mapdata/Read/Layer?id=${mapdata.id}`, "readPipelineWindow", `width=${width},height=${height}, top=${top}, left=${left}`);
         });
         // 選取框
         row.append(`<td class="category-cell">

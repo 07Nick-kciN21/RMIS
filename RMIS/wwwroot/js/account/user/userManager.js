@@ -1,5 +1,7 @@
 import { initPage } from "../Pagination.js";
+import { WindowManager } from "../../windowCtl.js";
 
+const wm = new WindowManager();
 var allUsers = [];
 var allRoles = [];
 var allDepartments = [];
@@ -27,7 +29,8 @@ $(document).ready(function () {
         // 計算彈出視窗的位置
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        window.open("/Account/User/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        wm.open("createUserWindow", "/Account/User/Create", windowWidth, windowHeight);
+        // window.open("/Account/User/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     window.addEventListener('message', function(event) {
         if (event.origin !== window.location.origin) return; // 安全性驗證
@@ -96,7 +99,8 @@ function updateUserTable(users){
             // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            window.open(`/Account/User/Update?id=${user.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            wm.open("updateUserWindow", `/Account/User/Update?id=${user.id}`, windowWidth, windowHeight);
+            // window.open(`/Account/User/Update?id=${user.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
 
         var deleteBtn = $(`<button class="delete-user read">刪除</button>`).on("click", function () {

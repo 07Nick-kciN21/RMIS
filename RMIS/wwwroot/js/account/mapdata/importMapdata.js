@@ -1,7 +1,6 @@
 let map = null;
 
 $(document).ready(function () {
-
     initLayerSelect();
     // 初始化leaflet地圖
     map = L.map('map').setView([24.99305818692662, 121.3010601], 18);
@@ -88,7 +87,20 @@ $(document).ready(function () {
                 alert('匯入過程發生錯誤');
                 console.error(xhr);
             }
+        })
+        .always(function () {
+            // 在這裡可以隱藏 loading spinner 或其他 UI 元素
+            console.log("AJAX 請求完成");
         });
+    });
+
+    $('#goback').on('click', function (e) {
+        const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+        if (returnUrl) {
+            window.location.href = returnUrl;
+        } else {
+            history.back(); // 若沒有 returnUrl 就用瀏覽器返回
+        }
     });
 });
 
@@ -114,11 +126,12 @@ function initLayerSelect(){
                     $select.append($("<option>").val(layer.id).text(layer.name));
                 });
             }
+            console.log("AJAX 請求完成");
         },
         error: function (xhr) {
             console.log("取得資料失敗:", xhr.status);
         }
-    });
+    })
 }
 
 function showResult_xlsx(buffer) {
@@ -222,13 +235,6 @@ function showResult_xlsx(buffer) {
     } else {
         alert('⚠️ Excel 檔案中沒有有效圖形。');
     }
-    // 顯示表格（模仿 KML）
-    // for (const roadId in groups) {
-    //     const placemarkRows = xlsxJson.filter(r => r.road_id == roadId);
-    //     console.log(roadId, placemarkRows);
-    //     const container = generateAreaContainer_xlsx(placemarkRows[0].road_name, placemarkRows);
-    //     $("#result").append(container);
-    // }
     unifiedFeatures = []; // 清空
     for (const roadId in groups) {
         const placemarkRows = xlsxJson.filter(r => r.road_id == roadId);
@@ -348,7 +354,7 @@ function showResult_kml(kmlContent) {
             return true; // 預設保留所有
         });
         const unified = [];
-
+        console.log("filteredPlacemarks", filteredPlacemarks);
         filteredPlacemarks.forEach((pm) => {
             const coordsElements = pm.getElementsByTagName("coordinates");
             const coordSet = [];
@@ -379,7 +385,7 @@ function showResult_kml(kmlContent) {
                     Index: kind === "point" ? unified.length + 1 : (idx + 1),
                     Latitude: lat,
                     Longitude: lon,
-                    Property: JSON.stringify(dataMap).replace(/\bNaN\b/g, "null")
+                    Property: kind === "point" || idx==0 ? JSON.stringify(dataMap).replace(/\bNaN\b/g, "null") : null
                 });
             });
         });
@@ -391,7 +397,6 @@ function showResult_kml(kmlContent) {
         const container = generateAreaContainer_unified(folderName, unified);
         $("#result").append(container);
     });
-    console.log(unifiedFeatures);
     // 儲存為全域變數，方便後續移除
     window.kmlLayer = geoJsonLayer;
 
@@ -485,7 +490,7 @@ function generateAreaContainer_unified(name, mapdataPoints){
                     <th>Index</th>
                     <th>緯度</th>
                     <th>經度</th>
-                    <th>資訊</th>
+                    <th style="width: 450px;">資訊</th>
                 </tr>
             </thead>
             <tbody class="mapdataPointBody"></tbody>
@@ -583,4 +588,12 @@ function getQueryParam(key) {
         }
     }
     return null;
+}
+
+function showLoading() {
+    $("#loadingSpinner").show();
+}
+
+function hideLoading() {
+    $("#loadingSpinner").hide();
 }

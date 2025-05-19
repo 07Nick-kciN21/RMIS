@@ -754,6 +754,10 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限查看" });
             }
+            if (LayerId == Guid.Empty)
+            {
+                return Json(new { success = false, message = "未選擇圖層或行政區" });
+            }
             var MapdataSearch = await _accountInterface.GetMapdataSearchAsync(LayerId, Dist, AreaId);
             if (MapdataLayer == null)
             {

@@ -1,7 +1,8 @@
 import { initPage } from "../Pagination.js";
+import { WindowManager } from "../../windowCtl.js";
 
+const wm = new WindowManager();
 let allDepartments = [];
-
 
 $(document).ready(function () {
     initDepartmentTable();
@@ -13,7 +14,8 @@ $(document).ready(function () {
         var screenHeight = window.screen.height;
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        window.open('/Account/Department/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        wm.open("createDepartmentWindow", "/Account/Department/Create", windowWidth, windowHeight);
+        // window.open('/Account/Department/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
 
     $("#departmentSelector").on("change", function () {
@@ -93,7 +95,8 @@ function updateDepartmentTable(departments){
             // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            window.open(`/Account/Department/Update?id=${department.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            wm.open("updateDepartmentWindow", `/Account/Department/Update?id=${department.id}`, windowWidth, windowHeight);
+            // window.open(`/Account/Department/Update?id=${department.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
         });
         var deleteBtn = $(`<button class="delete-department read">刪除</button>`).on("click", function () {
             console.log(`/Account/Department/Delete?departmentId=${department.id}`);

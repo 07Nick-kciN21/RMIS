@@ -1,6 +1,15 @@
 ﻿$(document).ready(function () {
     // 初始化欄位值
+    showLoading();
     initMapdataPoints();
+    $('#goback').on('click', function (e) {
+        const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+        if (returnUrl) {
+            window.location.href = returnUrl;
+        } else {
+            history.back(); // 若沒有 returnUrl 就用瀏覽器返回
+        }
+    });
 });
 
 function initMapdataPoints(){
@@ -33,17 +42,26 @@ function initMapdataPoints(){
                 tbody.empty(); // 清空舊資料
                 points.forEach(point => {
                     // 將 point.Property 格式化成漂亮的 JSON 字串
-                    let formattedJson = jsonPrettify(point.property);
+                    let infoHtml = '';
+                    const props = point.property ? JSON.parse(point.property) : {};
+                    for (const key in props) {
+                        infoHtml += `<b>${key}</b>: ${props[key]}<br>`;
+                    }
                     let row = `
                         <tr>
                             <td>${point.index}</td>
                             <td>${point.latitude}</td>
                             <td>${point.longitude}</td>
-                            <td><pre class="mb-0">${formattedJson}</pre></td>
+                            <td style="width: 450px;">${infoHtml}</td>
                         </tr>
                     `;
                     tbody.append(row);
                 });
+                // ✅ 最後關閉 loading
+                setTimeout(() => {
+                    console.log("關閉 loading");
+                    hideLoading();
+                }, 100); // 小延遲避免過快銜接
             }
         },
         error: function (xhr) {
@@ -199,4 +217,12 @@ function jsonPrettify(jsonStr) {
     } catch (e) {
         return jsonStr; // 無法解析時返回原始內容
     }
+}
+
+function showLoading() {
+    $(".loadingSpinner").show();
+}
+
+function hideLoading() {
+    $(".loadingSpinner").hide();
 }
