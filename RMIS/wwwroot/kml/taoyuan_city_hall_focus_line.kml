@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Taoyuan City Hall - Styled</name>
+
+    <Folder>
+      <name>678910</name>
+      <Placemark>        
+        <ExtendedData>
+          <Data name="ID"><value>10736</value></Data>
+          <Data name="申請日期"><value>2024/11/15</value></Data>
+          <Data name="申請租借事由"><value>活動</value></Data>
+          <Data name="租借起始日"><value>2024/12/27</value></Data>
+          <Data name="租借結束日"><value>2024/12/28</value></Data>
+          <Data name="借用時段"><value>8點0分至22點0分</value></Data>
+          <Data name="借用路段"><value>678910</value></Data>
+          <Data name="案件狀態"><value>已核定(同意)</value></Data>
+          <Data name="SymStatus"><value>1</value></Data>
+        </ExtendedData>
+
+          <LineString>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                121.300526,24.992861,0
+                121.301446,24.992875,0
+                121.301395,24.993474,0
+                121.300532,24.993469,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </LineString>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>12345</name>
+      <Placemark>        
+        <ExtendedData>
+          <Data name="ID"><value>10736</value></Data>
+          <Data name="申請日期"><value>2024/11/15</value></Data>
+          <Data name="申請租借事由"><value>活動</value></Data>
+          <Data name="租借起始日"><value>2024/12/27</value></Data>
+          <Data name="租借結束日"><value>2024/12/28</value></Data>
+          <Data name="借用時段"><value>8點0分至22點0分</value></Data>
+          <Data name="借用路段"><value>12345</value></Data>
+          <Data name="案件狀態"><value>已核定(同意)</value></Data>
+          <Data name="SymStatus"><value>1</value></Data>
+        </ExtendedData>
+        <LineString>
+          <outerBoundaryIs>
+            <LinearRing>
+              <coordinates>
+                121.301562,24.993486,0
+                121.301570,24.993055,0
+                121.302111,24.993067,0              
+                121.302098,24.993503,0
+              </coordinates>
+            </LinearRing>
+          </outerBoundaryIs>
+        </LineString>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

@@ -43,7 +43,7 @@ function initMapdataPoints(){
                 points.forEach(point => {
                     // 將 point.Property 格式化成漂亮的 JSON 字串
                     let infoHtml = '';
-                    const props = point.property ? JSON.parse(point.property) : {};
+                    const props = point.property ? jsonPrettify(point.property) : {};
                     for (const key in props) {
                         infoHtml += `<b>${key}</b>: ${props[key]}<br>`;
                     }
@@ -213,7 +213,7 @@ function jsonPrettify(jsonStr) {
         // 嘗試解析 JSON
         let obj = JSON.parse(jsonStr);
         // 轉換為漂亮格式（2空格縮排）
-        return JSON.stringify(obj, null, 2);
+        return obj;
     } catch (e) {
         return jsonStr; // 無法解析時返回原始內容
     }

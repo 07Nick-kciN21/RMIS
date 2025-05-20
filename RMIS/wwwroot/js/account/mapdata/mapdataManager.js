@@ -68,13 +68,13 @@ function updateMapdataTable(mapdatas){
             "data-mapdata-id": mapdata.id,
         });
         
-        var updateBtn = $(`<button class="update-mapdata read">編輯</button>`).on("click", function () {
-            var windowWidth = 800;
-            var windowHeight = 600;
-            const url = `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`;
-            wm.open("updatePipelineWindow", url, windowWidth, windowHeight);
-            // updatePipelineWindow = openWindow(updatePipelineWindow, `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
-        });
+        // var updateBtn = $(`<button class="update-mapdata read">編輯</button>`).on("click", function () {
+        //     var windowWidth = 800;
+        //     var windowHeight = 600;
+        //     const url = `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`;
+        //     wm.open("updatePipelineWindow", url, windowWidth, windowHeight);
+        //     // updatePipelineWindow = openWindow(updatePipelineWindow, `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
+        // });
         var deleteBtn = $(`<button class="delete-mapdata read">刪除</button>`).on("click", function () {
             console.log(`/Account/Mapdata/Delete/Pipeline?departmentId=${mapdata.id}`);
             if (confirm("確定要刪除圖資？")) {
@@ -116,7 +116,7 @@ function updateMapdataTable(mapdatas){
         
         // 建立操作按鈕
         var actionTd = $(`<td class="action-cell"></td>`);
-        actionTd.append(updateBtn, deleteBtn);
+        actionTd.append(deleteBtn);
         // 將按鈕 append 進 td，再 append 到 tr
         row.append(actionTd);
 

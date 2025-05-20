@@ -71,6 +71,7 @@ $(document).ready(function () {
         };
         console.log("unifiedFeatures =", JSON.stringify(unifiedFeatures, null, 2));
         console.log(payload);
+        showLoading();
         $.ajax({
             url: '/Account/Mapdata/Import',
             type: 'POST',
@@ -82,16 +83,17 @@ $(document).ready(function () {
                 } else {
                     alert(data.message || '匯入失敗');
                 }
+                hideLoading();
+                location.reload(); // ✅ 重新載入頁面
             },
             error: function (xhr) {
                 alert('匯入過程發生錯誤');
                 console.error(xhr);
+                hideLoading();
             }
-        })
-        .always(function () {
-            // 在這裡可以隱藏 loading spinner 或其他 UI 元素
-            console.log("AJAX 請求完成");
         });
+        // 在這裡可以隱藏 loading spinner 或其他 UI 元素
+        console.log("AJAX 請求完成");
     });
 
     $('#goback').on('click', function (e) {
@@ -228,7 +230,31 @@ function showResult_xlsx(buffer) {
             layer.bindPopup(html);
         }
     }).addTo(map);
-
+    // 🡺 加上箭頭裝飾
+    if (kind === "arrowline") {
+        layer.eachLayer(function (l) {
+            if (l instanceof L.Polyline && !(l instanceof L.Polygon)) {
+                const decorator = L.polylineDecorator(l, {
+                    patterns: [
+                        {
+                            offset: '100%',
+                            repeat: 0,      // 不重複，僅在尾端顯示箭頭
+                            symbol: L.Symbol.arrowHead({
+                                pixelSize: 25,
+                                pathOptions: {
+                                    fillOpacity: 1,
+                                    weight: 0,
+                                    color: color,
+                                    interactive: false, // 禁用互動
+                                }
+                            })
+                        }
+                    ]
+                });
+                decorator.addTo(map);
+            }
+        });
+    }
     window.xlsxLayer = layer;
     if (layer.getBounds && layer.getLayers().length > 0) {
         map.fitBounds(layer.getBounds());
@@ -239,11 +265,12 @@ function showResult_xlsx(buffer) {
     for (const roadId in groups) {
         const placemarkRows = xlsxJson.filter(r => r.road_id == roadId);
         const converted = placemarkRows.map((r, i) => ({
-            Index: i + 1,
+            Index: i,
             Latitude: parseFloat(r.pile_lat),
             Longitude: parseFloat(r.pile_lon),
             Property: (r.pile_prop || "{}").replace(/\bNaN\b/g, "null")
         }));
+        console.log("converted", converted);
         const ImportMapdataArea = {
             name: placemarkRows[0].road_name,
             MapdataPoints: converted
@@ -252,7 +279,7 @@ function showResult_xlsx(buffer) {
         const container = generateAreaContainer_unified(placemarkRows[0].road_name || roadId, converted);
         $("#result").append(container);
     }
-    console.log(unifiedFeatures);
+    console.log("unifiedFeatures", unifiedFeatures);
 }
 
 function showResult_kml(kmlContent) {
@@ -335,6 +362,31 @@ function showResult_kml(kmlContent) {
         }
     }).addTo(map);
 
+    // 🡺 加上箭頭裝飾
+    if (kind === "arrowline") {
+        geoJsonLayer.eachLayer(function (l) {
+            if (l instanceof L.Polyline && !(l instanceof L.Polygon)) {
+                const decorator = L.polylineDecorator(l, {
+                    patterns: [
+                        {
+                            offset: '100%',
+                            repeat: 0,      // 不重複，僅在尾端顯示箭頭
+                            symbol: L.Symbol.arrowHead({
+                                pixelSize: 25,
+                                pathOptions: {
+                                    fillOpacity: 1,
+                                    weight: 0,
+                                    color: color,
+                                    interactive: false, // 禁用互動
+                                }
+                            })
+                        }
+                    ]
+                });
+                decorator.addTo(map);
+            }
+        });
+    }
     const folders = Array.from(kmlDoc.getElementsByTagName("Folder"));
     console.log("folders", folders);
     unifiedFeatures = [];
@@ -382,7 +434,7 @@ function showResult_kml(kmlContent) {
             coordSet.forEach((coord, idx) => {
                 const [lat, lon] = coord;
                 unified.push({
-                    Index: kind === "point" ? unified.length + 1 : (idx + 1),
+                    Index: kind === "point" ? unified.length : (idx),
                     Latitude: lat,
                     Longitude: lon,
                     Property: kind === "point" || idx==0 ? JSON.stringify(dataMap).replace(/\bNaN\b/g, "null") : null
@@ -404,6 +456,8 @@ function showResult_kml(kmlContent) {
         map.fitBounds(geoJsonLayer.getBounds());
     } else {
         alert('⚠️ KML 檔案中沒有有效圖形。');
+        // 清空#Xlsx_or_Kml
+        $("#Xlsx_or_Kml").val("");
     }
 }
 
@@ -591,9 +645,9 @@ function getQueryParam(key) {
 }
 
 function showLoading() {
-    $("#loadingSpinner").show();
+    $(".loadingSpinner").show();
 }
 
 function hideLoading() {
-    $("#loadingSpinner").hide();
+    $(".loadingSpinner").hide();
 }

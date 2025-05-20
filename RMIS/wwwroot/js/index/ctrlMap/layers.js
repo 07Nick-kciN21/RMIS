@@ -188,7 +188,7 @@ export function addFocusLayer2Map(id, ofType, LayerData, startDate, endDate){
                 console.log(result.datas);
                 if (areas != null) {
                     var newLayer = createNewLayer(result.datas, pipelineId);
-                    indexMap.addLayer(newLayer);
+                    _indexMap.addLayer(newLayer);
                     setPointerEvents(newLayer, Map.popupEnabled);
                     layers[result.datas.id] = newLayer;
                     console.log("Add Layer Success", result.datas);

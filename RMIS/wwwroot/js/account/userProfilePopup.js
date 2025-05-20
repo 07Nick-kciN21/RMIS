@@ -1,3 +1,7 @@
+import { WindowManager } from "../windowCtl.js";
+
+const wm = new WindowManager();
+
 $(document).ready(function () {
     $("#profileBtn").on("click", function () {
         var windowWidth = 800;
@@ -8,7 +12,8 @@ $(document).ready(function () {
         // 計算彈出視窗的位置
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
-        window.open("/Account/User/Profile", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        wm.open("userProfileWindow", "/Account/User/Profile", windowWidth, windowHeight);
+        // window.open("/Account/User/Profile", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
 
     // 設定 userMenuContent 的寬度等於 username
