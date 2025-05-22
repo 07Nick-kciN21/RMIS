@@ -29,7 +29,7 @@
     }
 </style>
 
-
+<!-- ✅ 本地樣式 -->
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
 <link rel="stylesheet" href="~/css/index/offcanvas.css" />
 <link rel="stylesheet" href="~/css/index/menu.css" />
@@ -41,35 +41,34 @@
 <link rel="stylesheet" href="~/css/index/modal.css" />
 <link rel="stylesheet" href="~/css/index/pointEdit.css" />
 
-<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
-
-
-<script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
-<!-- Leaflet Draw Script -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
-
+<!-- ✅ 外部樣式 (請視是否已有本機版本，建議改為 ~/lib/... 儲存) -->
+<link rel="stylesheet" href="~/lib/pikaday/pikaday.css" />
+<link rel="stylesheet" href="~/lib/leaflet-draw/leaflet.draw.css" />
+<link rel="stylesheet" href="~/lib/jQuery-QueryBuilder/query-builder.default.min.css" />
+<link rel="stylesheet" href="~/lib/select2/select2.min.css" />
 <link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.css" />
 <link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.Default.css" />
+
+<!-- ✅ JavaScript 放在底部依序 -->
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/select2/select2.min.js"></script>
+<script src="~/lib/pikaday/pikaday.js"></script>
+<script src="~/lib/jQuery-QueryBuilder/query-builder.standalone.min.js"></script>
+<script src="~/lib/leaflet-draw/leaflet.draw.js"></script>
+<script src="~/lib/xlsx/xlsx.full.min.js"></script>
+<script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
 <script src="~/lib/leaflet-markercluster/leaflet.markercluster.js"></script>
-
-<script src="https://unpkg.com/togeojson@0.16/togeojson.js"></script>
-
-<script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
+<script src="~/lib/togeojson/togeojson.js"></script>
+<script src="~/lib/leaflet-omnivore/leaflet-omnivore.min.js"></script>
 <script src="~/lib/leaflet-gridlayer-googlemutant/Leaflet.GoogleMutant.js"></script>
 <script src="~/lib/leaflet-pip/leaflet-pip.min.js"></script>
 <script src="~/lib/leaflet-geometryutil/leaflet.geometryutil.min.js"></script>
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
-<script src="~/lib/proj4.js"></script>
+<script src="~/lib/proj4/proj4.js"></script>
+
+<!-- ✅ ES Module -->
 <script type="module" src="~/js/account/userProfilePopup.js"></script>
+
 
 @section HomeHeaderNavList{
     <div id="col1">

@@ -13,10 +13,6 @@
         <script src="~/js/sessionManager.js"></script>
         <script type="module" src="~/js/account/userProfilePopup.js"></script>
         <script type="module" src="~/js/account/Pagination.js"></script>
-        <!-- Select2 CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-        <!-- Select2 JS -->
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
         <style>
             html, body {
@@ -118,9 +114,15 @@
                         </a>
                     </li>
                     <li>
-                        <a class="nav-link menu-title" href="/Account/Mapdata/List">
+                        <a class="nav-link menu-title" href="/Mapdata/General/List">
                             <span id="data" class="account-menu-icon"></span>
-                            <span>圖資列表</span>
+                            <span>一般圖資列表</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link menu-title" href="/Mapdata/NotGeneral/List">
+                            <span id="data" class="account-menu-icon"></span>
+                            <span>特殊圖資列表</span>
                         </a>
                     </li>
                 </ul>
