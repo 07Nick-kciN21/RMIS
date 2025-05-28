@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "使用者管理";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+<link rel="stylesheet" href="~/css/Account/mapdataManager.css" />
+<script type="module" src="~/js/account/mapdata/notgeneral/mapdataManager.js"></script>
+<h2>圖資列表</h2>
+
+<div style="display: flex;">
+    <select id="mapdataSelector" class="selector form-select">
+    </select>
+</div>
+<div class="table-container">
+    <table class="table table-bordered text-center permissionTable">
+        <thead>
+            <tr>
+                <th class="category-cell">圖資類別</th>
+                <th class="name-cell">圖資名稱</th>
+                <th class="more-cell">資料</th>
+                <th class="action-cell">操作</th>
+            </tr>
+        </thead>
+    </table>
+    <!-- tbody 放在獨立容器中滾動 -->
+    <div class="tbody-scroll">
+        <table class="table table-bordered text-center permissionTable mb-0">
+            <tbody id="mapdataTable">
+                <!-- 資料動態插入 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="mapdataPage" class="d-flex justify-content-center mt-2">
+</div>

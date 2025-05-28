@@ -1,7 +1,5 @@
 ﻿@model RMIS.Models.Account.Mapdatas.ImportMapdataView;
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+
 @{
     Layout = null;
 }
@@ -24,16 +22,15 @@
 </style>
 
 <head>
-    <meta charset="utf-8" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <script src="~/lib/jquery/dist/jquery.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/togeojson@0.16/togeojson.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="~/css/mapdata/importmapdata.css" />
+    <script src="~/lib/jquery/dist/jquery.js"></script>    
+    <script src="~/lib/togeojson/togeojson.js"></script>
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/lib/xlsx/xlsx.full.min.js"></script>
     <script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
-    <script src="~/js/account/mapdata/importMapdata.js"></script>
+    <script src="~/js/account/mapdata/general/importMapdata.js"></script>
 </head>
 
 <body class="p-3">
@@ -88,7 +85,20 @@
                         <label>上傳檔案</label>
                         <input asp-for="Xlsx_or_Kml" type="file" class="form-control" />
                     </div>
-                    
+                    @* 額外內容() *@
+                    <div>
+                        <!-- 進階選項切換 -->
+                        <button type="button" id="advancedToggle" class="advanced-toggle" onclick="toggleAdvanced()" style="display:none;">
+                            <span>進階選項</span>
+                            <span class="toggle-icon">▼</span>
+                        </button>
+                        
+                        <div class="advanced-options" id="advancedOptions">
+                            <div id="advancedContainer">
+                                <!-- 這裡會動態載入不同的功能模組 -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="showContainer" class="mb-4">
                     <div id="map" style="height: 400px;">

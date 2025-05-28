@@ -31,7 +31,7 @@ $(document).ready(function () {
         formData.append("CategoryId", $('#CategorySelect').val());
         formData.append("ManagementUnit", $('input[name="ManagementUnit"]').val());
         $.ajax({
-            url: '/Account/Mapdata/Update/Pipeline',
+            url: '/Mapdata/General/Update/Pipeline',
             type: 'POST',
             processData: false,
             contentType: false,
@@ -79,7 +79,7 @@ $(document).ready(function () {
     
         console.log('收集的 JSON 資料：', data);
     
-        // 如需轉成 JSON 字串
+        // 如需轉成 JSON 字串 
         const datainfoStr = JSON.stringify(data);
         // 使用formdata
         let formData = new FormData();
@@ -90,7 +90,7 @@ $(document).ready(function () {
         }
         // 可送出 AJAX 或其他處理
         $.ajax({
-            url: '/Account/Mapdata/Update/Datainfo',
+            url: '/Mapdata/General/Update/Datainfo',
             type: 'POST',
             data: formData,
             processData: false,
@@ -122,7 +122,7 @@ function getQueryParam(name) {
 }
 function initCategories(id, categoryId){    
     $.ajax({
-        url: `/Account/Department/Get/PipelineAccess?id=${id}`,
+        url: `/Mapdata/Department/Get/PipelineAccess?id=${id}`,
         type: 'POST',
         processData: false,
         contentType: false,
@@ -177,7 +177,7 @@ function initCategories(id, categoryId){
 
 function initDatainfo(id){
     $.ajax({
-        url: `/Account/Mapdata/Get/Datainfo?id=${id}`,
+        url: `/Mapdata/General/Get/Datainfo?id=${id}`,
         type: 'POST',
         processData: false,
         contentType: false,
@@ -228,7 +228,7 @@ function initDatainfo(id){
                 console.error(result.message);
             }
         
-            console.log(`/Account/Mapdata/Get/Datainfo?id=${id}`);
+            console.log(`/Mapdata/General/Get/Datainfo?id=${id}`);
         },
         
     });    

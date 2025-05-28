@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/_layout.css" />
     <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
     <link rel="stylesheet" href="~/lib//leaflet-geoman/leaflet-geoman.css" />
@@ -18,7 +17,7 @@
 
     <script src="~/lib/leaflet-geoman/leaflet-geoman.min.js"></script>
 
-    <script src="~/lib/turf.js"></script>
+    <script src="~/lib/turf/turf.js"></script>
     <script src="~/js/sessionManager.js"></script>
 
     <style>
@@ -58,5 +57,21 @@
         
     </div>
     @await RenderSectionAsync("Scripts", required: false)
+    <div class="modal fade" id="extendSessionModal" tabindex="-1" aria-labelledby="extendSessionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="extendSessionModalLabel">登入即將過期</h5>
+            </div>
+            <div class="modal-body">
+                您的登入即將到期，是否延長？
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="logoutBtn">登出</button>
+                <button type="button" class="btn btn-primary" id="extendBtn">延長登入</button>
+            </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

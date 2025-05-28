@@ -20,7 +20,14 @@ namespace RMIS.ViewEngines
                     "/Views/Account/Role/{0}.cshtml",
                     "/Views/Account/Permission/{0}.cshtml",
                     "/Views/Account/Department/{0}.cshtml",
-                    "/Views/Account/Mapdata/{0}.cshtml",
+                };
+            }
+            if (context.ControllerName == "Mapdata")
+            {
+                return new string[]
+                {
+                    "/Views/Mapdata/General/{0}.cshtml",
+                    "/Views/Mapdata/NotGeneral/{0}.cshtml",
                 };
             }
             return viewLocations;

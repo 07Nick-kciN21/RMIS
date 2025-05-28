@@ -90,6 +90,7 @@ builder.Services.AddDbContext<MapDBContext>(options =>
 builder.Services.AddScoped<AdminInterface, AdminRepository>();
 builder.Services.AddScoped<AccountInterface, AccountRepository>();
 builder.Services.AddScoped<PortalInterface, PortalRepository>();
+builder.Services.AddScoped<MapdataInterface, MapdataRepository>();
 
 // ✅ 註冊 RoleManager<ApplicationRole>
 builder.Services.AddScoped<RoleManager<ApplicationRole>>();

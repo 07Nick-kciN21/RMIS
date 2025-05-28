@@ -73,7 +73,7 @@ $(document).ready(function () {
         console.log(payload);
         showLoading();
         $.ajax({
-            url: '/Account/Mapdata/Import',
+            url: '/Mapdata/General/Import',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(payload), // ✅ 傳送 JSON
@@ -110,7 +110,7 @@ function initLayerSelect(){
     var id = $("#LayerId").val();
 
     $.ajax({
-        url: `/Account/Mapdata/Get/Layer?id=${id}`,
+        url: `/Mapdata/General/Get/Layer?id=${id}`,
         type: "POST",
         processData: false,
         contentType: false,

@@ -1,5 +1,5 @@
-import { WindowManager } from "../../windowCtl.js";
-import { initPage } from "../Pagination.js";
+import { WindowManager } from "../../../windowCtl.js";
+import { initPage } from "../../Pagination.js";
 
 let allMapdata = [];
 let updatePipelineWindow = null;
@@ -35,7 +35,7 @@ $(document).ready(function () {
 
 function initMapdataTable(){
     $.ajax({
-        url: "/Account/Mapdata/Get/ManagerData",
+        url: "/Mapdata/Get/ManagerData",
         type: "POST",
         processData: false,
         contentType: false,
@@ -47,7 +47,12 @@ function initMapdataTable(){
                 console.log(data);
                 var managerData = data.mapdataManager;
                 allMapdata = managerData.pipelineDatas;
+                // 過濾出allMapdata.isGeneralPipeline 為true的資料
+                // allMapdata = allMapdata.filter((mapdata) => {
+                //     return mapdata.isGeneralPipeline == true;
+                // });
                 // 過濾出allMapdata中的Category，並去除重複的值
+
                 var categories = allMapdata.map((mapdata) => mapdata.category);
                 categories = [...new Set(categories)];
                 initPage("mapdataPage", updateMapdataTable, allMapdata);
@@ -71,15 +76,15 @@ function updateMapdataTable(mapdatas){
         // var updateBtn = $(`<button class="update-mapdata read">編輯</button>`).on("click", function () {
         //     var windowWidth = 800;
         //     var windowHeight = 600;
-        //     const url = `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`;
+        //     const url = `/Mapdata/General/Update/Pipeline?id=${mapdata.id}`;
         //     wm.open("updatePipelineWindow", url, windowWidth, windowHeight);
-        //     // updatePipelineWindow = openWindow(updatePipelineWindow, `/Account/Mapdata/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
+        //     // updatePipelineWindow = openWindow(updatePipelineWindow, `/Mapdata/General/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
         // });
         var deleteBtn = $(`<button class="delete-mapdata read">刪除</button>`).on("click", function () {
-            console.log(`/Account/Mapdata/Delete/Pipeline?departmentId=${mapdata.id}`);
+            console.log(`/Mapdata/General/Delete/Pipeline?departmentId=${mapdata.id}`);
             if (confirm("確定要刪除圖資？")) {
                 $.ajax({
-                    url: `/Account/Mapdata/Delete/Pipeline?id=${mapdata.id}`,
+                    url: `/Mapdata/General/Delete/Pipeline?id=${mapdata.id}`,
                     type: "POST",
                     xhrFields: {
                         withCredentials: true // 確保攜帶 Cookie
@@ -102,7 +107,7 @@ function updateMapdataTable(mapdatas){
         var moreBtn = $(`<a class="more-data read">more</a>`).on("click", function () {
             var width = 800;
             var height = 600;
-            var url = `/Account/Mapdata/Read/Layer?id=${mapdata.id}`;
+            var url = `/Mapdata/General/Read/Layer?id=${mapdata.id}`;
             wm.open("readPipelineWindow", url, width, height);
         });
         // 選取框

@@ -12,6 +12,7 @@ namespace RMIS.Models.Account.Mapdatas
         public Guid Id { get; set; }
         public string? Category { get; set; }
         public string Name { get; set; }
+        public bool IsGeneralPipeline { get; set; }
     }
     public class MapdataLayer
     {
@@ -59,6 +60,7 @@ namespace RMIS.Models.Account.Mapdatas
         public string LayerSvg { get; set; } // 圖層標記
         public string LayerColor { get; set; } // 圖層顏色
         public string District { get; set; } // 行政區
+        public string ImportSetting { get; set; } // 匯入設定
         public List<ImportMapdataArea>? ImportMapdataAreas { get; set; }
         public IFormFile Xlsx_or_Kml { get; set; }
     }

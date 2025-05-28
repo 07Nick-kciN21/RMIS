@@ -1,0 +1,78 @@
+﻿@model RMIS.Models.Account.Mapdatas.UpdatePipelineView;
+
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/select2/select2.min.css" />
+        <link rel="stylesheet" href="~/select2/select2-bootstrap-5-theme.min.css" />
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/select2/select2.min.js"></script>
+        <script src="~/js/account/mapdata/general/updatePipeline.js"></script>
+    </head>
+    <body>
+        <div class="modal-header">
+            <h5 class="modal-title" id="registerModalLabel">修改部門資料</h5>
+        </div>
+        <div class="modal-content">
+            <div class="modal-body">
+                <form>
+                    <div>
+                        <input type="hidden" class="form-control" asp-for="Id" readonly>
+                        <input type="hidden" class="form-control" asp-for="CategoryId" readonly>
+                    </div>
+                    <div class="form-group row mb-3">
+                        <label class="col-sm-2 col-form-label">圖資類別</label>
+                        <div class="col-sm-10">
+                            <select id="CategorySelect" class="form-select"></select>
+                        </div>
+                    </div>
+                    <div class="form-group row mb-3">
+                        <label class="col-sm-2 col-form-label">管理單位</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" asp-for="ManagementUnit">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-3">
+                        <label class="col-sm-2 col-form-label">圖資名稱</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" asp-for="Name">
+                        </div>
+                    </div>
+                    <div class="form-group row mb-3">
+                        <label class="col-sm-2 col-form-label">詮釋資料</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#resetdataInfo">編輯詮釋資料</button>
+                        </div>
+                    </div>
+                    <button id="submit" class="btn btn-primary">儲存</button>
+                    <button id="cancel" class="btn btn-secondary">取消</button>
+                </form>
+            </div>
+        </div>
+        <div class="modal fade" id="resetdataInfo" tabindex="-1" aria-labelledby="resetdataInfo" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">修改密碼</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form form-horizontal" method="post">
+                            <div id="dataInfo" class="form-body">
+                            </div>
+                            <div class="col-md-4 m-auto text-center"></div>
+                                <button id="datainfo-Save" type="button" class="btn btn-primary">儲存</button>
+                                <button id="datainfo-cancel" type="button" class="btn btn-secondary">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
