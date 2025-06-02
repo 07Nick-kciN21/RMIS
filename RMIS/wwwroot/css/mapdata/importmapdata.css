@@ -187,6 +187,32 @@
     object-fit: cover;
 }
 
+.photo-grid {
+    display: flex;
+    flex-wrap: wrap;        /* ✅ 可自動換行 */
+    gap: 15px;              /* ✅ 圖片間間距 */
+    margin-top: 10px;
+}
+
+.photo-filename {
+    margin-top: 5px;
+    font-size: 13px;
+    text-align: center;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.photo-item-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 120px;  /* 要與 .image-preview 寬度一致 */
+}
+
+
 .image-remove-btn {
     position: absolute;
     top: 5px;

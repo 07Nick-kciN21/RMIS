@@ -63,43 +63,50 @@ $(document).ready(function () {
         $("#showContainer").removeClass("d-none");
     });
 
-    $('#submit').on('click', function (e){
-        e.preventDefault(); // 阻止預設提交行為
-        const payload = {
-            LayerId: $("#LayerId").val(),
-            LayerName: $("#LayerName").val(),
-            LayerKind: $("#LayerKind").val(),
-            LayerSvg: $("#LayerSvg").val(),
-            LayerColor: $("#LayerColor").val(),
-            District: $("#District").val(),
-            ImportMapdataAreas: unifiedFeatures // 這裡是 JS 陣列
-        };
-        console.log("unifiedFeatures =", JSON.stringify(unifiedFeatures, null, 2));
-        console.log(payload);
+    $('#submit').on('click', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData();
+
+        formData.append("LayerId", $("#LayerId").val());
+        formData.append("LayerName", $("#LayerName").val());
+        formData.append("LayerKind", $("#LayerKind").val());
+        formData.append("LayerSvg", $("#LayerSvg").val());
+        formData.append("LayerColor", $("#LayerColor").val());
+        formData.append("District", $("#District").val());
+
+        // ✅ 加入所有照片檔案（每張圖為 IFormFile）
+        uploadedPhotos.forEach((photo, i) => {
+            formData.append("Photos", photo.file, photo.name);
+        });
+
+        // 如果也要上傳原始的 Xlsx/Kml 檔案（選填）
+        const file = $('#Xlsx_or_Kml')[0].files[0];
+        if (file) {
+            formData.append("Xlsx_or_Kml", file);
+        }
+
         showLoading();
+
         $.ajax({
             url: '/Mapdata/General/Import',
             type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(payload), // ✅ 傳送 JSON
+            data: formData,
+            processData: false,       // ✅ 不處理成 query string
+            contentType: false,       // ✅ 讓瀏覽器自動設 Content-Type
             success: function (data) {
-                if (data.success) {
-                    alert('匯入成功！');
-                } else {
-                    alert(data.message || '匯入失敗');
-                }
+                alert(data.success ? '匯入成功！' : (data.message || '匯入失敗'));
                 hideLoading();
-                location.reload(); // ✅ 重新載入頁面
+                location.reload();
             },
             error: function (xhr) {
-                alert('匯入過程發生錯誤');
                 console.error(xhr);
+                alert('匯入過程發生錯誤');
                 hideLoading();
             }
         });
-        // 在這裡可以隱藏 loading spinner 或其他 UI 元素
-        console.log("AJAX 請求完成");
     });
+
 
     $('#goback').on('click', function (e) {
         const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
@@ -110,6 +117,17 @@ $(document).ready(function () {
         }
     });
 });
+
+function collectPhotoUploadData() {
+    return uploadedPhotos.map(photo => ({
+        name: photo.name,
+        size: photo.size,
+        type: photo.type,
+        dataUrl: photo.dataUrl,           // base64 圖片資料
+        uploadTime: photo.uploadTime,
+        dateCreated: photo.dateCreated ? photo.dateCreated.toISOString() : null
+    }));
+}
 
 function initLayerSelect(){
     var id = $("#LayerId").val();
@@ -152,6 +170,7 @@ function initAdvancedOptions() {
             withCredentials: true // 確保攜帶 Cookie
         },
         success: function (data) {
+            console.log(data);
             if (data.success) {
                 var layerConfig = JSON.parse(data.layerConfig);
                 console.log(layerConfig);
@@ -233,7 +252,6 @@ function toggleAdvanced() {
  * @param {Object} associatedLayer - 關聯圖層資訊
  */
 function createPhotoUploadModule(settings = {}, associatedLayer = null) {
-    const maxPhotos = settings.max_photos || 20;
     const allowedFormats = settings.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     const maxFileSize = settings.max_file_size || 10; // MB
     
@@ -258,20 +276,15 @@ function createPhotoUploadModule(settings = {}, associatedLayer = null) {
                         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('photoInput').click()">
                             📷 選擇照片
                         </button>
+                        <input type="file" id="photoInput" multiple accept="image/*" style="display: none;">
                         <small class="text-muted ms-2">支援多選</small>
                     </div>
                     <div class="col-md-6 text-end">
-                        <span class="photo-count">已上傳 <span id="photoCount" class="fw-bold text-primary">0</span>/${maxPhotos} 張</span>
+                        <span class="photo-count">已上傳 <span id="photoCount" class="fw-bold text-primary">0</span> 張</span>
                     </div>
                 </div>
             </div>
-            
-            <div class="image-upload-area" id="photoUploadArea">
-                <div class="upload-icon">📷</div>
-                <p class="upload-text">點擊或拖拽照片到此處上傳</p>
-                <p class="upload-hint">支援 ${allowedFormats.join('、').toUpperCase()} 格式，檔案大小限制 ${maxFileSize}MB</p>
-                <input type="file" id="photoInput" multiple accept="image/*" style="display: none;">
-            </div>
+        
             
             <div class="image-preview-container" id="photoPreviewContainer" style="display: none;">
                 <div class="preview-header mb-3">
@@ -296,7 +309,6 @@ function createPhotoUploadModule(settings = {}, associatedLayer = null) {
  * @param {Object} associatedLayer - 關聯圖層資訊
  */
 function initializePhotoUpload(settings = {}, associatedLayer = null) {
-    const maxPhotos = settings.max_photos || 20;
     const maxFileSize = (settings.max_file_size || 10) * 1024 * 1024; // 轉換為 bytes
     const allowedFormats = settings.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     
@@ -316,28 +328,27 @@ function initializePhotoUpload(settings = {}, associatedLayer = null) {
     
     // 文件選擇處理
     $input.on('change', function(e) {
-        handlePhotoFiles(e.target.files, maxPhotos, maxFileSize, allowedFormats);
+        handlePhotoFiles(e.target.files, maxFileSize, allowedFormats);
         // 清空 input，允許重複選擇相同檔案
         $(this).val('');
     });
     
     // 拖拽功能
-    setupPhotoDragAndDrop($uploadArea, maxPhotos, maxFileSize, allowedFormats);
+    setupPhotoDragAndDrop($uploadArea, maxFileSize, allowedFormats);
     
     // 初始化 tooltip
     initializeTooltips();
     
-    console.log('照片上傳模組初始化完成', { associatedLayer, maxPhotos, maxFileSize });
+    console.log('照片上傳模組初始化完成', { associatedLayer, maxFileSize });
 }
 
 /**
  * 設定照片拖拽功能
  * @param {jQuery} $element - 目標元素
- * @param {number} maxPhotos - 最大照片數量
  * @param {number} maxFileSize - 最大檔案大小
  * @param {Array} allowedFormats - 允許格式
  */
-function setupPhotoDragAndDrop($element, maxPhotos, maxFileSize, allowedFormats) {
+function setupPhotoDragAndDrop($element, maxFileSize, allowedFormats) {
     $element.on('dragover', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -356,25 +367,18 @@ function setupPhotoDragAndDrop($element, maxPhotos, maxFileSize, allowedFormats)
         $(this).removeClass('dragover');
         
         const files = e.originalEvent.dataTransfer.files;
-        handlePhotoFiles(files, maxPhotos, maxFileSize, allowedFormats);
+        handlePhotoFiles(files, maxFileSize, allowedFormats);
     });
 }
 
 /**
  * 處理照片檔案上傳
  * @param {FileList} files - 檔案列表
- * @param {number} maxPhotos - 最大照片數量
  * @param {number} maxFileSize - 最大檔案大小
  * @param {Array} allowedFormats - 允許格式
  */
-function handlePhotoFiles(files, maxPhotos, maxFileSize, allowedFormats) {
+function handlePhotoFiles(files, maxFileSize, allowedFormats) {
     const fileArray = Array.from(files);
-    
-    // 檢查是否超過數量限制
-    if (uploadedPhotos.length + fileArray.length > maxPhotos) {
-        alert(`最多只能上傳 ${maxPhotos} 張照片，目前已有 ${uploadedPhotos.length} 張`);
-        return;
-    }
     
     let validFiles = [];
     let errors = [];
@@ -429,7 +433,7 @@ function processValidPhotos(validFiles) {
         
         reader.onload = function(e) {
             const photoData = {
-                id: Date.now() + Math.random(), // 簡單的 ID 生成
+                id: `photo_${Date.now()}_${Math.floor(Math.random() * 10000)}`, // ← 產生唯一字串 ID
                 file: file,
                 name: file.name,
                 size: file.size,
@@ -505,33 +509,22 @@ function updatePhotoPreview() {
  */
 function createPhotoPreviewItem(photo, index) {
     const $photoItem = $(`
-        <div class="image-preview fade-in" data-photo-id="${photo.id}">
-            <img src="${photo.dataUrl}" alt="${photo.name}" loading="lazy">
-            <button type="button" class="image-remove-btn" onclick="removePhoto('${photo.id}')" title="移除照片">
-                ×
-            </button>
-            <div class="photo-overlay">
-                <div class="photo-info">
-                    <div class="photo-name" title="${photo.name}">${truncateFileName(photo.name, 15)}</div>
-                    <div class="photo-size">${formatFileSize(photo.size)}</div>
-                    ${photo.gpsData ? '<div class="gps-indicator" title="包含GPS資訊">📍 GPS</div>' : ''}
-                </div>
+        <div class="photo-item-wrapper fade-in">
+            <div class="image-preview" data-photo-id="${photo.id}">
+                <img src="${photo.dataUrl}" alt="${photo.name}" loading="lazy">
+                <button type="button" class="image-remove-btn" onclick="removePhoto('${photo.id}')" title="移除照片">×</button>
             </div>
-            <div class="photo-description-area">
-                <textarea 
-                    class="form-control photo-description-input" 
-                    placeholder="輸入照片描述..." 
-                    rows="2"
-                    onchange="updatePhotoDescription('${photo.id}', this.value)"
-                    onblur="this.parentElement.parentElement.classList.remove('editing')"
-                    onfocus="this.parentElement.parentElement.classList.add('editing')"
-                >${photo.description}</textarea>
+            <div class="photo-filename" title="${photo.name}">
+                ${truncateFileName(photo.name, 20)}
             </div>
         </div>
     `);
-    
+
     return $photoItem;
 }
+
+
+
 
 /**
  * 移除照片
@@ -543,7 +536,7 @@ function removePhoto(photoId) {
         return;
     }
     
-    const photoIndex = uploadedPhotos.findIndex(photo => photo.id === photoId);
+    const photoIndex = uploadedPhotos.findIndex(photo => String(photo.id) === String(photoId));
     console.log('移除照片ID:', photoId, '索引:', photoIndex);
     if (photoIndex > -1) {
         const removedPhoto = uploadedPhotos.splice(photoIndex, 1)[0];

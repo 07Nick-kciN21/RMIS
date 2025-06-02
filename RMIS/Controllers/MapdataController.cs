@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Auth;
 using RMIS.Repositories;
+using System.Text.Json;
 
 namespace RMIS.Controllers
 {
@@ -315,10 +316,9 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/General/Import")]
-        public async Task<IActionResult> ImportMapdata([FromBody] ImportMapdataView importMapdata)
+        public async Task<IActionResult> ImportMapdata([FromForm] ImportMapdataView importMapdata)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -326,9 +326,16 @@ namespace RMIS.Controllers
                 return Json(new { success = false, message = "無權限新增" });
             }
 
-            var imported = await _mapdataInterface.ImportMapdataAsync(importMapdata);
-            return Json(new { success = imported.Success, message = imported.Message });
+            //var result = await _mapdataInterface.ImportMapdataAsync(importMapdata);
+            return Json(new { success = true, message = "" });
         }
+
+        // 小幫手類型
+        public class ImportSettingWrapper
+        {
+            public List<ImportMapdataArea>? ImportMapdataAreas { get; set; }
+        }
+
 
         [HttpPost("[controller]/General/Update/Datainfo")]
         public async Task<IActionResult> UpdateDatainfo([FromForm] UpdateDatainfo updateDatainfo)

@@ -44,10 +44,5 @@ export class WindowManager {
 
         window.addEventListener('beforeunload', closeHandler); // 標準關閉
         window.addEventListener('pagehide', closeHandler);     // Safari & iOS 有效
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                this.closeAll(); // 偵測頁面隱藏（跳轉或關閉）
-            }
-        });
     }
 }
