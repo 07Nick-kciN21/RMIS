@@ -1,4 +1,4 @@
-road_id,city_id,dist_id,road_city,road_dist,road_name,road_level,pile_data,pile_id,pile_lat,pile_lon,pile_dir,pile_lane,pile_distance,pile_angle,pile_width,pile_prop
+﻿road_id,city_id,dist_id,road_city,road_dist,road_name,road_level,pile_data,pile_id,pile_lat,pile_lon,pile_dir,pile_lane,pile_distance,pile_angle,pile_width,pile_prop
 1268,2,38,桃園市,桃園區,忠誠街,RD,,148611,24.960409,121.300503,1,1,0,98,3,"{""ID"": 10736, ""\u7533\u8acb\u65e5\u671f"": ""2024/11/15"", ""\u7533\u8acb\u79df\u501f\u4e8b\u7531"": ""\u6d3b\u52d5"", ""\u79df\u501f\u8d77\u59cb\u65e5"": ""2024/12/27"", ""\u79df\u501f\u7d50\u675f\u65e5"": ""2024/12/28"", ""\u501f\u7528\u6642\u6bb5"": ""8\u66420\u5206\u81f322\u66420\u5206"", ""\u501f\u7528\u8def\u6bb5"": ""\u6843\u5712\u5340\u6210\u529f\u8def\u4e09\u6bb5\u81f3\u6843\u5712\u5340\u6210\u529f\u8def\u4e09\u6bb5"", ""\u6848\u4ef6\u72c0\u614b"": ""\u5df2\u6838\u5b9a(\u540c\u610f)"", ""SymStatus"": 1}"
 1268,2,38,桃園市,桃園區,忠誠街,RD,,148612,24.960383,121.300699,1,1,20,98,3,
 1268,2,38,桃園市,桃園區,忠誠街,RD,,148613,24.960358,121.300895,1,1,40,98,3,

@@ -2,8 +2,10 @@ let map = null;
 let isAdvancedExpanded = false;
 // 全域變數
 let uploadedImages = [];
+let uploadedPhotos = [];
 let selectedSyncLayers = [];
 let advancedConfig = {};
+let associatedLayerConfig = null;
 $(document).ready(function () {
     initLayerSelect();
     initAdvancedOptions();
@@ -66,45 +68,76 @@ $(document).ready(function () {
     $('#submit').on('click', function (e) {
         e.preventDefault();
 
-        const formData = new FormData();
+        const payload = {
+            LayerId: $("#LayerId").val(),
+            LayerName: $("#LayerName").val(),
+            LayerKind: $("#LayerKind").val(),
+            LayerSvg: $("#LayerSvg").val(),
+            LayerColor: $("#LayerColor").val(),
+            District: $("#District").val(),
+            ImportMapdataAreas: unifiedFeatures // 這裡是 JS 陣列
+        };
+        // const formData = new FormData();
 
-        formData.append("LayerId", $("#LayerId").val());
-        formData.append("LayerName", $("#LayerName").val());
-        formData.append("LayerKind", $("#LayerKind").val());
-        formData.append("LayerSvg", $("#LayerSvg").val());
-        formData.append("LayerColor", $("#LayerColor").val());
-        formData.append("District", $("#District").val());
-
+        // formData.append("LayerId", $("#LayerId").val());
+        // formData.append("LayerName", $("#LayerName").val());
+        // formData.append("LayerKind", $("#LayerKind").val());
+        // formData.append("LayerSvg", $("#LayerSvg").val());
+        // formData.append("LayerColor", $("#LayerColor").val());
+        // formData.append("District", $("#District").val());
+        // formData.append("ImportMapdataAreas", unifiedFeatures);
         // ✅ 加入所有照片檔案（每張圖為 IFormFile）
-        uploadedPhotos.forEach((photo, i) => {
-            formData.append("Photos", photo.file, photo.name);
-        });
+        // uploadedPhotos.forEach((photo, i) => {
+        //     formData.append("Photos", photo.file, photo.name);
+        // });
 
-        // 如果也要上傳原始的 Xlsx/Kml 檔案（選填）
-        const file = $('#Xlsx_or_Kml')[0].files[0];
-        if (file) {
-            formData.append("Xlsx_or_Kml", file);
-        }
+        // // 如果也要上傳原始的 Xlsx/Kml 檔案（選填）
+        // const file = $('#Xlsx_or_Kml')[0].files[0];
+        // if (file) {
+        //     formData.append("Xlsx_or_Kml", file);
+        // }
 
         showLoading();
-
+        // if(advancedConfig.advanced)
         $.ajax({
             url: '/Mapdata/General/Import',
             type: 'POST',
-            data: formData,
-            processData: false,       // ✅ 不處理成 query string
-            contentType: false,       // ✅ 讓瀏覽器自動設 Content-Type
+            contentType: 'application/json',
+            data: JSON.stringify(payload), // ✅ 傳送 JSON
             success: function (data) {
-                alert(data.success ? '匯入成功！' : (data.message || '匯入失敗'));
+                if (data.success) {
+                    alert('匯入成功！');
+                } else {
+                    alert(data.message || '匯入失敗');
+                }
                 hideLoading();
-                location.reload();
+                location.reload(); // ✅ 重新載入頁面
             },
             error: function (xhr) {
-                console.error(xhr);
                 alert('匯入過程發生錯誤');
+                console.error(xhr);
                 hideLoading();
             }
         });
+        // 在這裡可以隱藏 loading spinner 或其他 UI 元素
+        console.log("AJAX 請求完成");
+        // $.ajax({
+        //     url: '/Mapdata/General/Import',
+        //     type: 'POST',
+        //     data: formData,
+        //     processData: false,       // ✅ 不處理成 query string
+        //     contentType: false,       // ✅ 讓瀏覽器自動設 Content-Type
+        //     success: function (data) {
+        //         alert(data.success ? '匯入成功！' : (data.message || '匯入失敗'));
+        //         hideLoading();
+        //         location.reload();
+        //     },
+        //     error: function (xhr) {
+        //         console.error(xhr);
+        //         alert('匯入過程發生錯誤');
+        //         hideLoading();
+        //     }
+        // });
     });
 
 
@@ -170,15 +203,24 @@ function initAdvancedOptions() {
             withCredentials: true // 確保攜帶 Cookie
         },
         success: function (data) {
-            console.log(data);
             if (data.success) {
                 var layerConfig = JSON.parse(data.layerConfig);
-                console.log(layerConfig);
-                if(layerConfig.advanced){
-                    loadAdvancedModules(layerConfig);
+                advancedConfig = layerConfig; // 儲存全域變數
+                console.log(advancedConfig);
+                
+                if(advancedConfig.advanced){
+                    if(advancedConfig.associated_layer){
+                        // 如果associated_layer存在
+                        associatedLayer = advancedConfig.associated_layer;
+                        if (associatedLayer && associatedLayer.length > 0) {                            
+                            console.log("關聯圖層:", associatedLayer);
+                        }                                
+                    }
+                    loadAdvancedModules();
+                    return true;
                 }
                 else {
-                    hideAdvancedOptions();
+                    // hideAdvancedOptions();
                 }
             }
         }
@@ -190,8 +232,7 @@ function initAdvancedOptions() {
  * 載入進階功能模組
  * @param {Object} config - 圖層配置物件
  */
-function loadAdvancedModules(config) {
-    advancedConfig = config;
+function loadAdvancedModules() {
     const $advancedContainer = $("#advancedContainer");
     
     // 清空現有內容
@@ -201,20 +242,20 @@ function loadAdvancedModules(config) {
     $("#advancedToggle").show();
     
     // 根據配置載入對應模組
-    if (config.modules && config.modules.length > 0) {
-        config.modules.forEach(module => {
+    if (advancedConfig.modules && advancedConfig.modules.length > 0) {
+        advancedConfig.modules.forEach(module => {
             switch(module) {
                 case 'photo_upload':
-                    $advancedContainer.append(createPhotoUploadModule(config.settings, config.associated_layer));
-                    initializePhotoUpload(config.settings, config.associated_layer);
+                    $advancedContainer.append(createPhotoUploadModule());
+                    initializePhotoUpload();
                     break;
                 // case 'layer_sync':
-                //     $advancedContainer.append(createLayerSyncModule(config.settings));
-                //     initializeLayerSync(config.settings);
+                //     $advancedContainer.append(createLayerSyncModule(advancedConfig.settings));
+                //     initializeLayerSync(advancedConfig.settings);
                 //     break;
                 // case 'display_settings':
-                //     $advancedContainer.append(createDisplaySettingsModule(config.settings));
-                //     initializeDisplaySettings(config.settings);
+                //     $advancedContainer.append(createDisplaySettingsModule(advancedConfig.settings));
+                //     initializeDisplaySettings(advancedConfig.settings);
                 //     break;
                 // default:
                 //     console.warn(`未知的模組類型: ${module}`);
@@ -222,7 +263,7 @@ function loadAdvancedModules(config) {
         });
         
         // 如果設定自動展開
-        if (config.settings && config.settings.auto_expand) {
+        if (advancedConfig.settings && advancedConfig.settings.auto_expand) {
             setTimeout(() => {
                 toggleAdvanced();
             }, 100);
@@ -251,21 +292,20 @@ function toggleAdvanced() {
  * @param {Object} settings - 模組設定
  * @param {Object} associatedLayer - 關聯圖層資訊
  */
-function createPhotoUploadModule(settings = {}, associatedLayer = null) {
-    const allowedFormats = settings.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    const maxFileSize = settings.max_file_size || 10; // MB
+function createPhotoUploadModule() {
+    const allowedFormats = advancedConfig.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const maxFileSize = advancedConfig.max_file_size || 10; // MB
     
     return $(`
         <div class="advanced-module fade-in" data-module="photo_upload">
             <div class="module-header">
                 <h6 class="module-title">
-                    街景照片上傳
-                    ${associatedLayer ? `<span class="badge bg-info ms-2">${associatedLayer.Name}</span>` : ''}
+                    照片上傳
                 </h6>
                 <span class="help-icon" 
                       data-bs-toggle="tooltip" 
                       data-bs-placement="right" 
-                      title="上傳與此圖層相關的街景照片，支援 ${allowedFormats.join('、').toUpperCase()} 格式，最大 ${maxFileSize}MB">
+                      title="上傳與此圖層相關的照片，支援 ${allowedFormats.join('、').toUpperCase()} 格式，最大 ${maxFileSize}MB">
                     ❔
                 </span>
             </div>
@@ -308,9 +348,9 @@ function createPhotoUploadModule(settings = {}, associatedLayer = null) {
  * @param {Object} settings - 設定參數
  * @param {Object} associatedLayer - 關聯圖層資訊
  */
-function initializePhotoUpload(settings = {}, associatedLayer = null) {
-    const maxFileSize = (settings.max_file_size || 10) * 1024 * 1024; // 轉換為 bytes
-    const allowedFormats = settings.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+function initializePhotoUpload() {
+    const maxFileSize = (advancedConfig.max_file_size || 10) * 1024 * 1024; // 轉換為 bytes
+    const allowedFormats = advancedConfig.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     
     const $uploadArea = $("#photoUploadArea");
     const $input = $("#photoInput");
@@ -339,7 +379,7 @@ function initializePhotoUpload(settings = {}, associatedLayer = null) {
     // 初始化 tooltip
     initializeTooltips();
     
-    console.log('照片上傳模組初始化完成', { associatedLayer, maxFileSize });
+    console.log('照片上傳模組初始化完成', { maxFileSize });
 }
 
 /**
@@ -713,6 +753,28 @@ function showResult_xlsx(buffer) {
     const svg = $("#LayerSvg").val();
     const color = $("#LayerColor").val();
 
+    if(advancedConfig.advanced){
+        // 檢查是否有 associated_layer 配置
+        if (advancedConfig.associated_layer && advancedConfig.associated_layer.length > 0) {
+            const featureName = feature.properties.name;
+            
+            // 優先使用 ExtendedData 中的 layerType
+            const layerType = feature.properties.layerType;
+            
+            let matchedLayer = null;
+            
+            if (layerType) {
+                // 方法一：使用 ExtendedData 的 layerType 精確匹配
+                matchedLayer = advancedConfig.associated_layer.find(layer => 
+                    layer.Name === layerType
+                );
+            }
+            
+            if (matchedLayer) {
+                feature.layerConfig = matchedLayer;
+            }
+        }
+    }
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
@@ -727,14 +789,18 @@ function showResult_xlsx(buffer) {
 
     const features = [];
     const groups = {};
-
+    
+    const props = {};
+    console.log("Processing XLSX data:", xlsxJson);
     for (const row of xlsxJson) {
         const lat = parseFloat(row["pile_lat"]);
         const lng = parseFloat(row["pile_lon"]);
         if (isNaN(lat) || isNaN(lng)) continue;
-
         const roadId = row["road_id"] || `group_${Math.random()}`;
-        if (!groups[roadId]) groups[roadId] = [];
+        if (!groups[roadId]) {
+            groups[roadId] = [];
+            props[roadId] = row; // 儲存第一個屬性
+        }
         groups[roadId].push([lng, lat]);
 
         if (kind === "point") {
@@ -745,6 +811,7 @@ function showResult_xlsx(buffer) {
             });
         }
     }
+    console.log("Grouped coordinates:", props);
     if (kind === "line" || kind === "arrowline") {
         for (const roadId in groups) {
             const coords = groups[roadId];
@@ -752,7 +819,7 @@ function showResult_xlsx(buffer) {
                 features.push({
                     type: "Feature",
                     geometry: { type: "LineString", coordinates: coords },
-                    properties: { name: roadId }
+                    properties: props[roadId]
                 });
             }
         }
@@ -764,7 +831,7 @@ function showResult_xlsx(buffer) {
                 features.push({
                     type: "Feature",
                     geometry: { type: "Polygon", coordinates: [coords] },
-                    properties: { name: roadId }
+                    properties: props[roadId]
                 });
             }
         }
@@ -793,14 +860,30 @@ function showResult_xlsx(buffer) {
         },
         onEachFeature: function (feature, layer) {
             const p = feature.properties;
+            console.log("Processing feature properties:", p);
             if (!p) return;
-            let html = `<b>${p.name || '未命名圖層'}</b><br><table>`;
-            for (const key in p) {
-                if (key !== 'name') html += `<tr><td><b>${key}</b></td><td>${p[key]}</td></tr>`;
-            }
+            let html = `<b>${p.road_name || '未命名圖層'}</b><br><table>`;
+            let prop = JSON.parse((p.pile_prop || "{}").replace(/\bNaN\b/g, "null")) || {};
+            for (const key in prop) {
+                console.log("Processing property:", key, prop[key]);
+                if(key != "施工範圍"){
+                    html += `<tr><td style="width: 30%;><b>${key}</b></td><td>${prop[key]}</td></tr>`
+                }
+                
+            };
             html += '</table>';
             layer.bindPopup(html);
         }
+        // onEachFeature: function (feature, layer) {
+        //     const p = feature.properties;
+        //     if (!p) return;
+        //     let html = `<b>${p.name || '未命名圖層'}</b><br><table>`;
+        //     for (const key in p) {
+        //         if (key !== 'name') html += `<tr><td><b>${key}</b></td><td>${p[key]}</td></tr>`;
+        //     }
+        //     html += '</table>';
+        //     layer.bindPopup(html);
+        // }
     }).addTo(map);
     // 🡺 加上箭頭裝飾
     if (kind === "arrowline") {
@@ -833,32 +916,76 @@ function showResult_xlsx(buffer) {
     } else {
         alert('⚠️ Excel 檔案中沒有有效圖形。');
     }
+    console.log(xlsxJson)
+
+    // 生成表格容器
     unifiedFeatures = []; // 清空
-    for (const roadId in groups) {
-        const placemarkRows = xlsxJson.filter(r => r.road_id == roadId);
-        const converted = placemarkRows.map((r, i) => ({
-            Index: i,
-            Latitude: parseFloat(r.pile_lat),
-            Longitude: parseFloat(r.pile_lon),
-            Property: (r.pile_prop || "{}").replace(/\bNaN\b/g, "null")
-        }));
-        console.log("converted", converted);
-        const ImportMapdataArea = {
-            name: placemarkRows[0].road_name,
-            MapdataPoints: converted
-        }
-        unifiedFeatures.push(ImportMapdataArea);
-        const container = generateAreaContainer_unified(placemarkRows[0].road_name || roadId, converted);
-        $("#result").append(container);
+    // for (const roadId in groups) {
+    //     // 以 road_id 與 pile_dir 分組
+    //     const placemarkRows = xlsxJson.filter(r => r.road_id == roadId);
+    //     const converted = placemarkRows.map((r, i) => ({
+    //         Index: i,
+    //         Latitude: parseFloat(r.pile_lat),
+    //         Longitude: parseFloat(r.pile_lon),
+    //         Property: (r.pile_prop || "{}").replace(/\bNaN\b/g, "null")
+    //     }));
+    //     console.log("Converted placemark rows:", converted);
+    //     const ImportMapdataArea = {
+    //         name: placemarkRows[0].road_name,
+    //         MapdataPoints: converted
+    //     }
+    //     unifiedFeatures.push(ImportMapdataArea);
+    //     var pile_dir = placemarkRows[0].pile_dir || 1;
+    //     var road_name = `${placemarkRows[0].road_name} - 方向 ${pile_dir}` || roadId;
+    //     const container = generateAreaContainer_unified(road_name, converted);
+    //     $("#result").append(container);
+    // }
+    const groupedByRoadAndDir = {};
+
+xlsxJson.forEach(row => {
+    const roadId = row.road_id;
+    const pileDir = row.pile_dir || '1'; // 預設為 1，如果是空值
+    const key = `${roadId}_${pileDir}`;
+
+    if (!groupedByRoadAndDir[key]) {
+        groupedByRoadAndDir[key] = [];
     }
-    console.log("unifiedFeatures", unifiedFeatures);
+    groupedByRoadAndDir[key].push(row);
+});
+
+// 遍歷分組後的資料
+for (const key in groupedByRoadAndDir) {
+    const placemarkRows = groupedByRoadAndDir[key];
+
+    const converted = placemarkRows.map((r, i) => ({
+        Index: i,
+        Latitude: parseFloat(r.pile_lat),
+        Longitude: parseFloat(r.pile_lon),
+        Property: (r.pile_prop || "{}").replace(/\bNaN\b/g, "null")
+    }));
+
+    console.log("Converted placemark rows:", converted);
+
+    const road_name = placemarkRows[0].road_name;
+    const pile_dir = placemarkRows[0].pile_dir || 1;
+    const displayName = `${road_name} - 方向 ${pile_dir}`;
+
+    const ImportMapdataArea = {
+        name: displayName,
+        MapdataPoints: converted
+    };
+
+    unifiedFeatures.push(ImportMapdataArea);
+
+    const container = generateAreaContainer_unified(displayName, converted);
+    $("#result").append(container);
+}
 }
 
 function showResult_kml(kmlContent) {
     var kind = $("#LayerKind").val();
     var svg = $("#LayerSvg").val();
     var color = $("#LayerColor").val();
-    console.log(`${kind} ${svg} ${color}`);
     // 在這裡處理 KML 內容
     // 移除 #map的d-none class
     // 將 KML 內容顯示在地圖上
@@ -870,6 +997,28 @@ function showResult_kml(kmlContent) {
     // 過濾 geojson.features 根據 kind
     geojson.features = geojson.features.filter(feature => {
         const type = feature.geometry.type;
+        if(advancedConfig.advanced){
+            // 檢查是否有 associated_layer 配置
+            if (advancedConfig.associated_layer && advancedConfig.associated_layer.length > 0) {            
+            // 優先使用 ExtendedData 中的 layerType
+            const layerType = feature.properties.layerType;
+            
+            let matchedLayer = null;
+            
+            if (layerType) {
+                // 方法一：使用 ExtendedData 的 layerType 精確匹配
+                matchedLayer = advancedConfig.associated_layer.find(layer => 
+                    layer.Name === layerType
+                );
+            }
+            
+            if (matchedLayer) {
+                feature.layerConfig = matchedLayer;
+            }
+        }
+        
+        return true; // 特殊模式保留所有幾何類型
+    }
         if (kind === "point") {
             return type === "Point";
         } else if (kind === "arrowline" || kind === "line") {
@@ -891,42 +1040,83 @@ function showResult_kml(kmlContent) {
     const geoJsonLayer = L.geoJSON(geojson, {
         // 處理 Point → 自訂 marker icon
         pointToLayer: function (feature, latlng) {
-            return L.marker(latlng, {
-                icon: Map.customIcon || L.icon({
-                    iconUrl: `/img/${svg}`,
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 32],
-                    popupAnchor: [0, -32]
-                })
-            }).bindPopup(feature.properties || '地點');
-        },
-        style: function (feature) {
-            const isLine = feature.geometry.type === 'LineString';
-            const isPolygon = feature.geometry.type === 'Polygon';
-
-            if (isLine) {
-                return {
-                    color: color,
-                    weight: 3
-                };
+            // return L.marker(latlng, {
+            //     icon: Map.customIcon || L.icon({
+            //         iconUrl: `/img/${svg}`,
+            //         iconSize: [32, 32],
+            //         iconAnchor: [16, 32],
+            //         popupAnchor: [0, -32]
+            //     })
+            // }).bindPopup(feature.properties || '地點');
+            const layerConfig = feature.layerConfig;
+            console
+            if (layerConfig) {
+                // 使用 associated_layer 的圖標配置
+                return L.marker(latlng, {
+                    icon: L.icon({
+                        iconUrl: `/img/${layerConfig.GeoName}`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -32]
+                    })
+                });
+            } else {
+                // 使用預設圖標
+                return L.marker(latlng, {
+                    icon: Map.customIcon || L.icon({
+                        iconUrl: `/img/${svg}`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -32]
+                    })
+                });
             }
-            if (isPolygon) {
-                return {
-                    color: color,
-                    weight: 2,
-                    fillColor: color,
-                    fillOpacity: 0.5
+        },
+        // style: function (feature) {
+        //     const isLine = feature.geometry.type === 'LineString';
+        //     const isPolygon = feature.geometry.type === 'Polygon';
+
+        //     if (isLine) {
+        //         return {
+        //             color: color,
+        //             weight: 3
+        //         };
+        //     }
+        //     if (isPolygon) {
+        //         return {
+        //             color: color,
+        //             weight: 2,
+        //             fillColor: color,
+        //             fillOpacity: 0.5
+        //         };
+        //     }
+        // },
+        style: function (feature) {
+            const layerConfig = feature.layerConfig;
+            // 如果有 layerConfig 且包含顏色配置，優先使用；否則使用預設顏色
+            const featureColor = (layerConfig && layerConfig.Color) ? layerConfig.Color : color;
+            
+            if (feature.geometry.type === "LineString") {
+                return { color: featureColor, weight: 3 };
+            }
+            if (feature.geometry.type === "Polygon") {
+                return { 
+                    color: featureColor, 
+                    fillColor: featureColor, 
+                    weight: 2, 
+                    fillOpacity: 0.5 
                 };
             }
         },
         onEachFeature: function (feature, layer) {
             const p = feature.properties;
             if (!p) return;
+            console.log("Processing feature properties:", p);
             // 組合 popup HTML
             let html = `<b>${p.name || '未命名圖層'}</b><br><table>`;
             for (const key in p) {
                 if (key !== 'name') {
-                    html += `<tr><td><b>${key}</b></td><td>${p[key]}</td></tr>`;
+                    html += `<tr><td style="width: 30%;"><b>${key}</b></td><td>${p[key]}</td></tr>`;
                 }
             }
             html += '</table>';
@@ -960,7 +1150,6 @@ function showResult_kml(kmlContent) {
         });
     }
     const folders = Array.from(kmlDoc.getElementsByTagName("Folder"));
-    console.log("folders", folders);
     unifiedFeatures = [];
     folders.forEach((folder, folderIndex) => {
         const folderName = folder.getElementsByTagName("name")[0]?.textContent || `群組${folderIndex + 1}`;

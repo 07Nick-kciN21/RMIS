@@ -194,8 +194,10 @@ function initMapdataLayerTable(layerId, dist, areaId) {
                         </table>
                     </div>
                 `);
-
-                $innerContent.find("#mapdataHeader").append(addBtn);
+                if(result.importEnabled){
+                    $innerContent.find("#mapdataHeader").append(addBtn);
+                }
+                
                 $innerContent.find("table").append($tbody);
 
                 // 插入內容並顯示

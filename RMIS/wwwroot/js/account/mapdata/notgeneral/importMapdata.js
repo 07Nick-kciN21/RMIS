@@ -70,8 +70,6 @@ $(document).ready(function () {
             ImportMapdataAreas: unifiedFeatures // 這裡是 JS 陣列
         };
         console.log("unifiedFeatures =", JSON.stringify(unifiedFeatures, null, 2));
-        console.log(payload);
-        showLoading();
         $.ajax({
             url: '/Mapdata/General/Import',
             type: 'POST',

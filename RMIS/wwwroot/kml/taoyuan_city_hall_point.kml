@@ -67,7 +67,7 @@
         </Point>
       </Placemark>
       <Placemark>
-        <name>測試2</name>
+        <name>桃園節點3</name>
         <ExtendedData>
           <Data name="類別碼"><value>801010203</value></Data>
           <Data name="識別碼"><value>8010102030059570</value></Data>
@@ -102,7 +102,7 @@
 
       <!-- 點：桃園市警察局 -->
       <Placemark>
-        <name>桃園市警察局</name>
+        <name>桃園市警察局2</name>
         <ExtendedData>
           <Data name="類別碼"><value>801010203</value></Data>
           <Data name="識別碼"><value>8010102030059570</value></Data>
@@ -131,7 +131,7 @@
 
       <!-- 點：桃園市政府 -->
       <Placemark>
-        <name>桃園市政府</name>
+        <name>桃園市政府2</name>
         <ExtendedData>
           <Data name="類別碼"><value>801010203</value></Data>
           <Data name="識別碼"><value>8010102030059570</value></Data>
@@ -158,7 +158,7 @@
         </Point>
       </Placemark>
       <Placemark>
-        <name>測試2</name>
+        <name>桃園節點3-2</name>
         <ExtendedData>
           <Data name="類別碼"><value>801010203</value></Data>
           <Data name="識別碼"><value>8010102030059570</value></Data>

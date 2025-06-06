@@ -1,0 +1,205 @@
+<?xml version="1.0" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <name>忠誠街</name>
+      <ExtendedData>
+        <Data name="OBJECTID">
+          <value>78260</value>
+        </Data>
+        <Data name="調查表編號">
+          <value>市桃園23879(龍祥段0327-0001)</value>
+        </Data>
+        <Data name="鄉鎮市區">
+          <value>桃園區</value>
+        </Data>
+        <Data name="地段-名">
+          <value>龍祥段</value>
+        </Data>
+        <Data name="地號">
+          <value>0327-0001</value>
+        </Data>
+        <Data name="整筆土地面積(㎡)">
+          <value>32.83</value>
+        </Data>
+        <Data name="市(國)有持分">
+          <value>1月1日</value>
+        </Data>
+        <Data name="使用分區(都市計劃內)">
+          <value>道路用地</value>
+        </Data>
+        <Data name="疑似占用">
+          <value>否</value>
+        </Data>
+        <Data name="清查年度">
+          <value>106</value>
+        </Data>
+        <Data name="疑似占用類型">
+          <value>0</value>
+        </Data>
+        <Data name="道路編號">
+          <value>桃51線</value>
+        </Data>
+        <Data name="村里">
+          <value>龍山里</value>
+        </Data>
+        <Data name="道路名稱">
+          <value>龍壽街</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>121.2260647,24.93770855</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>忠誠街</name>
+      <ExtendedData>
+        <Data name="layerType">
+            <value>否</value>  <!-- 用這個字段關聯 associated_layer -->
+        </Data>
+        <Data name="OBJECTID">
+          <value>78260</value>
+        </Data>
+        <Data name="調查表編號">
+          <value>市桃園23879(龍祥段0327-0001)</value>
+        </Data>
+        <Data name="鄉鎮市區">
+          <value>桃園區</value>
+        </Data>
+        <Data name="地段-名">
+          <value>龍祥段</value>
+        </Data>
+        <Data name="地號">
+          <value>0327-0001</value>
+        </Data>
+        <Data name="整筆土地面積(㎡)">
+          <value>32.83</value>
+        </Data>
+        <Data name="市(國)有持分">
+          <value>1月1日</value>
+        </Data>
+        <Data name="使用分區(都市計劃內)">
+          <value>道路用地</value>
+        </Data>
+        <Data name="疑似占用">
+          <value>否</value>
+        </Data>
+        <Data name="清查年度">
+          <value>106</value>
+        </Data>
+        <Data name="疑似占用類型">
+          <value>0</value>
+        </Data>
+        <Data name="道路編號">
+          <value>桃51線</value>
+        </Data>
+        <Data name="村里">
+          <value>龍山里</value>
+        </Data>
+        <Data name="道路名稱">
+          <value>龍壽街</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>121.2260647,24.93770855</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>忠誠街</name>
+      <ExtendedData>
+        <Data name="OBJECTID">
+          <value>75652</value>
+        </Data>
+        <Data name="調查表編號">
+          <value>市桃園23824(龍鳳段0940-0007)</value>
+        </Data>
+        <Data name="鄉鎮市區">
+          <value>桃園區</value>
+        </Data>
+        <Data name="地段-名">
+          <value>龍鳳段</value>
+        </Data>
+        <Data name="地號">
+          <value>0940-0007</value>
+        </Data>
+        <Data name="整筆土地面積(㎡)">
+          <value>98.14</value>
+        </Data>
+        <Data name="市(國)有持分">
+          <value>340/1000</value>
+        </Data>
+        <Data name="使用分區(都市計劃內)">
+          <value>綠地用地</value>
+        </Data>
+        <Data name="疑似占用">
+          <value>否</value>
+        </Data>
+        <Data name="清查年度">
+          <value>106</value>
+        </Data>
+        <Data name="疑似占用類型">
+          <value>0</value>
+        </Data>
+        <Data name="村里">
+          <value>龍祥里</value>
+        </Data>
+        <Data name="道路名稱">
+          <value>無名路</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>121.2447681,24.95224194</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>忠誠街</name>
+      <ExtendedData>
+        <Data name="layerType">
+            <value>否</value>  <!-- 用這個字段關聯 associated_layer -->
+        </Data>
+        <Data name="OBJECTID">
+          <value>75652</value>
+        </Data>
+        <Data name="調查表編號">
+          <value>市桃園23824(龍鳳段0940-0007)</value>
+        </Data>
+        <Data name="鄉鎮市區">
+          <value>桃園區</value>
+        </Data>
+        <Data name="地段-名">
+          <value>龍鳳段</value>
+        </Data>
+        <Data name="地號">
+          <value>0940-0007</value>
+        </Data>
+        <Data name="整筆土地面積(㎡)">
+          <value>98.14</value>
+        </Data>
+        <Data name="市(國)有持分">
+          <value>340/1000</value>
+        </Data>
+        <Data name="使用分區(都市計劃內)">
+          <value>綠地用地</value>
+        </Data>
+        <Data name="疑似占用">
+          <value>否</value>
+        </Data>
+        <Data name="清查年度">
+          <value>106</value>
+        </Data>
+        <Data name="疑似占用類型">
+          <value>0</value>
+        </Data>
+        <Data name="村里">
+          <value>龍祥里</value>
+        </Data>
+        <Data name="道路名稱">
+          <value>無名路</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>121.2447681,24.95224194</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

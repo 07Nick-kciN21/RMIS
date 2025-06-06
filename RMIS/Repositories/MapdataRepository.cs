@@ -4,6 +4,7 @@ using RMIS.Data;
 using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Auth;
 using RMIS.Models.sql;
+using System.Xml.Serialization;
 
 namespace RMIS.Repositories
 {
@@ -104,7 +105,8 @@ namespace RMIS.Repositories
                 Dist = dist.Town,
                 Kind = layer.GeometryType.Kind,
                 Svg = layer.GeometryType.Svg,
-                Color = layer.GeometryType.Color
+                Color = layer.GeometryType.Color,
+                ImportEnabled = layer.ImportEnabled
             };
             if (AreaId == Guid.Empty)
             {
@@ -182,7 +184,14 @@ namespace RMIS.Repositories
         public async Task<string> GetMapdataImportSetting(Guid LayerId)
         {
             var Layer = await _mapDBContext.Layers.FindAsync(LayerId);
-            return Layer.ImportConfiguration;
+            // 把ImportConfiguration轉換成json
+            var importConfig = Layer?.ImportConfiguration;
+            if (importConfig == null)
+            {
+                return "沒有設定匯入配置";
+            }
+
+            return importConfig;
         }
         public async Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid areaId)
         {
@@ -308,6 +317,17 @@ namespace RMIS.Repositories
                 return (true, null, "沒有詮釋資料");
             }
             return (true, pipeline.dataInfo, "取得詮釋資料");
+        }
+
+        public async Task<(bool Success, string Message)> ImportNotGeneralAsync(ImportMapdataView importMapata)
+        {
+            await ImportNotGeneralAsync(importMapata);
+            return (true, "匯入成功");
+        }
+
+        private void ConstructNotices(string prop)
+        {
+            return;
         }
     }
 }

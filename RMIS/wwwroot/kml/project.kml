@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+  <name>Taoyuan City Hall - Styled</name>
+  <Folder>
+    <name>asd123</name>
+    <Placemark>
+      <name>新農街382巷至中山北路一段390巷</name>
+      <ExtendedData>
+        <Data name="專案代號">
+          <value>asd123</value>
+        </Data>
+        <Data name="提案人">
+          <value>李家興議員</value>
+        </Data>
+        <Data name="行政區">
+          <value>楊梅區</value>
+        </Data>
+        <Data name="起點">
+          <value>新農街382巷</value>
+        </Data>
+        <Data name="終點">
+          <value>中山北路一段390巷</value>
+        </Data>
+        <Data name="起訖位置">
+          <value>新農街382巷至中山北路一段390巷</value>
+        </Data>
+        <Data name="道路長度">
+          <value>60公尺</value>
+        </Data>
+        <Data name="現況路寬">
+          <value>未開闢</value>
+        </Data>
+        <Data name="計畫路寬">
+          <value>8公尺|都計道路</value>
+        </Data>
+        <Data name="公有土地">
+          <value>2</value>
+        </Data>
+        <Data name="私有土地">
+          <value>1</value>
+        </Data>
+        <Data name="公私土地">
+          <value>0</value>
+        </Data>
+        <Data name="工程經費">
+          <value>500萬</value>
+        </Data>
+        <Data name="用地經費">
+          <value>3100萬</value>
+        </Data>
+        <Data name="補償經費">
+          <value>0萬</value>
+        </Data>
+        <Data name="合計經費">
+          <value>3600萬</value>
+        </Data>
+        <Data name="備註">
+          <value>通學道路可連接楊梅國小及楊明國中</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>121.225981,24.949975 121.226059,24.949483 121.226059,24.949483 121.226609,24.950167</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>asd123_01.png</name>
+      <ExtendedData>
+        <Data name="layerType">
+            <value>街景照片</value>  <!-- 用這個字段關聯 associated_layer -->
+        </Data>
+        <Data name="imageUrl">
+            <value>asd123_01.png</value>  <!-- 實際照片 URL -->
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>121.225928,24.95</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>asd123_02.png</name>
+     <ExtendedData>
+        <Data name="layerType">
+            <value>街景照片</value>  <!-- 用這個字段關聯 associated_layer -->
+        </Data>
+        <Data name="imageUrl">
+            <value>asd123_02.png</value>  <!-- 實際照片 URL -->
+        </Data>
+    </ExtendedData>
+      <Point>
+        <coordinates>121.226626,24.95017</coordinates>
+      </Point>
+    </Placemark>
+    </Folder>
+  </Document>
+</kml>

@@ -1,0 +1,93 @@
+<?xml version="1.0" ?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <name>AP11318766</name>
+      <ExtendedData>
+        <Data name="許可證號">
+          <value>AP11318766</value>
+        </Data>
+        <Data name="工程案號">
+          <value>AP11318766</value>
+        </Data>
+        <Data name="核定單位">
+          <value>工務局</value>
+        </Data>
+        <Data name="工程名稱">
+          <value>桃園市道路工程通報案件</value>
+        </Data>
+        <Data name="施工狀態">
+          <value>本日施工</value>
+        </Data>
+        <Data name="施工開始日期">
+          <value>2024/11/26 AM 12:00:00</value>
+        </Data>
+        <Data name="施工結束日期">
+          <value>2025/1/31 AM 12:00:00</value>
+        </Data>
+        <Data name="行政區">
+          <value>中壢區</value>
+        </Data>
+        <Data name="施工地點">
+          <value>中壢區高鐵站前東路與青山路-高鐵站前東路與青山路(開挖開關箱)</value>
+        </Data>
+        <Data name="白天施工時段">
+          <value/>
+        </Data>
+        <Data name="晚上施工時段">
+          <value/>
+        </Data>
+        <Data name="管線單位">
+          <value>桃園市政府養護工程處路燈工程科</value>
+        </Data>
+        <Data name="施工原因">
+          <value/>
+        </Data>
+        <Data name="變更狀態">
+          <value/>
+        </Data>
+        <Data name="變更日期">
+          <value/>
+        </Data>
+        <Data name="結案日期">
+          <value/>
+        </Data>
+        <Data name="施工前照片">
+          <value>AP11318766_01.png</value>
+        </Data>
+        <Data name="施工後照片">
+          <value>AP11318766_01.png</value>
+        </Data>
+        <Data name="打卡告示照片">
+          <value>AP11318766_03.png</value>
+        </Data>
+        <Data name="打卡交管照片">
+          <value>AP11318766_04.png</value>
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>121.21830880432448,25.011720110617812</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>AP11318766_施工範圍1</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>121.21638832141913,25.013416726144825 121.21635613491283,25.01320769080961 121.21669409322902,25.0130278229108 121.21656534720383,25.01330491659119</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>AP11318766_施工範圍2</name>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>121.21894740175556,25.01259658950617 121.21915661404655,25.01260631213617 121.21900909255933,25.012681662492607</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

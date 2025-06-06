@@ -29,6 +29,7 @@ namespace RMIS.Models.Account.Mapdatas
         public string Svg { get; set; }
         public string Color { get; set; }
         public List<MapdataArea> Areas { get; set; }
+        public bool ImportEnabled { get; set; } // 是否允許匯入
     }
     public class MapdatAdminDist
     {

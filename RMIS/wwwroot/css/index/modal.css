@@ -28,7 +28,7 @@
     z-index: 1100;
 }
 
-.modal-content {
+.Admin-Modal-content {
     top:8%;
     background-color: #fff;
     border-radius: 10px; /* 圆角 */

@@ -4,8 +4,9 @@
     <name>Taoyuan City Hall - Styled</name>
 
     <Folder>
-    <name>桃園市政府</name>
-      <Placemark>        
+      <name>桃園市群組1</name>   
+      <Placemark>     
+        <name>桃園市政府</name>   
         <ExtendedData>
           <Data name="類別碼"><value>801010203</value></Data>
           <Data name="識別碼"><value>8010102030059570</value></Data>
@@ -40,10 +41,27 @@
           </outerBoundaryIs>
         </Polygon>
       </Placemark>
+      <Placemark>
+        <name>管線(綠)</name>
+        <ExtendedData>
+            <Data name="layerType">
+                <value>管線(綠)</value>  <!-- 用這個字段關聯 associated_layer -->
+            </Data>
+        </ExtendedData>
+        <LineString>
+          <coordinates>
+                121.300121,24.992861,0
+                121.301141,24.992875,0
+                121.301191,24.993474,0
+                121.300131,24.993469,0
+              </coordinates>
+        </LineString>
+      </Placemark>
     </Folder>
     <Folder>
-      <name>桃園市警察局</name>
+    <name>桃園市群組2</name> 
       <Placemark>
+        <name>桃園市警察局</name>
         <ExtendedData>
           <Data name="類別碼"><value>801010203</value></Data>
           <Data name="識別碼"><value>8010102030059570</value></Data>

@@ -15,5 +15,7 @@ namespace RMIS.Repositories
         Task<(bool Success, string Message)> DeleteMapdataAreaAsync(Guid id);
         Task<(bool Success, string Message)> UpdateDatainfoAsync(UpdateDatainfo datainfo);
         Task<(bool Success, string? Data, string Message)> GetDatainfoAsync(Guid id);
+
+        Task<(bool Success, string? Message)> ImportNotGeneralAsync(ImportMapdataView importMapata);
     }
 }

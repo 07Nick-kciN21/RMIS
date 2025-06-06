@@ -316,9 +316,10 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/General/Import")]
-        public async Task<IActionResult> ImportMapdata([FromForm] ImportMapdataView importMapdata)
+        public async Task<IActionResult> ImportMapdata([FromBody] ImportMapdataView importMapdata)
         {
             var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -326,9 +327,24 @@ namespace RMIS.Controllers
                 return Json(new { success = false, message = "無權限新增" });
             }
 
-            //var result = await _mapdataInterface.ImportMapdataAsync(importMapdata);
-            return Json(new { success = true, message = "" });
+            var imported = await _mapdataInterface.ImportMapdataAsync(importMapdata);
+            return Json(new { success = imported.Success, message = imported.Message });
         }
+
+        //[HttpPost("[controller]/General/Import")]
+        //public async Task<IActionResult> ImportMapdata([FromForm] ImportMapdataView importMapdata)
+        //{
+        //    var currentUser = await _userManager.GetUserAsync(User);
+        //    var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+        //    if (!currentUserPermission.Create)
+        //    {
+        //        return Json(new { success = false, message = "無權限新增" });
+        //    }
+
+        //    var result = await _mapdataInterface.ImportMapdataAsync(importMapdata);
+        //    return Json(new { success = result.Success, message = result.Message });
+        //}
 
         // 小幫手類型
         public class ImportSettingWrapper
@@ -356,6 +372,22 @@ namespace RMIS.Controllers
         public IActionResult NotGeneralMapdataLayer(Guid id)
         {
             return View("");
+        }
+
+        [HttpPost("[controller]/NotGeneral/Import")]
+        public async Task<IActionResult> ImportNotGeneralMapdata([FromBody] ImportMapdataView importMapdata)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
+
+            if (!currentUserPermission.Create)
+            {
+                return Json(new { success = false, message = "無權限新增" });
+            }
+
+            var imported = await _mapdataInterface.ImportNotGeneralAsync(importMapdata);
+            return Json(new { success = imported.Success, message = imported.Message });
         }
     }
 }
