@@ -95,6 +95,100 @@
         <coordinates>121.226626,24.95017</coordinates>
       </Point>
     </Placemark>
-    </Folder>
+  </Folder>
+  <Folder>
+    <name>qwe456</name>
+    <Placemark>
+      <name>泰昌五街至宏昌三街</name>
+      <ExtendedData>
+        <Data name="專案代號">
+          <value>qwe456</value>
+        </Data>
+        <Data name="提案人">
+          <value>萬美玲議員</value>
+        </Data>
+        <Data name="行政區">
+          <value>桃園區</value>
+        </Data>
+        <Data name="起點">
+          <value>泰昌五街</value>
+        </Data>
+        <Data name="終點">
+          <value>宏昌三街</value>
+        </Data>
+        <Data name="起訖位置">
+          <value>泰昌五街至宏昌三街</value>
+        </Data>
+        <Data name="道路長度">
+          <value>60公尺</value>
+        </Data>
+        <Data name="現況路寬">
+          <value>未開闢</value>
+        </Data>
+        <Data name="計畫路寬">
+          <value>8公尺|都計道路</value>
+        </Data>
+        <Data name="公有土地">
+          <value>2</value>
+        </Data>
+        <Data name="私有土地">
+          <value>1</value>
+        </Data>
+        <Data name="公私土地">
+          <value>0</value>
+        </Data>
+        <Data name="工程經費">
+          <value>500萬</value>
+        </Data>
+        <Data name="用地經費">
+          <value>3100萬</value>
+        </Data>
+        <Data name="補償經費">
+          <value>0萬</value>
+        </Data>
+        <Data name="合計經費">
+          <value>3600萬</value>
+        </Data>
+        <Data name="備註">
+          <value>地上有農作物</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>121.206912,24.957282 121.206719,24.954635 121.208693,24.954596 121.208929,24.956873</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>qwe456_01.png</name>
+      <ExtendedData>
+        <Data name="layerType">
+            <value>街景照片</value>  <!-- 用這個字段關聯 associated_layer -->
+        </Data>
+        <Data name="imageUrl">
+            <value>qwe456_01.png</value>  <!-- 實際照片 URL -->
+        </Data>
+      </ExtendedData>
+      <Point>
+        <coordinates>121.208929,24.956873</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>qwe456_02.png</name>
+     <ExtendedData>
+        <Data name="layerType">
+            <value>街景照片</value>  <!-- 用這個字段關聯 associated_layer -->
+        </Data>
+        <Data name="imageUrl">
+            <value>qwe456_02.png</value>  <!-- 實際照片 URL -->
+        </Data>
+    </ExtendedData>
+      <Point>
+        <coordinates>121.206869,24.957369</coordinates>
+      </Point>
+    </Placemark>
+  </Folder>
   </Document>
 </kml>

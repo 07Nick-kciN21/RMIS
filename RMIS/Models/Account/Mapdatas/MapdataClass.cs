@@ -61,7 +61,7 @@ namespace RMIS.Models.Account.Mapdatas
         public string LayerSvg { get; set; } // 圖層標記
         public string LayerColor { get; set; } // 圖層顏色
         public string District { get; set; } // 行政區
-        public string ImportSetting { get; set; } // 匯入設定
+        public string Associated_table { get; set; } // 匯入設定
         public List<ImportMapdataArea>? ImportMapdataAreas { get; set; }
         public IFormFile Xlsx_or_Kml { get; set; }
         public List<IFormFile> Photos { get; set; } // ✅ 加這個來接收多張照片

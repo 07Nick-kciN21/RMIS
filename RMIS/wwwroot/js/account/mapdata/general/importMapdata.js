@@ -75,7 +75,8 @@ $(document).ready(function () {
             LayerSvg: $("#LayerSvg").val(),
             LayerColor: $("#LayerColor").val(),
             District: $("#District").val(),
-            ImportMapdataAreas: unifiedFeatures // 這裡是 JS 陣列
+            ImportMapdataAreas: unifiedFeatures, // 這裡是 JS 陣列
+            Associated_table: advancedConfig.associated_table || null,
         };
         // const formData = new FormData();
 
@@ -206,10 +207,11 @@ function initAdvancedOptions() {
             if (data.success) {
                 var layerConfig = JSON.parse(data.layerConfig);
                 advancedConfig = layerConfig; // 儲存全域變數
-                console.log(advancedConfig);
+                console.log("advancedConfig", advancedConfig);
                 
                 if(advancedConfig.advanced){
                     if(advancedConfig.associated_layer){
+                        console.log("關聯圖層配置:", advancedConfig.associated_layer);
                         // 如果associated_layer存在
                         associatedLayer = advancedConfig.associated_layer;
                         if (associatedLayer && associatedLayer.length > 0) {                            
@@ -752,11 +754,10 @@ function showResult_xlsx(buffer) {
     const kind = $("#LayerKind").val();
     const svg = $("#LayerSvg").val();
     const color = $("#LayerColor").val();
-
+    
     if(advancedConfig.advanced){
         // 檢查是否有 associated_layer 配置
         if (advancedConfig.associated_layer && advancedConfig.associated_layer.length > 0) {
-            const featureName = feature.properties.name;
             
             // 優先使用 ExtendedData 中的 layerType
             const layerType = feature.properties.layerType;
@@ -1004,14 +1005,14 @@ function showResult_kml(kmlContent) {
             const layerType = feature.properties.layerType;
             
             let matchedLayer = null;
-            
+            console.log("layerType:", advancedConfig.associated_layer);
             if (layerType) {
                 // 方法一：使用 ExtendedData 的 layerType 精確匹配
                 matchedLayer = advancedConfig.associated_layer.find(layer => 
                     layer.Name === layerType
                 );
             }
-            
+            console.log("matchedLayer:", matchedLayer, layerType);
             if (matchedLayer) {
                 feature.layerConfig = matchedLayer;
             }
@@ -1049,8 +1050,9 @@ function showResult_kml(kmlContent) {
             //     })
             // }).bindPopup(feature.properties || '地點');
             const layerConfig = feature.layerConfig;
-            console
+            console.log("layerConfig feature:", layerConfig);
             if (layerConfig) {
+                console.log(`/img/${layerConfig.GeoName}`);
                 // 使用 associated_layer 的圖標配置
                 return L.marker(latlng, {
                     icon: L.icon({

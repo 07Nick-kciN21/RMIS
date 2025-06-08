@@ -4,6 +4,7 @@ using RMIS.Data;
 using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Auth;
 using RMIS.Models.sql;
+using System.Text.Json;
 using System.Xml.Serialization;
 
 namespace RMIS.Repositories
@@ -233,7 +234,20 @@ namespace RMIS.Repositories
                 var layerExists = await _mapDBContext.Layers.AnyAsync(l => l.Id == importMapata.LayerId);
                 if (!layerExists)
                     return (false, "圖層不存在，無法新增區域");
+                var associated_table = importMapata.Associated_table;
+                switch (associated_table)
+                {
+                    case "RoadProject":
+                        var roadprojects = await Add2RoadProject(importMapata.ImportMapdataAreas);
+                        await _mapDBContext.RoadProjects.AddRangeAsync(roadprojects);
+                        break;
+                    case "其他":
+                        // 其他類型的處理邏輯
+                        break;
+                    default:
+                        break;
 
+                }
                 foreach (var mapdataArea in importMapata.ImportMapdataAreas)
                 {
                     if (mapdataArea.MapdataPoints == null || mapdataArea.MapdataPoints.Count == 0)
@@ -279,6 +293,70 @@ namespace RMIS.Repositories
             }
         }
 
+        private async Task<List<RoadProject>> Add2RoadProject(List<ImportMapdataArea> ImportMapdataAreas)
+        {
+            var roadProjects = new List<RoadProject>();
+
+            foreach (var mapdataArea in ImportMapdataAreas)
+            {
+                var propJson = mapdataArea.MapdataPoints[0].Property;
+
+                // 解析 JSON 字串成 Dictionary
+                var propDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(propJson);
+
+                // 安全取得值
+                string GetStr(string key) =>
+                    propDict != null && propDict.TryGetValue(key, out var val) ? val.ToString() : "";
+
+                int GetInt(string key) =>
+                    propDict != null && propDict.TryGetValue(key, out var val) &&
+                    int.TryParse(val.ToString(), out var result) ? result : 0;
+
+                float GetFloat(string key) =>
+                    propDict != null && propDict.TryGetValue(key, out var val) &&
+                    float.TryParse(val.ToString(), out var result) ? result : 0f;
+
+                int ParseMoney(string? raw) =>
+                    int.TryParse(raw?.Replace("萬", "").Trim(), out var value) ? value * 10000 : 0;
+
+                var project = new RoadProject
+                {
+                    Id = Guid.NewGuid(),
+                    ProjectId = GetStr("專案代號"),
+                    Proposer = GetStr("提案人"),
+                    AdministrativeDistrict = GetStr("行政區"),
+                    StartPoint = GetStr("起點"),
+                    EndPoint = GetStr("終點"),
+                    StartEndLocation = GetStr("起訖位置"),
+                    RoadLength = float.TryParse(GetStr("道路長度").Replace("公尺", ""), out var rl) ? rl : 0,
+                    CurrentRoadWidth = GetStr("現況路寬"),
+                    PlannedRoadWidth = GetStr("計畫路寬"),
+                    PublicLand = GetInt("公有土地"),
+                    PrivateLand = GetInt("私有土地"),
+                    PublicPrivateLand = GetInt("公私土地"),
+                    ConstructionBudget = ParseMoney(GetStr("工程經費")),
+                    LandAcquisitionBudget = ParseMoney(GetStr("用地經費")),
+                    CompensationBudget = ParseMoney(GetStr("補償經費")),
+                    TotalBudget = ParseMoney(GetStr("合計經費")),
+                    Remarks = GetStr("備註"),
+                    CreateTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                };
+
+                roadProjects.Add(project);
+            }
+
+            return roadProjects;
+        }
+
+        private int ParseInt(string? input)
+        {
+            return int.TryParse(input, out var result) ? result : 0;
+        }
+
+        private float ParseFloat(string? input)
+        {
+            return float.TryParse(input, out var result) ? result : 0;
+        }
         public async Task<(bool Success, string Message)> UpdateDatainfoAsync(UpdateDatainfo updateDatainfo)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
@@ -303,7 +381,6 @@ namespace RMIS.Repositories
                 return (false, "詮釋資料修改失敗");
             }
         }
-
 
         public async Task<(bool Success, string? Data, string Message)> GetDatainfoAsync(Guid id)
         {
