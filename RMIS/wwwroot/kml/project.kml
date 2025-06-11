@@ -14,7 +14,7 @@
           <value>李家興議員</value>
         </Data>
         <Data name="行政區">
-          <value>楊梅區</value>
+          <value>桃園區</value>
         </Data>
         <Data name="起點">
           <value>新農街382巷</value>
@@ -177,14 +177,14 @@
     </Placemark>
     <Placemark>
       <name>qwe456_02.png</name>
-     <ExtendedData>
+      <ExtendedData>
         <Data name="layerType">
             <value>街景照片</value>  <!-- 用這個字段關聯 associated_layer -->
         </Data>
         <Data name="imageUrl">
             <value>qwe456_02.png</value>  <!-- 實際照片 URL -->
         </Data>
-    </ExtendedData>
+      </ExtendedData>
       <Point>
         <coordinates>121.206869,24.957369</coordinates>
       </Point>

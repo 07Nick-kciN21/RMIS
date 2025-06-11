@@ -6,6 +6,8 @@ let uploadedPhotos = [];
 let selectedSyncLayers = [];
 let advancedConfig = {};
 let associatedLayerConfig = null;
+let matchedLayer = null;
+window.associatedLayers = []; // 儲存關聯圖層的全域變數
 $(document).ready(function () {
     initLayerSelect();
     initAdvancedOptions();
@@ -32,6 +34,27 @@ $(document).ready(function () {
 
     $('#Xlsx_or_Kml').on('change', function () {
         $("#result").empty();
+        // 清空地圖
+        if(window.associatedLayer){
+            window.associatedLayers.forEach(layer => map.removeLayer(layer));
+            window.associatedLayers = []; // 清空
+        }
+        if (window.xlsxLayer) {
+            map.removeLayer(window.xlsxLayer);
+            window.xlsxLayer = null; // 清除全域變數
+        }
+        if (window.kmlLayer) {
+            map.removeLayer(window.kmlLayer);
+            window.kmlLayer = null; // 清除全域變數
+        }
+
+        // 清空照片上傳區域
+        uploadedPhotos = []; // 清空已上傳的照片
+        $("#photoPreviewContainer").hide();
+        $("#photoGrid").empty();
+        $("#photoCount").text("0");
+
+
         var format = $('#formatSelect').val();
         console.log(format);
         // 獲取選擇的檔案
@@ -122,23 +145,6 @@ $(document).ready(function () {
         });
         // 在這裡可以隱藏 loading spinner 或其他 UI 元素
         console.log("AJAX 請求完成");
-        // $.ajax({
-        //     url: '/Mapdata/General/Import',
-        //     type: 'POST',
-        //     data: formData,
-        //     processData: false,       // ✅ 不處理成 query string
-        //     contentType: false,       // ✅ 讓瀏覽器自動設 Content-Type
-        //     success: function (data) {
-        //         alert(data.success ? '匯入成功！' : (data.message || '匯入失敗'));
-        //         hideLoading();
-        //         location.reload();
-        //     },
-        //     error: function (xhr) {
-        //         console.error(xhr);
-        //         alert('匯入過程發生錯誤');
-        //         hideLoading();
-        //     }
-        // });
     });
 
 
@@ -251,16 +257,6 @@ function loadAdvancedModules() {
                     $advancedContainer.append(createPhotoUploadModule());
                     initializePhotoUpload();
                     break;
-                // case 'layer_sync':
-                //     $advancedContainer.append(createLayerSyncModule(advancedConfig.settings));
-                //     initializeLayerSync(advancedConfig.settings);
-                //     break;
-                // case 'display_settings':
-                //     $advancedContainer.append(createDisplaySettingsModule(advancedConfig.settings));
-                //     initializeDisplaySettings(advancedConfig.settings);
-                //     break;
-                // default:
-                //     console.warn(`未知的模組類型: ${module}`);
             }
         });
         
@@ -295,9 +291,7 @@ function toggleAdvanced() {
  * @param {Object} associatedLayer - 關聯圖層資訊
  */
 function createPhotoUploadModule() {
-    const allowedFormats = advancedConfig.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    const maxFileSize = advancedConfig.max_file_size || 10; // MB
-    
+    const allowedFormats = advancedConfig.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];    
     return $(`
         <div class="advanced-module fade-in" data-module="photo_upload">
             <div class="module-header">
@@ -307,7 +301,7 @@ function createPhotoUploadModule() {
                 <span class="help-icon" 
                       data-bs-toggle="tooltip" 
                       data-bs-placement="right" 
-                      title="上傳與此圖層相關的照片，支援 ${allowedFormats.join('、').toUpperCase()} 格式，最大 ${maxFileSize}MB">
+                      title="上傳與此圖層相關的照片，支援 ${allowedFormats.join('、').toUpperCase()} 格式">
                     ❔
                 </span>
             </div>
@@ -754,28 +748,6 @@ function showResult_xlsx(buffer) {
     const kind = $("#LayerKind").val();
     const svg = $("#LayerSvg").val();
     const color = $("#LayerColor").val();
-    
-    if(advancedConfig.advanced){
-        // 檢查是否有 associated_layer 配置
-        if (advancedConfig.associated_layer && advancedConfig.associated_layer.length > 0) {
-            
-            // 優先使用 ExtendedData 中的 layerType
-            const layerType = feature.properties.layerType;
-            
-            let matchedLayer = null;
-            
-            if (layerType) {
-                // 方法一：使用 ExtendedData 的 layerType 精確匹配
-                matchedLayer = advancedConfig.associated_layer.find(layer => 
-                    layer.Name === layerType
-                );
-            }
-            
-            if (matchedLayer) {
-                feature.layerConfig = matchedLayer;
-            }
-        }
-    }
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
@@ -783,15 +755,16 @@ function showResult_xlsx(buffer) {
 
     // 清除 map 與畫面
     if (window.xlsxLayer) {
+        window.associatedLayers.forEach(layer => map.removeLayer(layer));
+        window.associatedLayers = []; // 清空
         map.removeLayer(window.xlsxLayer);
     }
     $("#showContainer").removeClass("d-none");
     $("#result").empty();
 
-    const features = [];
-    const groups = {};
-    
-    const props = {};
+    const features = []; // GeoJSON features 結構
+    const groups = {}; // key: road_id, value: [[lng, lat]]
+    const props = {}; // key: road_id, value: 屬性資料
     console.log("Processing XLSX data:", xlsxJson);
     for (const row of xlsxJson) {
         const lat = parseFloat(row["pile_lat"]);
@@ -837,7 +810,16 @@ function showResult_xlsx(buffer) {
             }
         }
     }
-
+    // 匹配的圖層列表(名稱待修改) 
+    let associated_layers = [];
+    // 額外處理 pile_prop 中的關聯圖示點位
+    if (advancedConfig.advanced && advancedConfig.associated_layer?.length > 0) {
+        // associated_layers
+        associated_layers = advancedConfig.associated_layer;
+    }
+    console.log("associated_layers:", associated_layers);
+    // 關聯欄位
+    let associated_fields = [];
     const geojson = { type: "FeatureCollection", features };
 
     const layer = L.geoJSON(geojson, {
@@ -861,30 +843,80 @@ function showResult_xlsx(buffer) {
         },
         onEachFeature: function (feature, layer) {
             const p = feature.properties;
-            console.log("Processing feature properties:", p);
+            console.log("Feature properties:", feature);
             if (!p) return;
             let html = `<b>${p.road_name || '未命名圖層'}</b><br><table>`;
             let prop = JSON.parse((p.pile_prop || "{}").replace(/\bNaN\b/g, "null")) || {};
             for (const key in prop) {
-                console.log("Processing property:", key, prop[key]);
-                if(key != "施工範圍"){
-                    html += `<tr><td style="width: 30%;><b>${key}</b></td><td>${prop[key]}</td></tr>`
+                const value = prop[key];
+                // 如果是關鍵欄位的座標資料，則處理為關聯圖示點位
+                const layerDef = associated_layers.find(ld => ld.Name === key);
+                if (layerDef) {
+                    associated_fields.push(key); // 收集關聯欄位
+                    if (layerDef.GeoType === "point" && typeof value === "object") {
+                        console.log("Processing point coordinates for layer:", layerDef.Name, value);
+                        for (const [imgName, coordList] of Object.entries(value)) {
+                            // 預期 coordList 是 [lng, lon]
+                            const coordStr = coordList[0];
+                            const [lng, lon] = coordStr.split(',').map(parseFloat);
+                            console.log("Processed point coordinates:", coordStr);
+                            if (!isNaN(lng) && !isNaN(lon)) {
+                                const marker = L.marker([lng, lon], {
+                                    icon: L.icon({
+                                        iconUrl: `/img/${layerDef.GeoName}`,
+                                        iconSize: [32, 32],
+                                        iconAnchor: [16, 32],
+                                        popupAnchor: [0, -32]
+                                    })
+                                }).bindPopup(`<b>${layerDef.Name}</b><br>${imgName}`);                                
+                                marker.addTo(map);
+                                window.associatedLayers.push(marker); // 儲存關聯圖示點位
+                            }
+                        }
+                    } else if (layerDef.GeoType === "line" && typeof value === "object") {
+                        for (const [imgName, coordList] of Object.entries(value)) {
+                            console.log("Processing line coordinates for image:", imgName, coordList);
+                            if(coordList.length < 2) continue; // 至少需要兩個點
+                            const lineCoords = coordList.map(coordStr => {
+                                const [lng, lon] = coordStr.split(',').map(parseFloat);
+                                return !isNaN(lng) && !isNaN(lon) ? [lng, lon] : null;
+                            }).filter(c => c);
+                            console.log("Processed line coordinates:", lineCoords);
+                            if (lineCoords.length >= 2) {
+                                const polyline = L.polyline(lineCoords, {
+                                    color: layerDef.GeoColor || color,
+                                    weight: 3
+                                }).bindPopup(`<b>${layerDef.Name}</b><br>${imgName}`);
+                                polyline.addTo(map);
+                                window.associatedLayers.push(polyline);
+                            }
+                        }
+                    } else if (layerDef.GeoType === "plane" && Array.isArray(value) && value.length >= 3) {
+                        const polygonCoords = value.map(coordStr => {
+                            const [lon, lat] = coordStr.split(',').map(parseFloat);
+                            return !isNaN(lat) && !isNaN(lon) ? [lat, lon] : null;
+                        }).filter(c => c);
+
+                        if (polygonCoords.length >= 3) {
+                            const polygon = L.polygon(polygonCoords, {
+                                color: layerDef.GeoColor || color,
+                                fillColor: layerDef.GeoColor || color,
+                                weight: 2,
+                                fillOpacity: 0.5
+                            }).bindPopup(`<b>${layerDef.Name}</b>`);
+                            polygon.addTo(map);
+                            window.associatedLayers.push(polygon);
+                        }
+                    }
+                    continue; // 👈 不加到 popup 表格
                 }
-                
-            };
+
+                // 不是 associated_layer 的欄位，加到 popup 表格中
+                html += `<tr><td style="width: 30%;"><b>${key}</b></td><td>${Array.isArray(value) ? value.join("<br>") : value}</td></tr>`;
+            }
             html += '</table>';
             layer.bindPopup(html);
         }
-        // onEachFeature: function (feature, layer) {
-        //     const p = feature.properties;
-        //     if (!p) return;
-        //     let html = `<b>${p.name || '未命名圖層'}</b><br><table>`;
-        //     for (const key in p) {
-        //         if (key !== 'name') html += `<tr><td><b>${key}</b></td><td>${p[key]}</td></tr>`;
-        //     }
-        //     html += '</table>';
-        //     layer.bindPopup(html);
-        // }
     }).addTo(map);
     // 🡺 加上箭頭裝飾
     if (kind === "arrowline") {
@@ -917,73 +949,60 @@ function showResult_xlsx(buffer) {
     } else {
         alert('⚠️ Excel 檔案中沒有有效圖形。');
     }
-    console.log(xlsxJson)
-
+    console.log(xlsxJson);
+    
     // 生成表格容器
     unifiedFeatures = []; // 清空
-    // for (const roadId in groups) {
-    //     // 以 road_id 與 pile_dir 分組
-    //     const placemarkRows = xlsxJson.filter(r => r.road_id == roadId);
-    //     const converted = placemarkRows.map((r, i) => ({
-    //         Index: i,
-    //         Latitude: parseFloat(r.pile_lat),
-    //         Longitude: parseFloat(r.pile_lon),
-    //         Property: (r.pile_prop || "{}").replace(/\bNaN\b/g, "null")
-    //     }));
-    //     console.log("Converted placemark rows:", converted);
-    //     const ImportMapdataArea = {
-    //         name: placemarkRows[0].road_name,
-    //         MapdataPoints: converted
-    //     }
-    //     unifiedFeatures.push(ImportMapdataArea);
-    //     var pile_dir = placemarkRows[0].pile_dir || 1;
-    //     var road_name = `${placemarkRows[0].road_name} - 方向 ${pile_dir}` || roadId;
-    //     const container = generateAreaContainer_unified(road_name, converted);
-    //     $("#result").append(container);
-    // }
     const groupedByRoadAndDir = {};
 
-xlsxJson.forEach(row => {
-    const roadId = row.road_id;
-    const pileDir = row.pile_dir || '1'; // 預設為 1，如果是空值
-    const key = `${roadId}_${pileDir}`;
+    xlsxJson.forEach(row => {
+        const roadId = row.road_id;
+        const pileDir = row.pile_dir || '1'; // 預設為 1，如果是空值
+        const key = `${roadId}_${pileDir}`;
 
-    if (!groupedByRoadAndDir[key]) {
-        groupedByRoadAndDir[key] = [];
+        if (!groupedByRoadAndDir[key]) {
+            groupedByRoadAndDir[key] = [];
+        }
+        groupedByRoadAndDir[key].push(row);
+    });
+
+    // 遍歷分組後的資料
+    for (const key in groupedByRoadAndDir) {
+        const placemarkRows = groupedByRoadAndDir[key];
+
+        const converted = placemarkRows.map((r, i) => ({
+            Index: i,
+            Latitude: parseFloat(r.pile_lat),
+            Longitude: parseFloat(r.pile_lon),
+            Property: (r.pile_prop || "{}").replace(/\bNaN\b/g, "null")
+        }));
+
+        console.log("Converted placemark rows:", converted);
+
+        const road_name = placemarkRows[0].road_name;
+        const pile_dir = placemarkRows[0].pile_dir || 1;
+        const displayName = `${road_name} - 方向 ${pile_dir}`;
+
+        const ImportMapdataArea = {
+            name: displayName,
+            MapdataPoints: converted
+        };
+
+        unifiedFeatures.push(ImportMapdataArea);
+
+        const container = generateAreaContainer_unified(displayName, converted, associated_fields);
+        $("#result").append(container);
     }
-    groupedByRoadAndDir[key].push(row);
-});
-
-// 遍歷分組後的資料
-for (const key in groupedByRoadAndDir) {
-    const placemarkRows = groupedByRoadAndDir[key];
-
-    const converted = placemarkRows.map((r, i) => ({
-        Index: i,
-        Latitude: parseFloat(r.pile_lat),
-        Longitude: parseFloat(r.pile_lon),
-        Property: (r.pile_prop || "{}").replace(/\bNaN\b/g, "null")
-    }));
-
-    console.log("Converted placemark rows:", converted);
-
-    const road_name = placemarkRows[0].road_name;
-    const pile_dir = placemarkRows[0].pile_dir || 1;
-    const displayName = `${road_name} - 方向 ${pile_dir}`;
-
-    const ImportMapdataArea = {
-        name: displayName,
-        MapdataPoints: converted
-    };
-
-    unifiedFeatures.push(ImportMapdataArea);
-
-    const container = generateAreaContainer_unified(displayName, converted);
-    $("#result").append(container);
-}
 }
 
 function showResult_kml(kmlContent) {
+    // 清除原圖層（如需要）
+    if (window.kmlLayer) {
+        window.associatedLayers.forEach(layer => map.removeLayer(layer));
+        window.associatedLayers = []; // 清空
+        map.removeLayer(window.kmlLayer);
+    }
+
     var kind = $("#LayerKind").val();
     var svg = $("#LayerSvg").val();
     var color = $("#LayerColor").val();
@@ -998,28 +1017,29 @@ function showResult_kml(kmlContent) {
     // 過濾 geojson.features 根據 kind
     geojson.features = geojson.features.filter(feature => {
         const type = feature.geometry.type;
-        if(advancedConfig.advanced){
-            // 檢查是否有 associated_layer 配置
-            if (advancedConfig.associated_layer && advancedConfig.associated_layer.length > 0) {            
-            // 優先使用 ExtendedData 中的 layerType
+        // 檢查是否為associated_layer中的type
+        if (advancedConfig.advanced) {
             const layerType = feature.properties.layerType;
-            
+
+            // 試著找到符合 layerType 的圖層設定
             let matchedLayer = null;
-            console.log("layerType:", advancedConfig.associated_layer);
-            if (layerType) {
-                // 方法一：使用 ExtendedData 的 layerType 精確匹配
-                matchedLayer = advancedConfig.associated_layer.find(layer => 
-                    layer.Name === layerType
-                );
+            if (layerType && Array.isArray(advancedConfig.associated_layer)) {
+                matchedLayer = advancedConfig.associated_layer.find(layer => layer.Name === layerType);
             }
-            console.log("matchedLayer:", matchedLayer, layerType);
+
+            // 如果 matchedLayer 有找到，就掛上 layerConfig 屬性
             if (matchedLayer) {
                 feature.layerConfig = matchedLayer;
             }
+
+            // advanced 模式只保留：geometry 符合 kind 或 layerType 符合
+            const geometryMatch =
+                (kind === "point" && type === "Point") ||
+                ((kind === "line" || kind === "arrowline") && type === "LineString") ||
+                (kind === "plane" && type === "Polygon");
+
+            return geometryMatch || !!matchedLayer;
         }
-        
-        return true; // 特殊模式保留所有幾何類型
-    }
         if (kind === "point") {
             return type === "Point";
         } else if (kind === "arrowline" || kind === "line") {
@@ -1030,25 +1050,11 @@ function showResult_kml(kmlContent) {
         return true; // 預設保留所有
     });
 
-
-    // 清除原圖層（如需要）
-    if (window.kmlLayer) {
-        map.removeLayer(window.kmlLayer);
-    }
-
     // 解析並加到地圖上
     // 顯示為 geoJSON 圖層
     const geoJsonLayer = L.geoJSON(geojson, {
         // 處理 Point → 自訂 marker icon
         pointToLayer: function (feature, latlng) {
-            // return L.marker(latlng, {
-            //     icon: Map.customIcon || L.icon({
-            //         iconUrl: `/img/${svg}`,
-            //         iconSize: [32, 32],
-            //         iconAnchor: [16, 32],
-            //         popupAnchor: [0, -32]
-            //     })
-            // }).bindPopup(feature.properties || '地點');
             const layerConfig = feature.layerConfig;
             console.log("layerConfig feature:", layerConfig);
             if (layerConfig) {
@@ -1074,25 +1080,6 @@ function showResult_kml(kmlContent) {
                 });
             }
         },
-        // style: function (feature) {
-        //     const isLine = feature.geometry.type === 'LineString';
-        //     const isPolygon = feature.geometry.type === 'Polygon';
-
-        //     if (isLine) {
-        //         return {
-        //             color: color,
-        //             weight: 3
-        //         };
-        //     }
-        //     if (isPolygon) {
-        //         return {
-        //             color: color,
-        //             weight: 2,
-        //             fillColor: color,
-        //             fillOpacity: 0.5
-        //         };
-        //     }
-        // },
         style: function (feature) {
             const layerConfig = feature.layerConfig;
             // 如果有 layerConfig 且包含顏色配置，優先使用；否則使用預設顏色
@@ -1112,13 +1099,13 @@ function showResult_kml(kmlContent) {
         },
         onEachFeature: function (feature, layer) {
             const p = feature.properties;
+            console.log("Processing feature", feature);
             if (!p) return;
-            console.log("Processing feature properties:", p);
             // 組合 popup HTML
             let html = `<b>${p.name || '未命名圖層'}</b><br><table>`;
             for (const key in p) {
                 if (key !== 'name') {
-                    html += `<tr><td style="width: 30%;"><b>${key}</b></td><td>${p[key]}</td></tr>`;
+                    html += `<tr><td style="width: 40%;"><b>${key}</b></td><td>${p[key]}</td></tr>`;
                 }
             }
             html += '</table>';
@@ -1296,7 +1283,7 @@ function generateAreaContainer_kml(folderName, placemarkList) {
     return $container;
 }
 
-function generateAreaContainer_unified(name, mapdataPoints){
+function generateAreaContainer_unified(name, mapdataPoints, associated_fields=[]){
     const $container = $(`<div class="areaContainer">
         <div class="card-header bg-primary text-white">
             <strong class="layerName">${name}</strong>
