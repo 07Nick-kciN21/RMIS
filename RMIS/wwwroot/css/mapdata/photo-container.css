@@ -1,0 +1,154 @@
+.photo-upload-container {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-top: 20px;
+            padding: 20px;
+        }
+        
+        .photo-section {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: white;
+            margin-bottom: 15px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .photo-section:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .data-preview {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        
+        .upload-zone {
+            border: 2px dashed #28a745;
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            background: #f8fff8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone:hover {
+            background: #e8f5e8;
+            border-color: #20c997;
+        }
+        
+        .upload-zone.dragover {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .photo-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .photo-item {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid #dee2e6;
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .photo-item .remove-btn:hover {
+            background: rgba(220, 53, 69, 1);
+        }
+        
+        .progress-bar-container {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .photo-count {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .section-id {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0;
+            font-size: 18px;
+        }
+        
+        .collapsed-content {
+            display: none;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-pending { background-color: #ffc107; }
+        .status-uploading { background-color: #17a2b8; }
+        .status-complete { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        
+        .batch-actions {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 6px;
+        }
+        
+        .format-info {
+            background: #d1ecf1;
+            border-left: 4px solid #bee5eb;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 0 4px 4px 0;
+        }

@@ -54,13 +54,19 @@ $(document).ready(function () {
         $("#photoGrid").empty();
         $("#photoCount").text("0");
 
+        // ✅ 新增：清空照片上傳模組
+        clearPhotoUploadModule();
 
         var format = $('#formatSelect').val();
         console.log(format);
         // 獲取選擇的檔案
         const file = this.files[0];
         // 沒有選擇檔案就不做事
-        if (!file) return;
+        if (!file){
+            // ✅ 沒有檔案時也要清空
+            clearPhotoUploadModule(); 
+            return;
+        }            
 
         const fileName = file.name.toLowerCase();
         const isXlsx = fileName.endsWith('.xlsx');
@@ -101,26 +107,6 @@ $(document).ready(function () {
             ImportMapdataAreas: unifiedFeatures, // 這裡是 JS 陣列
             Associated_table: advancedConfig.associated_table || null,
         };
-        // const formData = new FormData();
-
-        // formData.append("LayerId", $("#LayerId").val());
-        // formData.append("LayerName", $("#LayerName").val());
-        // formData.append("LayerKind", $("#LayerKind").val());
-        // formData.append("LayerSvg", $("#LayerSvg").val());
-        // formData.append("LayerColor", $("#LayerColor").val());
-        // formData.append("District", $("#District").val());
-        // formData.append("ImportMapdataAreas", unifiedFeatures);
-        // ✅ 加入所有照片檔案（每張圖為 IFormFile）
-        // uploadedPhotos.forEach((photo, i) => {
-        //     formData.append("Photos", photo.file, photo.name);
-        // });
-
-        // // 如果也要上傳原始的 Xlsx/Kml 檔案（選填）
-        // const file = $('#Xlsx_or_Kml')[0].files[0];
-        // if (file) {
-        //     formData.append("Xlsx_or_Kml", file);
-        // }
-
         showLoading();
         // if(advancedConfig.advanced)
         $.ajax({
@@ -158,15 +144,38 @@ $(document).ready(function () {
     });
 });
 
+function clearPhotoUploadModule() {
+    projectPhotoData = {};
+    $("#photoSections").html(`
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-file-upload fa-2x mb-2"></i>
+            <p>請先上傳 Excel 或 KML 檔案，系統將自動識別需要上傳照片的專案</p>
+        </div>
+    `);
+    $("#photoUploadSummary").hide();
+    $("#totalPhotoProgress").text("等待資料載入...");
+}
+
 function collectPhotoUploadData() {
-    return uploadedPhotos.map(photo => ({
-        name: photo.name,
-        size: photo.size,
-        type: photo.type,
-        dataUrl: photo.dataUrl,           // base64 圖片資料
-        uploadTime: photo.uploadTime,
-        dateCreated: photo.dateCreated ? photo.dateCreated.toISOString() : null
-    }));
+    const allPhotoData = [];
+    
+    Object.keys(projectPhotoData).forEach(projectId => {
+        const project = projectPhotoData[projectId];
+        project.uploadedPhotos.forEach(photo => {
+            allPhotoData.push({
+                projectId: projectId,
+                projectName: project.name,
+                name: photo.name,
+                size: photo.size,
+                type: photo.type,
+                dataUrl: photo.dataUrl,
+                uploadTime: photo.uploadTime,
+                dateCreated: photo.dateCreated ? photo.dateCreated.toISOString() : null
+            });
+        });
+    });
+    
+    return allPhotoData;
 }
 
 function initLayerSelect(){
@@ -211,6 +220,7 @@ function initAdvancedOptions() {
         },
         success: function (data) {
             if (data.success) {
+                console.log(data.layerConfig);
                 var layerConfig = JSON.parse(data.layerConfig);
                 advancedConfig = layerConfig; // 儲存全域變數
                 console.log("advancedConfig", advancedConfig);
@@ -296,7 +306,7 @@ function createPhotoUploadModule() {
         <div class="advanced-module fade-in" data-module="photo_upload">
             <div class="module-header">
                 <h6 class="module-title">
-                    照片上傳
+                    <i class="fas fa-images"></i> 街景照片上傳
                 </h6>
                 <span class="help-icon" 
                       data-bs-toggle="tooltip" 
@@ -305,107 +315,523 @@ function createPhotoUploadModule() {
                     ❔
                 </span>
             </div>
-            
-            <div class="photo-upload-controls mb-3">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('photoInput').click()">
-                            📷 選擇照片
-                        </button>
-                        <input type="file" id="photoInput" multiple accept="image/*" style="display: none;">
-                        <small class="text-muted ms-2">支援多選</small>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <span class="photo-count">已上傳 <span id="photoCount" class="fw-bold text-primary">0</span> 張</span>
+
+            <!-- 圖片上傳容器 -->
+            <div class="photo-upload-container" style="border: 2px dashed #dee2e6; border-radius: 8px; background: #f8f9fa; padding: 20px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge bg-secondary" id="totalPhotoProgress">等待資料載入...</span>
+                </div>
+
+                <!-- 動態生成的圖片上傳區塊 -->
+                <div id="photoSections" style="max-height: 400px;overflow-y: auto;">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-file-upload fa-2x mb-2"></i>
+                        <p>請先上傳 Excel 或 KML 檔案，系統將自動識別需要上傳照片的專案</p>
                     </div>
                 </div>
-            </div>
-        
-            
-            <div class="image-preview-container" id="photoPreviewContainer" style="display: none;">
-                <div class="preview-header mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">照片預覽</h6>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearAllPhotos()">
-                            🗑️ 清空全部
-                        </button>
+
+                <!-- 上傳狀態總覽 -->
+                <div class="mt-4 p-3 border rounded" id="photoUploadSummary" style="display: none;">
+                    <h6>上傳狀態總覽</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-warning" id="pendingPhotoCount">0</div>
+                                <small>待上傳</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-info" id="uploadingPhotoCount">0</div>
+                                <small>上傳中</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-success" id="completePhotoCount">0</div>
+                                <small>已完成</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-danger" id="errorPhotoCount">0</div>
+                                <small>失敗</small>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="photo-grid" id="photoGrid">
-                    <!-- 照片預覽將在這裡動態生成 -->
                 </div>
             </div>
         </div>
     `);
 }
 
-/**
- * 初始化照片上傳功能
- * @param {Object} settings - 設定參數
- * @param {Object} associatedLayer - 關聯圖層資訊
- */
+// 新增全域變數來儲存專案照片資料
+let projectPhotoData = {};
+
+// 修改 initializePhotoUpload() 函數：
 function initializePhotoUpload() {
-    const maxFileSize = (advancedConfig.max_file_size || 10) * 1024 * 1024; // 轉換為 bytes
+    const maxFileSize = (advancedConfig.max_file_size || 10) * 1024 * 1024;
     const allowedFormats = advancedConfig.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     
-    const $uploadArea = $("#photoUploadArea");
-    const $input = $("#photoInput");
-    const $previewContainer = $("#photoPreviewContainer");
+    // 重置專案照片資料
+    projectPhotoData = {};
     
-    // 重置上傳的照片陣列
-    uploadedPhotos = [];
+    console.log('照片上傳模組初始化完成', { maxFileSize, allowedFormats });
+}
+
+// 新增函數：根據上傳的檔案資料生成照片上傳區塊
+function generatePhotoUploadSections(dataSource, format) {
+    console.log('生成照片上傳區塊', { dataSource, format });
+    const $photoSections = $("#photoSections");
+    $photoSections.empty();
     
-    // 點擊上傳區域觸發文件選擇
-    $uploadArea.on('click', function(e) {
-        if (!$(e.target).is('input')) {
-            $input.click();
+    projectPhotoData = {};
+    
+    if (format === 'xlsx') {
+        generatePhotoSectionsFromXlsx(dataSource);
+    } else if (format === 'kml') {
+        generatePhotoSectionsFromKml(dataSource);
+    }
+    
+    updatePhotoUploadSummary();
+}
+
+
+// 從 Excel 資料生成照片區塊
+function generatePhotoSectionsFromXlsx(xlsxJson) {
+    const groupedProjects = {};
+    const photoFields = advancedConfig.photo_field?.prop || [];
+    const photoLayers = advancedConfig.photo_field?.layer || [];
+    
+    xlsxJson.forEach(row => {
+        const projectId = row.road_id;
+        if (!projectId) return;
+        
+        if (!groupedProjects[projectId]) {
+            groupedProjects[projectId] = {
+                name: row.road_name || '未命名專案',
+                proposer: row.proposer || '',
+                district: row.district || '',
+                requiredPhotos: 0,
+                photoFieldNames: [],
+                expectedFilenames: [], // 新增：儲存期望的檔名
+                uploadedPhotos: []
+            };
+        }
+        
+        // 解析 pile_prop 中的照片檔名
+        if (row.pile_prop) {
+            try {
+                const prop = JSON.parse(row.pile_prop.replace(/\bNaN\b/g, "null"));
+                
+                // 1. 檢查 photo_field.prop 欄位（如：施工前照片、施工後照片）
+                photoFields.forEach(fieldName => {
+                    if (prop[fieldName]) {
+                        groupedProjects[projectId].photoFieldNames.push(fieldName);
+                        groupedProjects[projectId].expectedFilenames.push({
+                            fieldName: fieldName,
+                            filename: prop[fieldName] // 直接的檔名
+                        });
+                        groupedProjects[projectId].requiredPhotos++;
+                    }
+                });
+                
+                // 2. 檢查 photo_field.layer 欄位（如：街景照片）
+                photoLayers.forEach(layerName => {
+                    if (prop[layerName] && typeof prop[layerName] === 'object') {
+                        // 解析 {"wsx852.png": ["24.911446, 121.158393"]} 格式
+                        Object.keys(prop[layerName]).forEach(filename => {
+                            groupedProjects[projectId].photoFieldNames.push(`${layerName}`);
+                            groupedProjects[projectId].expectedFilenames.push({
+                                fieldName: layerName,
+                                filename: filename
+                            });
+                            groupedProjects[projectId].requiredPhotos++;
+                        });
+                    }
+                });
+                
+            } catch (e) {
+                console.warn('解析 pile_prop 失敗:', e);
+            }
         }
     });
     
-    // 文件選擇處理
-    $input.on('change', function(e) {
-        handlePhotoFiles(e.target.files, maxFileSize, allowedFormats);
-        // 清空 input，允許重複選擇相同檔案
-        $(this).val('');
+    Object.keys(groupedProjects).forEach(projectId => {
+        projectPhotoData[projectId] = groupedProjects[projectId];
     });
     
-    // 拖拽功能
-    setupPhotoDragAndDrop($uploadArea, maxFileSize, allowedFormats);
-    
-    // 初始化 tooltip
-    initializeTooltips();
-    
-    console.log('照片上傳模組初始化完成', { maxFileSize });
+    generatePhotoSectionUI(groupedProjects);
 }
 
-/**
- * 設定照片拖拽功能
- * @param {jQuery} $element - 目標元素
- * @param {number} maxFileSize - 最大檔案大小
- * @param {Array} allowedFormats - 允許格式
- */
-function setupPhotoDragAndDrop($element, maxFileSize, allowedFormats) {
-    $element.on('dragover', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).addClass('dragover');
-    });
+// 從 KML 資料生成照片區塊  
+function generatePhotoSectionsFromKml(kmlContent) {
+    const parser = new DOMParser();
+    const kmlDoc = parser.parseFromString(kmlContent, 'text/xml');
+    const folders = Array.from(kmlDoc.getElementsByTagName("Folder"));
     
-    $element.on('dragleave', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).removeClass('dragover');
-    });
+    const photoFields = advancedConfig.photo_field?.prop || [];
+    const photoLayers = advancedConfig.photo_field?.layer || [];
     
-    $element.on('drop', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).removeClass('dragover');
+    folders.forEach(folder => {
+        const folderName = folder.getElementsByTagName("name")[0]?.textContent || '未命名專案';
+        const placemarks = Array.from(folder.getElementsByTagName("Placemark"));
         
-        const files = e.originalEvent.dataTransfer.files;
-        handlePhotoFiles(files, maxFileSize, allowedFormats);
+        const projectId = folderName.replace(/\s+/g, '_');
+        console.log('處理專案', projectId, folderName);
+        const projectData = {
+            name: folderName,
+            proposer: '',
+            district: '',
+            requiredPhotos: 0,
+            photoFieldNames: [],
+            expectedFilenames: [],
+            uploadedPhotos: []
+        };
+        
+        placemarks.forEach(pm => {
+            const dataTags = pm.getElementsByTagName("Data");
+            
+            // 1. 檢查主要圖形的 prop 欄位
+            photoFields.forEach(fieldName => {
+                const dataElement = Array.from(dataTags).find(data => 
+                    data.getAttribute("name") === fieldName
+                );
+                if (dataElement) {
+                    const filename = dataElement.getElementsByTagName("value")[0]?.textContent;
+                    if (filename && filename.trim()) {
+                        projectData.photoFieldNames.push(fieldName);
+                        projectData.expectedFilenames.push({
+                            fieldName: fieldName,
+                            filename: filename.trim()
+                        });
+                        projectData.requiredPhotos++;
+                    }
+                }
+            });
+            
+            // 2. 檢查 layer 類型的 Placemark（街景照片等）
+            const layerTypeElement = Array.from(dataTags).find(data => 
+                data.getAttribute("name") === "layerType"
+            );
+            const imageUrlElement = Array.from(dataTags).find(data => 
+                data.getAttribute("name") === "imageUrl"
+            );
+            
+            if (layerTypeElement && imageUrlElement) {
+                const layerType = layerTypeElement.getElementsByTagName("value")[0]?.textContent;
+                const imageUrl = imageUrlElement.getElementsByTagName("value")[0]?.textContent;
+                
+                if (photoLayers.includes(layerType) && imageUrl && imageUrl.trim()) {
+                    projectData.photoFieldNames.push(layerType);
+                    projectData.expectedFilenames.push({
+                        fieldName: layerType,
+                        filename: imageUrl.trim()
+                    });
+                    projectData.requiredPhotos++;
+                }
+            }
+        });
+        
+        if (projectData.requiredPhotos > 0) {
+            projectPhotoData[projectId] = projectData;
+        }
     });
+    
+    generatePhotoSectionUI(projectPhotoData);
 }
+
+// 生成照片上傳區塊 UI
+function generatePhotoSectionUI(projects) {
+    const $photoSections = $("#photoSections");
+    console.log('生成照片上傳區塊 UI', projects);
+    Object.keys(projects).forEach(projectId => {
+        const project = projects[projectId];
+        console.log('生成專案區塊', projectId, project);
+        const sectionHtml = `
+            <div class="photo-section" data-project="${projectId}" style="border: 1px solid #e9ecef; border-radius: 6px; background: white; margin-bottom: 15px; padding: 15px;">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <span class="status-indicator status-pending" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #ffc107; margin-right: 8px;"></span>
+                        <span class="section-id" style="font-weight: bold; color: #495057;">專案代號：${projectId}</span>
+                        <span class="photo-count" style="color: #6c757d; font-size: 0.9em;">(需要 ${project.requiredPhotos} 張照片)</span>
+                    </div>
+                    <button class="collapse-btn" onclick="togglePhotoSection(this)" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 18px;">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                
+                <div class="section-content">
+                    <div class="data-preview" style="background: #f8f9fa; border-radius: 4px; padding: 10px; margin-bottom: 10px; font-size: 0.9em;">
+                        <strong>${project.name}</strong><br>
+                    </div>
+                    <!-- 新增：圖檔名顯示區域 -->
+                    <div class="expected-filenames mb-3" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px;">
+                        <h6 style="margin-bottom: 8px; color: #856404;"><i class="fas fa-file-image"></i> 建議檔名格式：</h6>
+                        <div class="filename-list" style="font-size: 0.85em; color: #856404;">
+                            ${generateExpectedFilenames(projectId, project)}
+                        </div>
+                    </div>
+                    <div class="upload-zone" onclick="triggerProjectFileInput('${projectId}')" 
+                         ondrop="handleProjectDrop(event, '${projectId}')" 
+                         ondragover="handleProjectDragOver(event)"
+                         ondragleave="handleProjectDragLeave(event)"
+                         style="border: 2px dashed #28a745; border-radius: 6px; padding: 20px; text-align: center; background: #f8fff8; cursor: pointer;">
+                        <i class="fas fa-cloud-upload-alt fa-2x text-success mb-2"></i>
+                        <p class="mb-0">點擊或拖拽圖片到此處</p>
+                        <small class="text-muted">支援 JPG、PNG 格式，單檔最大 5MB</small>
+                    </div>
+                    
+                    <input type="file" id="fileInput_${projectId}" multiple accept="image/*" style="display: none;" onchange="handleProjectFileSelect(event, '${projectId}')">
+                    
+                    <div class="progress-bar-container" style="margin-top: 10px; display: none;">
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="photo-preview" id="preview_${projectId}" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                        <!-- 已上傳的圖片會顯示在這裡 -->
+                    </div>
+                </div>
+            </div>
+        `;
+        $photoSections.append(sectionHtml);
+    });
+    
+    $("#photoUploadSummary").show();
+    $("#totalPhotoProgress").text(`0/${Object.keys(projects).length} 專案已完成`);
+}
+
+function generateExpectedFilenames(projectId, project) {
+    let filenameHtml = '';
+    
+    if (project.expectedFilenames && project.expectedFilenames.length > 0) {
+        project.expectedFilenames.forEach(item => {
+            filenameHtml += `
+                <div class="filename-item mb-1" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>${item.fieldName}：</strong></span>
+                    <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; color: #d63384;">${item.filename}</code>
+                </div>
+            `;
+        });
+    } else {
+        filenameHtml = `
+            <div class="filename-item text-muted">
+                <i class="fas fa-info-circle"></i> 此專案沒有指定的圖片檔名
+            </div>
+        `;
+    }
+    
+    return filenameHtml;
+}
+// 專案照片上傳相關函數
+function triggerProjectFileInput(projectId) {
+    document.getElementById(`fileInput_${projectId}`).click();
+}
+
+
+function handleProjectFileSelect(event, projectId) {
+    const files = event.target.files;
+    uploadProjectFiles(files, projectId);
+    $(event.target).val(''); // 清空以允許重複選擇
+}
+
+function handleProjectDrop(event, projectId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const uploadZone = event.currentTarget;
+    uploadZone.classList.remove('dragover');
+    
+    const files = event.dataTransfer.files;
+    uploadProjectFiles(files, projectId);
+}
+
+function handleProjectDragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('dragover');
+}
+
+function handleProjectDragLeave(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('dragover');
+}
+
+function uploadProjectFiles(files, projectId) {
+    const maxFileSize = (advancedConfig.max_file_size || 10) * 1024 * 1024;
+    const allowedFormats = advancedConfig.allowed_formats || ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    
+    const previewContainer = document.getElementById(`preview_${projectId}`);
+    const progressContainer = document.querySelector(`[data-project="${projectId}"] .progress-bar-container`);
+    const progressBar = document.querySelector(`[data-project="${projectId}"] .progress-bar`);
+    
+    const project = projectPhotoData[projectId];
+    const expectedFilenames = project.expectedFilenames?.map(item => item.filename) || [];
+
+    let validFiles = [];
+    let errors = [];
+    
+    Array.from(files).forEach(file => {
+        
+        // 檢查格式
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (!allowedFormats.includes(fileExtension)) {
+            errors.push(`"${file.name}" 格式不支援`);
+            return;
+        }
+        
+        // 檢查大小
+        if (file.size > maxFileSize) {
+            errors.push(`"${file.name}" 檔案過大`);
+            return;
+        }
+        
+        // 檢查重複
+        const isDuplicate = projectPhotoData[projectId].uploadedPhotos.some(photo => 
+            photo.name === file.name && photo.size === file.size
+        );
+        if (isDuplicate) {
+            errors.push(`"${file.name}" 已上傳過`);
+            return;
+        }
+        
+        validFiles.push(file);
+    });
+    
+    if (errors.length > 0) {
+        alert(errors.join('\n'));
+    }
+    
+    if (validFiles.length > 0) {
+        progressContainer.style.display = 'block';
+        updateProjectStatus(projectId, 'uploading');
+        
+        let processedCount = 0;
+        validFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photoData = {
+                    id: `${projectId}_${Date.now()}_${Math.random()}`,
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    dataUrl: e.target.result,
+                    uploadTime: new Date().toISOString()
+                };
+                
+                projectPhotoData[projectId].uploadedPhotos.push(photoData);
+                
+                // 建立預覽
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.style.cssText = 'position: relative; width: 120px; height: 120px; border-radius: 6px; overflow: hidden; border: 2px solid #dee2e6;';
+                photoItem.innerHTML = `
+                    <img src="${e.target.result}" alt="${file.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <button class="remove-btn" onclick="removeProjectPhoto(this, '${projectId}', '${photoData.id}')" 
+                            style="position: absolute; top: 5px; right: 5px; background: rgba(220, 53, 69, 0.8); color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-size: 12px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                previewContainer.appendChild(photoItem);
+                
+                processedCount++;
+                if (processedCount === validFiles.length) {
+                    simulateProjectUpload(progressBar, () => {
+                        updateProjectStatus(projectId, 'complete');
+                        updatePhotoUploadSummary();
+                    });
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+function removeProjectPhoto(button, projectId, photoId) {
+    if (confirm('確定要移除此照片嗎？')) {
+        button.parentElement.remove();
+        const index = projectPhotoData[projectId].uploadedPhotos.findIndex(photo => photo.id === photoId);
+        if (index > -1) {
+            projectPhotoData[projectId].uploadedPhotos.splice(index, 1);
+        }
+        updateProjectStatus(projectId, 'pending');
+        updatePhotoUploadSummary();
+    }
+}
+
+function simulateProjectUpload(progressBar, callback) {
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+            setTimeout(callback, 500);
+        }
+        progressBar.style.width = progress + '%';
+    }, 200);
+}
+
+function updateProjectStatus(projectId, status) {
+    const section = document.querySelector(`[data-project="${projectId}"]`);
+    const indicator = section.querySelector('.status-indicator');
+    
+    indicator.classList.remove('status-pending', 'status-uploading', 'status-complete', 'status-error');
+    indicator.classList.add(`status-${status}`);
+    
+    // 更新背景顏色
+    const colors = {
+        pending: '#ffc107',
+        uploading: '#17a2b8', 
+        complete: '#28a745',
+        error: '#dc3545'
+    };
+    indicator.style.backgroundColor = colors[status];
+}
+
+function updatePhotoUploadSummary() {
+    let pending = 0, uploading = 0, complete = 0, error = 0;
+    
+    Object.keys(projectPhotoData).forEach(projectId => {
+        const project = projectPhotoData[projectId];
+        const uploadedCount = project.uploadedPhotos.length;
+        const requiredCount = project.requiredPhotos;
+        
+        if (uploadedCount === 0) {
+            pending++;
+        } else if (uploadedCount < requiredCount) {
+            uploading++;
+        } else {
+            complete++;
+        }
+    });
+    
+    document.getElementById('pendingPhotoCount').textContent = pending;
+    document.getElementById('uploadingPhotoCount').textContent = uploading;
+    document.getElementById('completePhotoCount').textContent = complete;
+    document.getElementById('errorPhotoCount').textContent = error;
+    
+    const totalProjects = Object.keys(projectPhotoData).length;
+    document.getElementById('totalPhotoProgress').textContent = `${complete}/${totalProjects} 專案已完成`;
+}
+
+function togglePhotoSection(button) {
+    const section = button.closest('.photo-section');
+    const content = section.querySelector('.section-content');
+    const icon = button.querySelector('i');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.className = 'fas fa-chevron-down';
+    } else {
+        content.style.display = 'none';
+        icon.className = 'fas fa-chevron-right';
+    }
+}
+
+
 
 /**
  * 處理照片檔案上傳
@@ -605,87 +1031,6 @@ function clearAllPhotos() {
     console.log('已清空所有照片');
 }
 
-/**
- * 更新照片描述
- * @param {string} photoId - 照片ID
- * @param {string} description - 描述文字
- */
-function updatePhotoDescription(photoId, description) {
-    const photo = uploadedPhotos.find(p => p.id === photoId);
-    if (photo) {
-        photo.description = description.trim();
-        console.log('更新照片描述:', photo.name, '→', photo.description);
-    }
-}
-
-/**
- * 提取照片元資料（簡化版EXIF讀取）
- * @param {File} file - 圖片檔案
- * @param {Object} photoData - 照片資料物件
- */
-function extractPhotoMetadata(file, photoData) {
-    // 簡化的 EXIF 資料提取
-    if (file.type === 'image/jpeg') {
-        // 這裡可以整合 EXIF.js 或其他 EXIF 讀取庫
-        // 暫時模擬一些 GPS 資料用於展示
-        if (Math.random() > 0.8) { // 20% 機率模擬有 GPS 資料
-            photoData.gpsData = {
-                lat: 24.99305 + (Math.random() - 0.5) * 0.02,
-                lng: 121.30106 + (Math.random() - 0.5) * 0.02,
-                altitude: Math.floor(Math.random() * 200) + 50
-            };
-        }
-    }
-    
-    // 記錄照片的建立時間
-    photoData.dateCreated = file.lastModified ? new Date(file.lastModified) : new Date();
-}
-
-/**
- * 格式化檔案大小
- * @param {number} bytes - 位元組數
- * @returns {string} 格式化後的大小
- */
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
-/**
- * 截斷檔案名稱
- * @param {string} fileName - 檔案名稱
- * @param {number} maxLength - 最大長度
- * @returns {string} 截斷後的檔案名稱
- */
-function truncateFileName(fileName, maxLength) {
-    if (fileName.length <= maxLength) return fileName;
-    
-    const extension = fileName.split('.').pop();
-    const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
-    const truncatedName = nameWithoutExt.substring(0, maxLength - extension.length - 4) + '...';
-    
-    return truncatedName + '.' + extension;
-}
-
-/**
- * 收集照片上傳資料
- * @returns {Array} 照片資料陣列
- */
-function collectPhotoUploadData() {
-    return uploadedPhotos.map(photo => ({
-        name: photo.name,
-        size: photo.size,
-        type: photo.type,
-        dataUrl: photo.dataUrl,
-        description: photo.description || '',
-        gpsData: photo.gpsData || null,
-        uploadTime: photo.uploadTime,
-        dateCreated: photo.dateCreated ? photo.dateCreated.toISOString() : null
-    }));
-}
 
 
 /**
@@ -949,7 +1294,6 @@ function showResult_xlsx(buffer) {
     } else {
         alert('⚠️ Excel 檔案中沒有有效圖形。');
     }
-    console.log(xlsxJson);
     
     // 生成表格容器
     unifiedFeatures = []; // 清空
@@ -992,6 +1336,10 @@ function showResult_xlsx(buffer) {
 
         const container = generateAreaContainer_unified(displayName, converted, associated_fields);
         $("#result").append(container);
+    }
+
+    if (advancedConfig.advanced && advancedConfig.modules && advancedConfig.modules.includes('photo_upload')) {
+        generatePhotoUploadSections(xlsxJson, 'xlsx');
     }
 }
 
@@ -1208,6 +1556,10 @@ function showResult_kml(kmlContent) {
         alert('⚠️ KML 檔案中沒有有效圖形。');
         // 清空#Xlsx_or_Kml
         $("#Xlsx_or_Kml").val("");
+    }
+
+    if (advancedConfig.advanced && advancedConfig.modules && advancedConfig.modules.includes('photo_upload')) {
+        generatePhotoUploadSections(kmlContent, 'kml');
     }
 }
 

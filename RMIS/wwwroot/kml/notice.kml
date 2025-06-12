@@ -1,6 +1,9 @@
 <?xml version="1.0" ?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
+  <name>Taoyuan City Hall - Styled</name>
+  <Folder>
+    <name>AP11318766</name>
     <Placemark>
       <name>AP11318766</name>
       <ExtendedData>
@@ -89,5 +92,6 @@
         </outerBoundaryIs>
       </Polygon>
     </Placemark>
+  </Folder>
   </Document>
 </kml>
