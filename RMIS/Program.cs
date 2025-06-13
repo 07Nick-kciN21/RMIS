@@ -45,14 +45,6 @@ builder.Host.UseSerilog((context, services, configuration) =>
         );
 });
 
-//// 設定身份驗證 Cookie 的過期時間
-//builder.Services.ConfigureApplicationCookie(options =>
-//{
-//    options.LoginPath = "/Portal/Login";
-//    options.ExpireTimeSpan = TimeSpan.FromMinutes(2);
-//    options.SlidingExpiration = false;
-//});
-
 //  註冊 AuthDbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbConnectionString")));
@@ -166,18 +158,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Portal}/{action=Login}/{id?}"
 );
-
-
-//app.UseEndpoints(endpoints =>
-//{
-//    endpoints.MapControllerRoute(
-//        name: "root",
-//        pattern: "/",
-//        defaults: new { controller = "Account", action = "Login" });
-
-//    endpoints.MapControllerRoute(
-//        name: "default",
-//        pattern: "{controller=Account}/{action=Login}/{id?}");
-//});
 
 app.Run();

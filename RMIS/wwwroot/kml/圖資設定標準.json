@@ -1,18 +1,38 @@
-﻿{
-  "modules": [ "file_upload", "preview", "photo_upload", "layer_binding" ],
-  "advanced": true,
-  "associated_layer": [
-    {
-      "Id": "C155F3E2-42B6-4004-97C2-05E1C0EFC0E0",
-      "Name": "街景照片",
-      "GeoType": "point",
-      "GeoName": "04.png"
-    }
-  ],
-  "photo_field": {
-    "prop": [ "施工前照片", "施工後照片", "打卡告示照片", "打卡交管照片" ],
-    "layer": [ "街景照片" ]
+﻿// 道路專案
+[
+  {
+    "modules": [ "file_upload", "preview", "photo_upload", "layer_binding" ],
+    "advanced": true,
+    "associated_layer": [
+      {
+        "Id": "C155F3E2-42B6-4004-97C2-05E1C0EFC0E0",
+        "Name": "街景照片",
+        "GeoType": "point",
+        "GeoName": "04.png"
+      }
+    ],
+    "photo_field": { "layer": [ "街景照片" ] },
+    "associated_table": "RoadProject"
   },
-  "associated_table": "RoadProject"
-}
 
+  // 施工通報
+  {
+    "modules": [ "file_upload", "preview", "photo_upload" ],
+    "advanced": true,
+    "photo_field": { "prop": [ "施工前照片", "施工後照片", "打卡告示照片", "打卡交管照片" ] }
+  },
+
+  // 無佔用
+  {
+    "modules": [ "file_upload", "preview", "layer_binding" ],
+    "advanced": true,
+    "associated_layer": [
+      {
+        "Id": "5DEDC3C2-9926-4305-81EB-AFF22E829E49",
+        "Name": "否",
+        "GeoType": "point",
+        "GeoName": "1011.png"
+      }
+    ]
+  }
+]

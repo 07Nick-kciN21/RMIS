@@ -64,15 +64,27 @@ namespace RMIS.Models.Account.Mapdatas
         public string Associated_table { get; set; } // 匯入設定
         public List<ImportMapdataArea>? ImportMapdataAreas { get; set; }
         public IFormFile Xlsx_or_Kml { get; set; }
-        public List<IFormFile> Photos { get; set; } // ✅ 加這個來接收多張照片
-    }
 
+        // 新增照片上傳資料欄位
+        public Dictionary<string, List<PhotoFile>>? PhotoUploadData { get; set; }
+    }
 
     public class ImportMapdataArea
     {
         public string name { get; set; }
         public List<MapdataPoint> MapdataPoints { get; set; }
     }
+
+    // 照片檔案資料結構
+    public class PhotoFile
+    {
+        public string Name { get; set; }
+        public long Size { get; set; }
+        public string Type { get; set; }
+        public string DataUrl { get; set; } // Base64 圖片資料
+        public DateTime UploadTime { get; set; }
+    }
+
     public class UpdatePipelineView
     {
         public Guid Id { get; set; }

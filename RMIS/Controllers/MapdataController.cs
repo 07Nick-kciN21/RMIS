@@ -326,9 +326,9 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限新增" });
             }
-
-            var imported = await _mapdataInterface.ImportMapdataAsync(importMapdata);
-            return Json(new { success = imported.Success, message = imported.Message });
+            return Json(new { success = true, message = "成功" });
+            //var imported = await _mapdataInterface.ImportMapdataAsync(importMapdata);
+            //return Json(new { success = imported.Success, message = imported.Message });
         }
 
         //[HttpPost("[controller]/General/Import")]
@@ -366,28 +366,6 @@ namespace RMIS.Controllers
             }
             var updated = await _mapdataInterface.UpdateDatainfoAsync(updateDatainfo);
             return Json(new { success = updated.Success, message = updated.Message });
-        }
-
-        [HttpGet("[controller]/NotGeneral/Read/Layer")]
-        public IActionResult NotGeneralMapdataLayer(Guid id)
-        {
-            return View("");
-        }
-
-        [HttpPost("[controller]/NotGeneral/Import")]
-        public async Task<IActionResult> ImportNotGeneralMapdata([FromBody] ImportMapdataView importMapdata)
-        {
-            var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
-            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
-
-            if (!currentUserPermission.Create)
-            {
-                return Json(new { success = false, message = "無權限新增" });
-            }
-
-            var imported = await _mapdataInterface.ImportNotGeneralAsync(importMapdata);
-            return Json(new { success = imported.Success, message = imported.Message });
         }
     }
 }
