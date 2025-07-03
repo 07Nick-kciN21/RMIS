@@ -436,22 +436,13 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddRoadProjectByExcel(AddRoadProjectByExcelInput roadProjectByExcel)
+        public async Task<IActionResult> AddRoadProjectByExcel([FromBody] AddRoadProjectByExcelInput roadProjectByExcel)
         {
             try
             {
-                var rowsAffected = await _adminInterface.AddRoadProjectByExcelAsync(roadProjectByExcel);
-
-                if (rowsAffected > 0)
-                {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
-                    return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆專案資料到資料庫" });
-                }
-                else
-                {
-                    _logger.LogInformation("未對資料庫進行任何變更");
-                    return BadRequest(new { success = false, message = "未對資料庫進行任何變更" });
-                }
+                var result = await _adminInterface.AddRoadProjectByExcelAsync(roadProjectByExcel);
+                //var result = new { Success = true, Message = "成功"};
+                return Ok(new {success = result.Success, message = result.Message});
             }
             catch (Exception ex)
             {

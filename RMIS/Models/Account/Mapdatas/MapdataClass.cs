@@ -28,6 +28,7 @@ namespace RMIS.Models.Account.Mapdatas
         public string Kind { get; set; }
         public string Svg { get; set; }
         public string Color { get; set; }
+        public string Config { get; set; }
         public List<MapdataArea> Areas { get; set; }
         public bool ImportEnabled { get; set; } // 是否允許匯入
     }
@@ -60,7 +61,6 @@ namespace RMIS.Models.Account.Mapdatas
         public string LayerKind { get; set; } // 圖層類型
         public string LayerSvg { get; set; } // 圖層標記
         public string LayerColor { get; set; } // 圖層顏色
-        public string District { get; set; } // 行政區
         public string Associated_table { get; set; } // 匯入設定
         public List<ImportMapdataArea>? ImportMapdataAreas { get; set; }
         public IFormFile Xlsx_or_Kml { get; set; }
@@ -72,6 +72,7 @@ namespace RMIS.Models.Account.Mapdatas
     public class ImportMapdataArea
     {
         public string name { get; set; }
+        public string adminDist { get; set; }
         public List<MapdataPoint> MapdataPoints { get; set; }
     }
 
@@ -81,7 +82,7 @@ namespace RMIS.Models.Account.Mapdatas
         public string Name { get; set; }
         public long Size { get; set; }
         public string Type { get; set; }
-        public string DataUrl { get; set; } // Base64 圖片資料
+        public string Base64Data { get; set; } // Base64 圖片資料
         public DateTime UploadTime { get; set; }
     }
 

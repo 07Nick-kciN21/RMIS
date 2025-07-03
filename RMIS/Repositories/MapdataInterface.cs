@@ -12,10 +12,9 @@ namespace RMIS.Repositories
         Task<MapdataSearch> GetMapdataSearchAsync(Guid LayerId, string Dist, Guid AreaId);
         Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid id);
         Task<(bool Success, string? Message)> ImportMapdataAsync(ImportMapdataView importMapata);
-        Task<(bool Success, string Message)> DeleteMapdataAreaAsync(Guid id);
+        Task<(bool Success, string Message)> DeleteMapdataAreaAsync(Guid id, string associateLayer);
         Task<(bool Success, string Message)> UpdateDatainfoAsync(UpdateDatainfo datainfo);
         Task<(bool Success, string? Data, string Message)> GetDatainfoAsync(Guid id);
-
         Task<(bool Success, string? Message)> ImportNotGeneralAsync(ImportMapdataView importMapata);
     }
 }

@@ -62,7 +62,7 @@ export class PhotoUpload {
         const groupedProjects = {};
         const photoFields = window.advancedConfig.photo_field?.prop || [];
         const photoLayers = window.advancedConfig.photo_field?.layer || [];
-        
+        console.log(photoFields, photoLayers);
         xlsxJson.forEach(row => {
             const projectId = String(row.road_id).trim();
             if (!projectId) return;
@@ -364,7 +364,7 @@ export class PhotoUpload {
             }
             
             if (!expectedFilenames.includes(file.name)) {
-                errors.push(`"${file.name}" 檔名不符合預期，請使用建議檔名`);
+                errors.push(`"${file.name}" 檔名不符，請使用特定照片`);
                 return;
             }
 

@@ -27,7 +27,7 @@ namespace RMIS.Repositories
 
         // Road Project (道路工程)
         Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput);
-        Task<int> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput roadProjectByExcel);
+        Task<(bool Success, string Message)> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput roadProjectByExcel);
         Task<List<RoadProject>> GetProjectByAsync(GetRoadProjectInput data);
         Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId);
         Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput);

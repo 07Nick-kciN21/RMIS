@@ -1,8 +1,5 @@
 import { WindowManager } from '../../../windowCtl.js';
 
-let importWindow = null;
-let readPointWindow = null;
-let addPointWindow = null;
 const wm = new WindowManager();
 $(document).ready(function () {
     initLayerSelect();
@@ -126,14 +123,14 @@ function initMapdataLayerTable(layerId, dist, areaId) {
             if (data.success) {
                 var result = data.mapdataSearch;
                 console.log(result);
-
+                var config = JSON.parse(result.config);
+                console.log(config);
                 const addBtn = $(`<button class="btn btn-primary btn-sm ms-2">新增圖資</button>`)
                     .on("click", function () {
-                        const url = `/Mapdata/General/Import?layerId=${result.id}&name=${result.name}&dist=${result.dist}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
+                        const url = `/Mapdata/General/Import?layerId=${result.id}&name=${result.name}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
                         sessionStorage.setItem('mapdataLayerSelector', $("#mapdataLayerSelector").val());
                         sessionStorage.setItem('mapdataDistSelector', $("#mapdataDistSelector").val());
                         sessionStorage.setItem('mapdataNameSelector', $("#mapdataNameSelector").val());
-                        // wm.open('addPointWindow', url, windowWidth, windowHeight)
                         window.location.href = url;
                     });
 
@@ -142,15 +139,13 @@ function initMapdataLayerTable(layerId, dist, areaId) {
                 $.each(result.areas, function (i, area) {
                     var moreBtn = $(`<button class="btn btn-primary btn-sm">更多</button>`).on("click", function () {
                         const url = `/Mapdata/General/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
-                        // wm.open('readPipelineWindow', url, windowWidth, windowHeight);
                         window.location.href = url;
-                        // readPointWindow = openWindow(readPointWindow, `/Mapdata/General/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`, "readPointWindow", windowWidth, windowHeight);
                     });
 
                     var deleteBtn = $(`<button class="delete-mapdata read btn btn-danger btn-sm">刪除</button>`).on("click", function () {
                         if (confirm("確定要刪除圖資？")) {
                             $.ajax({
-                                url: `/Mapdata/General/Delete/Area?id=${area.id}`,
+                                url: `/Mapdata/General/Delete/Area?id=${area.id}&associateLayer=${config.associated_table}`,
                                 type: "POST",
                                 xhrFields: {
                                     withCredentials: true

@@ -43,7 +43,7 @@
 }
 
 .modal-body form > div {
-    display: flex;
+    display: block;
     margin: 10px 30px;
 }
 

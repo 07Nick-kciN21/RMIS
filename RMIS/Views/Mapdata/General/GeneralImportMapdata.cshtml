@@ -33,7 +33,7 @@
     <script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
     @* <script src="~/js/account/mapdata/general/importMapdata.js"></script> *@
     <!-- 模組化的 JavaScript 文件 -->
-    <script type="module" src="~/js/account/mapdata/general/main.js"></script>
+    <script type="module" src="~/js/account/mapdata/general/importMapdata.js"></script>
 </head>
 
 <body class="p-3">
@@ -44,7 +44,6 @@
         <div class="container mt-4">
             <form>
                 <div class="mb-4">
-                    <div id="addform"></div>
                     <div>
                         <input type="hidden" class="form-control" asp-for="LayerId" readonly>
                         <input type="hidden" class="form-control" asp-for="LayerSvg" readonly>
@@ -57,25 +56,6 @@
                     <div>
                         <label>圖層類型</label>
                         <input type="text" class="form-control" asp-for="LayerKind" readonly>
-                    </div>
-                    <div>
-                        <label>行政區</label>
-                        <select asp-for="District" class="form-select">
-                            <option value="" selected disabled>請選擇行政區</option>
-                            <option value="桃園區">桃園區</option>
-                            <option value="大溪區">大溪區</option>
-                            <option value="中壢區">中壢區</option>
-                            <option value="楊梅區">楊梅區</option>
-                            <option value="蘆竹區">蘆竹區</option>
-                            <option value="大園區">大園區</option>
-                            <option value="龜山區">龜山區</option>
-                            <option value="八德區">八德區</option>
-                            <option value="龍潭區">龍潭區</option>
-                            <option value="平鎮區">平鎮區</option>
-                            <option value="新屋區">新屋區</option>
-                            <option value="觀音區">觀音區</option>
-                            <option value="復興區">復興區</option>
-                        </select>
                     </div>
                     <div class="form-group">
                         <label>上傳格式</label>

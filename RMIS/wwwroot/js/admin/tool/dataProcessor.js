@@ -15,17 +15,10 @@ export class DataProcessor {
      */
     showResult_xlsx(buffer) {
         const kind = $("#LayerKind").val();
-        const svg = $("#LayerSvg").val();
-        const color = $("#LayerColor").val();
         const workbook = XLSX.read(buffer, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const xlsxJson = XLSX.utils.sheet_to_json(worksheet);
-
-        // 清除地圖與畫面
-        this.mapManager.clearCustomLayers();
-        this.uiManager.showContainer("#showContainer");
-        this.uiManager.clearContainer("#result");
 
         const features = [];
         const groups = {};
@@ -55,95 +48,12 @@ export class DataProcessor {
             }
         }
 
-        // 根據圖層類型創建要素
-        this.createFeaturesFromGroups(features, groups, props, kind);
-
         // 處理關聯圖層
-        let associated_layers = [];
         let associated_fields = [];
-        
-        if (window.advancedConfig.advanced && window.advancedConfig.associated_layer?.length > 0) {
-            associated_layers = window.advancedConfig.associated_layer;
-        }
-
-        // 創建並添加到地圖
-        const geojson = { type: "FeatureCollection", features };
-        const layer = this.createMapLayer(geojson, kind, svg, color, associated_layers, associated_fields);
-        
-        window.xlsxLayer = layer;
-        
-        // 處理箭頭裝飾
-        if (kind === "arrowline") {
-            this.addArrowDecorators(layer, color);
-        }
-
-        // 適應地圖視圖
-        if (!this.mapManager.fitBounds(layer)) {
-            alert('⚠️ Excel 檔案中沒有有效圖形。');
-        }
-
         // 生成統一的資料結構
         this.generateUnifiedFeatures(xlsxJson, associated_fields);
-
-        // 生成照片上傳區塊（如果啟用）
-        if (window.advancedConfig.advanced && 
-            window.advancedConfig.modules && 
-            window.advancedConfig.modules.includes('photo_upload')) {
-            this.photoUpload.generatePhotoUploadSections(xlsxJson, 'xlsx');
-        }
-    }
-
-    /**
-     * 顯示 KML 處理結果 - 保持原有功能
-     */
-    showResult_kml(kmlContent) {
-        // 清除原圖層
-        this.mapManager.clearCustomLayers();
-
-        const kind = $("#LayerKind").val();
-        const svg = $("#LayerSvg").val();
-        const color = $("#LayerColor").val();
-
-        // 解析 KML
-        const parser = new DOMParser();
-        const kmlDoc = parser.parseFromString(kmlContent, 'text/xml');
-        const geojson = toGeoJSON.kml(kmlDoc);
-
-        // 過濾 geojson.features
-        geojson.features = this.filterKmlFeatures(geojson.features, kind);
-
-        // 創建 GeoJSON 圖層
-        const geoJsonLayer = this.mapManager.createGeoJSONLayer(geojson, {
-            pointToLayer: (feature, latlng) => this.handleKmlPointToLayer(feature, latlng, svg),
-            style: (feature) => this.handleKmlStyle(feature, color),
-            onEachFeature: (feature, layer) => this.handleKmlFeature(feature, layer)
-        });
-
-        geoJsonLayer.addTo(window.map);
-
-        // 處理箭頭裝飾
-        if (kind === "arrowline") {
-            this.addArrowDecorators(geoJsonLayer, color);
-        }
-
-        // 處理 KML 文檔結構
-        this.processKmlDocument(kmlDoc, kind);
-
-        // 儲存圖層
-        window.kmlLayer = geoJsonLayer;
-
-        // 適應地圖視圖
-        if (!this.mapManager.fitBounds(geoJsonLayer)) {
-            alert('⚠️ KML 檔案中沒有有效圖形。');
-            $("#Xlsx_or_Kml").val("");
-        }
-
-        // 生成照片上傳區塊（如果啟用）
-        if (window.advancedConfig.advanced && 
-            window.advancedConfig.modules && 
-            window.advancedConfig.modules.includes('photo_upload')) {
-            this.photoUpload.generatePhotoUploadSections(kmlContent, 'kml');
-        }
+        // 生成照片上傳區塊
+        this.photoUpload.generatePhotoUploadSections(xlsxJson, 'xlsx');
     }
 
     /**
@@ -343,11 +253,13 @@ export class DataProcessor {
             }));
 
             const road_name = placemarkRows[0].road_name;
+            const road_dist = placemarkRows[0].road_dist;
             const pile_dir = placemarkRows[0].pile_dir || 1;
             const displayName = `${road_name} - 方向 ${pile_dir}`;
 
             const ImportMapdataArea = {
                 name: displayName,
+                adminDist: road_dist,
                 MapdataPoints: converted
             };
 

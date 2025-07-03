@@ -209,7 +209,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/General/Delete/Area")]
-        public async Task<IActionResult> DeleteMapdataArea(Guid id)
+        public async Task<IActionResult> DeleteMapdataArea(Guid id, string associateLayer)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -219,7 +219,7 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限刪除" });
             }
-            var deleteArea = await _mapdataInterface.DeleteMapdataAreaAsync(id);
+            var deleteArea = await _mapdataInterface.DeleteMapdataAreaAsync(id, associateLayer);
             return Json(new { success = deleteArea.Success, message = deleteArea.Message });
         }
 
@@ -272,7 +272,7 @@ namespace RMIS.Controllers
             return Json(new { success = datainfo.Success, datainfo = datainfo.Data, message = datainfo.Message });
         }
         [HttpGet("[controller]/General/Import")]
-        public async Task<IActionResult> GeneralImportMapdata(Guid layerId, string name, string dist, string kind, string svg, string color)
+        public async Task<IActionResult> GeneralImportMapdata(Guid layerId, string name, string kind, string svg, string color)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -287,7 +287,6 @@ namespace RMIS.Controllers
             {
                 LayerId = layerId,
                 LayerName = name,
-                District = dist,
                 LayerKind = kind,
                 LayerColor = color,
                 LayerSvg = svg,
@@ -326,25 +325,10 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = false, message = "無權限新增" });
             }
-            return Json(new { success = true, message = "成功" });
-            //var imported = await _mapdataInterface.ImportMapdataAsync(importMapdata);
-            //return Json(new { success = imported.Success, message = imported.Message });
+            // return Json(new { success = true, message = "成功" });
+            var imported = await _mapdataInterface.ImportMapdataAsync(importMapdata);
+            return Json(new { success = imported.Success, message = imported.Message });
         }
-
-        //[HttpPost("[controller]/General/Import")]
-        //public async Task<IActionResult> ImportMapdata([FromForm] ImportMapdataView importMapdata)
-        //{
-        //    var currentUser = await _userManager.GetUserAsync(User);
-        //    var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
-
-        //    if (!currentUserPermission.Create)
-        //    {
-        //        return Json(new { success = false, message = "無權限新增" });
-        //    }
-
-        //    var result = await _mapdataInterface.ImportMapdataAsync(importMapdata);
-        //    return Json(new { success = result.Success, message = result.Message });
-        //}
 
         // 小幫手類型
         public class ImportSettingWrapper

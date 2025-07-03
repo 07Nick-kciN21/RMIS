@@ -1,10 +1,10 @@
 // main.js - 主要入口文件
-import { MapManager } from './modules/mapManager.js';
-import { FileHandler } from './modules/fileHandler.js';
-import { UIManager } from './modules/uiManager.js';
-import { AdvancedFeatures } from './modules/advancedFeatures.js';
-import { PhotoUpload } from './modules/photoUpload.js';
-import { DataProcessor } from './modules/dataProcessor.js';
+import { MapManager } from './importMapdata/mapManager.js';
+import { FileHandler } from './importMapdata/fileHandler.js';
+import { UIManager } from './importMapdata/uiManager.js';
+import { AdvancedFeatures } from './importMapdata/advancedFeatures.js';
+import { PhotoUpload } from './importMapdata/photoUpload.js';
+import { DataProcessor } from './importMapdata/dataProcessor.js';
 
 // 全域變數 - 保持原有的全域狀態
 window.map = null;
@@ -85,14 +85,13 @@ class ImportMapdataApp {
         // 遍歷所有專案照片資料
         Object.keys(window.projectPhotoData || {}).forEach(projectId => {
             const project = window.projectPhotoData[projectId];
-            
             if (project.uploadedPhotos && project.uploadedPhotos.length > 0) {
                 // 只保留照片檔案的基本資訊
                 photoData[projectId] = project.uploadedPhotos.map(photo => ({
                     name: photo.name,
                     size: photo.size,
                     type: photo.type,
-                    dataUrl: photo.dataUrl, // Base64 圖片資料
+                    base64Data: photo.dataUrl, // Base64 圖片資料
                     uploadTime: photo.uploadTime
                 }));
             }
@@ -118,7 +117,6 @@ class ImportMapdataApp {
             LayerKind: $("#LayerKind").val(),
             LayerSvg: $("#LayerSvg").val(),
             LayerColor: $("#LayerColor").val(),
-            District: $("#District").val(),
             ImportMapdataAreas: window.unifiedFeatures,
             Associated_table: window.advancedConfig.associated_table || null,
 
@@ -128,26 +126,26 @@ class ImportMapdataApp {
 
         // this.uiManager.showLoading();
         console.log("提交資料:", payload);
-        // $.ajax({
-        //     url: '/Mapdata/General/Import',
-        //     type: 'POST',
-        //     contentType: 'application/json',
-        //     data: JSON.stringify(payload),
-        //     success: (data) => {
-        //         if (data.success) {
-        //             alert('匯入成功！');
-        //         } else {
-        //             alert(data.message || '匯入失敗');
-        //         }
-        //         this.uiManager.hideLoading();
-        //         location.reload();
-        //     },
-        //     error: (xhr) => {
-        //         alert('匯入過程發生錯誤');
-        //         console.error(xhr);
-        //         this.uiManager.hideLoading();
-        //     }
-        // });
+        $.ajax({
+            url: '/Mapdata/General/Import',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: (data) => {
+                if (data.success) {
+                    alert('匯入成功！');
+                } else {
+                    alert(data.message || '匯入失敗');
+                }
+                this.uiManager.hideLoading();
+                location.reload();
+            },
+            error: (xhr) => {
+                alert('匯入過程發生錯誤');
+                console.error(xhr);
+                this.uiManager.hideLoading();
+            }
+        });
     }
 
     handleGoBack(e) {

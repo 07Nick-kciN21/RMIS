@@ -264,20 +264,31 @@ function popUpForm(prop) {
     let table = '<table class="popup-table-content"  cellpadding="5" cellspacing="0">';
     
     Object.keys(prop).forEach(key => {
+        if(key === "街景照片"){
+            return;
+        }
         // 如果key不存在於propMap中，則不顯示
         // if (!propMap[key]) return;
         let value = prop[key];
     
         // 如果是CurrentRoadWidth、PlannedRoadWidth，轉換成json格式，並顯示路寬與路況
         if (["現況路寬", "計畫路寬"].includes(key)) {
-            const parsedValue = JSON.parse(value);
-            value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
+            // 如果格式不是json，給原值
+            let parsedValue;
+            try {
+                parsedValue = JSON.parse(value);
+                value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
+            } catch (e) {
+                // 不是 JSON 格式，直接給原值
+                value = value;
+            }
         }
     
         // 如果是ConstructionBudget等，則轉換成萬元
-        if (["工程經費", "用地經費", "補償經費", "合計經費"].includes(key)) {
-            value = value === 0 ? value : value / 10000 + '萬';
-        }
+        // if (["工程經費", "用地經費", "補償經費", "合計經費"].includes(key)) {
+            
+        //     value = value === 0 ? value : value / 10000 + '萬';
+        // }
     
         // 如果是PublicPrivateLand等，則顯示筆數
         if (["公有土地", "私有土地", "公私土地"].includes(key)) {
@@ -322,8 +333,8 @@ function renderTableBody(pageData){
             }
             currentRow = $(this).closest('tr');
             currentRow.addClass('selectRow');
+            console.log(project);
             addLayerToMap(project['id']);
-            console.log(project['plannedExpansionId'], project['streetViewId']);
         });
         // 預設儲存按鈕不顯示
         // 編輯與儲存交替顯示
@@ -464,6 +475,7 @@ function renderTableBody(pageData){
             for (var pair of updateForm.entries()) {
                 console.log(pair[0]+ ', ' + pair[1]); 
             }
+            // console.log(updateForm);
             // 取得更新後的所有值
             // 透過/api/AdminAPI/UpdateRoadProject更新資料
             fetch(`/api/AdminAPI/updateProjectData`, {  

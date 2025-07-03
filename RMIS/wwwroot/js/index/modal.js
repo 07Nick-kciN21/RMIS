@@ -11,6 +11,34 @@
     
         ['adminMenuBtn'].forEach(initializeObserver);
     });
+
+    // ✅ 事件委派方式：針對動態加入的 form 也能綁定
+    $(document).on('submit', '#customModal .modal-body form', function (e) {
+        e.preventDefault();
+
+        const $form = $(this);
+        const url = $form.attr('action') || $form.data('action'); // 優先使用 action 屬性
+        const method = $form.attr('method') || 'POST';
+        const formData = new FormData(this);
+
+        $.ajax({
+            url: url,
+            type: method,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                alert(response.message || '提交成功');
+                // 若你要關掉 modal 可加上：
+                $('#customModal').fadeOut();
+                $('.disable-overlay').remove();
+            },
+            error: function (xhr, status, error) {
+                alert(`Error ${status}. 表單提交失敗: ${xhr.responseText}`);
+            }
+        });
+    });
+
     // Dropdown 切換邏輯
     $('#adminMenuBtn').on('click', function (e) {
         e.stopPropagation();
@@ -25,37 +53,16 @@
         $('#customModal').fadeIn();
         var url = $(this).data('action');
         var modalTitle = $(this).text();
-        // l = 500px
-        // xl = 800px
-        $('#customModal').fadeIn();
         $('#modalTitle').text(modalTitle);
         $('#customModal .modal-body').html('<p>正在加载...</p>');
 
-        $.get(url, function (data) {
-            console.log("get data");
+        $.get(url + '?_t=' + new Date().getTime(), function (data) {
             $('#customModal .modal-body').html(data);
-            $('#customModal .modal-body form').on('submit', function (e) {
-                e.preventDefault(); // 阻止默認行為
-                var method = $(this).attr('method');
-                var formData = new FormData(this);
-                // alert(`${method} ${url} ${formData}`);
-                $.ajax({
-                    url: url,
-                    type: method,
-                    data: formData,
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function (response) {
-                        // 處理成功回應
-                        alert(response.message);
-                    },
-                    error: function (xhr, status, error) {
-                        // 處理錯誤回應
-                        alert(`Error ${status}. 表單提交失敗: {${xhr.responseText}}` );
-                    }
-                });
-            });
+
+            // ✅ 每次 modal 載入後重新初始化 app
+            if (window.app && typeof window.app.init === 'function') {
+                window.app.init();
+            }
         }).fail(function () {
             $('#customModal .modal-body').html('<p>載入失敗。</p>');
         });
@@ -63,9 +70,6 @@
         if (!$('.disable-overlay').length) {
             $('body').append('<div class="disable-overlay"></div>');
         }
-        //$('.dropdown-content').each(function () {
-        //    $(this).css('display', 'none');
-        //});
     });
 
     $('.close-modal').on('click', function () {

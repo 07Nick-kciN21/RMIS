@@ -7,16 +7,25 @@
     Layout = null; // 禁用 _Layout.cshtml 加载
 }
 
-<form asp-controller="Admin" asp-action="AddRoadProjectByCSV" method="post" enctype="multipart/form-data">
-    <div class="form-group">
-        <label asp-for="projectFile" class="control-label">請上傳EXCEL檔案：</label> <br />
-        <input asp-for="projectFile" type="file" class="form-control-file" accept=".xlsx" />
-        <span asp-validation-for="projectFile" class="text-danger"></span>
+<script type="module" src="~/js/admin/AddRoadProjectByExcel.js"></script>
+
+
+<div class="modal-content">
+    <div class="container mt-4">
+        <form>
+            <div class="mb-4">
+                <div class="mb-3">
+                    <label>上傳檔案</label>
+                    <input asp-for="projectFile" type="file" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <div class="advanced-options" id="advancedOptions">
+                        <div id="advancedContainer" style="width: 100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <button id="submit" class="btn btn-primary">上傳資料</button>    
     </div>
-    <div class="form-group">
-        <label asp-for="projectPhoto" class="control-label">請上傳圖檔：</label> <br />
-        <input asp-for="projectPhoto" type="file" class="form-control-file" multiple accept="image/*" />
-        <span asp-validation-for="projectPhoto" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">上傳資料</button>
-</form>
+</div>

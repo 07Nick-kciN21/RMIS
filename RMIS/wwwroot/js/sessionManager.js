@@ -61,7 +61,6 @@ const sessionManager = (() => {
     // 強制檢查會話狀態
     function checkSessionTimeout() {
         const remainingTime = getRemainingTime();
-        console.log("剩餘時間:", Math.floor(remainingTime / 1000), "秒");
         
         if (remainingTime <= 0) {
             handleSessionExpired();

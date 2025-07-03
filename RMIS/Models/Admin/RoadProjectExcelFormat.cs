@@ -1,4 +1,6 @@
-﻿namespace RMIS.Models.Admin
+﻿using RMIS.Models.Account.Mapdatas;
+
+namespace RMIS.Models.Admin
 {
     public class RoadProjectExcelFormat
     {
