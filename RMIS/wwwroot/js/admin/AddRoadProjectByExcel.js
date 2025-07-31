@@ -83,25 +83,45 @@ class AddRoadProjectByExcel {
             ImportMapdataAreas: window.unifiedFeatures,
             PhotoUploadData: photoUploadData
         };
-        console.log("提交資料:", payload);
-        $.ajax({
-            url: '/Admin/AddRoadProjectByExcel',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(payload),
-            success: (data) => {
-                if (data.success) {
-                    alert(data.message, '匯入成功！');
-                } else {
-                    alert(data.message || '匯入失敗');
-                }
+        if(!payload.ImportMapdataAreas || payload.ImportMapdataAreas.length === 0) {
+            alert('請先上傳有效的Excel檔案！');
+            return;
+        }
+        // 檢查每個專案都上傳所有所需照片
+        for (const [index, area] of (window.unifiedFeatures || []).entries()) {
+            const projectId = index.toString();
+            const requiredPhotos = window.app.photoUpload.getRequiredPhotoTypes
+            ? window.app.photoUpload.getRequiredPhotoTypes(projectId)
+            : []; // 需由 photoUpload 實作
+            const uploadedPhotos = (window.projectPhotoData[projectId]?.uploadedPhotos || []).map(p => p.type);
 
-            },
-            error: (xhr) => {
-                alert('匯入過程發生錯誤');
-                console.error(xhr);
+            for (const type of requiredPhotos) {
+                if (!uploadedPhotos.includes(type)) {
+                    alert(`專案 ${area.name} 缺少所需照片類型：${type}！`);
+                    return;
+                }
             }
-        });
+        }
+
+        console.log("提交資料:", payload);
+        // $.ajax({
+        //     url: '/Admin/AddRoadProjectByExcel',
+        //     type: 'POST',
+        //     contentType: 'application/json',
+        //     data: JSON.stringify(payload),
+        //     success: (data) => {
+        //         if (data.success) {
+        //             alert(data.message, '匯入成功！');
+        //         } else {
+        //             alert(data.message || '匯入失敗');
+        //         }
+
+        //     },
+        //     error: (xhr) => {
+        //         alert('匯入過程發生錯誤');
+        //         console.error(xhr);
+        //     }
+        // });
     }
 }
 
@@ -161,7 +181,7 @@ function generateUnifiedFeatures(xlsxJson) {
 
         const road_name = placemarkRows[0].road_name;
         const pile_dir = placemarkRows[0].pile_dir || 1;
-        const displayName = `${road_name} - 方向 ${pile_dir}`;
+        const displayName = `${road_name} - 預拓範圍`;
         const road_dist = placemarkRows[0].road_dist;
 
         const ImportMapdataArea = {

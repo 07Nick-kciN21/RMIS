@@ -6,6 +6,8 @@ namespace RMIS.Models.sql
     {
         public Guid Id { get; set; }
         public string ProjectId { get; set; }
+
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Index { get; set; }
         /// 提案人
         public string Proposer { get; set; }

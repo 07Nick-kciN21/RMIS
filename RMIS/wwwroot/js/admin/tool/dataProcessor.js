@@ -229,7 +229,7 @@ export class DataProcessor {
     generateUnifiedFeatures(xlsxJson, associated_fields) {
         window.unifiedFeatures = [];
         const groupedByRoadAndDir = {};
-
+        console.log("Generating unified features from XLSX data:", xlsxJson);
         xlsxJson.forEach(row => {
             const roadId = row.road_id;
             const pileDir = row.pile_dir || '1';

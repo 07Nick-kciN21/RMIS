@@ -556,7 +556,7 @@ export class PhotoUpload {
      */
     handlePhotoFiles(files, maxFileSize, allowedFormats) {
         const fileArray = Array.from(files);
-        
+        console.log("handPhotoFiles");
         let validFiles = [];
         let errors = [];
         

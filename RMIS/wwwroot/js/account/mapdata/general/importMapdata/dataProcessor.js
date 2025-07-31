@@ -220,11 +220,11 @@ export class DataProcessor {
                 continue;
             }
 
-            html += `<tr><td style="width: 30%;"><b>${key}</b></td><td>${Array.isArray(value) ? value.join("<br>") : value}</td></tr>`;
+            html += `<tr><td style="width: 40%;"><b>${key}</b></td><td>${Array.isArray(value) ? value.join("<br>") : value}</td></tr>`;
         }
         
         html += '</table>';
-        layer.bindPopup(html);
+        layer.bindPopup(html, {maxWidth: 400});
     }
 
     /**
@@ -318,6 +318,7 @@ export class DataProcessor {
      */
     generateUnifiedFeatures(xlsxJson, associated_fields) {
         window.unifiedFeatures = [];
+        console.log(xlsxJson);
         const groupedByRoadAndDir = {};
 
         xlsxJson.forEach(row => {

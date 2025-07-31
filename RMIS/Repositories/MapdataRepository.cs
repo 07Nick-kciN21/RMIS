@@ -284,7 +284,7 @@ namespace RMIS.Repositories
                     case "RoadProject":
                         // 先檢查所有重複的 projectId
                         var duplicateProjectIds = await CheckDuplicateProjectIds(importMapata);
-                        if (duplicateProjectIds.Any())
+                        if (duplicateProjectIds.Count != 0)
                         {
                             var duplicateIds = string.Join(", ", duplicateProjectIds);
                             return (false, $"上傳失敗 專案{duplicateIds} 已經存在");

@@ -105,8 +105,8 @@ function updateMapdataTable(mapdatas){
             }
         });
         var moreBtn = $(`<a class="more-data read">more</a>`).on("click", function () {
-            var width = 800;
-            var height = 600;
+            var width = 1000;
+            var height = 800;
             var url = `/Mapdata/General/Read/Layer?id=${mapdata.id}`;
             wm.open("readPipelineWindow", url, width, height);
         });

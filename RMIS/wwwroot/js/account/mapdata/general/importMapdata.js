@@ -124,28 +124,43 @@ class ImportMapdataApp {
             PhotoUploadData: photoUploadData
         };
 
+        for (const [index, area] of (window.unifiedFeatures || []).entries()) {
+            const projectId = index.toString();
+            const requiredPhotos = window.app.photoUpload.getRequiredPhotoTypes
+            ? window.app.photoUpload.getRequiredPhotoTypes(projectId)
+            : []; // 需由 photoUpload 實作
+            const uploadedPhotos = (window.projectPhotoData[projectId]?.uploadedPhotos || []).map(p => p.type);
+
+            for (const type of requiredPhotos) {
+                if (!uploadedPhotos.includes(type)) {
+                    alert(`專案 ${area.name} 缺少所需照片類型：${type}！`);
+                    return;
+                }
+            }
+        }
+
         // this.uiManager.showLoading();
         console.log("提交資料:", payload);
-        $.ajax({
-            url: '/Mapdata/General/Import',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(payload),
-            success: (data) => {
-                if (data.success) {
-                    alert('匯入成功！');
-                } else {
-                    alert(data.message || '匯入失敗');
-                }
-                this.uiManager.hideLoading();
-                location.reload();
-            },
-            error: (xhr) => {
-                alert('匯入過程發生錯誤');
-                console.error(xhr);
-                this.uiManager.hideLoading();
-            }
-        });
+        // $.ajax({
+        //     url: '/Mapdata/General/Import',
+        //     type: 'POST',
+        //     contentType: 'application/json',
+        //     data: JSON.stringify(payload),
+        //     success: (data) => {
+        //         if (data.success) {
+        //             alert('匯入成功！');
+        //         } else {
+        //             alert(data.message || '匯入失敗');
+        //         }
+        //         this.uiManager.hideLoading();
+        //         location.reload();
+        //     },
+        //     error: (xhr) => {
+        //         alert('匯入過程發生錯誤');
+        //         console.error(xhr);
+        //         this.uiManager.hideLoading();
+        //     }
+        // });
     }
 
     handleGoBack(e) {

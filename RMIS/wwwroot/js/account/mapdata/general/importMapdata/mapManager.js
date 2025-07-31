@@ -167,7 +167,7 @@ export class MapManager {
             }
         }
         html += '</table>';
-        layer.bindPopup(html);
+        layer.bindPopup(html,{maxWidth: 300});
     }
 
     /**

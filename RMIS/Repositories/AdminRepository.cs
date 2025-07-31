@@ -989,8 +989,17 @@ namespace RMIS.Repositories
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
             try
             {
+               if(importMapata.ImportMapdataAreas.Count == 0)
+                {
+                    return (false, $"未上傳檔案");
+                }
                 // 先檢查所有重複的 projectId
                 var duplicateProjectIds = await CheckDuplicateProjectIds(importMapata);
+                if (duplicateProjectIds.Count != 0)
+                {
+                    var duplicateIds = string.Join(", ", duplicateProjectIds);
+                    return (false, $"上傳失敗 專案{duplicateIds} 已經存在");
+                }
 
                 // 用來儲存專案代號與 areaId 的對應關係（僅用於 RoadProject）
                 var areaIdMapping = new Dictionary<string, Guid>();
@@ -1004,10 +1013,12 @@ namespace RMIS.Repositories
                     var AdminDist = mapdataArea.adminDist;
                     var DistId = await _mapDBContext.AdminDist.Where(ad => ad.Town == AdminDist).Select(ad => ad.Id).FirstOrDefaultAsync();
                     var areaId = Guid.NewGuid();
+                    var nameParts = mapdataArea.name.Split(" - ");
+                    var name = nameParts.Length > 0 ? nameParts[0] + " - 預拓範圍" : mapdataArea.name;
                     var area = new Area
                     {
                         Id = areaId,
-                        Name = mapdataArea.name,
+                        Name = name,
                         LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A"),
                         ConstructionUnit = "未填寫",
                         AdminDistId = DistId
