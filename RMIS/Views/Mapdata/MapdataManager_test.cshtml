@@ -1,0 +1,155 @@
+﻿@{
+    ViewData["Title"] = "使用者管理";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+    @* Layout = null; *@
+}
+
+<link rel="stylesheet" href="~/css/Account/mapdataManager_test.css" />
+<link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script type="module" src="~/js/account/mapdata/mapdataManager_test.js"></script>
+<script src="~/lib/leaflet/leaflet.js"></script>
+<script src="~/lib/leaflet-polylinedecorator/leaflet-polylinedecorator.js"></script>
+<div class="mapdata-manager-container">
+    <!-- 頂部導航 -->
+    <div class="top-navigation">
+        <div class="breadcrumb">
+            <a href="#" class="breadcrumb-link" data-page="pipeline">圖資系統</a>
+            <span>></span>
+            <span class="current">圖層管理</span>
+        </div>
+    </div>
+    
+    <!-- 主要工作區域 -->
+    <div class="main-workspace">
+        <!-- 左側內容區域 -->
+        <div class="content-section">
+            <!-- Pipeline 列表頁面 -->
+            <div id="pipeline-page" class="content-area page-transition active">
+                <div class="page-header">
+                    <h1 class="page-title">圖資管理</h1>
+                </div>
+                <div class="pipeline-grid">
+                </div>
+            </div>
+            
+            <!-- Layer 列表頁面 -->
+            <div id="layer-page" class="content-area page-transition">
+                <div class="page-header">
+                    <h1 class="page-title">圖層管理</h1>
+                </div>
+                
+                <div class="layer-grid">
+                </div>
+            </div>
+            
+            <!-- Area 管理頁面 -->
+            <div id="area-page" class="content-area page-transition">
+                <div class="page-header">
+                    <h1 class="page-title">區塊管理 - <span id="current-layer-name">載入中...</span></h1>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+                    <!-- Area 資訊卡片 -->
+                    <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px;">圖層資訊</h2>
+                            </div>
+                            <button class="btn btn-primary">編輯圖層設定</button>
+                        </div>
+                        
+                        <!-- 行政區選擇區域 -->
+                        <div style="margin-bottom: 24px; padding: 16px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
+                            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <label for="district-select" style="font-weight: 600; color: #333; white-space: nowrap;">
+                                        📍 選擇行政區：
+                                    </label>
+                                    <select id="district-select" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: white; min-width: 150px; font-size: 14px;">
+                                        <option value="">請選擇行政區</option>
+                                        <option value="中壢區">中壢區</option>
+                                        <option value="桃園區">桃園區</option>
+                                        <option value="平鎮區">平鎮區</option>
+                                        <option value="八德區">八德區</option>
+                                        <option value="楊梅區">楊梅區</option>
+                                        <option value="蘆竹區">蘆竹區</option>
+                                        <option value="大溪區">大溪區</option>
+                                        <option value="龜山區">龜山區</option>
+                                        <option value="大園區">大園區</option>
+                                        <option value="觀音區">觀音區</option>
+                                        <option value="新屋區">新屋區</option>
+                                        <option value="龍潭區">龍潭區</option>
+                                        <option value="復興區">復興區</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: #666; font-size: 14px;">
+                                        目前選擇：
+                                    </span>
+                                    <span id="selected-district-display" style="color: #667eea; font-weight: 500;">
+                                        未選擇
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div id="district-hint" style="margin-top: 12px; padding: 8px 12px; background: #e3f2fd; border-radius: 4px; color: #1565c0; font-size: 13px;">
+                                💡 請先選擇行政區以載入該區域的區塊資料
+                            </div>
+                        </div>
+                        
+                        <!-- Area 表格 -->
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e1e5e9;">
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">區塊名稱</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">行政區</th>
+                                        <th style="padding: 12px; text-align: center; font-weight: 600; color: #333;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Area資料將由JavaScript動態載入 -->
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                                            請選擇行政區以載入區塊資料
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e1e5e9; text-align: right;">
+                            <button class="btn btn-primary" id="add-area-btn" disabled style="opacity: 0.6;">+ 新增區塊</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Point 編輯頁面 -->
+            <div id="point-page" class="content-area page-transition">
+                <div class="page-header">
+                    <h1 class="page-title">座標編輯 - <span id="current-area-name">區塊載入中...</span></h1>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 24px; height: calc(100vh - 300px);">
+                    <!-- 地圖編輯區 -->
+                    <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div id="map" style="width: 100%; height: 100%; min-height: 400px;" class="mb-4"></div>
+                    </div>
+                    
+                    <!-- 座標列表 -->
+                    <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow-y: auto;">
+                        <h3 style="margin-bottom: 16px; color: #1a1a1a;">座標列表</h3>
+                        
+                        <div id="points-container">
+                            <!-- 座標項目將由JavaScript動態載入 -->
+                            <div style="text-align: center; padding: 40px; color: #666;">載入中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

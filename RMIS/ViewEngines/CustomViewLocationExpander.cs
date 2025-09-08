@@ -26,8 +26,7 @@ namespace RMIS.ViewEngines
             {
                 return new string[]
                 {
-                    "/Views/Mapdata/General/{0}.cshtml",
-                    "/Views/Mapdata/NotGeneral/{0}.cshtml",
+                    "/Views/Mapdata/{0}.cshtml",
                 };
             }
             return viewLocations;

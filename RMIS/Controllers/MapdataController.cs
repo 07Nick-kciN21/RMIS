@@ -27,8 +27,8 @@ namespace RMIS.Controllers
             _mapdataInterface = mapdataInterface;
         }
 
-        [HttpGet("[controller]/General/List")]
-        public async Task<IActionResult> GeneralMapdataManager()
+        [HttpGet("[controller]/List")]
+        public async Task<IActionResult> MapdataManager()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -43,8 +43,8 @@ namespace RMIS.Controllers
             return View();
         }
 
-        [HttpGet("[controller]/NotGeneral/List")]
-        public async Task<IActionResult> NotGeneralMapdataManager()
+        [HttpGet("[controller]/List_Test")]
+        public async Task<IActionResult> MapdataManager_test()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -75,20 +75,20 @@ namespace RMIS.Controllers
             return Ok(new { success = true, MapdataManager = MapdataManagerData });
         }
 
-        [HttpGet("[controller]/General/Read/Layer")]
-        public IActionResult GeneralMapdataLayer(Guid id)
+        [HttpGet("[controller]/Read/Layer")]
+        public IActionResult MapdataLayer(Guid id)
         {
             return View();
         }
 
-        [HttpGet("[controller]/General/Read/Point")]
-        public IActionResult GeneralMapdataPoint(Guid areaId, string kind)
+        [HttpGet("[controller]/Read/Point")]
+        public IActionResult MapdataPoint(Guid areaId, string kind)
         {
             return View();
         }
 
-        [HttpGet("[controller]/General/Get/Point")]
-        public async Task<IActionResult> GeneralGetMapdataPoint(Guid areaId)
+        [HttpGet("[controller]/Get/Point")]
+        public async Task<IActionResult> GetMapdataPoint(Guid areaId)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -106,7 +106,7 @@ namespace RMIS.Controllers
             return Json(new { success = true, points = MapdataPoints, message = "取得圖資" });
         }
 
-        [HttpPost("[controller]/General/Delete")]
+        [HttpPost("[controller]/Delete")]
         public async Task<IActionResult> DeleteMapdata(Guid id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -125,7 +125,7 @@ namespace RMIS.Controllers
             return Json(new { success = true, message = "刪除圖資" });
         }
 
-        [HttpPost("[controller]/General/Get/Layer")]
+        [HttpPost("[controller]/Get/Layer")]
         public async Task<IActionResult> GetMapdataLayer(Guid id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -144,7 +144,7 @@ namespace RMIS.Controllers
             return Json(new { success = true, layers = MapdataLayers, message = "取得圖資列表" });
         }
 
-        [HttpPost("[controller]/General/Get/Dist")]
+        [HttpPost("[controller]/Get/Dist")]
         public async Task<IActionResult> GetMapdataDist(Guid id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -164,7 +164,7 @@ namespace RMIS.Controllers
             return Json(new { success = true, dists = MapdataDists, message = "取得圖資行政區列表" });
         }
 
-        [HttpPost("[controller]/General/Get/Area")]
+        [HttpPost("[controller]/Get/Area")]
         public async Task<IActionResult> GetMapdataArea(Guid LayerId, string Dist)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -184,7 +184,7 @@ namespace RMIS.Controllers
             return Json(new { success = true, areas = MapdataAreas, message = "取得圖資道路列表" });
         }
 
-        [HttpPost("[controller]/General/Search")]
+        [HttpPost("[controller]/Search")]
         public async Task<IActionResult> GetMapdataSearch(Guid LayerId, string Dist, Guid AreaId)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -208,7 +208,7 @@ namespace RMIS.Controllers
             return Json(new { success = true, mapdataSearch = MapdataSearch, message = "取得圖資" });
         }
 
-        [HttpPost("[controller]/General/Delete/Area")]
+        [HttpPost("[controller]/Delete/Area")]
         public async Task<IActionResult> DeleteMapdataArea(Guid id, string associateLayer)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -223,8 +223,8 @@ namespace RMIS.Controllers
             return Json(new { success = deleteArea.Success, message = deleteArea.Message });
         }
 
-        [HttpGet("[controller]/General/Update/Pipeline")]
-        public async Task<IActionResult> GeneralUpdateMapdataPipeline(Guid id, Guid categoryId)
+        [HttpGet("[controller]/Update/Pipeline")]
+        public async Task<IActionResult> UpdateMapdataPipeline(Guid id, Guid categoryId)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -240,7 +240,7 @@ namespace RMIS.Controllers
             return View(pipeline);
         }
 
-        [HttpPost("[controller]/General/Update/Pipeline")]
+        [HttpPost("[controller]/Update/Pipeline")]
         public async Task<IActionResult> UpdateMapdataPipeline(UpdatePipeline updatePipeline)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -257,7 +257,7 @@ namespace RMIS.Controllers
             return Json(new { success = update.Success, message = update.Message });
         }
 
-        [HttpPost("[controller]/General/Get/Datainfo")]
+        [HttpPost("[controller]/Get/Datainfo")]
         public async Task<IActionResult> GetDatainfo(Guid id)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -271,8 +271,8 @@ namespace RMIS.Controllers
             var datainfo = await _mapdataInterface.GetDatainfoAsync(id);
             return Json(new { success = datainfo.Success, datainfo = datainfo.Data, message = datainfo.Message });
         }
-        [HttpGet("[controller]/General/Import")]
-        public async Task<IActionResult> GeneralImportMapdata(Guid layerId, string name, string kind, string svg, string color)
+        [HttpGet("[controller]/Import")]
+        public async Task<IActionResult> ImportMapdata(Guid layerId, string name, string kind, string svg, string color)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -307,14 +307,14 @@ namespace RMIS.Controllers
             return View(importMapdata);
         }
 
-        [HttpGet("[controller]/General/Get/LayerConfig")]
+        [HttpGet("[controller]/Get/LayerConfig")]
         public async Task<IActionResult> GetLayerConfig(Guid layerId)
         {
             var LayerConfig = await _mapdataInterface.GetMapdataImportSetting(layerId);
             return Json(new { success = true, LayerConfig = LayerConfig });
         }
 
-        [HttpPost("[controller]/General/Import")]
+        [HttpPost("[controller]/Import")]
         public async Task<IActionResult> ImportMapdata([FromBody] ImportMapdataView importMapdata)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -336,8 +336,7 @@ namespace RMIS.Controllers
             public List<ImportMapdataArea>? ImportMapdataAreas { get; set; }
         }
 
-
-        [HttpPost("[controller]/General/Update/Datainfo")]
+        [HttpPost("[controller]/Update/Datainfo")]
         public async Task<IActionResult> UpdateDatainfo([FromForm] UpdateDatainfo updateDatainfo)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -351,5 +350,7 @@ namespace RMIS.Controllers
             var updated = await _mapdataInterface.UpdateDatainfoAsync(updateDatainfo);
             return Json(new { success = updated.Success, message = updated.Message });
         }
+
+
     }
 }

@@ -196,6 +196,7 @@ namespace RMIS.Repositories
 
             return importConfig;
         }
+
         public async Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid areaId)
         {
             var points = await _mapDBContext.Points
