@@ -23,25 +23,21 @@
             <option value="">-- None --</option>
         </select>
     </div>
-    <div class="form-group" style="height:140px">
+    <div class="form-group">
         <label asp-for="selectedDepartmentIds">可用部門</label>
         <select asp-for="selectedDepartmentIds" asp-items="@Model.Departments" class="form-control" multiple>
         </select>
     </div>
-    <div class="form-group" style="height:140px">
+    <div class="form-group">
         <label asp-for="selectedGeometryTypes">圖層</label>
         <select asp-for="selectedGeometryTypes" asp-items="@Model.GeometryTypes" class="form-control" multiple>
         </select>
-    </div>
-    <div>
-
     </div>
     <div class="form-group">
         <label asp-for="Color">顏色</label>
         <input asp-for="Color" type="color" class="form-control" />
         <span asp-validation-for="Color" class="text-danger"></span>
     </div>
-
     <button type="submit" class="btn btn-primary">新增管線</button>
 </form>
 

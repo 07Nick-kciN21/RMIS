@@ -56,12 +56,14 @@
 .modal-body form > div > select{
     height: 100%;
     width: 60%;
+    margin: auto;
 }
 
 .modal-body form > div > input,
 .modal-body form > div > textarea {
     height: 35px;
     width: 60%;
+    margin: auto;
 }
 
 /* 關閉按鈕 */

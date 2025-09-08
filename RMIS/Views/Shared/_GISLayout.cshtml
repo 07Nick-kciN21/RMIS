@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>@ViewData["Title"]</title>
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/_layout.css" />
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="~/lib//leaflet-geoman/leaflet-geoman.css" />
+    
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/leaflet/leaflet.js"></script>
+
+    <script src="~/lib/leaflet-geoman/leaflet-geoman.min.js"></script>
+
+    <script src="~/lib/turf/turf.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .content-wrapper {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-wrapper">
+        <header class="gx-0 custom-header">
+            @RenderSection("HomeHeaderNavList", required: false)
+        </header>
+        
+        @RenderBody()
+    </div>
+</body>
+</html>
