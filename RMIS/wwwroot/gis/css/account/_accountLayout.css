@@ -1,0 +1,41 @@
+.navbar-toggle {
+    display: block;
+}
+
+.head-logo {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.user-icon {
+    background-image: url('/svg/user.svg');
+    background-size: 90%;
+    background-position: center;
+    width: 36px;
+    height: 36px;
+    margin: 8px;
+}
+
+.sidebar{
+    background-color: #f6f5dd;
+}
+
+a > span {
+    color: black;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+header { 
+    display: flex;
+    background-color: #f0d984;
+}
+
+#col2 {
+    margin-left: auto;
+    margin-right: 40px;
+}
+
+li {
+    list-style-type: none;
+}

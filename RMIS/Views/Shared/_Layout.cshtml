@@ -43,18 +43,18 @@
         </header>
         
         @RenderBody()
-
-        @RenderSection("painterPanel", required: false)
-        @RenderSection("searchPropPanel", required: false)
-        @RenderSection("flagPanel", required: false)
-        @RenderSection("focusPanel", required: false)
-        @RenderSection("measurePanel", required: false)
-        @RenderSection("metaDataPanel", required: false)
-        @RenderSection("projectPanel", required: false)
-        @RenderSection("roadMaintPanel", required: false)
-        @RenderSection("searchPanel", required: false)
-        @RenderSection("accidentPanel", required: false)
-        
+        <div class="panels-container">
+            @RenderSection("painterPanel", required: false)
+            @RenderSection("searchPropPanel", required: false)
+            @RenderSection("flagPanel", required: false)
+            @RenderSection("focusPanel", required: false)
+            @RenderSection("measurePanel", required: false)
+            @RenderSection("metaDataPanel", required: false)
+            @RenderSection("projectPanel", required: false)
+            @RenderSection("roadMaintPanel", required: false)
+            @RenderSection("searchPanel", required: false)
+            @RenderSection("accidentPanel", required: false)
+        </div>
     </div>
     @await RenderSectionAsync("Scripts", required: false)
     <div class="modal fade" id="extendSessionModal" tabindex="-1" aria-labelledby="extendSessionModalLabel" aria-hidden="true">

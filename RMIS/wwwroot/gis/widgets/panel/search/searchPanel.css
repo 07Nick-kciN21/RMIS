@@ -1,0 +1,22 @@
+﻿#searchPanel .searchPanelBtn {
+    width: 25px;
+    height: 27px;
+    background-position: center;
+    background-size: 90%;
+    background-repeat: no-repeat;
+    background-image: url('/svg/search.svg');
+    cursor: pointer;
+}
+
+#searchPanel .searchPanelBtn:hover{
+    background-color:gainsboro;
+}
+
+#searchPanel .searchPanelInput {
+    margin-bottom: 0;
+    width:90%;
+}
+
+#searchPanel .panelResult{
+    font-size: 16px;
+}

@@ -117,62 +117,59 @@
                             </ul>
                         </div>
                     </div>
-                    
-                    {
-                        <div class="nav-item dropdown">
-                            <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
-                            <div id="adminMenuContent" class="dropdown-content">
-                                <ul id="adminMenu" class="menu-background">
-                                    @* 業務圖資 *@
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
-                                            <h4>新增圖源</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
-                                            <h4>新增類別</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
-                                            <h4>新增圖資</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
-                                            <h4>上傳圖資類別</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
-                                            <h4>上傳路線資料</h4>
-                                        </a>
-                                    </li>
+                    <div class="nav-item dropdown">
+                        <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
+                        <div id="adminMenuContent" class="dropdown-content">
+                            <ul id="adminMenu" class="menu-background">
+                                @* 業務圖資 *@
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
+                                        <h4>新增圖源</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
+                                        <h4>新增類別</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
+                                        <h4>新增圖資</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
+                                        <h4>上傳圖資類別</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
+                                        <h4>上傳路線資料</h4>
+                                    </a>
+                                </li>
 
-                                    @* 專案查詢 *@
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
-                                            <h4>新增道路專案</h4>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
-                                            <h4>上傳道路專案</h4>
-                                        </a>
-                                    </li>
-                                    
-                                    @* 養工焦點 *@
-                                    <li>
-                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
-                                            <h4>上傳施工通報</h4>
-                                        </a>
-                                    </li>
-                                    
-                                </ul>
-                            </div>
+                                @* 專案查詢 *@
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
+                                        <h4>新增道路專案</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
+                                        <h4>上傳道路專案</h4>
+                                    </a>
+                                </li>
+                                
+                                @* 養工焦點 *@
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
+                                        <h4>上傳施工通報</h4>
+                                    </a>
+                                </li>
+                                
+                            </ul>
                         </div>
-                    }
+                    </div>
                     <div class="nav-item dropdown">
                         <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
                     </div>
@@ -230,18 +227,9 @@
 </div>
 
 <div id="indexMap" style="width: 100%; height: 100vh;">
-    <div class="map-controls">
-        <span id="tb-sidebar" class="mobileTool" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock"></span>
-        <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
-        <span id="tb-zoomOut" class="mobileTool" title="縮小"></span>
-        <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
-        <span id="tb-painterPanel" class="mobileTool" title="繪圖板"></span>
-        <span id="tb-propEnabled" title="屬性資料"></span>
-        <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
-        <span id="tb-location" class="mobileTool" title="目前位置"></span>
-        <span id="tb-streetView" class="mobileTool" title="google街景"></span>
-        
-        
+    <div id="js-load-left-maptool">
+    </div>
+    <div id="js-load-bottom-maptool">
     </div>
     <div class="map-footer">
         <div id="scale-control" class="footer-tip"></div>
@@ -289,21 +277,10 @@
     </div>
 </div>
 
-<div id="customModal" class="modal-overlay hidden">
-    <div class="Admin-Modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="modalTitle">Loading...</h5>
-            <button class="close-modal">x</button>
-        </div>
-        <div class="modal-body">
-            <p>Loading content...</p>
-        </div>
-    </div>
-</div>
 
 <!-- 放在 body 最底部 -->
-
-
+<div id="panel-box" style="z-index: 1051;">
+</div>
 
 <div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
 <div id="measureTip" class="tip" style="display: none;"></div>

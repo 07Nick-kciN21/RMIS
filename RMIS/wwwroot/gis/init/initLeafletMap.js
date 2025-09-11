@@ -94,62 +94,28 @@ var initLeafletMap = {
     /**
      * 創建預設圖層
      */
-    createDefaultLayers: function() {
-        // Google 街景地圖
-        const GoogleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
+    createDefaultLayers: function() {        
+        console.log(this.appCore);
+        this.appCore.environment.layerConfigs.basemap.forEach(config => {
+            const options = {
+                maxZoom: config.maxZoom || 18,
+                pane: config.pane || 'tilePane',
+                opacity: config.opacity || 1
+            };
+
+            if (config.subdomains) options.subdomains = config.subdomains;
+
+            let layer = L.tileLayer(config.url, options);
+
+            this.baseMaps[config.name] = layer;
+
+            if (config.initVisible) {
+                this.currentTileLayer = layer;
+                
+                layer.addTo(this.indexMap);
+            }
         });
-
-        // Google 衛星地圖
-        const GoogleSatellite = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
-        });
-
-        // Google 地形圖
-        const GoogleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
-        });
-
-        // Google 混合地圖
-        const GoogleHybrid = L.tileLayer('http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
-        });
-
-        // OpenStreetMap
-        const OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 22,
-            attribution: '&copy; OpenStreetMap contributors',
-            pane: 'basePane'
-        }).addTo(this.indexMap);
-
-        // SP2006NC_3857
-        const SP2006NC_3857 = L.tileLayer('https://data.csrsr.ncu.edu.tw/SP/SP2006NC_3857/{z}/{x}/{y}.png', {
-            maxZoom: 22,
-            attribution: '&copy; OpenStreetMap contributors',
-            pane: 'basePane'
-        });
-
-        // 基本圖層配置
-        this.baseMaps = {
-            "Open Street地圖": OpenStreet,
-            "Google 街景地圖": GoogleStreets,
-            "Google 衛星地圖": GoogleSatellite,
-            "Google 地形圖": GoogleTerrain,
-            "Google 混和地圖": GoogleHybrid,
-            "SP2006NC_3857": SP2006NC_3857,
-        };
-
-        // 設定預設底圖
-        this.currentTileLayer = OpenStreet;
-
+        console.log(this.baseMaps);
         // 將圖層資訊存入 appCore
         this.appCore.layers.baseLayers = this.baseMaps;
         this.appCore.layers.overlayMaps = this.overlayMaps;

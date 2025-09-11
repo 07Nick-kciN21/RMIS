@@ -250,7 +250,9 @@
     </div>
 </div>
 
-<div id="indexMap" style="width: 100%; height: 100vh;">
+<div id="indexMap" style="width: 100%; height: 100vh;">    
+    <div id="js-load-panel-features">
+    </div>
     <div class="map-controls">
         <span id="tb-sidebar" class="mobileTool" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock"></span>
         <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
@@ -280,8 +282,6 @@
         @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status){
             <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
         }
-        
-        
     </div>
     <div class="map-footer">
         <div id="scale-control" class="footer-tip"></div>
@@ -329,7 +329,6 @@
     </div>
 </div>
 
-
 @section searchPanel {
     @Html.Partial("~/Views/Home/Partials/_searchPanel.cshtml")
 }
@@ -342,25 +341,25 @@
     @Html.Partial("~/Views/Home/Partials/_searchPropPanel.cshtml")
 }
 
- @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
+@if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
 {
     @section focusPanel {
         @Html.Partial("~/Views/Home/Partials/_focusPanel.cshtml")
     }
 }
- @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status)
+@if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status)
 {
     @section projectPanel {
         @Html.Partial("~/Views/Home/Partials/_projectPanel.cshtml")
     }
 }
- @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
+@if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
 {
     @section accidentPanel {
         @Html.Partial("~/Views/Home/Partials/_accidentPanel.cshtml")
     }
 }
- @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
+@if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
 {
     @section flagPanel {
         @Html.Partial("~/Views/Home/Partials/_flagPanel.cshtml")
@@ -378,6 +377,9 @@
 @section roadMaintPanel {
     @Html.Partial("~/Views/Home/Partials/_roadMaintPanel.cshtml")
 }
+
+
+
 
 <div id="customModal" class="modal-overlay hidden">
     <div class="Admin-Modal-content">

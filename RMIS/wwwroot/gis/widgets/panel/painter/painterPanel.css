@@ -1,0 +1,59 @@
+﻿#painterPanel #colorPickerContent {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#ptbInOut {
+    display: none; /* 初始狀態下隱藏選單 */
+    position: absolute; /* 相對於 drawMenu 定位 */
+    right: -95px; /* 從圖示的右側顯示 */
+    background: #fff;
+    border: 1px solid #ccc;
+    list-style: none;
+    padding: 10px;
+    z-index: 1000;
+}
+
+    #ptbInOut li {
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+        #ptbInOut li:hover {
+            background: #f0f0f0;
+        }
+
+.editableBox {
+    padding-left:5px;
+}
+
+.right-elements {
+    margin-left: auto;
+    display: flex;
+    gap: 2px;
+}
+
+.goDraw {
+    width: 100%;
+    display: none;
+    border-radius: 5px;
+    border: none;
+}
+
+    .goDraw:hover {
+        color:white;
+        background-color:gray;
+    }
+
+.searchBar {
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.searchBar:hover{
+    background-color: #dddada;
+}

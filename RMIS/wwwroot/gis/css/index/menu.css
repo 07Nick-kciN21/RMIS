@@ -1,0 +1,162 @@
+﻿.menu-head{
+    padding-bottom: 5px;
+}
+
+.menu-background {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.menu-sub {
+    padding: 8px 0px 0px 10px;
+    display: none;
+}
+
+.menu-node {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+}
+
+    .menu-node h4 {
+        margin: 0;
+    }
+
+.menu-title{
+    color: #956904;
+}
+
+.menu-layer {
+    display: flex;
+    align-items: center; /* This will vertically align the items in the center */
+}
+.menu-icon {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    margin-right: 10px;
+}
+
+.menu-node, .menu-layer, .menu-icon {
+    cursor: pointer;
+}
+
+.menu-open {
+    background-image: url('/svg/menu-open.svg');
+}
+
+.menu-close {
+    background-image: url('/svg/menu-close.svg');
+}
+
+.user-icon{
+    background-image: url('/svg/user.svg');
+    background-size: 90%;
+    background-position: center;
+    width: 36px; /* or any appropriate size */
+    height: 36px;
+    margin: 8px;
+}
+
+.username-text {
+    display: flex;
+    align-items: center; /* 垂直置中 */
+    padding-right: 5px; /* 右邊距 5px */
+    gap: 5px; /* 圖標與文字之間的間距 */
+}
+
+    /* 使用者名稱文字樣式 */
+    .username-text h5 {
+        margin: 0; /* 清除預設 margin */
+        font-size: 14px; /* 調整文字大小 */
+        color: #555; /* 文字顏色 */
+        user-select: none; /* 禁止文字選中 */
+        cursor: default; /* 讓滑鼠指標維持默認狀態 */
+    }
+
+        /* 向下三角形樣式 */
+        .username-text h5::after {
+            content: ''; /* 插入一個空內容 */
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-left: 5px;
+            vertical-align: middle;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #555; /* 三角形顏色 */
+        }
+
+.toggle {
+    float: right;
+    display: none !important;
+}
+
+.navbar-toggle{
+    display: block;
+}
+
+@media (min-width: 900px) {
+    #head-nav {
+        display: block !important;
+        margin-left:auto;
+    }
+}
+
+@media (max-width: 899px) {
+    .toggle {
+        display: block !important;
+    }
+
+    .navbar-toggle{
+        display: none !important;
+    }
+
+    #col1, #col2 {
+        display: block !important; /* 讓每個區塊占滿整行 */
+        width: 100%; /* 占滿父容器寬度 */
+        text-align: center; /* 內容置中（可選） */
+        margin: 0 auto; /* 垂直排列並置中 */
+    }
+
+    #sidebar-toggle{
+        margin-right: auto;
+    }
+
+    #menu-toggle{
+        margin-left: auto;
+    }
+    #head-nav {
+        display: block; /* 確保內容分為一列 */
+        width: 100%; /* 占滿整行寬度 */
+        text-align: center; /* 內容文字置中 */
+        margin-top: 10px; /* 與上方按鈕間距 */
+    }
+
+    #left-nav{
+        margin-right: auto;
+    }
+
+    #right-nav{
+        margin-left: auto;
+    }
+
+    #navbar-menu {
+        flex-direction: column; /* 垂直排列 */
+        align-items: stretch; /* 占滿可用寬度 */
+        width: 100%; /* 占滿父容器寬度 */
+    }
+    #navbar-menu .nav-item {
+        flex: 1; /* 子項目占滿可用空間 */
+        width: 100%; /* 確保項目自身寬度占滿父容器 */
+        text-align: center; /* 文字置中 */
+    }
+    #navbar-menu .dropdown-button {
+        width: 100%; /* 確保按鈕寬度與父容器一致 */
+    }
+
+    #navbar-menu > div:not(.mobile-show){
+        display: none;
+    }
+}

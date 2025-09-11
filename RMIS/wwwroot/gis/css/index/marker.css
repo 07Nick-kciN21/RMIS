@@ -1,0 +1,4 @@
+.marker-clicked {
+    border: 2px solid red; /* 增加外框 */
+    border-radius: 50%; /* 圓形外框 */
+}

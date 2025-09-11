@@ -1,0 +1,80 @@
+﻿#adminPermissionContent{
+    max-height: 400px;
+    min-width: 150px;
+}
+
+#adminMenuContent {
+    font-size: 1.5rem;
+    min-width:180px;
+}
+
+#imageDataContent {
+    max-height: 400px;
+    min-width: 250px;
+}
+
+#commonLinkContent{
+    min-width: 200px;
+}
+
+.active {
+    background-color: #e9b02c;
+    color: black;
+}
+
+.dropdown-button {
+    background-color: #f0d984;
+    border: none;
+    color: #43413d;
+    cursor: pointer;
+    font-size: 1.5rem; /* 調整字體大小 */
+    font-weight: bold;
+    padding: 10px 20px;
+}
+
+    .dropdown-button:hover,
+    .open {
+        background-color: #ffffff;
+        color: black;
+    }
+
+.dropdown-content {
+    background-color: #f0d984;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    display: none;
+    left: -5px;
+    position: absolute;
+    width: 140px;
+    z-index: 1;
+}
+    .dropdown-content li {
+        background-color: #ffffff;
+        position: relative;
+    }
+
+    .dropdown-content ul {
+        list-style-type: none;
+        margin-bottom: 5px;
+    }
+
+.menu-background{
+    max-height: 350px;
+    overflow-y: auto;
+}
+    .menu-background::-webkit-scrollbar {
+        width: 2px;
+        height:5px;
+    }
+
+.modal-link{
+    cursor: pointer;
+    font-size:large
+}
+
+@media (max-width: 899px) {
+    .dropdown-content{
+        width: 100%;
+        left: 0px;
+    }
+}

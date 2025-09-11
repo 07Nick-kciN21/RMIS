@@ -1,0 +1,739 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+}
+
+/* ====================================
+   新增：主容器和布局樣式
+   ==================================== */
+
+/* 主容器樣式 */
+.mapdata-manager-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    background: #f5f7fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 頂部導航區域 */
+.top-navigation {
+    background: white;
+    padding: 16px 24px;
+    margin: 0 24px;
+    border-bottom: 1px solid #e1e5e9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    z-index: 10;
+}
+
+/* 主要工作區域 */
+.main-workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* 左側內容區域 */
+.content-section {
+    flex: 1;
+    padding: 24px 24px 24px 12px;
+    margin: 0 24px;
+    overflow-y: auto;
+    background: #f5f7fa;
+}
+
+/* 右側統計面板 */
+.stats-sidebar {
+    width: 280px;
+    background: white;
+    border-left: 1px solid #e1e5e9;
+    padding: 24px;
+    overflow-y: auto;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+}
+
+/* ====================================
+   原有布局樣式（保留兼容性）
+   ==================================== */
+
+.layout {
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+}
+
+/* 主要內容區 */
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.content-area {
+    flex: 1;
+    overflow-y: auto;
+    background: transparent;
+}
+
+.action-panel {
+    width: 280px;
+    background: white;
+    border-left: 1px solid #e1e5e9;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* ====================================
+   麵包屑導航
+   ==================================== */
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.breadcrumb a {
+    color: #667eea;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.breadcrumb a:hover {
+    background: #f0f8ff;
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+.breadcrumb .current {
+    color: #666;
+    font-weight: 500;
+}
+
+.breadcrumb-link {
+    color: #667eea;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+    color: #5a67d8;
+    text-decoration: underline;
+}
+
+/* ====================================
+   頁面標題和布局
+   ==================================== */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #667eea;
+}
+
+/* ====================================
+   卡片網格系統
+   ==================================== */
+
+.pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.layer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+/* ====================================
+   圖層卡片樣式
+   ==================================== */
+
+.layer-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e1e5e9;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.layer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border-color: #667eea;
+}
+
+.layer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.layer-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.layer-type {
+    font-size: 12px;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.layer-stats {
+    display: flex;
+    gap: 16px;
+    margin: 12px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.layer-meta {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.layer-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* ====================================
+   按鈕樣式（更新版）
+   ==================================== */
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+    border: 1px solid #667eea;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #5a67d8;
+    border-color: #5a67d8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #eeeeee;
+    border-color: #bbb;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: #e53e3e;
+    color: white;
+    border: 1px solid #e53e3e;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #c53030;
+    border-color: #c53030;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+}
+
+/* ====================================
+   操作面板樣式（更新版）
+   ==================================== */
+
+.panel-section {
+    margin-bottom: 32px;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.action-btn:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    color: #333;
+    text-decoration: none;
+}
+
+.action-btn span:first-child {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* ====================================
+   統計卡片樣式（更新版）
+   ==================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.stat-label {
+    font-size: 12px;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* ====================================
+   表格樣式
+   ==================================== */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e1e5e9;
+}
+
+tr:hover {
+    background: #f8f9fa;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ====================================
+   狀態指示器
+   ==================================== */
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.status-active {
+    background: #4caf50;
+    box-shadow: 0 0 4px rgba(76, 175, 80, 0.4);
+}
+
+.status-inactive {
+    background: #9e9e9e;
+}
+
+/* ====================================
+   頁面切換動畫
+   ==================================== */
+
+.page-transition {
+    display: none;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.page-transition.active {
+    display: block;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ====================================
+   行政區選擇樣式
+   ==================================== */
+
+.district-selector {
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.district-selector label {
+    font-weight: 600;
+    color: #333;
+    margin-right: 8px;
+}
+
+.district-selector select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-size: 14px;
+    min-width: 150px;
+    transition: border-color 0.2s ease;
+}
+
+.district-selector select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.district-hint {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: #e3f2fd;
+    border-radius: 4px;
+    color: #1565c0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* ====================================
+   響應式設計（更新版）
+   ==================================== */
+
+@media (max-width: 1200px) {
+    .stats-sidebar {
+        width: 250px;
+    }
+    
+    .pipeline-grid,
+    .layer-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .main-workspace {
+        flex-direction: column;
+    }
+    
+    .stats-sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid #e1e5e9;
+        padding: 16px;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .content-section {
+        padding: 16px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+    
+    .stat-card {
+        padding: 12px;
+    }
+    
+    .stat-number {
+        font-size: 20px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .mapdata-manager-container {
+        height: calc(100vh - 80px);
+    }
+    
+    .top-navigation {
+        padding: 12px 16px;
+    }
+    
+    .main-content {
+        flex-direction: column;
+    }
+    
+    .action-panel {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid #e1e5e9;
+    }
+    
+    .pipeline-grid,
+    .layer-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .page-title {
+        font-size: 20px;
+    }
+    
+    .layer-card {
+        padding: 16px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .district-selector {
+        padding: 12px;
+    }
+    
+    .district-selector > div {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .district-selector select {
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-section {
+        padding: 12px;
+    }
+    
+    .top-navigation {
+        padding: 8px 12px;
+    }
+    
+    .breadcrumb {
+        font-size: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .page-title {
+        font-size: 18px;
+    }
+    
+    .layer-card {
+        padding: 12px;
+    }
+    
+    .layer-name {
+        font-size: 16px;
+    }
+    
+    .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .action-btn {
+        padding: 10px 12px;
+    }
+    
+    .stat-card {
+        padding: 10px;
+    }
+    
+    .stat-number {
+        font-size: 18px;
+    }
+}
+
+/* ====================================
+   深色模式支援（可選）
+   ==================================== */
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #1a1a1a;
+        color: #e0e0e0;
+    }
+    
+    .mapdata-manager-container {
+        background: #1a1a1a;
+    }
+    
+    .top-navigation {
+        background: #2d2d2d;
+        border-bottom-color: #404040;
+    }
+    
+    .content-section {
+        background: #1a1a1a;
+    }
+    
+    .stats-sidebar {
+        background: #2d2d2d;
+        border-left-color: #404040;
+    }
+    
+    .layer-card {
+        background: #2d2d2d;
+        border-color: #404040;
+        color: #e0e0e0;
+    }
+    
+    .breadcrumb a {
+        color: #8bb6ff;
+    }
+    
+    .breadcrumb .current {
+        color: #b0b0b0;
+    }
+}
+
+/* ====================================
+   列印樣式
+   ==================================== */
+
+@media print {
+    .stats-sidebar,
+    .top-navigation,
+    .action-btn,
+    .btn {
+        display: none !important;
+    }
+    
+    .main-workspace {
+        flex-direction: column;
+    }
+    
+    .content-section {
+        padding: 0;
+    }
+    
+    .layer-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .page-title {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+}
