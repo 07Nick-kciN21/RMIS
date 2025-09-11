@@ -1,0 +1,64 @@
+#editStep1 > #pointEdit0{
+    background-image: url('/img/layerEdit/pSymbol0.png');
+}
+
+#editStep1 > #pointEdit1{
+    background-image: url('/img/layerEdit/pSymbol1.png');
+}
+
+#editStep1 > #pointEdit2{
+    background-image: url('/img/layerEdit/pSymbol2.png');
+}
+
+#editStep1 > #lineEdit0{
+    background-image: url('/img/layerEdit/pSymbol_line0.png');
+}
+
+#editStep1 > #lineEdit1{
+    background-image: url('/img/layerEdit/pSymbol_line1.png');
+}
+
+#editStep1 > #lineEdit2{
+    background-image: url('/img/layerEdit/pSymbol_line2.png');
+}
+
+#editStep1 > #planeEdit0{
+    background-image: url('/img/layerEdit/pSymbol_plane0.png');
+}
+
+#editStep1 > #planeEdit1{
+    background-image: url('/img/layerEdit/pSymbol_plane1.png');
+}
+
+#editStep1 > #planeEdit2{
+    background-image: url('/img/layerEdit/pSymbol_plane2.png');
+}
+
+.layerOpacity{
+    width: 38px;
+}
+
+#editSymbol-Step1 .symbolText{
+    width: 35%;
+    height: 100%;
+    line-height: 64px;
+    text-align: center;
+    background: rgba(169, 169, 169, 0.7);
+    float: right;
+    color: white;
+}
+
+#editSymbol-Step1 .symbolClass{
+    border: 1px solid #cccccc;
+    width: 100%;
+    height: 64px;
+    background-size: 65%;
+    background-repeat: no-repeat;
+    background-position: left;
+    margin: 0.65rem 0;
+    cursor: pointer;
+}
+
+#editSymbol-Step1 .symbolClass.selected .symbolText{
+    background-color: gray;
+}

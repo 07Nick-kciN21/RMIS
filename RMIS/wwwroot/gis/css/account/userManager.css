@@ -1,0 +1,35 @@
+.department-cell{
+    width: auto;
+}
+.display-cell{
+    width: 150px; 
+    max-width: 150px;
+}
+.user-cell{
+    width: 150px; 
+    max-width: 150px;
+}
+.role-cell{
+    width: 150px; 
+    max-width: 150px;
+}
+.email-cell{
+    width: 250px; 
+    max-width: 250px;
+}
+.phone-cell{
+    width: 150px; 
+    max-width: 150px;
+}
+.status-cell{
+    width: 100px; 
+    max-width: 100px;
+}
+.createAt-cell{
+    width: 300px; 
+    max-width: 300px;
+}
+.action-cell{
+    width: 140px; 
+    max-width: 140px;
+}

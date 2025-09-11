@@ -12,7 +12,7 @@
 import { initLeafletMap } from "./init/initLeafletMap.js";
 import { initEnvironment } from "./init/initEnvironment.js";
 // 功能載入器
-import { loadBase } from "./widgets/loadBase.js";
+import { loadBase } from "./loadBase.js";
 
 // 事件處理器模組
 // import { graphicHandler } from "./widgets/tool/graphicHandler.js";

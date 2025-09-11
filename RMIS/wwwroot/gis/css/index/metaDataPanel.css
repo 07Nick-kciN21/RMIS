@@ -1,0 +1,14 @@
+#metaDataPanel tr{
+    font-size: 20px;
+    width: 160px;
+    white-space: pre-line;
+}
+
+#metaDataPanel th{
+    text-align: right;
+    width: 40%;
+}
+
+#metaDataPanel td{
+    text-align: left;
+}

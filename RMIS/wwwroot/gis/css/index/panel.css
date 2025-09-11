@@ -1,0 +1,221 @@
+﻿#metaDataPanel{
+    width: 500px;
+    height: 500px;
+}
+
+#searchPanel {
+    width: 200px;
+    height: 250px;
+}
+
+#painterPanel {
+    width: 400px;
+}
+
+#searchPropPanel {
+    width: 500px;
+}
+
+#photoPanel {
+    width: 300px;
+    height:100px;
+}
+
+#measurePanel {
+    width: 130px;
+    height: 150px;
+}
+
+#flagPanel {
+    width: 500px;
+    height: 500px;
+}
+
+#focusPanel {
+    width: 450px;
+    height: 500px;
+}
+
+#projectPanel {
+    width: 550px;
+    height: 630px;
+}
+
+#accidentPanel {
+    width: 450px;
+    height: 450px;
+}
+
+.panel {
+    z-index: 1051;
+    position: absolute;
+    top: 20%;
+    left: 30%;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    background-color: #f9f9f9;
+}
+
+.hide {
+    display: none !important;
+}
+
+.panelHeading {
+    background-color: #f0d984;
+    border-radius: 10px 10px 0 0;
+    color: #43413d;
+    padding: 5px 5px 5px 10px;
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+    .panelHeading span {
+        font-size: 20px;
+        font-weight: 800;
+    }
+    .panelHeading .close-button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+.panelInput {
+    padding: 10px 10px 0;
+    margin: 0;
+    display: flex;
+    justify-content: flex-start;
+}
+.panelBody {
+    display: flex;
+    justify-content: space-between; /* 使內部元素左右對齊 */
+    align-items: center; /* 垂直方向上居中對齊 */
+    padding: 0 10px 10px;
+    border-radius: 10px;
+}
+
+.panelRadio li{
+    width: 25%;
+}
+
+.panelRadio li .select{
+    background-color: #f0d984;
+    box-shadow: none !important;
+}
+
+.panelRadio li label{
+    width: 100%;
+    border: 1px solid #f0d984;
+    border-radius: 0;
+}
+
+.panelFooter {
+    padding: 10px;
+    flex-grow: 1;
+    border-radius: 0 0 10px 10px;
+}
+
+
+.panelList {
+    padding: 0;
+    /* overflow-x: hidden; */
+    overflow-y: auto;
+    border: 2px solid gray;
+    height: 100%;
+}
+
+    .panelList li {
+        list-style: none;
+        margin: 0;
+    }
+
+    .panelList li:hover {
+        background-color: #dddada;
+    }
+
+.panelResult {
+    font-size: 20px;
+    padding: 5px;
+    transition: 0.3s;
+}
+
+/* 自訂 .layerBar 的滾動條樣式 */
+.panelList::-webkit-scrollbar {
+    width: 2px;
+    height:5px;
+}
+
+.panelList::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+
+.panelList::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 10px;
+}
+
+    .panelList::-webkit-scrollbar-thumb:hover {
+        background: #444;
+    }
+
+.leaflet-draw-toolbar{
+    transform:scale(1.2);
+    transform-origin: top left;
+}
+
+.closeButton {
+    border-radius: 10px;
+}
+
+.point_on_map {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+    background-image: url('/svg/point__on_map.svg');
+}
+
+.goResult{
+    font-size: 20px; 
+    font-weight: bolder;
+}
+
+    .goResult:hover {
+        background-color: gray;
+        color:white;
+    }
+
+.resultListTitle span,
+.resultListTitle a{
+    font-size: 20px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+@media (max-width:899px){
+    #searchPanel{
+        top:50%;
+        left: 0%;
+    }
+
+    #searchPanel li{
+        font-size: 16px;
+    }
+
+    #focusPanel{
+        top:51.5px;
+        left: 0%;
+        width: 100%;
+    }
+    #projectPanel{
+        top:51.5px;
+        left: 0%;
+        width: 100%;
+    }
+}

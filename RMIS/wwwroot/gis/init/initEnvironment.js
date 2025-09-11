@@ -7,35 +7,62 @@ var initEnvironment = {
     layerConfigs: {
         basemap: [
             {
-                id: "nlscmap",
-                name: "臺灣通用電子地圖",
-                image: "nlsc.png",
-                type: "wmts",
-                listMode: "hide",
-                minLevel: 19,
-                opacity: 0.75,
-                initVisible: true,
-                identifier: "EMAP",
-                serviceMode: "KVP",
-                url: "https://wmts.nlsc.gov.tw/wmts"
+                id: 'google_streets',
+                name: 'Google 街道圖',
+                type: 'tile',
+                url: 'http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}&hl=zh_TW',
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                maxZoom: 22,
+                pane: 'basePane',
+                initVisible: false
             },
             {
-                id: "osm",
-                name: "開放街道地圖",
-                image: "OSM.png",
-                type: "osm",
-                listMode: "hide",
-                //minLevel: 19,
-                opacity: 0.75,
-                initVisible: true,
-                url: "osm"
+                id: 'google_satellite',
+                name: 'Google 衛星圖',
+                type: 'tile',
+                url: 'http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}&hl=zh_TW',
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                maxZoom: 22,
+                pane: 'basePane',
+                initVisible: false
             },
             {
-                id: "none",
-                name: "關閉底圖",
-                image: "XX.png",
-                type: "none",
-                url: null
+                id: 'google_terrain',
+                name: 'Google 地形圖',
+                type: 'tile',
+                url: 'http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}&hl=zh_TW',
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                maxZoom: 22,
+                pane: 'basePane',
+                initVisible: false
+            },
+            {
+                id: 'google_hybrid',
+                name: 'Google 混合圖',
+                type: 'tile',
+                url: 'http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}&hl=zh_TW',
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                maxZoom: 22,
+                pane: 'basePane',
+                initVisible: false
+            },
+            {
+                id: 'open_street_map',
+                name: 'OpenStreetMap',
+                type: 'tile',
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                maxZoom: 22,
+                pane: 'basePane',
+                initVisible: true
+            },
+            {
+                id: 'sp2006nc',
+                name: 'SP2006NC_3857',
+                type: 'tile',
+                url: 'https://data.csrsr.ncu.edu.tw/SP/SP2006NC_3857/{z}/{x}/{y}.png',
+                maxZoom: 22,
+                pane: 'basePane',
+                initVisible: false
             }
         ]
     }

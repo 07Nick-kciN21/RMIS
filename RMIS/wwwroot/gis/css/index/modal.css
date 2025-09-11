@@ -1,0 +1,106 @@
+﻿/* 隐藏 Modal 的初始状态 */
+.hidden {
+    display: none;
+}
+
+/* 禁止交互的覆盖层 */
+.disable-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0); /* 透明背景，仅用于禁用交互 */
+    pointer-events: none;
+    z-index: 999; /* 在内容之上，但低于 modal */
+}
+
+/* 背景遮罩 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明遮罩 */
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.Admin-Modal-content {
+    top:8%;
+    background-color: #fff;
+    border-radius: 10px; /* 圆角 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* 阴影 */
+    padding: 20px;
+    width: 45%; /* 默认宽度 */
+    max-width: 70%; /* 最大宽度 */
+    text-align: center; /* 内容居中 */
+    animation: modalFadeIn 0.3s ease-out; /* 动画 */
+    position: relative; /* 确保关闭按钮正确定位 */
+    margin: auto;
+}
+
+.modal-body form > div {
+    display: block;
+    margin: 10px 30px;
+}
+
+.modal-body form > div > label{
+    height: 35px;
+    width: 40%;
+    text-align: left;
+}
+
+.modal-body form > div > select{
+    height: 100%;
+    width: 60%;
+    margin: auto;
+}
+
+.modal-body form > div > input,
+.modal-body form > div > textarea {
+    height: 35px;
+    width: 60%;
+    margin: auto;
+}
+
+/* 關閉按鈕 */
+.close-modal {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-body .dateTimeRange{
+    align-items: center;
+}
+
+.modal-body .dateTimeRange input{
+    width: 27%;
+}
+
+.modal-body .dateTimeRange span{
+    margin: auto;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* 动画效果 */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
