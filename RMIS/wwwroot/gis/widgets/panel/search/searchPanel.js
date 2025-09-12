@@ -2,7 +2,7 @@
 let _initFlag = false;
 let _apiBaseUrl = "";
 let _appCore;
-
+let $indexMap;
 var instance = {
     id: _fId,
     set: function (appCore) {
@@ -12,15 +12,16 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
+        $indexMap = _appCore.map.leafletMap;
         initSearchPanel();
         // initEstateBuildItem();
     },
     open: function () {
         if (!_initFlag) { _initFlag = true; instance.init(); }
-        //console.log(`${_fId} open`);
+        console.log(`${_fId} open`);
     },
     close: function () {
-        //console.log(`${_fId} close`);
+        console.log(`${_fId} close`);
     },
 };
 export { instance as searchPanel };
@@ -30,13 +31,13 @@ let roadlayer;
 function initSearchPanel() {
     const $panelSearchBtn = $('#searchPanel').find(".searchPanelBtn");
     $panelSearchBtn.on("click", () => {
+        console.log(_appCore.layerList);
         handleSearch();
     })
 
     $('#search_Close').on('click', () => {
-        var indexMap = _appCore.map.leafletMap;
         if (roadlayer) {
-            indexMap.removeLayer(roadlayer);
+            $indexMap.removeLayer(roadlayer);
         }
     })
 }
@@ -71,19 +72,18 @@ function handleSearch() {
     }
 }
 function addRoadLayer(id) {
-    var indexMap = _appCore.map.leafletMap;
     $.ajax({
         url: `/api/MapAPI/GetPointsbyLayerId?LayerId=${id}`,
         method: 'POST',
         success: function (result) {
             try {
                 if (roadlayer) {
-                    indexMap.removeLayer(roadlayer); // 移除舊的圖層
+                    $indexMap.removeLayer(roadlayer); // 移除舊的圖層
                 }
                 let points = result.points.map(point => [point.latitude, point.longitude]);
                 if (points.length > 0) {
-                    roadlayer = L.polyline(points, { color: 'blue', interactive: false }).addTo(indexMap); // 添加新的圖層
-                    indexMap.setView(points[0], 17); // 移動視角到第一個點
+                    roadlayer = L.polyline(points, { color: 'blue', interactive: false }).addTo($indexMap); // 添加新的圖層
+                    $indexMap.setView(points[0], 17); // 移動視角到第一個點
                 }
                 console.log("Add Layer Success");
             } catch (err) {

@@ -1,8 +1,12 @@
-import { addFocusPipeline, removePipeline } from './ctrlMap/pipeline.js';
-import { add2List, remove2List} from './ctrlMap/list.js';
-import { addFocusLayer2Map } from './ctrlMap/layers.js';
-import { Map } from './map_test.js';
+import { addFocusPipeline, removePipeline } from '/gis/js/index/ctrlMap/pipeline.js';
+import { add2List, remove2List} from '/gis/js/index/ctrlMap/list.js';
+import { addFocusLayer2Map } from '/gis/js/index/ctrlMap/layers.js';
 
+let _fId = "focusPanel";
+let _initFlag = false;
+let _apiBaseUrl = "";
+let _appCore;
+let $indexMap;
 let currentRow = null;
 let currentSquare = null;
 let currentPage = 1;
@@ -12,88 +16,113 @@ let focuseRange = null;
 let pageSize = 10;
 let focusPipeline = [];
 
-export function initFocusPanel(){
-    $(document).ready(function(){
-        const i18nSettings = {
-            previousMonth: '上個月',
-            nextMonth: '下個月',
-            months: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
-            weekdays: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
-            weekdaysShort: ['日', '一', '二', '三', '四', '五', '六']
-        };
+var instance = {
+    id: _fId,
+    set: function (appCore) {
+        _apiBaseUrl = appCore.environment.url.apiBaseUrl;
+        _appCore = appCore;
+        return this;
+    },
+    init: function () {
+        console.log(`panel ${_fId} init`);
+        $indexMap = _appCore.map.leafletMap;
+        initDate();
+        initFocusPanel();
+    },
+    open: function () {
+        if (!_initFlag) { _initFlag = true; instance.init(); }
+        console.log(`${_fId} open`);
+    },
+    close: function () {
+        console.log(`${_fId} close`);
+    },
+};
+
+export { instance as focusPanel };
+
+function initDate(){
+    const i18nSettings = {
+        previousMonth: '上個月',
+        nextMonth: '下個月',
+        months: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+        weekdays: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+        weekdaysShort: ['日', '一', '二', '三', '四', '五', '六']
+    };
+    
+    const options = {
+        i18n: i18nSettings,
+        firstDay: 1, // 星期一為每週第一天
+        container: document.getElementById('focusPanel'), // 將月曆渲染限制在 focusPanel 內
+        reposition: false, // 確保月曆自動調整位置，避免超出容器
         
-        const options = {
-            i18n: i18nSettings,
-            firstDay: 1, // 星期一為每週第一天
-            container: document.getElementById('focusPanel'), // 將月曆渲染限制在 focusPanel 內
-            reposition: false, // 確保月曆自動調整位置，避免超出容器
-            
-        };
+    };
 
-        const startDateInput = document.getElementById('focusStartDate');
-        const endDateInput = document.getElementById('focusEndDate');
+    const startDateInput = document.getElementById('focusStartDate');
+    const endDateInput = document.getElementById('focusEndDate');
 
-        var focusStart = new Pikaday({ 
-            field: startDateInput,
-            ...options,
-            onOpen: function() {
-                adjustCalendarPosition(focusStart.el, 'focusStartDate');
-            },
-            onSelect: function(selectedDate) {
-                const formattedDate = formatDate(selectedDate, 'YYYY/MM/DD'); // 格式化日期
-                document.getElementById('focusStartDate').value = formattedDate; // 更新輸入框
-            }
-        });
-        
-        var focusEnd = new Pikaday({ 
-            field: endDateInput,
-            ...options,
-            onOpen: function() {
-                adjustCalendarPosition(focusEnd.el, 'focusEndDate');
-            },
-            onSelect: function(selectedDate) {
-                const formattedDate = formatDate(selectedDate, 'YYYY/MM/DD'); // 格式化日期
-                document.getElementById('focusEndDate').value = formattedDate; // 更新輸入框
-            }
-        });
-
-        // 調整月曆位置的函數
-        function adjustCalendarPosition(calendar, inputId) {
-            const input = document.getElementById(inputId);
-            const inputRect = input.getBoundingClientRect();
-            const panelRect = document.getElementById('focusPanel').getBoundingClientRect();
-            const calendarRect = calendar.getBoundingClientRect();
-
-            // 計算月曆的 top 和 left，使其位於目標 input 下方
-            const top = inputRect.bottom - panelRect.top;
-            const left = inputRect.left - panelRect.left;
-
-            // 確保月曆不超出 focusPanel 的右邊界
-            const maxLeft = panelRect.width - calendarRect.width;
-            const adjustedLeft = Math.min(left, maxLeft);
-
-            // 設置月曆的位置
-            calendar.style.position = 'absolute';
-            calendar.style.top = `${top}px`;
-            calendar.style.left = `${adjustedLeft}px`;
-        }
-
-        function formatDate(date, format) {
-            const padZero = (num) => (num < 10 ? `0${num}` : num);
-            const year = date.getFullYear();
-            const month = padZero(date.getMonth() + 1); // 月份從 0 開始
-            const day = padZero(date.getDate());
-
-            switch (format) {
-                case 'YYYY/MM/DD':
-                    return `${year}/${month}/${day}`;
-                case 'DD-MM-YYYY':
-                    return `${day}-${month}-${year}`;
-                default:
-                    return date.toISOString().split('T')[0]; // 默認格式為 YYYY-MM-DD
-            }
+    var focusStart = new Pikaday({ 
+        field: startDateInput,
+        ...options,
+        onOpen: function() {
+            adjustCalendarPosition(focusStart.el, 'focusStartDate');
+        },
+        onSelect: function(selectedDate) {
+            const formattedDate = formatDate(selectedDate, 'YYYY/MM/DD'); // 格式化日期
+            document.getElementById('focusStartDate').value = formattedDate; // 更新輸入框
         }
     });
+    
+    var focusEnd = new Pikaday({ 
+        field: endDateInput,
+        ...options,
+        onOpen: function() {
+            adjustCalendarPosition(focusEnd.el, 'focusEndDate');
+        },
+        onSelect: function(selectedDate) {
+            const formattedDate = formatDate(selectedDate, 'YYYY/MM/DD'); // 格式化日期
+            document.getElementById('focusEndDate').value = formattedDate; // 更新輸入框
+        }
+    });
+
+    // 調整月曆位置的函數
+    function adjustCalendarPosition(calendar, inputId) {
+        const input = document.getElementById(inputId);
+        const inputRect = input.getBoundingClientRect();
+        const panelRect = document.getElementById('focusPanel').getBoundingClientRect();
+        const calendarRect = calendar.getBoundingClientRect();
+
+        // 計算月曆的 top 和 left，使其位於目標 input 下方
+        const top = inputRect.bottom - panelRect.top;
+        const left = inputRect.left - panelRect.left;
+
+        // 確保月曆不超出 focusPanel 的右邊界
+        const maxLeft = panelRect.width - calendarRect.width;
+        const adjustedLeft = Math.min(left, maxLeft);
+
+        // 設置月曆的位置
+        calendar.style.position = 'absolute';
+        calendar.style.top = `${top}px`;
+        calendar.style.left = `${adjustedLeft}px`;
+    }
+
+    function formatDate(date, format) {
+        const padZero = (num) => (num < 10 ? `0${num}` : num);
+        const year = date.getFullYear();
+        const month = padZero(date.getMonth() + 1); // 月份從 0 開始
+        const day = padZero(date.getDate());
+
+        switch (format) {
+            case 'YYYY/MM/DD':
+                return `${year}/${month}/${day}`;
+            case 'DD-MM-YYYY':
+                return `${day}-${month}-${year}`;
+            default:
+                return date.toISOString().split('T')[0]; // 默認格式為 YYYY-MM-DD
+        }
+    }
+}
+
+function initFocusPanel(){
     $('#focusGoResult').on('click', function(){
         var formData = new FormData();
         // focusStartDate與focusEndDate，轉換成時間戳記
@@ -130,7 +159,8 @@ export function initFocusPanel(){
             // 新增圖資清單
             focusPipeline.forEach(id => {
                 removePipeline(id).then(result => {
-                    remove2List(id);
+                    // remove2List(id);
+                    delete _appCore.layerList[id]
                 });
             })
             focusPipeline.length = 0;
@@ -140,17 +170,17 @@ export function initFocusPanel(){
                 for(var i = 0; i < datas.length; i++){
                     var { id, name, layers } = datas[i];
                     focusPipeline.push(id);
-                    add2List(id, name, layers);
-                    addFocusLayer2Map(id, ofType, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
+                    // add2List(id, name, layers);
+                    _appCore.layerList[id] = { name, datas: layers, metaData: null };
+                    // addFocusLayer2Map(id, ofType, layers, $('#focusStartDate').val(), $('#focusEndDate').val());
                 }
                 console.log(focusPipeline);
             });
             
             
-            $("#focusTotalCount").text(`(總數:${focusData.length})`);
-            updateFlagTable();
-            console.log(focusData);
-            $('#focusResultDiv').show();
+            // $("#focusTotalCount").text(`(總數:${focusData.length})`);
+            // updateFlagTable();
+            // $('#focusResultDiv').show();
         });
     });
     $('#focusExcel').on('click', function(){
@@ -194,7 +224,6 @@ function updateFlagTable() {
 
 function renderTableBody(pageData){
     var $focusTbody = $('#focusTbody');
-    var $indexMap = Map.getIndexMap();
     $focusTbody.empty();
     pageData.forEach(data => {
         const button = $('<button>目標</button>').on('click', function () {
