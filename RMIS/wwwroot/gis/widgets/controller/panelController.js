@@ -91,7 +91,6 @@ class PanelController {
             panelData.isDragging = true;
             panelData.offsetX = e.clientX - $panel.offset().left;
             panelData.offsetY = e.clientY - $panel.offset().top;
-            console.log("pointerdown", panelData.offsetX, panelData.offsetY)
             $panel.css("z-index", 1052);
             $panel.siblings(".panel").css("z-index", 1051);
             e.preventDefault();

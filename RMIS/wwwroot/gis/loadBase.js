@@ -4,8 +4,11 @@
 // ============================================================================
 import { initFunc } from './widgets/initFunc.js';
 import { PanelController } from './widgets/controller/panelController.js';
+import { LayerBarController } from './widgets/controller/leftLayerBarController.js';
 import { painterPanel } from './widgets/panel/painter/painterPanel.js';
 import { searchPanel } from './widgets/panel/search/searchPanel.js';
+import { measurePanel } from './widgets/panel/measure/measurePanel.js';
+import { focusPanel } from './widgets/panel/focus/focusPanel.js';
 // 功能實例中心
 let objCenter = [];
 
@@ -32,6 +35,7 @@ var loadBase = {
     init: function (appCore) {
         console.log("開始載入功能模組...");
         var panelController = new PanelController();
+        var layerBarController = new LayerBarController();
         // ====================================================================
         // 地圖工具模組初始化區塊
         // ====================================================================
@@ -40,6 +44,8 @@ var loadBase = {
         // ====================================================================
         objCenter.push(painterPanel.set(appCore));
         objCenter.push(searchPanel.set(appCore));
+        objCenter.push(measurePanel.set(appCore));
+        objCenter.push(focusPanel.set(appCore));
         // 載入介面
         loadFuncs();
 
@@ -48,7 +54,7 @@ var loadBase = {
          * 初始化 UI 系統和容器
          */
         function loadFuncs() {
-            console.log("初始化 UI 容器系統...");
+            console.log("初始化 UI 容器系統...", objCenter);
             $("#js-load-left-maptool").load('/gis/html-template/left-toolbar.html', function() {});
             // 先load templete
             $("#js-load-panel-features").load('/gis/html-template/panel-box.html', function () {});
@@ -56,15 +62,16 @@ var loadBase = {
             // UI 建立器初始化
             // concatenate.init();
             $.each(initFunc.config_func, function (i, func) {
-                var url = func.url;
-                console.log(func);
-                if(func.box == 'panel'){
-                    let divId = "p_" + func.funcId;
-                    let tbId = "tb-" + func.funcId; // e.g. tb-searchPanel
-                    $("#panel-box").append(`<div id=${divId}>load</div>`);
-                    $(`#${divId}`).hide();
-                    $(`#${divId}`).load(func.url, function () {
-                        // head 載入css
+                let url = func.url;
+                let funcId = func.funcId;
+                if (func.box === 'panel') {
+                    let tbId = "tb-" + funcId;
+                    let instance = getFuncInstance(funcId);
+                    $.get(url, function (html) {
+                        // 直接把面板內容 append 進 panel-box
+                        $("#panel-box").append(html);
+                        $("#"+funcId).hide();
+                        // 載入對應 CSS
                         if ($(`link[href="${func.css}"]`).length === 0) {
                             $("<link/>", {
                                 rel: "stylesheet",
@@ -72,19 +79,55 @@ var loadBase = {
                                 href: func.css
                             }).appendTo("head");
                             console.log("CSS 已載入:", func.css);
-                        };
-                        console.log(func.funcId, tbId, divId);
+                        }
+
+                        // 找出剛 append 進來的 panel
+                        let $panel = $("#panel-box").find(".panel").last();
+                        let divId = $panel.attr("id"); // 使用原始 panel 的 id
+
                         panelController.register({
-                            funcId: func.funcId,
+                            funcId: funcId,
                             buttonId: tbId,
                             divId: divId,
-                            openFunc: () => console.log(func.funcId + "開啟"),
-                            closeFunc: () => console.log(func.funcId + "關閉"),
-                        });  
+                            openFunc: () => {
+                                instance.open();
+                            },
+                            closeFunc: () => {
+                                instance.close();
+                            },
+                        });
                     });
-                };
+                }
+            });
+
+            
+            appCore.layerList = new Proxy({}, {
+                set(target, key, value) {
+                    target[key] = value;
+                    layerBarController.add(key, value.name, value.datas, value.metaData);
+                    return true;
+                },
+                deleteProperty(target, key) {
+                    if (key in target) {
+                        layerBarController.remove(key);
+                        delete target[key];
+                        return true;
+                    }
+                    return false;
+                }
             });
         };  
+
+        function getFuncInstance(id){
+            let instance;
+            $.each(objCenter, function (i, obj) {
+                if (obj.id === id) {
+                    instance = obj;
+                    return false;
+                }
+            });
+            return instance;
+        }
     }
 };  
 

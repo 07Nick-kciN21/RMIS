@@ -7,6 +7,7 @@ let fillColor = '#FF0000';
 let borderWidth = 1;
 let drawControl;
 let drawnItems;
+let $indexMap;
 let layerCount = 0;
 let itemMap = {};
 
@@ -25,7 +26,7 @@ var instance = {
     },
     open: function () {
         if (!_initFlag) { _initFlag = true; instance.init(); }
-        //console.log(`${_fId} open`);
+        console.log(`${_fId} open`);
     },
     close: function () {
         //console.log(`${_fId} close`);

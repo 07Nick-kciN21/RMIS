@@ -1,6 +1,5 @@
-@* 養工焦點 *@
-<link rel="stylesheet" href="~/css/index/focusPanel.css" />
-<div id="focusPanel" class="panel hide">
+<!-- @* 養工焦點 *@ -->
+<div id="focusPanel" class="panel">
     <div class="panelHeading">
         <span>
             養工焦點
@@ -16,14 +15,14 @@
         </ul>
         <div class="panelBody" style="display: block">
             <div class="form-group">
-                @* 日期範圍 *@
+                <!-- @* 日期範圍 *@ -->
                 <label>日期範圍</label>
                 <input type="text" id="focusStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
                 ⇔
                 <input type="text" id="focusEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
             </div>
             <div class="form-group">
-                @* 道路借用類型 *@
+                <!-- @* 道路借用類型 *@ -->
                 <label>借用類型</label>
                 <select id="ofType" class="form-select">
                     <option value="0">請選擇</option>
@@ -33,7 +32,7 @@
                 </select>
             </div>
             <div class="form-group">
-                @* 路名 *@
+                <!-- @* 路名 *@ -->
                 <label>路名</label>
                 <input type="text" id="focusRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
             </div>
@@ -44,20 +43,20 @@
         <div class="form-group resultListTitle" style="margin: 0 15px; clear: both;">
             <span style="vertical-align: text-top; margin: 0px;">結果列表</span>
             <span id="focusTotalCount"></span>
-            @if(Model["養工焦點"].Export){
+            <!-- @if(Model["養工焦點"].Export){ -->
                 <a id="focusExcel" class="exportExcel" style="float: right; margin-left: auto;">匯出Excel</a>
-            }
+            <!-- } -->
         </div>
         <div id="focusResultDiv" class="panelList">
             <table id="focusTable" class="propTable">
                 <thead id="focusThead">
                     <tr id="focusHdr" role="row">
                         <th style="width:60px">定位</th>
-                        @* 日期 *@
+                        <!-- @* 日期 *@ -->
                         <th style="width:100px">日期</th>
-                        @* 地點 *@
+                        <!-- @* 地點 *@ -->
                         <th style="width:100px">地點</th>
-                        @* 借用類型 *@
+                        <!-- @* 借用類型 *@ -->
                         <th style="width:100px">借用類型</th>
                     </tr>
                 </thead>
