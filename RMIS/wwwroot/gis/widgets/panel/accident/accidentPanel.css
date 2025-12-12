@@ -1,0 +1,52 @@
+#accidentPanel .panelInput li label {
+    width: 100%;
+    border: 1px solid #f0d984;
+    border-radius: 0;
+}
+
+#accidentPanel .panelBody{
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 0 10px 10px;
+    padding-top: 10px;
+}
+
+#accidentPanel #acc2 .panelList{
+    border: 1px solid gray;
+    border-radius: 0px;
+    max-height: 300px;
+}
+
+#accidentPanel #acc2 .panelInput{
+    padding: 10px 15px 0;
+}
+
+#accidentPanel #acc2 .form-group{
+    margin-bottom: 10px;
+    display: flex; 
+    align-items: center;
+}
+
+#accidentPanel #acc2 .form-group label {
+    width: 30%;
+}
+
+#accidentPanel #acc2 .form-group select, 
+#accidentPanel #acc2 .form-group div {
+    width: 70%;
+}
+
+#accidentPanel #acc2 #focusTbody{
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px;
+}
+
+#accidentPanel #acc2 #focusTbody td{
+    table-layout: fixed;
+    white-space: normal;
+}
+
+#accidentPanel #acc2 #focusTable{
+    width: 500px;
+}

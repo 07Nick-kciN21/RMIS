@@ -1,0 +1,58 @@
+#projectPanel .panelBody {
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px 15px 10px 15px;
+    padding-top: 10px;
+    display: block;
+}
+
+#projectPanel .panelBody > div > label{
+    width: 30%;
+}
+
+#projectPanel .panelBody > div > select, 
+#projectPanel .panelBody > div > input {
+    width: 70%;
+}
+
+#projectPanel .form-group {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+#projectPanel .panelList {
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 10px 15px 0 15px;
+    height: 250px;
+}
+
+#projectResultDiv{
+    max-height: 250px;
+    scrollbar-width: thin;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+#budgetDiv select{
+    width: 25%;
+}
+
+#budgetDiv input{
+    width: 40%;
+}
+
+#budgetDiv .totalBudget > input{
+    width: 30%;
+}
+@media (max-width: 899px) {
+    #projectPanel .panelBody label {
+        font-size: 1.5rem;
+    }
+    
+    #budgetDiv select {
+        width: 25%;
+        font-size: 12px;
+    }
+}
