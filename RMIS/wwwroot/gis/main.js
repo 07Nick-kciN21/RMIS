@@ -10,6 +10,7 @@
 // 初始化模組
 //import { initEnvironment } from "./init/initEnvironment.js";
 import { initLeafletMap } from "./init/initLeafletMap.js";
+import { initMap } from "./map/init/initMap.js";
 import { initEnvironment } from "./init/initEnvironment.js";
 // 功能載入器
 import { loadBase } from "./loadBase.js";
@@ -30,31 +31,7 @@ var apiToken;       // API 存取令牌
 var userId;         // 使用者 ID  
 var userDepName;    // 使用者部門名稱
 var userDepId;      // 使用者部門 ID
-var userRole;       // 使用者角色
-
-// 從 DOM 元素取得使用者資訊的範例（註解掉）
-// var apiToken = document.getElementById("HiddenAPIToken").value;
-// var userId = document.getElementById("HiddenUserId").value;
-// var userDepName = document.getElementById("HiddenDEPName").value;
-// var userDepId = document.getElementById("HiddenDEPId").value;
-// var userRole = document.getElementById("HiddenRole").value;
-
-// AJAX 全域設定（如果使用 jQuery）
-// $(document).ajaxSend(function (event, jqXHR, ajaxOptions) {
-//     jqXHR.setRequestHeader("token", apiToken);
-// });
-
-// Fetch API 包裝函數範例
-// var postData = function(url, data) {
-//     return fetch(url, {
-//         body: JSON.stringify(data), 
-//         cache: 'no-cache',
-//         headers: {
-//             'token': apiToken
-//         },
-//         method: 'POST', 
-//     }).then(response => response.json())
-// }
+var userRole;       // 使用者角色 
 
 // ============================================================================
 // 應用程式核心物件

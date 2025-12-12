@@ -1,6 +1,6 @@
-<div class="map-controls">
+<div id="left_toolBar" class="map-controls">
     <span id="tb-sidebar" class="mobileTool" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock"></span>
-    <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
+    <!-- <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
     <span id="tb-zoomOut" class="mobileTool" title="縮小"></span>
     <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
     <span id="tb-painterPanel" class="mobileTool" title="繪圖板"></span>
@@ -8,5 +8,13 @@
     <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
     <span id="tb-location" class="mobileTool" title="目前位置"></span>
     <span id="tb-streetView" class="mobileTool" title="google街景"></span>
-    <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
+    <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span> -->
 </div>
+
+<script id="template_left_toolbar" type="text/x-jsrender">
+    {{for config_func}}
+        {{if tab === "left-toolbar"}}
+            <span id="tb-{{:funcId}}" class="mobileTool" title="{{:name}}"></span>
+        {{/if}}
+    {{/for}}
+</script>

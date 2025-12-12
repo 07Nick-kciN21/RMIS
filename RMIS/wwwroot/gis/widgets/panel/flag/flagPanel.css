@@ -1,0 +1,65 @@
+#flagPanel .panelBody{
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px;
+    padding-top: 10px;
+    display: block;
+}
+
+#flagPanel .panelBody > div > div > label{
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#flagPanel .panelList{
+    border: 1px solid gray;
+    border-radius: 0px;
+    margin: 15px;
+}
+
+#flagPanel .boxList{
+    border: 1px solid gray;
+    border-radius: 0px;
+    padding-top: 10px;
+    height: 150px;
+}
+
+#flagPanel .boxList > .boxHeader{
+    margin-left: 10px;
+    margin-bottom: 5px;
+    width: 80%;
+}
+
+#flagPanel .boxList > .boxBody{
+    width: 100%;
+    height: 70%;
+    scrollbar-width: thin;
+    overflow-y: auto;
+}
+
+#locOccList{
+    padding-left: 0px;
+    list-style-type: none;
+}
+
+
+#flagPanel .form-group{
+    margin-bottom: 10px;
+    display: flex; 
+    align-items: center;
+}
+
+#flagPanel .form-group label {
+    width: 30%;
+}
+
+#flagPanel .form-group select, #flagPanel .form-group div{
+    width: 70%;
+}
+
+#flagResultDiv {
+    max-height: 250px;
+    scrollbar-width: thin;
+    overflow-y: auto;
+    overflow-x: auto;
+}

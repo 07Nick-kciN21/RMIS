@@ -1,5 +1,3 @@
-@* 權管土地 *@
-<link rel="stylesheet" href="~/css/index/flagPanel.css" />
 <div id="flagPanel" class="panel hide">
     <div class="panelHeading">
         <span>
@@ -7,10 +5,8 @@
         </span>
         <button class="closeButton">&times;</button>
     </div>
-    @* 滾動條 *@
     <div style="scrollbar-width: thin; height: 90%; overflow-y: auto;">
         <div class="panelBody">
-            @* 行政區 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>行政區</label>
                 <select id="adminSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
@@ -30,7 +26,6 @@
                     <option value="12">復興區</option>
                 </select>
             </div>
-            @* 管理單位 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>管理單位</label>
                 <select id="manageSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
@@ -41,7 +36,6 @@
                     <option value="3">秘書室</option>
                 </select>
             </div>
-            @* 疑似占用 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>疑似占用</label>
                 <div class="fieldset-radio" style="width: 70%;">
@@ -56,7 +50,6 @@
                     </label>
                 </div>
             </div>
-            @* 疑似占用類型 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>占用類型</label>
                 <select id="suspectTypeSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
@@ -67,7 +60,6 @@
                     <option value="4">第四類-永久建築物</option>
                 </select>
             </div>
-            @* 地段 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>地段</label>
                 <select id="landSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
@@ -76,7 +68,6 @@
                     <option value="雙龍段">雙龍段</option>
                 </select>
             </div>
-            @* 地號 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>地號</label>
                 <div class="boxList">
@@ -99,7 +90,6 @@
                     </div>
                 </div>
             </div>
-            @* 年度 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>年度</label>
                 <select id="yearSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
@@ -115,14 +105,12 @@
                     <option value="113">113年</option>
                 </select>
             </div>
-            @* 使用分區 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>使用分區</label>
                 <select id="useSelect" class="form-select" style="flex-grow: 1;border-radius:0;">
                     <option value="-1">全部</option>
                 </select>
             </div>
-            @* 案件狀況 *@
             <div class="form-group" style="display: flex; align-items: center;">
                 <label>案件狀況</label>
                 <select id="caseSelect" class="form-select" style="flex-grow: 1;border-radius:0;">

@@ -10,9 +10,9 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
     var $indexMap = Map.getIndexMap();
     let icon = L.icon({
         iconUrl: `/img/${svg}`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
-        popupAnchor: [0, -15]
+        // iconSize: [30, 30],
+        // iconAnchor: [15, 15],
+        // popupAnchor: [0, -15]
     });
     points.forEach(function (point) {
         let marker = L.marker(point[0], {

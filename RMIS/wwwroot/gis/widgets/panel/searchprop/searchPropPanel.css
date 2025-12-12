@@ -1,0 +1,99 @@
+﻿#searchPropPanel{
+    scrollbar-width: thin;
+}
+
+#searchPropPanel .panelInput{
+    list-style: none; 
+    display: flex;
+}
+
+#searchPropPanel #pFeatSelect{
+    box-shadow: none;
+}
+
+#searchPropPanel #prop2 #shapeGroup #propGeoCustom button{
+    width:90px; 
+    height:90px; 
+    float:left; 
+    margin-right:10px; 
+    background-color: #f0d984;
+}
+
+#searchPropPanel #prop2 #shapeGroup #propGeoCustom button img{
+    max-width: 100%; 
+    max-height: 100%;
+}
+
+#searchPropPanel .propResultTitle {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#searchPropPanel #prop3 .propResultTitle a{
+    text-decoration: none;
+}
+
+#searchPropPanel #prop4 .form-check label{
+    font-size: 26px;
+}
+
+#searchPropPanel #prop4 #anaHdr{
+    background-color:#f2f2f2; 
+    font-weight: bold;
+}
+
+.propTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+    .propTable th, .propTable td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        font-size: 18px;
+    }
+
+    .propTable th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+
+    .propTable tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+
+.exportExcel:hover {
+    color: white;
+    background-color: gray;
+}
+
+.pageList a {
+    width: 20px;
+    color: blue;
+    text-align: center;
+    text-decoration: underline;
+    display: inline-block;
+}
+
+.pageList a:hover {
+    background-color:#e4b867;
+}
+
+.pageList .select {
+    background-color: #f0d984;
+}
+
+
+.selectRow {
+    background-color: #e4b867 !important;
+    color: white;
+}
+
+div#propQuery_group_0 {
+    margin: 0;
+    border-radius: 0;
+}

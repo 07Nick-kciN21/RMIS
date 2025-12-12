@@ -66,14 +66,8 @@
 <script src="~/lib/leaflet-geometryutil/leaflet.geometryutil.min.js"></script>
 <script src="~/lib/leaflet-editable/Leaflet.Editable.js"></script>
 <script src="~/lib/proj4/proj4.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
 
 <!-- ✅ ES Module -->
-<script type="module" src="~/js/account/userProfilePopup.js"></script>
-<script src="~/gis/global.js"></script>
-<script src="~/gis/main.js" type="module"></script>
-
-
 @section HomeHeaderNavList{
     <div id="col1">
         <nav id="left-nav" style="display: flex;">
@@ -284,3 +278,9 @@
 
 <div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
 <div id="measureTip" class="tip" style="display: none;"></div>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/jsrender/jsrender.min.js"></script>
+<script src="~/gis/global.js"></script>
+
+<script type="module" src="~/js/account/userProfilePopup.js"></script>
+<script type="module" src="~/gis/main.js"></script>

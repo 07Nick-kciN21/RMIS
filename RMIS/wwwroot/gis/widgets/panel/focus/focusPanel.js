@@ -1,6 +1,4 @@
 import { addFocusPipeline, removePipeline } from '/gis/js/index/ctrlMap/pipeline.js';
-import { add2List, remove2List} from '/gis/js/index/ctrlMap/list.js';
-import { addFocusLayer2Map } from '/gis/js/index/ctrlMap/layers.js';
 
 let _fId = "focusPanel";
 let _initFlag = false;
