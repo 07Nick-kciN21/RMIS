@@ -1,0 +1,175 @@
+#role {
+    background-image: url("/svg/account/role.svg");
+    background-size: 70%;
+    background-position: center;
+}
+a:hover {
+    #role {
+        background-image: url("/svg/account/role2.svg");
+    }
+}
+#user {
+    background-image: url("/svg/account/user.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+a:hover {
+    #user {
+        background-image: url("/svg/account/user2.svg");
+    }
+}
+
+#permission {
+    background-image: url("/svg/account/permission.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+a:hover {
+    #permission {
+        background-image: url("/svg/account/permission2.svg");
+    }
+}
+
+#department {
+    background-image: url("/svg/account/department.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+a:hover {
+    #department {
+        background-image: url("/svg/account/department2.svg");
+    }
+}
+
+#home {
+    background-image: url("/svg/account/home.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+a:hover {
+    #home {
+        background-image: url("/svg/account/home2.svg");
+    }
+}
+
+#log{
+    background-image: url("/svg/account/log.svg");
+    background-size: 70%;
+    background-position: center;
+}
+
+#data{
+    background-image: url("/svg/account/data.svg");
+    background-size: 90%;
+    background-position: center;
+}
+
+a:hover {
+    #data {
+        background-image: url("/svg/account/data.svg");
+    }
+}
+
+.d-none {
+    display: none;
+}
+
+.enable {
+    border: 1px solid #32cd32;
+    border-radius: 3px;
+    color: #32cd32;
+    width: 70%;
+    margin: auto;
+}
+
+.stop {
+    border: 1px solid #ff0000;
+    border-radius: 3px;
+    color: #ff0000;
+    width: 70%;
+    margin: auto;
+}
+
+.merged-cell {
+    border-bottom: none !important;
+    /* 移除下方邊框 */
+    border-right: 1px solid #dee2e6 !important;
+    /* 保持右邊框 */
+}
+
+/* 讓最後一個合併的 `<td>` 恢復底部邊框 */
+.merged-cell[rowspan]:last-of-type {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.tbody-scroll {
+    max-height: 550px;
+    /* 你想要的固定高度 */
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.tbody-scroll table {
+    margin: 0;
+}
+
+.table-container {
+    height: 80%;
+    overflow-y: auto;
+}
+
+.table-container table {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 0;
+}
+
+.permissionTable {
+    font-size: 18px;
+}
+
+.permissionTable th,
+.permissionTable td {
+    word-break: break-word;
+    /* 讓長字串自動換行 */
+    white-space: normal;
+    /* 允許文字換行 */
+    overflow: hidden;
+}
+
+.permissionTable thead {
+    background-color: #f2f2f2;
+}
+
+.permissionTable tbody {
+    vertical-align: middle;
+}
+
+.permissionName {
+    font-weight: bold;
+}
+
+.edit {
+    width: 100%;
+    justify-items: center;
+}
+
+.selector {
+    width: fit-content;
+}
+
+.account-menu-icon {
+    font-size: 1.75rem;
+    text-align: center;
+    float: left;
+    width: 39px;
+    height: 39px;
+    line-height: 42px;
+    cursor: pointer;
+    background-size: cover;
+    background-repeat: no-repeat;
+}

@@ -1,0 +1,52 @@
+.eye {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.eyeOpen {
+    background-image: url('/svg/eye-open.svg'); /* Replace with the actual image path for the open eye */
+}
+
+.eyeClosed {
+    background-image: url('/svg/eye-close.svg'); /* Replace with the actual image path for the closed eye */
+}
+
+.more {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    background-image: url('/svg/more.svg'); /* Replace with the actual image path for the more icon */
+    cursor: pointer;
+}
+
+.more:hover {
+    background-image: url('/svg/more_on.svg'); /* Replace with the actual image path for the more icon on hover */
+}
+
+.more-on{
+    background-image: url('/svg/more_on.svg');
+}
+.more-off{
+    background-image: url('/svg/more_off.svg');
+}
+
+.switch {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.switch-off {
+    background-image: url('/svg/switch-off.svg');
+}
+
+.switch-on {
+    background-image: url('/svg/switch-on.svg');
+}

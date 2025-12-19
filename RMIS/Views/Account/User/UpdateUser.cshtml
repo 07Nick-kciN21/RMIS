@@ -17,7 +17,7 @@
         </div>
         <div class="modal-content">
             <div class="modal-body">
-                <form>
+                <form id="updateUserForm" class="needs-validation" novalidate>
                     <div>
                         <input type="hidden" class="form-control" asp-for="UserId" readonly>
                     </div>
@@ -32,6 +32,13 @@
                         <label asp-for="UserName" class="col-sm-2 col-form-label">帳號</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" asp-for="UserName" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-group row" style="margin-bottom: 20px">
+                        <label class="col-sm-2 col-form-label">密碼</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#resetPassword">變更密碼</button>
                         </div>
                     </div>
 
@@ -52,7 +59,7 @@
                     <div class="form-group row mb-3">
                         <label asp-for="Email" class="col-sm-2 col-form-label">信箱</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" asp-for="Email">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#resetEmail">變更信箱</button>
                         </div>
                     </div>
 
@@ -76,9 +83,149 @@
                             </div>
                         </div>
                     </div>
-                    <button id="submit" class="btn btn-primary">儲存</button>
+                    <button type="submit" class="btn btn-primary">儲存</button>
                     <button id="cancel" class="btn btn-secondary">取消</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="modal fade" id="resetPassword" tabindex="-1" aria-labelledby="resetPassword" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="resetPasswordForm" class="needs-validation" novalidate>
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">變更密碼</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form form-horizontal" method="post">
+                                <div class="form-body">
+                                    <div class="row">
+                                        <input type="hidden" class="form-control" asp-for="UserId" readonly>                                    
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">新密碼</label>
+                                                <div class="col-md-8">
+                                                    <input type="password" id="NewPassword" name="NewPassword" class="form-control"
+                                                        pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$" required>
+                                                    <div class="form-control-position" style="right: 15px;">
+                                                        <i class="fa fa-eye fa-eye-slash mimaShow" data-id="New"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">確認新密碼</label>
+                                                <div class="col-md-8">
+                                                    <input type="password" id="CheckPassword" name="CheckPassword" class="form-control" required>
+                                                    <div class="form-control-position" style="right: 15px;">
+                                                        <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Check"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12" style="margin-bottom: 20px">
+                                            <div class="form-group row">
+                                                <label class="col-sm-3 label-control" style="padding-top:0.75em;text-align:right">驗證碼</label>
+                                                <div class="col-md-8">
+                                                    <div class="input-group">
+                                                        <input id="adminUpdate_newPasswordCaptcha" type="text" name="adminUpdate_newPasswordCaptcha" class="form-control" placeholder="輸入驗證碼" required>
+                                                        <span class="input-group-text p-0" style="background: transparent; border:none;">
+                                                            <img class="captchaImage"
+                                                                    data-type="adminUpdate_newPassword"
+                                                                    alt="驗證碼"
+                                                                    title="點擊更新驗證碼"
+                                                                    style="cursor:pointer; border:1px solid #ccc; height:40px;" />
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10">
+                                            <div class="form-group row">
+                                                <label class="col-md-2 label-control" style="padding-top:0.75em;text-align:right"></label>
+                                                <div class="col-md-10 ">
+                                                    <label class="text-danger" style="margin-top:10px">密碼規格：6字元以上、包含包含英文字母與數字且不可與帳號相同。</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 m-auto text-center">
+                                            <button type="submit" class="btn btn-block btn-min-width btn-info mtop"><i class="ft-save"></i> 儲存</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="resetEmail" tabindex="-1" aria-labelledby="resetEmail" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="resetEmailForm" class="needs-validation" novalidate>
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">變更信箱</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form form-horizontal" method="post">
+                                <div class="form-body">
+                                    <div class="row">
+                                        <input type="hidden" class="form-control" asp-for="UserId" readonly>
+                                        <div class="col-md-12">
+                                            <div class="form-group row">
+                                                <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right">新信箱</label>
+                                                <div class="col-md-8">
+                                                    <input type="email" id="newEmail" name="newEmail"
+                                                     class="form-control" placeholder="新信箱"
+                                                     pattern="^[^\s@@]+@@[^\s@@]+\.[^\s@@]{2,}$" required>
+                                                    <div class="invalid-feedback">
+                                                        請輸入有效的信箱地址
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12" style="margin-bottom: 20px">
+                                            <div class="form-group row">
+                                                <label class="col-sm-3 label-control" style="padding-top:0.75em;text-align:right">驗證碼</label>
+                                                <div class="col-md-8">
+                                                    <div class="input-group">
+                                                        <input id="adminUpdate_newEmailCaptcha" type="text" name="adminUpdate_newEmailCaptcha" class="form-control" required>
+                                                        <span class="input-group-text p-0" style="background: transparent; border:none;">
+                                                            <img class="captchaImage"
+                                                                    data-type="adminUpdate_newEmail"
+                                                                    alt="驗證碼"
+                                                                    title="點擊更新驗證碼"
+                                                                    style="cursor:pointer; border:1px solid #ccc; height:40px;" />
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 m-auto text-center">
+                                            <button type="submit" class="btn btn-block btn-min-width btn-info mtop"><i class="ft-save"></i> 送出驗證碼</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="globalModalOverlay" style="
+            display:none;
+            position: fixed;
+            background: rgba(255,255,255,0.7);
+            z-index: 2000; /* 高於 modal-content，但低於 modal backdrop */
+            display: flex;
+            justify-content: center;
+            align-items: center;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">載入中...</span>
             </div>
         </div>
     </body> 

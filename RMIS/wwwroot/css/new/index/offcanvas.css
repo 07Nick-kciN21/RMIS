@@ -1,0 +1,141 @@
+.layerList {
+    width: 90%;
+    height: 90%;
+    border: 2px solid #e0e0e0;
+    padding: 10px 5px;
+    margin-top: 71.5px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.layerBar {
+    margin-bottom: 5px;
+    display: flex;
+    border-radius: 5px;
+    padding:10px 5px;
+}
+.layerBar.show{
+    background-color: #EBEDE9;
+    border: 1px solid #CCD2C6;
+    border-radius: 5px;
+    padding:10px 4px;
+}
+.layerTitle {
+    flex-grow: 1; /* This will allow the title to take up the remaining space */
+    width: 50%;
+}
+
+.layerName{
+    color: #545033;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.layerRemove {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+.layerRemove {
+    background-image: url('/svg/remove_0.svg');
+    width: 24px;
+    height: 24px;
+    text-align: center;
+}
+
+    .layerRemove:hover {
+        background-color: rgba(221, 182, 182, 0.77);
+        border-radius: 5px;
+        /* background-image: url('/svg/remove_1.svg'); */
+    }
+
+.moreMenu {
+    display: none; /* 初始狀態下隱藏選單 */
+    position: absolute; /* 相對於 drawMenu 定位 */
+    right: 45px; /* 從圖示的右側顯示 */
+    background: #fff;
+    border: 1px solid #ccc;
+    list-style: none;
+    padding: 10px;
+    z-index: 1000;
+}
+
+    .moreMenu li {
+        padding: 5px;
+        cursor: pointer;
+    }
+
+        .moreMenu li:hover {
+            background: #f0f0f0;
+        }
+        
+.section {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+    color: #545033;
+    padding-top: 5px;
+    font-weight: 700;
+}
+
+.section_icon {
+    width: 24px; /* or any appropriate size */
+    height: 24px;
+    margin-right: 5px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    display: block; /* Ensure the element is displayed */
+}
+
+.edit_icon{
+    width: 16px; /* or any appropriate size */
+    height: 16px;
+    background-size: cover; /* or 'contain' depending on how you want the image to scale */
+    background-repeat: no-repeat;
+    display: block; /* Ensure the element is displayed */
+}
+
+.offcanvas{
+    background-color: #f6f5dd;
+    z-index: 1050;
+    visibility: visible;
+}
+
+.offcanvas-title{
+    flex-grow: 1;
+    padding: 1rem 1rem;
+    overflow-y: auto;
+    color: #43413d;
+    font-weight: 300;
+    margin: 0 6px;
+    padding: 0.51667rem;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 1.5rem;
+    line-height: 1.55rem;
+}
+
+
+.custom-offcanvas-width {
+    width: 300px;
+    margin-top: 10px;
+}
+
+.symbolProp > .offcanvas-title {
+    margin-bottom: 10px;
+}
+
+.symbolProp select {
+    height: 28px;
+    max-width: 200px;
+}
+
+
+@media (max-width: 768px){
+    .custom-offcanvas-width {
+        width: 100%;
+    }
+}

@@ -1,22 +1,21 @@
 ﻿@{
-    ViewData["Title"] = "權限管理";
+    ViewData["Title"] = "功能模組管理";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <link rel="stylesheet" href="~/css/Account/permissionManager.css" />
 <script type="module" src="~/js/account/permission/permissionManage.js"></script>
 
-<h2>權限列表</h2>
+<h2>功能模組列表</h2>
 <div style="display: flex;">
     <select id="permissionSelector" class="selector form-select">
     </select>
-    <button id="createPermission">新增權限</button>
 </div>
 <div class="table-container">
     <table class="table table-bordered text-center permissionTable">
         <thead>
             <tr>
-                <th>權限名稱</th>
+                <th>功能模組名稱</th>
                 <th class="status-cell">狀態</th>
                 <th class="createAt-cell">創建日期</th>
                 <th class="action-cell">操作</th>

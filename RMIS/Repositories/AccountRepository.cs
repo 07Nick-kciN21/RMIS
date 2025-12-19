@@ -303,6 +303,14 @@ namespace RMIS.Repositories
                     _authDbContext.ChangeTracker.Clear();
                     return (false, "帳號已存在");
                 }
+
+                var existEmail = await _userManager.FindByEmailAsync(user.Email);
+                if (existEmail != null)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, "信箱已被使用");
+                }
                 // 取得最大排序值
                 var maxOrder = await _authDbContext.Users.MaxAsync(u => (int?)u.Order) ?? 0;
 
@@ -313,7 +321,7 @@ namespace RMIS.Repositories
                     UserName = user.Account,
                     PhoneNumber = user.Phone,
                     Email = user.Email,
-                    EmailConfirmed = true, // ✅ 預設 Email 已確認
+                    EmailConfirmed = false, // ✅ 預設 Email 已確認
                     DepartmentId = user.DepartmentId,
                     Status = user.Status,
                     Order = maxOrder + 1,
@@ -520,6 +528,7 @@ namespace RMIS.Repositories
                     Role = _userManager.GetRolesAsync(u).Result.First(),
                     Order = u.Order,
                     Status = u.Status,
+                    EmailConfirm = u.EmailConfirmed,
                     CreateAt = u.CreatedAt
                 }).ToListAsync();
 
@@ -888,6 +897,7 @@ namespace RMIS.Repositories
             {
                 UserId = user.Id,
                 UserName = user.UserName,
+                Password = user.PasswordHash,
                 DisplayName = user.DisplayName,
                 Email = user.Email,
                 Phone = user.PhoneNumber,
@@ -1140,12 +1150,11 @@ namespace RMIS.Repositories
                     _authDbContext.ChangeTracker.Clear();
                     return (false, $"無法修改系統保護的使用者 {existUser.UserName}");
                 }
-                bool isOldPasswordCorrect = await _userManager.CheckPasswordAsync(existUser, updateUserPassword.OriginPassword);
-                if (!isOldPasswordCorrect)
+                if(existUser.UserName == updateUserPassword.NewPassword)
                 {
-                    await transaction.RollbackAsync();
-                    return (false, "舊密碼輸入錯誤");
+                    return (false, $"密碼不能跟帳號相同");
                 }
+
                 var resetToken = await _userManager.GeneratePasswordResetTokenAsync(existUser);
                 var resetResult = await _userManager.ResetPasswordAsync(existUser, resetToken, updateUserPassword.NewPassword);
                 if (!resetResult.Succeeded)
@@ -1166,6 +1175,36 @@ namespace RMIS.Repositories
             }
         }
 
+        public async Task<(bool Success, string Message)> UpdateUserEmailAsync(UpdateUserEmail updateUserEmail)
+        {
+            using var transaction = await _authDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var existUser = await _userManager.FindByIdAsync(updateUserEmail.UserId);
+                if (existUser == null)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"帳號不存在");
+                }
+                if (existUser.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法修改系統保護的使用者 {existUser.UserName}");
+                }
+
+                await transaction.CommitAsync();
+                return (true, "密碼修改成功");
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _authDbContext.ChangeTracker.Clear();
+                return (false, $"密碼修改失敗: {ex.Message}");
+            }
+        }
         public async Task<(bool Success, string? Data, string? Message)> GetPipelineAccessAsync(int id)
         {
             var allCategories = await _mapDBContext.Categories.ToListAsync();

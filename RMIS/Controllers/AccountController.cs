@@ -1,21 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using RMIS.Data;
 using RMIS.Models.Account.Departments;
-using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Account.Permissions;
 using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
 using RMIS.Models.Auth;
-using RMIS.Models.Portal;
-using RMIS.Models.sql;
 using RMIS.Repositories;
 using System.Data;
-using System.Security;
-using System.Threading.Tasks;
+using static Org.BouncyCastle.Crypto.Engines.SM2Engine;
 
 namespace RMIS.Controllers
 {
@@ -30,15 +25,16 @@ namespace RMIS.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AuthDbContext _authDbContext;
+        private readonly IEmailSender _emailSender;
 
-
-        public AccountController(AccountInterface accountInterface, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, AdminInterface adminInterface)
+        public AccountController(AccountInterface accountInterface, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, AdminInterface adminInterface, IEmailSender emailSender)
         {
             _accountInterface = accountInterface;
             _adminInterface = adminInterface;
             _userManager = userManager;
             _roleManager = roleManager;
-            _authDbContext = authDbContext;            
+            _authDbContext = authDbContext;
+            _emailSender = emailSender;
         }
 
         private IActionResult RedirectToLocal(string returnUrl)
@@ -51,6 +47,21 @@ namespace RMIS.Controllers
 
         [HttpGet("[controller]/User/List")]
         public async Task<IActionResult> UserManager()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Read)
+            {
+                return RedirectToAction("Login", "Portal");
+            }
+            ViewBag.Username = currentUser.UserName;
+            return View();
+        }
+
+        [HttpGet("[controller]/User/Test")]
+        public async Task<IActionResult> UserManagerTest()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             // 檢查權限
@@ -225,11 +236,66 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/User/UpdatePassword")]
-        public async Task<IActionResult> UpdateUserPassword([FromForm] UpdateUserPassword updateUserPassword)
+        public async Task<IActionResult> UpdateUserPassword([FromForm] UpdateUserPassword updateUserPassword, string NewPasswordCaptcha)
         {
+            var code = HttpContext.Session.GetString("CaptchaCode_adminUpdate_newPassword");
+            if (string.IsNullOrEmpty(code) || !string.Equals(code, NewPasswordCaptcha, StringComparison.OrdinalIgnoreCase))
+                return Json(new { success = false, message = "驗證碼錯誤" });
 
             var updated = await _accountInterface.UpdateUserPasswordAsync(updateUserPassword);
             return Json(new { success = updated.Success, message = updated.Message });
+        }
+
+        [HttpPost("[controller]/User/UpdateEmail")]
+        public async Task<IActionResult> UpdateUserEmail([FromForm] UpdateUserEmail updateUserEmail, string newEmailCaptcha)
+        {
+            var code = HttpContext.Session.GetString("CaptchaCode_newEmail");
+            if (string.IsNullOrEmpty(code) || !string.Equals(code, newEmailCaptcha, StringComparison.OrdinalIgnoreCase))
+                return Json(new { success = false, message = "驗證碼錯誤" });
+            var user = await _userManager.FindByIdAsync(updateUserEmail.UserId);
+            if (user == null) 
+                return Json(new { success = false, message = "使用者不存在" });
+
+            var existEmailUser = await _userManager.FindByEmailAsync(updateUserEmail.NewEmail);
+            if (existEmailUser != null)
+            {
+                return Json(new { success = false, message = "信箱已被註冊" });
+            }
+            // ✅ 更新 Security Stamp - 這會讓所有舊的 token 失效
+            await _userManager.UpdateSecurityStampAsync(user);
+
+            var token = await _userManager.GenerateChangeEmailTokenAsync(user, updateUserEmail.NewEmail);
+            var confirmLink = Url.Action("UpdateEmailConfirm", "Account",
+                new { userId = user.Id, newEmail = updateUserEmail.NewEmail, token = token },
+                protocol: Request.Scheme);
+
+            await _emailSender.SendEmailAsync(updateUserEmail.NewEmail, "請驗證您的新電子郵件",
+                    $"請點擊以下連結完成信箱更改驗證：<a href='{confirmLink}'>驗證信箱</a>");
+
+            ViewBag.ResendMessage = "已重新寄送驗證信至您的信箱，請查看信件。";
+            return Json(new { success = true, message = "已寄送驗證信至新信箱，請查看信件。" });
+        }
+
+        [HttpGet("[controller]/User/UpdateEmailConfirm")]
+        public async Task<IActionResult> UpdateEmailConfirm(string userId, string newEmail, string token)
+        {
+            if (userId == null || newEmail == null || token == null)
+                return RedirectToAction("Index", "Home");
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound($"無法載入使用者 ID '{userId}'。");
+
+            var result = await _userManager.ChangeEmailAsync(user, newEmail, token);
+            if (result.Succeeded)
+            {
+                return View();
+            }
+            else
+            {
+                ViewBag.ErrorMessage = "驗證失敗，請聯絡管理員。";
+                return View("UpdateEmailConfirmExpired");
+            }
         }
 
         [HttpPost("[controller]/User/Delete")]
@@ -281,6 +347,7 @@ namespace RMIS.Controllers
                 }).ToListAsync();
             return View(createUser);
         }
+        
         [HttpPost("[controller]/User/Create")]
         public async Task<IActionResult> CreateUser([FromForm] CreateUser createUser)
         {
@@ -293,7 +360,26 @@ namespace RMIS.Controllers
             }
                 
             var created = await _accountInterface.CreateUserAsync(createUser);
-            return Json(new { success = created.Success, message = created.Message });
+
+            if (created.Success)
+            {
+                var userEntity = await _userManager.FindByNameAsync(createUser.Account);
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
+                var confirmLink = Url.Action("ConfirmEmail", "Portal",
+                    new { userId = userEntity.Id, token = token },
+                    protocol: Request.Scheme);
+
+                await _emailSender.SendEmailAsync(createUser.Email, "請驗證您的電子郵件",
+                    $"請點擊以下連結完成信箱驗證：<a href='{confirmLink}'>驗證信箱</a>");
+
+                return Json(new { Success = true, Message = "建立帳號，請完成信箱認證" });
+            }
+            else
+            {
+                // ✅ 透過 ViewData 讓錯誤訊息顯示在 `Register` View
+                // ViewData["ErrorMessage"] = result.Message;
+                return Json(new { Success = false, Message = created.Message }); ;
+            }
         }
         [HttpPost("[controller]/Role/Get/ManagerData")]
         public async Task<IActionResult> GetRoleManagerData()
@@ -618,7 +704,28 @@ namespace RMIS.Controllers
             return Json(new {success = result.Success, message = result.Message });
         }
 
-        
+        [HttpGet("[controller]/Log/List")]
+        public async Task<IActionResult> LogManage()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            // 檢查權限
+            var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+
+            if (!currentUserPermission.Read)
+            {
+                return Json(new { success = false, message = "無權限查看" });
+            }
+
+            ViewBag.Username = currentUser.UserName;
+            return View();
+        }
+
+        [HttpPost("[controller]/Log/Get/ManagerData")]
+        public async Task<IActionResult> LogManagerData()
+        {
+            var result = await _accountInterface.GetLogRecordAsync();
+            return Json( new { Success = true, LogManage = result });
+        }
         // 無權限時
         public IActionResult AccessDenied(string returnUrl = null)
         {

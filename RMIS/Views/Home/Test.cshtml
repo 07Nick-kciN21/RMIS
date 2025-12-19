@@ -1,0 +1,383 @@
+@model Dictionary<string, RMIS.Models.Account.Users.PermissionDetail>
+@{
+    ViewData["Title"] = "桃園市工務局開瓶道路系統";
+    Layout = "~/Views/Shared/_TestLayout.cshtml";
+}
+<style>
+    label{
+        font-size: 2rem;
+    }
+
+    #indexMap {
+        width: 100%;
+        height: 87vh;
+    }
+
+    .leaflet-draw-tooltip {
+        display: none !important;
+    }
+
+    .tip {
+        position: absolute;
+        background-color: #333;
+        color: #fff;
+        padding: 5px;
+        border-radius: 5px;
+        font-size: 12px;
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+</style>
+
+<!-- ✅ 本地樣式 -->
+@* <link rel="stylesheet" href="~/css/index/dropdown.css" />
+<link rel="stylesheet" href="~/css/index/offcanvas.css" />
+<link rel="stylesheet" href="~/css/index/menu.css" />
+<link rel="stylesheet" href="~/css/index/svg_list.css" />
+<link rel="stylesheet" href="~/css/index/popup.css" />
+<link rel="stylesheet" href="~/css/index/drawtool.css" />
+<link rel="stylesheet" href="~/css/index/panel.css" />
+<link rel="stylesheet" href="~/css/index/maptool.css" />
+<link rel="stylesheet" href="~/css/index/modal.css" />
+<link rel="stylesheet" href="~/css/index/pointEdit.css" /> *@
+<link rel="stylesheet" href="~/css/index/menu.css" />
+<link rel="stylesheet" href="~/css/index/modal.css" />
+<link rel="stylesheet" href="~/css/index/pointEdit.css" />
+<link rel="stylesheet" href="~/css/index/popup.css" />
+<link rel="stylesheet" href="~/css/index/drawtool.css" />
+<link rel="stylesheet" href="~/css/index/panel.css" />
+<link rel="stylesheet" href="~/css/index/dropdown.css" />
+<link rel="stylesheet" href="~/css/new/index/style.css">
+<link rel="stylesheet" href="~/css/new/index/maptool.css">
+@* <link rel="stylesheet" href="~/css/new/index/menu.css"> *@
+<link rel="stylesheet" href="~/css/new/index/svg_list.css">
+<link rel="stylesheet" href="~/css/new/index/offcanvas.css">
+<!-- ✅ 外部樣式 (請視是否已有本機版本，建議改為 ~/lib/... 儲存) -->
+<link rel="stylesheet" href="~/lib/pikaday/pikaday.css" />
+<link rel="stylesheet" href="~/lib/leaflet-draw/leaflet.draw.css" />
+<link rel="stylesheet" href="~/lib/jQuery-QueryBuilder/query-builder.default.min.css" />
+<link rel="stylesheet" href="~/lib/select2/select2.min.css" />
+<link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.css" />
+<link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.Default.css" />
+<!-- ✅ ES Module -->
+<script type="module" src="~/js/account/userProfilePopup.js"></script>
+
+
+
+<div class="div0">
+    <div class="div1">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <a class="navbar-brand head-logo" href="#">桃園市工務局開瓶道路系統</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div id="col2" style="margin-left:auto">
+                    <nav id="head-nav" class="navbar-toggle">
+                        <div class="container-fluid ">
+                            <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
+                                <div id="userMenuBtn" class="user-logo-box" data-target="userMenuContent">                        
+                                    <div id="username" class="username-text">
+                                        <div class="user-icon"></div>
+                                        <h5>@ViewBag.Username<span class="caret"></span></h5>
+                                    </div>
+                                    <div id="userMenuContent" class="dropdown-content">
+                                        <ul class="menu-background">
+                                            <li>
+                                                <a id="profileBtn" class="nav-link menu-title">
+                                                    <h5 id="userProfile">帳號資料</h5>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="nav-link menu-title" href="/Portal/Logout">
+                                                    <h5>登出</h5>
+                                                </a>
+                                            </li>
+                                            @if (Model.ContainsKey("使用者管理") && Model["使用者管理"].Read && Model["使用者管理"].Status)
+                                            {
+                                                <li>
+                                                    <a class="nav-link menu-title" href="/Account/User/List">
+                                                        <h5>權限管理</h5>
+                                                    </a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                                @if ((Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status) ||
+                                    (Model.ContainsKey("養工焦點") && Model["養工焦點"].Create && Model["養工焦點"].Status) ||
+                                    (Model.ContainsKey("專案查詢") && Model["專案查詢"].Create && Model["專案查詢"].Status))
+                                {
+                                    <div class="nav-item dropdown">
+                                        <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
+                                        <div id="adminMenuContent" class="dropdown-content">
+                                            <ul id="adminMenu" class="menu-background">
+                                                @* 業務圖資 *@
+                                                @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status)
+                                                {
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
+                                                            <h4>新增圖源</h4>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
+                                                            <h4>新增類別</h4>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
+                                                            <h4>新增圖資</h4>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
+                                                            <h4>上傳圖資類別</h4>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
+                                                            <h4>上傳路線資料</h4>
+                                                        </a>
+                                                    </li>
+                                                }
+
+                                                @* 專案查詢 *@
+                                                @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Create && Model["專案查詢"].Status)
+                                                {
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
+                                                            <h4>新增道路專案</h4>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
+                                                            <h4>上傳道路專案</h4>
+                                                        </a>
+                                                    </li>
+                                                }
+
+                                                @* 養工焦點 *@
+                                                @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Create && Model["養工焦點"].Status)
+                                                {
+                                                    <li>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
+                                                            <h4>上傳施工通報</h4>
+                                                        </a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                }
+                                <div class="nav-item dropdown">
+                                    <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
+                                </div>
+                                @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Read && Model["業務圖資"].Status)
+                                {
+                                    <div class="nav-item dropdown">
+                                        <button id="imageDataBtn" class="dropdown-button" data-target="imageDataContent">業務圖資</button>
+                                        <div id="imageDataContent" class="dropdown-content">
+                                        </div>
+                                    </div>
+                                }
+                                <div class="nav-item dropdown">
+                                    <button id="commonLinkBtn" class="dropdown-button" data-target="commonLinkContent">
+                                        常用連結
+                                    </button>
+                                    <div id="commonLinkContent" class="dropdown-content">
+                                        <ul id="commonLinkMenu" class="menu-background">
+                                            <li>
+                                                <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20130702.png" target="_blank">
+                                                    <h4>
+                                                        非都市土地使用分區圖
+                                                    </h4>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20140925.png" target="_blank">
+                                                    <h4>
+                                                        非都市土地使用分區圖(II)
+                                                    </h4>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/109%E5%B9%B4%E7%89%88%E5%9C%8B%E5%9C%9F%E5%88%A9%E7%94%A8%E8%89%B2%E7%A2%BC%E8%A1%A8.png" target="_blank">
+                                                    <h4>
+                                                        國土利用現況調查成果分類圖
+                                                    </h4>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="nav-item dropdown">
+                                    <button id="" class="dropdown-button" role="button" data-bs-toggle="top-vav-list3" aria-expanded="false">
+                                        下載專區
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <div class="div2 map-controls">
+        @* <span id="tb-sidebar" class="mobileTool" title="側欄" data-bs-toggle="offcanvas"
+            data-bs-target="#layerListBlock" aria-controls="layerListBlock"></span> *@
+        <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
+        <span id="tb-zoomOut" class="mobileTool" title="縮小"></span>
+        <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
+        <span id="tb-painterPanel" class="mobileTool" title="繪圖板"></span>
+        <span id="tb-propEnabled" title="屬性資料"></span>
+        <span id="tb-measurePanel" class="mobileTool" title="測量"></span>
+        <span id="tb-location" class="mobileTool" title="目前位置"></span>
+        <span id="tb-streetView" class="mobileTool" title="google街景"></span>
+        <span id="tb-searchPropPanel" class="mobileTool" title="屬性搜尋"></span>
+        <span id="tb-flagPanel" title="權管土地"></span>
+        <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
+        <span id="tb-accidentPanel" title="交通事故"></span>
+        <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
+    </div>
+    <div id="indexMap" class="div3">
+        <div class="map-footer">
+            <div id="scale-control" class="footer-tip"></div>
+            <span class="title-divider"></span>
+            <div id="map-Zoomlevel">
+                <select id="zoom-level" class="footer-tip">
+                    <option value="-1" disabled selected>縮放等級</option>
+                    <option value="3">3</option>
+                    <option value="6">6</option>
+                    <option value="9">9</option>
+                    <option value="12">12</option>
+                    <option value="15">15</option>
+                    <option value="18">18</option>
+                </select>
+            </div>
+            <span class="title-divider"></span>
+            <div id="map-Coordinate" class="footer-tip">
+                <span id="map-coord">經度: 0 , 緯度: 0</span>
+                <div id="coordinateSelect" class="footerSelect hide">
+                    <ul id="coordinateSelector">
+                        <li id="latlng" class="coordinate-item" data-type="1">
+                            <span>(WGS84) 經緯度座標</span>
+                        </li>
+                        <li id="twd97" class="coordinate-item" data-type="0">
+                            <span>(TWD97) 二度分帶座標</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <span class="title-divider"></span>
+            <div id="map-basemapCtrl" class="footer-tip">
+                <span id="map-basemap">Open Street地圖</span>
+                <div id="mapSelect" class="footerSelect hide">
+                    @* 基本圖層 (單選) *@
+                    <span class="selectTitle">基本圖層</span>
+                    <ul id="baseMapSelector">
+                    </ul>
+                    
+                    @* 疊加圖層 (多選) *@
+                    <span class="selectTitle">疊加圖層</span>
+                    <ul id="overlayMapSelector">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="layerListBlock" class="div4">
+        <div id="layerBar-ListTitle" class="offcanvas-title" style="color: var(--brown);margin-bottom: 15px;">圖資清單</div>
+        <div id="layerBarContainer" class="container-fluid">
+        </div>
+        <div id="editSymbol-Step1" class="container-fluid hidden">
+        </div>
+        <div id="editSymbol-Step2" class="container-fluid hidden">
+        </div>
+    </div>
+</div>
+
+
+
+
+
+@section searchPanel {
+    @Html.Partial("~/Views/Home/Partials/_searchPanel.cshtml")
+}
+
+@section painterPanel {
+    @Html.Partial("~/Views/Home/Partials/_painterPanel.cshtml")
+}
+
+@section searchPropPanel {
+    @Html.Partial("~/Views/Home/Partials/_searchPropPanel.cshtml")
+}
+
+ @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
+{
+    @section focusPanel {
+        @Html.Partial("~/Views/Home/Partials/_focusPanel.cshtml")
+    }
+}
+ @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status)
+{
+    @section projectPanel {
+        @Html.Partial("~/Views/Home/Partials/_projectPanel.cshtml")
+    }
+}
+ @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
+{
+    @section accidentPanel {
+        @Html.Partial("~/Views/Home/Partials/_accidentPanel.cshtml")
+    }
+}
+ @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
+{
+    @section flagPanel {
+        @Html.Partial("~/Views/Home/Partials/_flagPanel.cshtml")
+    }
+}
+
+@section measurePanel {
+    @Html.Partial("~/Views/Home/Partials/_measurePanel.cshtml")
+}
+
+@section metaDataPanel {
+    @Html.Partial("~/Views/Home/Partials/_metaDataPanel.cshtml")
+}
+
+@section roadMaintPanel {
+    @Html.Partial("~/Views/Home/Partials/_roadMaintPanel.cshtml")
+}
+
+<div id="customModal" class="modal-overlay hidden">
+    <div class="Admin-Modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Loading...</h5>
+            <button class="close-modal">x</button>
+        </div>
+        <div class="modal-body">
+            <p>Loading content...</p>
+        </div>
+    </div>
+</div>
+
+<!-- 放在 body 最底部 -->
+
+
+
+<div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
+<div id="measureTip" class="tip" style="display: none;"></div>
+
+@section Scripts {
+    <script type="text/javascript">
+        // 查看是否加到圖資清單
+        let layerList = {};
+        // 圖層管理
+        let layers = {};
+    </script>
+    <script type="module" src="~/js/main.js"></script>
+}

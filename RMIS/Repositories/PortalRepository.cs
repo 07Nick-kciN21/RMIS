@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 using RMIS.Models.Auth;
 using RMIS.Models.Portal;
+using System;
 
 namespace RMIS.Repositories
 {
@@ -46,7 +49,7 @@ namespace RMIS.Repositories
             };
         }
 
-        public async Task<(bool Success, string Message)> RegisterAsync(RegisterVIew user)
+        public async Task<(bool Success, string Message)> RegisterAsync(RegisterView user)
         {
             using var transaction = await _authDbContext.Database.BeginTransactionAsync();
             try
@@ -57,7 +60,15 @@ namespace RMIS.Repositories
                 {
                     await transaction.RollbackAsync();
                     _authDbContext.ChangeTracker.Clear();
-                    return (false, $"帳號已存在");
+                    return (false, $"帳號已被註冊");
+                }
+
+                var existEmailUser = await _userManager.FindByEmailAsync(user.Email);
+                if (existEmailUser != null)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, "信箱已被註冊");
                 }
 
                 // 取得最大排序值
@@ -69,7 +80,7 @@ namespace RMIS.Repositories
                     UserName = user.Account,
                     PhoneNumber = user.Phone,
                     Email = user.Email,
-                    EmailConfirmed = true, // ✅ 預設 Email 已確認
+                    EmailConfirmed = false, // ✅ 預設 Email 已確認
                     Status = false,
                     DepartmentId = user.DepartmentId,
                     Order = maxOrder + 1,
@@ -82,7 +93,6 @@ namespace RMIS.Repositories
                     var role = await _roleManager.FindByIdAsync(user.RoleId);
                     await _userManager.AddToRoleAsync(createUser, role.Name);
                     await _authDbContext.SaveChangesAsync();
-                    await _signInManager.SignInAsync(createUser, isPersistent: false);
                     await transaction.CommitAsync();
                     return (true, "使用者建立成功");
                 }
@@ -101,5 +111,27 @@ namespace RMIS.Repositories
                 return (false, $"使用者建立失敗: {ex}");
             }
         }
+
+        // PortalRepository.cs
+        public async Task<(bool Success, string Token, string Message)> GenerateResetPasswordTokenAsync(string account)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(account);
+
+                if (user == null)
+                {
+                    return (false, null, "帳號不存在");
+                }
+
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                return (true, token, "成功產生重設密碼 Token");
+            }
+            catch (Exception ex)
+            {
+                return (false, null, $"產生 Token 失敗：{ex.Message}");
+            }
+        }
+
     }
 }

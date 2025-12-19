@@ -52,6 +52,25 @@ namespace RMIS.Controllers
             Console.WriteLine("Index page loaded");
             return View();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Test()
+        {
+
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (currentUser != null)
+            {
+                ViewBag.Username = currentUser.UserName;
+                // 從user取得role資料與部門(基本上一個user只有一個role)
+                var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
+                var userPermissions = await _accountInterface.GetUserPermissions(userInfo.roleId);
+                return View(userPermissions);
+            }
+
+            Console.WriteLine("Index page loaded");
+            return View();
+        }
         [HttpGet]
         public async Task<IActionResult> BuildTreeData()
         {

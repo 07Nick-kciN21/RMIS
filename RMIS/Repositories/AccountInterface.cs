@@ -34,6 +34,7 @@ namespace RMIS.Repositories
         Task<UpdateUserView> UpdateUserViewAsync(string id);
         Task<(bool Success, string Message)> UpdateUserAsync(UpdateUserView updateUser);
         Task<(bool Success, string Message)> UpdateUserPasswordAsync(UpdateUserPassword updateUserPassword);
+        Task<(bool Success, string Message)> UpdateUserEmailAsync(UpdateUserEmail updateUserEmail);
         Task<UpdateRoleView> UpdateRoleViewAsync(string id);
         Task<(bool Success, string Message)> UpdateRoleAsync(UpdateRoleView updaterole);
         Task<UpdateDepartmentView> UpdateDepartmentViewAsync(int id);

@@ -1,0 +1,99 @@
+:root {
+    --lightgray: #F0F0ED;
+    --lightgray2: #FBFBFB;
+    --bordergray: #D6D6D3;
+    --brown: #B7A591;
+    --lightbrown: #C3C0AA;
+}
+
+body {
+    padding: 30px;
+    background: var(--lightgray);
+}
+
+.div0>div {
+    border: 1px solid var(--bordergray);
+    box-shadow: -5px -5px 4px rgb(255 255 255 / 75%), 5px 5px 4px rgb(0 0 0 / 25%);
+    background-color: var(--lightgray2);
+    border-radius: 8px;
+}
+
+.div0 {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: 5% 75% minmax(270px, 18%);
+}
+
+.div1 {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 1;
+    grid-column-end: 4;
+}
+
+.div2 {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 1;
+    grid-column-end: 2;
+}
+
+.div3 {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 2;
+    grid-column-end: 3;
+}
+
+.div4 {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 3;
+    grid-column-end: 4;
+    padding: 10px;
+    min-width: 270px;
+}
+
+.head-logo {
+    color: var(--brown) !important;
+    font-weight: bold;
+}
+
+header .dropdown-button,
+.username-text h5 {
+    color: #615649;
+}
+
+@media (max-width: 992px) {
+    .div0 {
+        grid-template-columns: 5% auto minmax(270px, 29%);
+    }
+}
+
+@media (max-width: 762px) {
+    .div0 {
+        grid-template-columns: 45px auto;
+        position: relative;
+    }
+
+    .div1 {
+        grid-column-end: 3;
+    }
+
+    .div3 {
+        grid-column-end: 3;
+
+    }
+
+    .div4 {
+        width: 302px;
+        right: 0;
+        /* display: none; */
+        position: absolute;
+    }
+}
+
+@media (max-width: 576px) {
+
+
+}

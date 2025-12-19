@@ -50,13 +50,6 @@
 </head>
 <body>
     <div class="content-wrapper">
-        <header class="gx-0 custom-header">
-            @if (IsSectionDefined("HomeHeaderNavList"))
-            {
-                @RenderSection("HomeHeaderNavList", required: false)
-            }
-        </header>
-        
         @RenderBody()
 
         @RenderSection("painterPanel", required: false)

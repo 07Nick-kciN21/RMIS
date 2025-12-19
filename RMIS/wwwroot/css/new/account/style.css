@@ -1,0 +1,103 @@
+body {
+    padding: 30px;
+    background: #efedea;
+}
+
+.div0>div {
+    border: 1px solid #D6D6D3;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+}
+
+.div0 {
+    display: grid;
+    gap: 18px;
+    grid-template-rows: 60px calc(100vh - 138px);
+    
+    grid-template-columns: 5% 75% minmax(270px, 18%);
+}
+
+.div1 {
+    grid-row-start: 1;
+    grid-row-end: 2;
+    grid-column-start: 1;
+    grid-column-end: 4;
+    background-color: #f8f7f6;
+}
+
+.div2 {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    background-color: #f6f4f1;
+}
+
+.div3 {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 2;
+    grid-column-end: 3;
+}
+
+.div4 {
+    grid-row-start: 2;
+    grid-row-end: 3;
+    grid-column-start: 3;
+    grid-column-end: 4;
+    padding: 10px;
+    min-width: 270px;
+    background-color: #fdfdfd;
+}
+
+.head-logo {
+    color:#B7A591 !important;
+    font-weight: bold;
+}
+
+header .dropdown-button,
+.username-text h5 {
+    color: #615649;
+}
+
+.usermodal-header{
+    background-color: #f6f4f1;
+    color: #2f1a0c;
+}
+.usermodal-btn{
+    background-color: #ccb9af;
+    color: #2f1a0c;
+}
+@media (max-width: 992px) {
+    .div0 {
+        grid-template-columns: 5% auto minmax(270px, 29%);
+    }
+}
+
+@media (max-width: 762px) {
+    .div0 {
+        grid-template-columns: 45px auto;
+        position: relative;
+    }
+
+    .div1 {
+        grid-column-end: 3;
+    }
+
+    .div3 {
+        grid-column-end: 3;
+
+    }
+
+    .div4 {
+        width: 302px;
+        right: 0;
+        /* display: none; */
+        position: absolute;
+    }
+}
+
+@media (max-width: 576px) {
+
+
+}

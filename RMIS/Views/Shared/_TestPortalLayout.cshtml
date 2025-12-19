@@ -1,0 +1,43 @@
+﻿@* 通用 Portal Layout *@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/index/modal.css" />
+    <link rel="stylesheet" href="~/css/portal/login.css" />
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/js/portal/login.js"></script>
+
+    @RenderSection("Styles", required: false)
+</head>
+<body class="justify-content-center align-items-center">
+
+    @RenderBody()
+
+    <!-- 頁腳 -->
+     @* <footer class="bg-light text-center text-muted py-3 mt-5 border-top">
+         <small>&copy; @(DateTime.Now.Year) 桃園市養護工程處</small>
+     </footer> *@
+
+    @RenderSection("Scripts", required: false)
+    <!-- 共用 Overlay，預設隱藏 -->
+    <div id="globalModalOverlay" style="
+        display:none;
+        position: fixed;
+        background: rgba(255,255,255,0.7);
+        z-index: 2000; /* 高於 modal-content，但低於 modal backdrop */
+        display: flex;
+        justify-content: center;
+        align-items: center;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">載入中...</span>
+        </div>
+    </div>
+
+</body>
+</html>

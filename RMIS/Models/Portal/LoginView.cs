@@ -3,11 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RMIS.Models.Portal
 {
-    public class LoginRegisterView
-    {
-        public LoginView Login { get; set; }
-        public RegisterVIew Register { get; set; }
-    }
     public class LoginView
     {
         [Required(ErrorMessage = "請輸入帳號")]
@@ -17,7 +12,7 @@ namespace RMIS.Models.Portal
         [DataType(DataType.Password)]
         public string Password { get; set; }
     }
-    public class RegisterVIew
+    public class RegisterView
     {
         [Required(ErrorMessage = "使用者名稱是必填欄位")]
         [StringLength(20, MinimumLength = 2, ErrorMessage = "使用者名稱長度不合規定(2~20)")]
@@ -25,14 +20,16 @@ namespace RMIS.Models.Portal
         public string DisplayName { get; set; }
 
         [Required(ErrorMessage = "帳號是必填欄位")]
-        [StringLength(20, MinimumLength = 8, ErrorMessage = "帳號長度不合規定(8~20)")]
-        [RegularExpression(@"^[a-zA-Z0-9]+$", ErrorMessage = "使用者名稱只能包含英文字母、數字")]
+        [StringLength(20, MinimumLength = 6, ErrorMessage = "帳號長度不合規定(6~20)")]
+        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$",
+            ErrorMessage = "帳號必須包含至少 1 個英文字母和 1 個數字，長度 6~20 位")]
         public string Account { get; set; }
 
         [Required(ErrorMessage = "密碼是必填欄位")]
-        [StringLength(20, MinimumLength = 8, ErrorMessage = "密碼長度不合規定(8~20)")]
+        [StringLength(20, MinimumLength = 6, ErrorMessage = "密碼長度不合規定(6~20)")]
         [PasswordNotSameAsAccount("Account", ErrorMessage = "密碼不能與帳號相同")]
-        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$", ErrorMessage = "密碼必須包含至少 1 個大寫字母、1 個小寫字母和 1 個數字")]
+        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$",
+            ErrorMessage = "密碼必須包含至少 1 個英文字母和 1 個數字，長度 6~20 位")]
         public string Password { get; set; }
 
         public int DepartmentId { get; set; }
@@ -49,4 +46,5 @@ namespace RMIS.Models.Portal
         [RegularExpression(@"^09\d{8}$", ErrorMessage = "請輸入有效的台灣手機號碼 (09xxxxxxxx)")]
         public string Phone { get; set; }
     }
+
 }

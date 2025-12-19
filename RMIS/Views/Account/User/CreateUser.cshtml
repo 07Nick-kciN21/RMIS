@@ -20,35 +20,35 @@
     </div>
     <div class="modal-content">
         <div class="modal-body">
-            <form>
+            <form id="createUserForm" class="needs-validation" novalidate>
                 <div class="form-group row mb-3">
-                    <label asp-for="DisplayName" class="col-sm-2 col-form-label">名稱</label>
+                    <label asp-for="DisplayName" class="col-sm-2 col-form-label">使用者名稱</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" asp-for="DisplayName">
-                        @* <div class="invalid-feedback">
-                            使用者名稱需為 2~20 字，僅限中英文、數字與底線。
-                        </div> *@
+                        <input type="text" class="form-control" asp-for="DisplayName" required>
                         <span class="text-danger" asp-validation-for="DisplayName"></span>
-                    </div>
+                        <div class="invalid-feedback">
+                            使用者名稱需為 2~20 字，僅限中英文、數字與底線。
+                        </div>
+                    </div>  
                 </div>
 
                 <div class="form-group row mb-3">
                     <label asp-for="Account" class="col-sm-2 col-form-label">帳號</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" asp-for="Account">
-                        @* <small class="form-text text-muted">
-                            使用者帳號長度需為 8~20 字，只能包含英文字母、數字
-                        </small> *@
+                        <input type="text" name="Account" id="Account" class="form-control" 
+                            required pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$" 
+                            title="帳號需為6-20位英數字" />
+                        <div class="invalid-feedback">帳號需為 6~20 字，且包含英文字母與數字</div>
                     </div>
                 </div>
 
                 <div class="form-group row mb-3">
                     <label asp-for="Password" class="col-sm-2 col-form-label">密碼</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" asp-for="Password">
-                        @* <small class="form-text text-muted">
-                            使用者密碼長度需為 2~20 字，必須包含至少 1 個大寫字母、1 個小寫字母和 1 個數字
-                        </small> *@
+                        <input type="password" name="Password" id="Password" class="form-control" 
+                            required pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$" 
+                            title="密碼需為6-20位，包含英數字" />
+                        <div class="invalid-feedback" id="passwordFeedback"></div>
                     </div>
                 </div>
 
@@ -69,14 +69,24 @@
                 <div class="form-group row mb-3">
                     <label asp-for="Email" class="col-sm-2 col-form-label">信箱</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" asp-for="Email">
+                        <input type="email" name="Email" class="form-control" 
+                            required pattern="^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                            title="請輸入正確的Email格式" />
+                        <div class="invalid-feedback">
+                            請輸入有效的信箱地址
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group row mb-3">
                     <label asp-for="Phone" class="col-sm-2 col-form-label">電話</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" asp-for="Phone">
+                        <input type="text" name="Phone" class="form-control" 
+                            required pattern="^09\d{8}$"
+                            title="手機號碼需為09開頭，共10碼" />
+                        <div class="invalid-feedback">
+                            請輸入有效的台灣手機號碼（09xxxxxxxx）。
+                        </div>
                     </div>
                 </div>
 
@@ -92,10 +102,10 @@
                             <label class="form-check-label" for="statusDisabled">禁止</label>
                         </div>
                     </div>
-                </div>                
-            </form>
-            <button id="submit" class="btn btn-primary">儲存</button>
-            <button id="cancel" class="btn btn-secondary">取消</button>
+                </div>
+                <button type="submit" class="btn btn-primary">儲存</button>
+                <button id="cancel" class="btn btn-secondary">取消</button>                
+            </form>            
         </div>    
     </div>
 </body>

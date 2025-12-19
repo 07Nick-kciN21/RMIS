@@ -7,10 +7,35 @@
         </span>
         <button id="search_Close" class="closeButton">&times;</button>
     </div>
-    <div class="panelInput">
-        <input type="text" class="searchPanelInput" placeholder="搜尋道路">
-        <button class="searchPanelBtn"></button>
+    <div class="panelInput row">
+        <div class="col-sm-12">
+            <select id="districtSelect" class="form-control" placeholder="行政區">
+                <option value="">請選擇行政區</option>
+                <option value="中壢區">中壢區</option>
+                <option value="平鎮區">平鎮區</option>
+                <option value="龍潭區">龍潭區</option>
+                <option value="楊梅區">楊梅區</option>
+                <option value="新屋區">新屋區</option>
+                <option value="觀音區">觀音區</option>
+                <option value="桃園區">桃園區</option>
+                <option value="龜山區">龜山區</option>
+                <option value="八德區">八德區</option>
+                <option value="大溪區">大溪區</option>
+                <option value="復興區">復興區</option>
+                <option value="大園區">大園區</option>
+                <option value="蘆竹區">蘆竹區</option>
+            </select>
+        </div>
+
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-sm-12">
+                    <input id="searchRoadInput" class="form-control" type="text" placeholder="搜尋道路">
+                </div>                
+            </div>
+        </div>
     </div>
+
     <div class="panelFooter">
         <ul id="searchList" class="panelList" style="max-height:150px">
         </ul>

@@ -12,9 +12,23 @@ using RMIS.ViewEngines;
 using RMIS.Models.Auth;
 using RMIS.Repositories;
 using Serilog;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using RMIS.Utils;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 圖形驗證用
+// 加入 Session 支援
+builder.Services.AddDistributedMemoryCache(); // 必須的
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(10); // Session 過期時間
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true; // GDPR 相關，確保 Cookie 總是可用
+});
+builder.Services.AddControllersWithViews();
+
 
 // 設定log
 builder.Host.UseSerilog((context, services, configuration) =>
@@ -45,6 +59,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
         );
 });
 
+
 //  註冊 AuthDbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbConnectionString")));
@@ -52,13 +67,30 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 // 設定 Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = true; 
+    // 設定密碼重設 Token 有效時間
+    options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
+    options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultProvider;
+
+    // 設定 Token 有效期
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+
+    // 設定 Token 壽命，例如 5分鐘
+    options.Tokens.ProviderMap[TokenOptions.DefaultProvider] =
+        new TokenProviderDescriptor(typeof(DataProtectorTokenProvider<IdentityUser>));
+
+    //options.SignIn.RequireConfirmedAccount = true; 
 })
 .AddEntityFrameworkStores<AuthDbContext>() // ✅ 讓 `UserManager<ApplicationUser>` 和 `RoleManager<ApplicationRole>` 使用 `EF Core`
 .AddDefaultTokenProviders();
 
+// ✅ 設定 Token 有效時間，例如 5分鐘
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+    opt.TokenLifespan = TimeSpan.FromSeconds(300));
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
+    options.User.RequireUniqueEmail = true; // 要求信箱
     options.Password.RequireDigit = false; // 不要求數字
     options.Password.RequireLowercase = false; // 不要求小寫字母
     options.Password.RequireUppercase = false; // 不要求大寫字母
@@ -88,9 +120,13 @@ builder.Services.AddScoped<MapdataInterface, MapdataRepository>();
 builder.Services.AddScoped<RoleManager<ApplicationRole>>();
 builder.Services.AddScoped<UserManager<ApplicationUser>>();
 
+// 註冊 IEmailSender
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+
 var app = builder.Build();
 
-
+app.UseSession();
 // ✅ 正確的 Middleware 執行順序
 app.UseRouting(); // 🔹 必須先執行 Routing
 

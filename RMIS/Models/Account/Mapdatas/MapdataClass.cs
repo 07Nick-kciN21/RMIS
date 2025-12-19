@@ -109,4 +109,14 @@ namespace RMIS.Models.Account.Mapdatas
         public Guid Id { get; set; }
         public string Datainfo { get; set; }
     }
+
+    public class LogRecord
+    {
+        public DateTime Timestamp { get; set; }  // 時間
+        public string IP { get; set; }
+        public string UserId { get; set; }
+        public string Type { get; set; }
+        public bool Success { get; set; }
+        public string? Reason { get; set; }
+    }
 }
