@@ -31,7 +31,7 @@ $(document).ready(function () {
         formData.append("CategoryId", $('#CategorySelect').val());
         formData.append("ManagementUnit", $('input[name="ManagementUnit"]').val());
         $.ajax({
-            url: '/Mapdata/General/Update/Pipeline',
+            url: '/Mapdata/Update/Pipeline',
             type: 'POST',
             processData: false,
             contentType: false,
@@ -90,7 +90,7 @@ $(document).ready(function () {
         }
         // 可送出 AJAX 或其他處理
         $.ajax({
-            url: '/Mapdata/General/Update/Datainfo',
+            url: '/Mapdata/Update/Datainfo',
             type: 'POST',
             data: formData,
             processData: false,
@@ -177,7 +177,7 @@ function initCategories(id, categoryId){
 
 function initDatainfo(id){
     $.ajax({
-        url: `/Mapdata/General/Get/Datainfo?id=${id}`,
+        url: `/Mapdata/Get/Datainfo?id=${id}`,
         type: 'POST',
         processData: false,
         contentType: false,
@@ -228,7 +228,7 @@ function initDatainfo(id){
                 console.error(result.message);
             }
         
-            console.log(`/Mapdata/General/Get/Datainfo?id=${id}`);
+            console.log(`/Mapdata/Get/Datainfo?id=${id}`);
         },
         
     });    

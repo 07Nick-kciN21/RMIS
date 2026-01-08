@@ -187,8 +187,8 @@ const sessionManager = (() => {
     function handleExtendSession() {
         const loadingBtn = document.getElementById("extendBtn");
         if (loadingBtn) {
-            loadingBtn.disabled = true;
-            loadingBtn.textContent = "延長中...";
+            loadingBtn.disabled = false;
+            loadingBtn.textContent = "延長會話";
         }
 
         fetch(EXTEND_API_URL, { 
@@ -262,7 +262,7 @@ const sessionManager = (() => {
             color: #000;
             padding: 15px;
             border-radius: 5px;
-            z-index: 1000;
+            z-index: 10500;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         `;
         message.innerHTML = `
@@ -287,7 +287,7 @@ const sessionManager = (() => {
             color: white;
             padding: 15px;
             border-radius: 5px;
-            z-index: 1000;
+            z-index: 10500;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         `;
         message.textContent = text;

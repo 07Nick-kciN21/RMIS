@@ -159,7 +159,14 @@ function updateUserTable(users){
                 '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
             }
         </td>`);
-        
+
+        // 信箱認證根據status顯示啟用或停用
+        row.append(`<td class="status-cell">
+            ${user.emailConfirm ? 
+                '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
+            }
+        </td>`);
+
         row.append(`<td class="createAt-cell">${convertDate(user.createAt)}</td>`);
 
         // 建立操作按鈕

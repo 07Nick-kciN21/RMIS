@@ -26,7 +26,7 @@ function initMapdataPoints(){
     }
     var areaId = getQueryParam("areaId");
     $.ajax({
-        url: `/Mapdata/General/Get/Point?areaId=${areaId}`,
+        url: `/Mapdata/Get/Point?areaId=${areaId}`,
         type: "GET",
         processData: false,
         contentType: false,

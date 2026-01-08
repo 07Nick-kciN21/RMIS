@@ -45,5 +45,6 @@ namespace RMIS.Repositories
         Task<(bool Success, string Message)> UpdatePermissionAsync(UpdatePermissionView updatePermission);
         Task<UpdatePipelineView> UpdatePupelineViewAsync(Guid id);
         Task<(bool Success, string Message)> UpdatePupelineAsync(UpdatePipeline updatePipeline);
+        Task<List<LogRecord>> GetLogRecordAsync();
     }
 }

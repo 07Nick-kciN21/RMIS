@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Azure;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -12,6 +13,7 @@ using RMIS.Models.Auth;
 using RMIS.Models.Portal;
 using RMIS.Models.sql;
 using System.Data;
+using System.Text.RegularExpressions;
 using static RMIS.Controllers.HomeController;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -1313,6 +1315,101 @@ namespace RMIS.Repositories
                 Console.WriteLine(ex);
                 return (false, "部門修改失敗");
             }
+        }
+        public async Task<List<LogRecord>> GetLogRecordAsync()
+        {
+            var logRecords = new List<LogRecord>();
+            var _logDirectory = "C:/Users/KingSu/Documents/Logs";
+            try
+            {
+                if (!Directory.Exists(_logDirectory))
+                {
+                    return logRecords;
+                }
+
+                // 取得目錄下所有 .log 檔案
+                var logFiles = Directory.GetFiles(_logDirectory, "*.log")
+                                        .OrderByDescending(f => f)
+                                        .ToList();
+
+                foreach (var logFile in logFiles)
+                {
+                    var records = await ParseLogFileAsync(logFile);
+                    logRecords.AddRange(records);
+                }
+
+                // 依時間排序（最新的在前）
+                logRecords = logRecords.OrderByDescending(r => r.Timestamp).ToList();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return logRecords;
+        }
+
+        private async Task<List<LogRecord>> ParseLogFileAsync(string filePath)
+        {
+            var records = new List<LogRecord>();
+
+            try
+            {
+                // 使用 FileShare.ReadWrite 允許同時讀寫
+                using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using var reader = new StreamReader(fileStream);
+
+                string line;
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    var record = ParseLogLine(line);
+                    if (record != null)
+                    {
+                        records.Add(record);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                //_logger.LogError(ex, $"解析日誌檔案時發生錯誤: {filePath}");
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// 解析單行日誌
+        /// 格式: 2024-12-19 10:27:13.207 +08:00 [WRN] UserId: wronguser | IP: 192.168.1.100 | Operation: Login-POST | Status: Failed | Reason: 驗證碼錯誤
+        /// </summary>
+        private LogRecord ParseLogLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                return null;
+
+            try
+            {
+                // 正則表達式解析日誌行
+                var pattern = @"^(?<timestamp>\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d{3}\s+[+\-]\d{2}:\d{2})\s+\[(?<level>\w+)\]\s+UserId:\s+(?<userId>[^|]+)\s+\|\s+IP:\s+(?<ip>[^|]+)\s+\|\s+Operation:\s+(?<operation>[^|]+)\s+\|\s+Status:\s+(?<status>\w+)\s+\|\s+Reason:\s+(?<reason>.*)$";
+
+                var match = Regex.Match(line, pattern);
+
+                if (match.Success)
+                {
+                    return new LogRecord
+                    {
+                        Timestamp = DateTime.Parse(match.Groups["timestamp"].Value),
+                        UserId = match.Groups["userId"].Value.Trim(),
+                        IP = match.Groups["ip"].Value.Trim(),
+                        Type = match.Groups["operation"].Value.Trim(),
+                        Success = match.Groups["status"].Value.Trim().Equals("Success", StringComparison.OrdinalIgnoreCase),
+                        Reason = match.Groups["reason"].Value.Trim()
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return null;
         }
     }
 }

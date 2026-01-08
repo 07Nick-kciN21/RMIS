@@ -1,9 +1,4 @@
-﻿let customIcon = L.icon({
-    iconUrl: '/img/2.png',
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32]
-  });
+﻿
 const Map = {
     // 是否啟用屬性資料功能（與街景功能互斥）
     popupEnabled: false,
@@ -25,29 +20,29 @@ const Map = {
         const $indexMapElement = $('#indexMap');
         let coordinateSwitch = 0;
 
-        // // 當 offcanvas 開啟時壓縮地圖
-        // $offcanvasElement.on('shown.bs.offcanvas', () => {
-        //     const width = $offcanvasElement.outerWidth();
-        //     $indexMapElement.css({
-        //         'transition': 'margin-left 0.3s ease, width 0.3s ease',
-        //         'margin-left': width + 'px',
-        //         'width': 'calc(100% - ' + width + 'px)'
-        //     }).on('transitionend', () => this.indexMap.invalidateSize());
-        // });
+        // 當 offcanvas 開啟時壓縮地圖
+        $offcanvasElement.on('shown.bs.offcanvas', () => {
+            const width = $offcanvasElement.outerWidth();
+            $indexMapElement.css({
+                'transition': 'margin-left 0.3s ease, width 0.3s ease',
+                'margin-left': width + 'px',
+                'width': 'calc(100% - ' + width + 'px)'
+            }).on('transitionend', () => this.indexMap.invalidateSize());
+        });
 
-        // // 當 offcanvas 關閉時恢復地圖大小
-        // $offcanvasElement.on('hidden.bs.offcanvas', () => {
-        //     $indexMapElement.css({ 'margin-left': '0', 'width': '100%' })
-        //         .on('transitionend', () => this.indexMap.invalidateSize());
-        // });
+        // 當 offcanvas 關閉時恢復地圖大小
+        $offcanvasElement.on('hidden.bs.offcanvas', () => {
+            $indexMapElement.css({ 'margin-left': '0', 'width': '100%' })
+                .on('transitionend', () => this.indexMap.invalidateSize());
+        });
 
-        // // 根據螢幕寬度決定是否預設開啟 offcanvas
-        // const defaultOffCanvas = () => {
-        //     const isSmallScreen = window.matchMedia("(max-width: 899px)").matches;
-        //     const offcanvas = new bootstrap.Offcanvas(document.getElementById('layerListBlock'));
-        //     isSmallScreen ? offcanvas.hide() : offcanvas.show();
-        // };
-        // defaultOffCanvas();
+        // 根據螢幕寬度決定是否預設開啟 offcanvas
+        const defaultOffCanvas = () => {
+            const isSmallScreen = window.matchMedia("(max-width: 899px)").matches;
+            const offcanvas = new bootstrap.Offcanvas(document.getElementById('layerListBlock'));
+            isSmallScreen ? offcanvas.hide() : offcanvas.show();
+        };
+        defaultOffCanvas();
 
         $('#menu-toggle').on('click', () => $('#head-nav').toggleClass('navbar-toggle'));
 

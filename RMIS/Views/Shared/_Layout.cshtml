@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="~/css/_layout.css" />
     <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
     <link rel="stylesheet" href="~/lib//leaflet-geoman/leaflet-geoman.css" />
-    
+
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.js"></script>
@@ -41,6 +41,7 @@
             margin: 0;
             padding: 0;
         }
+
         .content-wrapper {
             height: 100%;
             display: flex;
@@ -50,13 +51,6 @@
 </head>
 <body>
     <div class="content-wrapper">
-        <header class="gx-0 custom-header">
-            @if (IsSectionDefined("HomeHeaderNavList"))
-            {
-                @RenderSection("HomeHeaderNavList", required: false)
-            }
-        </header>
-        
         @RenderBody()
 
         @RenderSection("painterPanel", required: false)
@@ -69,22 +63,22 @@
         @RenderSection("roadMaintPanel", required: false)
         @RenderSection("searchPanel", required: false)
         @RenderSection("accidentPanel", required: false)
-        
+
     </div>
     @await RenderSectionAsync("Scripts", required: false)
     <div class="modal fade" id="extendSessionModal" tabindex="-1" aria-labelledby="extendSessionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="extendSessionModalLabel">登入即將過期</h5>
-            </div>
-            <div class="modal-body">
-                您的登入即將到期，是否延長？
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="logoutBtn">登出</button>
-                <button type="button" class="btn btn-primary" id="extendBtn">延長登入</button>
-            </div>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="extendSessionModalLabel">登入即將過期</h5>
+                </div>
+                <div class="modal-body">
+                    您的登入即將到期，是否延長？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="logoutBtn">登出</button>
+                    <button type="button" class="btn btn-primary" id="extendBtn">延長登入</button>
+                </div>
             </div>
         </div>
     </div>

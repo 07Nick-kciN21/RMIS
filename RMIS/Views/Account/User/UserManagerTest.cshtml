@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "使用者管理";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/Account/userManager.css" />
+<script type="module" src="~/js/account/user/userManager.js"></script>
+
+
+<h2>使用者列表</h2>
+<div style="display: flex;">
+    <select id="departmentSelector" class="selector form-select">
+    </select>
+    <button id ="createUser">新增使用者</button>
+</div>
+<div class="table-container">
+    <table class="table table-bordered text-center permissionTable">
+        <thead>
+            <tr>
+                <th class="department-cell">部門</th>
+                <th class="display-cell">使用者</th>
+                <th class="user-cell">帳號</th>
+                <th class="role-cell">身分</th>
+                <th class="email-cell">信箱</th>
+                <th class="phone-cell">電話</th>
+                <th class="status-cell">狀態</th>
+                <th class="status-cell">信箱認證</th>
+                <th class="createAt-cell">創建日期</th>
+                <th class="action-cell">操作</th>
+            </tr>
+        </thead>
+    </table>
+    <!-- tbody 放在獨立容器中滾動 -->
+    <div class="tbody-scroll">
+        <table class="table table-bordered text-center permissionTable mb-0">
+            <tbody id="userTable">
+                <!-- 資料動態插入 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="userPage" class="d-flex justify-content-center mt-2">
+</div>

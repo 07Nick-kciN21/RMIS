@@ -1,0 +1,20 @@
+.time-cell{
+    width: 300px;
+}
+.ip-cell{
+    width: 300px; 
+    max-width: 300px;
+}
+.user-cell{
+    width: 300px; 
+    max-width: 300px;
+}
+.type-cell{
+    width: 140px; 
+    max-width: 140px;
+}
+.success-cell{
+    width: 100px; 
+    max-width: 100px;
+}
+

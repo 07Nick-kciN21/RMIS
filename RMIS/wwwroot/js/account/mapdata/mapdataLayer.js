@@ -1,4 +1,4 @@
-import { WindowManager } from '../../../windowCtl.js';
+import { WindowManager } from '../../windowCtl.js';
 
 const wm = new WindowManager();
 $(document).ready(function () {
@@ -29,7 +29,7 @@ $(document).ready(function () {
         var selectedLayer = $("#mapdataLayerSelector").val();
         var selectedDist = $(this).val();
         $.ajax({
-            url: `/Mapdata/General/Get/Area?LayerId=${selectedLayer}&Dist=${selectedDist}`,
+            url: `/Mapdata/Get/Area?LayerId=${selectedLayer}&Dist=${selectedDist}`,
             type: "POST",
             processData: false,
             contentType: false,
@@ -80,7 +80,7 @@ function initLayerSelect(){
     var id = getQueryParam("id");
     showLoading();
     $.ajax({
-        url: `/Mapdata/General/Get/Layer?id=${id}`,
+        url: `/Mapdata/Get/Layer?id=${id}`,
         type: "POST",
         processData: false,
         contentType: false,
@@ -112,7 +112,7 @@ function initLayerSelect(){
 function initMapdataLayerTable(layerId, dist, areaId) {
     showLoading();
     $.ajax({
-        url: `/Mapdata/General/Search?LayerId=${layerId}&Dist=${dist}&AreaId=${areaId}`,
+        url: `/Mapdata/Search?LayerId=${layerId}&Dist=${dist}&AreaId=${areaId}`,
         type: "POST",
         processData: false,
         contentType: false,
@@ -127,7 +127,7 @@ function initMapdataLayerTable(layerId, dist, areaId) {
                 console.log(config);
                 const addBtn = $(`<button class="btn btn-primary btn-sm ms-2">新增圖資</button>`)
                     .on("click", function () {
-                        const url = `/Mapdata/General/Import?layerId=${result.id}&name=${result.name}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
+                        const url = `/Mapdata/Import?layerId=${result.id}&name=${result.name}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
                         sessionStorage.setItem('mapdataLayerSelector', $("#mapdataLayerSelector").val());
                         sessionStorage.setItem('mapdataDistSelector', $("#mapdataDistSelector").val());
                         sessionStorage.setItem('mapdataNameSelector', $("#mapdataNameSelector").val());
@@ -138,14 +138,14 @@ function initMapdataLayerTable(layerId, dist, areaId) {
                 var $tbody = $("<tbody>");
                 $.each(result.areas, function (i, area) {
                     var moreBtn = $(`<button class="btn btn-primary btn-sm">更多</button>`).on("click", function () {
-                        const url = `/Mapdata/General/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
+                        const url = `/Mapdata/Read/Point?areaId=${area.id}&kind=${result.kind}&svg=${result.svg}&color=${encodeURIComponent(result.color)}`;
                         window.location.href = url;
                     });
 
                     var deleteBtn = $(`<button class="delete-mapdata read btn btn-danger btn-sm">刪除</button>`).on("click", function () {
                         if (confirm("確定要刪除圖資？")) {
                             $.ajax({
-                                url: `/Mapdata/General/Delete/Area?id=${area.id}&associateLayer=${config.associated_table}`,
+                                url: `/Mapdata/Delete/Area?id=${area.id}&associateLayer=${config.associated_table}`,
                                 type: "POST",
                                 xhrFields: {
                                     withCredentials: true

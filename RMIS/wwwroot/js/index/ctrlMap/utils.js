@@ -17,9 +17,9 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
     points.forEach(function (point) {
         let marker = L.marker(point[0], {
             icon: icon,
-            iconSize: [30, 30],
-            iconAnchor: [15, 15],
-            popupAnchor: [0, -15],
+            // iconSize: [30, 30],
+            // iconAnchor: [15, 15],
+            // popupAnchor: [0, -15],
         });
         marker.addTo(newLayer);
         let prop = point[1];

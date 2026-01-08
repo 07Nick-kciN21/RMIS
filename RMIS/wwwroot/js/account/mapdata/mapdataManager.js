@@ -1,5 +1,5 @@
-import { WindowManager } from "../../../windowCtl.js";
-import { initPage } from "../../Pagination.js";
+import { WindowManager } from "../../windowCtl.js";
+import { initPage } from "../Pagination.js";
 
 let allMapdata = [];
 let updatePipelineWindow = null;
@@ -76,15 +76,15 @@ function updateMapdataTable(mapdatas){
         // var updateBtn = $(`<button class="update-mapdata read">編輯</button>`).on("click", function () {
         //     var windowWidth = 800;
         //     var windowHeight = 600;
-        //     const url = `/Mapdata/General/Update/Pipeline?id=${mapdata.id}`;
+        //     const url = `/Mapdata/Update/Pipeline?id=${mapdata.id}`;
         //     wm.open("updatePipelineWindow", url, windowWidth, windowHeight);
-        //     // updatePipelineWindow = openWindow(updatePipelineWindow, `/Mapdata/General/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
+        //     // updatePipelineWindow = openWindow(updatePipelineWindow, `/Mapdata/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
         // });
         var deleteBtn = $(`<button class="delete-mapdata read">刪除</button>`).on("click", function () {
-            console.log(`/Mapdata/General/Delete/Pipeline?departmentId=${mapdata.id}`);
+            console.log(`/Mapdata/Delete/Pipeline?departmentId=${mapdata.id}`);
             if (confirm("確定要刪除圖資？")) {
                 $.ajax({
-                    url: `/Mapdata/General/Delete/Pipeline?id=${mapdata.id}`,
+                    url: `/Mapdata/Delete/Pipeline?id=${mapdata.id}`,
                     type: "POST",
                     xhrFields: {
                         withCredentials: true // 確保攜帶 Cookie
@@ -107,7 +107,7 @@ function updateMapdataTable(mapdatas){
         var moreBtn = $(`<a class="more-data read">more</a>`).on("click", function () {
             var width = 1000;
             var height = 800;
-            var url = `/Mapdata/General/Read/Layer?id=${mapdata.id}`;
+            var url = `/Mapdata/Read/Layer?id=${mapdata.id}`;
             wm.open("readPipelineWindow", url, width, height);
         });
         // 選取框

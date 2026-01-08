@@ -331,13 +331,6 @@ function createBaseLayers() {
         pane: 'basePane'
     }).addTo(indexMap);
 
-    //SP2006NC_3857
-    var SP2006NC_3857 = L.tileLayer('https://data.csrsr.ncu.edu.tw/SP/SP2006NC_3857/{z}/{x}/{y}.png', {
-        maxZoom: 22,
-        attribution: '&copy; OpenStreetMap contributors',
-        pane: 'basePane'
-    });
-
     // 基本圖層 (單選)
     var baseMaps = {
         "Open Street地圖": OpenStreet,
@@ -345,7 +338,6 @@ function createBaseLayers() {
         "Google 衛星地圖": GoogleSatellite,
         "Google 地形圖"  : GoogleTerrain,
         "Google 混和地圖": GoogleHybrid,
-        "SP2006NC_3857": SP2006NC_3857,
     };
 
     let currentTileLayer = OpenStreet;

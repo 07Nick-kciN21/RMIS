@@ -124,7 +124,7 @@ export function add2List(id, name, datas, metaData) {
 // 從清單中移除圖層bar
 export function remove2List(id) {
     console.log("Remove from List", id);
-    let $layerList = $(".layerList");
+    let $layerList = $(".div4");
     $layerList.find('#layerBar_' + id).remove();
     delete layerList[id];
 }

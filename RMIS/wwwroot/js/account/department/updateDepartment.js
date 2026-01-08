@@ -78,7 +78,7 @@ function initPipelineAccess(){
       }
     var id = getQueryParam("id");
     $.ajax({
-        url: `/Account/Department/Get/PipelineAccess?id=${CategoryId}`,
+        url: `/Account/Department/Get/PipelineAccess?id=${id}`,
         type: 'POST',
         processData: false,
         contentType: false,

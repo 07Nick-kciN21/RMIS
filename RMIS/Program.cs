@@ -34,28 +34,16 @@ builder.Services.AddControllersWithViews();
 builder.Host.UseSerilog((context, services, configuration) =>
 {
     configuration
-        .ReadFrom.Configuration(context.Configuration) // 从 appsettings.json 讀取配置
-        .Enrich.FromLogContext() // 添加上下文
-        .WriteTo.Console() // 控制台输出
-        .WriteTo.Map(
-            keySelector: logEvent => logEvent.Properties.ContainsKey("Controller")
-                ? logEvent.Properties["Controller"].ToString().Trim('"') // 提取 Controller 名稱
-                : "Default", // 如果沒有 Controller，存入 Default 檔案
-            configure: (controller, wt) =>
-            {
-
-                var homePath = Environment.GetEnvironmentVariable("USERPROFILE").Replace("//", "/");
-                if (string.IsNullOrEmpty(homePath))
-                {
-                    throw new InvalidOperationException("環境變數 'HOMEPATH' 無法解析");
-                }
-                var logPath = "C:/Users/KingSu/Documents/Logs/{controller}-.log";
-                //var logPath = $"{homePath}/Documents/Logs/{controller}-.log";
-                wt.File(
-                    logPath,
-                    rollingInterval: RollingInterval.Day
-                ); // 根據 Controller與日期分檔
-            }
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
+        )
+        .WriteTo.File(
+            path: "C:/Users/KingSu/Documents/Logs/log-.log",
+            rollingInterval: RollingInterval.Day,
+            shared: true,
+            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
         );
 });
 

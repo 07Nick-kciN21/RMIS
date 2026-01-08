@@ -142,7 +142,7 @@ class ImportMapdataApp {
         // this.uiManager.showLoading();
         console.log("提交資料:", payload);
         // $.ajax({
-        //     url: '/Mapdata/General/Import',
+        //     url: '/Mapdata/Import',
         //     type: 'POST',
         //     contentType: 'application/json',
         //     data: JSON.stringify(payload),
@@ -176,7 +176,7 @@ class ImportMapdataApp {
         const id = $("#LayerId").val();
 
         $.ajax({
-            url: `/Mapdata/General/Get/Layer?id=${id}`,
+            url: `/Mapdata/Get/Layer?id=${id}`,
             type: "POST",
             processData: false,
             contentType: false,

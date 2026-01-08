@@ -1,0 +1,249 @@
+﻿@model Dictionary<string, RMIS.Models.Account.Users.PermissionDetail>
+@{
+    ViewData["Title"] = "桃園市養護工程處整合協作平台";
+    Layout = "~/Views/Shared/_GISLayout.cshtml";
+}
+<style>
+    label{
+        font-size: 2rem;
+    }
+
+    #indexMap {
+        height: 100vh;
+        width: 100%;
+    }
+
+    .leaflet-draw-tooltip {
+        display: none !important;
+    }
+
+    .tip {
+        position: absolute;
+        background-color: #333;
+        color: #fff;
+        padding: 5px;
+        border-radius: 5px;
+        font-size: 12px;
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+</style>
+
+<!-- ✅ ES Module -->
+@section HomeHeaderNavList{
+    <div id="col1">
+        <nav id="left-nav" style="display: flex;">
+            <div id="sidebar-toggle" class="toggle">
+                <button class="dropdown-button" title="側欄" data-bs-toggle="offcanvas" data-bs-target="#layerListBlock" aria-controls="layerListBlock">
+                    ☰ 側欄
+                </button>
+            </div>
+            <div id="menu-toggle" class="toggle">
+                <button class="dropdown-button">
+                    ☰ 菜單
+                </button>
+            </div>
+            <div class="head-logo-box navbar-toggle">
+                <div class="head-logo">桃園市養護工程處整合協作平台</div>
+            </div>
+        </nav>
+    </div>
+    
+    <div id="col2" style="margin-left:auto">
+        <nav id="head-nav" class="navbar-toggle">
+            <div class="container-fluid ">
+                <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
+                    <div id="userMenuBtn" class="user-logo-box" data-target="userMenuContent">                        
+                        <div id="username" class="username-text">
+                            <div class="user-icon"></div>
+                            <h5>@ViewBag.Username<span class="caret"></span></h5>
+                        </div>
+                        <div id="userMenuContent" class="dropdown-content">
+                            <ul class="menu-background">
+                                <li>
+                                    <a id="profileBtn" class="nav-link menu-title">
+                                        <h5 id="userProfile">帳號資料</h5>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title" href="/Portal/Logout">
+                                        <h5>登出</h5>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
+                        <div id="adminMenuContent" class="dropdown-content">
+                            <ul id="adminMenu" class="menu-background">
+                                @* 業務圖資 *@
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddMapSource">
+                                        <h4>新增圖源</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategory">
+                                        <h4>新增類別</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddPipeline">
+                                        <h4>新增圖資</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddCategoryByJson">
+                                        <h4>上傳圖資類別</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadByCSV">
+                                        <h4>上傳路線資料</h4>
+                                    </a>
+                                </li>
+
+                                @* 專案查詢 *@
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProject">
+                                        <h4>新增道路專案</h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
+                                        <h4>上傳道路專案</h4>
+                                    </a>
+                                </li>
+                                
+                                @* 養工焦點 *@
+                                <li>
+                                    <a class="nav-link menu-title modal-link" data-action="/Admin/AddConstructNoticeByExcel">
+                                        <h4>上傳施工通報</h4>
+                                    </a>
+                                </li>
+                                
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <button id="imageDataBtn" class="dropdown-button" data-target="imageDataContent">業務圖資</button>
+                        <div id="imageDataContent" class="dropdown-content">
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
+                    </div>
+
+                    <div class="nav-item dropdown">
+                        <button id="commonLinkBtn" class="dropdown-button" data-target="commonLinkContent">
+                            常用連結
+                        </button>
+                        <div id="commonLinkContent" class="dropdown-content">
+                            <ul id="commonLinkMenu" class="menu-background">
+                                <li>
+                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20130702.png" target="_blank">
+                                        <h4>
+                                            非都市土地使用分區圖
+                                        </h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20140925.png" target="_blank">
+                                        <h4>
+                                            非都市土地使用分區圖(II)
+                                        </h4>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/109%E5%B9%B4%E7%89%88%E5%9C%8B%E5%9C%9F%E5%88%A9%E7%94%A8%E8%89%B2%E7%A2%BC%E8%A1%A8.png" target="_blank">
+                                        <h4>
+                                            國土利用現況調查成果分類圖
+                                        </h4>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <button id="" class="dropdown-button" role="button" data-bs-toggle="top-vav-list3" aria-expanded="false">
+                            下載專區
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+}
+
+
+<div class="offcanvas offcanvas-start custom-offcanvas-width" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="layerListBlock" aria-hidden="false">
+    <div id="layerBarContainer" class="layerList container-fluid">
+        <h5 id="layerBar-ListTitle" class="offcanvas-title">圖資清單</h5>
+    </div>
+    <div id="editSymbol-Step1" class="layerList container-fluid hidden">
+    </div>
+    <div id="editSymbol-Step2" class="layerList container-fluid hidden">
+    </div>
+</div>
+
+<div id="indexMap" style="width: 100%; height: 100vh;">
+    <div id="js-load-left-maptool">
+    </div>
+    <div id="js-load-bottom-maptool">
+    </div>
+    <div class="map-footer">
+        <div id="scale-control" class="footer-tip"></div>
+        <span class="title-divider"></span>
+        <div id="map-Zoomlevel">
+            <select id="zoom-level" class="footer-tip">
+                <option value="-1" disabled selected>縮放等級</option>
+                <option value="3">3</option>
+                <option value="6">6</option>
+                <option value="9">9</option>
+                <option value="12">12</option>
+                <option value="15">15</option>
+                <option value="18">18</option>
+            </select>
+        </div>
+        <span class="title-divider"></span>
+        <div id="map-Coordinate" class="footer-tip">
+            <span id="map-coord">經度: 0 , 緯度: 0</span>
+            <div id="coordinateSelect" class="footerSelect hide">
+                <ul id="coordinateSelector">
+                    <li id="latlng" class="coordinate-item" data-type="1">
+                        <span>(WGS84) 經緯度座標</span>
+                    </li>
+                    <li id="twd97" class="coordinate-item" data-type="0">
+                        <span>(TWD97) 二度分帶座標</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <span class="title-divider"></span>
+        <div id="map-basemapCtrl" class="footer-tip">
+            <span id="map-basemap">Open Street地圖</span>
+            <div id="mapSelect" class="footerSelect hide">
+                @* 基本圖層 (單選) *@
+                <span class="selectTitle">基本圖層</span>
+                <ul id="baseMapSelector">
+                </ul>
+                
+                @* 疊加圖層 (多選) *@
+                <span class="selectTitle">疊加圖層</span>
+                <ul id="overlayMapSelector">
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 放在 body 最底部 -->
+<div id="panel-box" style="z-index: 1051;">
+</div>
+
+<div id="tooltip" class="tip" style="display: none;">點擊地圖顯示正射影像</div>
+<div id="measureTip" class="tip" style="display: none;"></div>
+

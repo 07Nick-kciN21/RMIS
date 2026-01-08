@@ -1,0 +1,118 @@
+.txtltbrown {
+    color: #C3C0AA;
+}
+
+.br25 {
+    border-radius: 25px!important;
+}
+
+html {
+    width: 100vw;
+    height: 100vh;
+}
+
+body {
+    height: 85vh;
+    background: #EFEDEA!important;
+}
+
+.system_name {
+    color: #B7A591;
+}
+
+.login {
+    display: flex;
+    margin: auto;
+    padding: 10px;
+    width: 24%!important;
+    min-height: 400px;
+    min-width: 400px;
+    background-color: #FBFBFB;
+    border-radius: 25px;
+    border: 1px solid #D6D6D3;
+}
+
+#UserName,
+#Password {
+    background-color: #F2F2F0;
+    box-shadow: inset 0px -4px 4px rgb(255 255 255 / 75%), inset 0px 4px 4px rgb(0 0 0 / 25%);
+}
+
+.field {
+    position: relative;
+}
+
+.usericon::after {
+    content: "";
+    position: absolute;
+    left:3ch;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background: url("usericon.svg") no-repeat center / contain;
+}
+#UserName:not(:placeholder-shown) ~ .usericon::after {
+  content: none;
+}
+
+.pwdicon::after {
+    content: "";
+    position: absolute;
+    left:3ch;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background: url("pwdicon.svg") no-repeat center / contain;
+}
+#Password:not(:placeholder-shown) ~ .pwdicon::after {
+  content: none;
+}
+
+#Password::placeholder,#UserName::placeholder {
+  color: #A7937B;
+  opacity: 1;
+}
+
+.mainshadow {
+    box-shadow: 0px 0px 10px rgb(0 0 0 / 25%);
+}
+
+.login>div {
+    margin: auto;
+}
+
+a {
+    text-decoration: none!important;
+}
+a:hover{
+    color: #89855c!important;
+    cursor: pointer;
+}
+
+.register-modal {
+    top: 8%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    /* padding: 20px; */
+    width: 90%;
+    max-width: 70%;
+    text-align: center;
+    animation: modalFadeIn 0.3s ease-out;
+    position: relative;
+    margin: auto;
+}
+.loginmodal-header{
+    background-color: #f6f4f1;
+    color: #2f1a0c;
+}
+.loginmodal-btn{
+    background-color: #ccb9af;
+    color: #2f1a0c;
+    border:0px;
+}
+.form-control:focus{
+        border-color: #b7a591;
+}

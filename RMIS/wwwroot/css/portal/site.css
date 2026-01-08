@@ -1,0 +1,41 @@
+body {
+    height: 85vh;
+    background: #f0d984;
+}
+.system_name {
+    position: relative;
+    margin: auto;
+    text-align: center;
+    top: 20%;
+}
+
+.portal-page {
+    position: relative;
+    margin: auto;
+    text-align: center;
+    top:25%;
+}
+
+.portal-card {
+    padding: 45px 10px;
+    width: 45%;
+    height: 450px;
+    background-color: #f6f5dd;
+    border-radius: 5px;
+    border-top: 10px solid #e4b867;
+    box-shadow: 0 0px 70px rgba(0, 0, 0, 0.1);
+}
+
+.auth-modal{
+    top: 8%;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    width: 90%;
+    max-width: 70%;
+    text-align: center;
+    animation: modalFadeIn 0.3s ease-out;
+    position: relative;
+    margin: auto;
+}

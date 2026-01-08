@@ -1,0 +1,42 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "信箱失敗";
+    Layout = "~/Views/Shared/_PortalLayout.cshtml";
+}
+<div class="portal-page">
+    <div class="container-fluid portal-card">
+        <h2 class="text-center">信箱變更</h2>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="text-center mt-5">
+                        <h2 class="text-danger">連結已過期</h2>
+                        <p>請重新申請，我們會寄送新的連結至您的信箱。</p>
+                        <p class="text-muted">系統將在 <span id="countdown">5</span> 秒後自動返回首頁。</p>
+                        <a href="/" class="btn btn-primary mt-3">
+                            返回首頁
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let countdown = 5;
+        const countdownElement = document.getElementById("countdown");
+
+        const interval = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            if (countdown <= 0) {
+                clearInterval(interval);
+                window.location.href = "/";
+            }
+        }, 1000);
+    </script>
+}
