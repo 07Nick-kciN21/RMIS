@@ -232,7 +232,6 @@ namespace RMIS.Controllers
             {
                 return Json(new { success = updated.Success, message = updated.Message });
             }
-
         }
 
         [HttpPost("[controller]/User/UpdatePassword")]
@@ -274,7 +273,7 @@ namespace RMIS.Controllers
 
             ViewBag.ResendMessage = "已重新寄送驗證信至您的信箱，請查看信件。";
             return Json(new { success = true, message = "已寄送驗證信至新信箱，請查看信件。" });
-        }
+        }        
 
         [HttpGet("[controller]/User/UpdateEmailConfirm")]
         public async Task<IActionResult> UpdateEmailConfirm(string userId, string newEmail, string token)
@@ -295,6 +294,24 @@ namespace RMIS.Controllers
             {
                 ViewBag.ErrorMessage = "驗證失敗，請聯絡管理員。";
                 return View("UpdateEmailConfirmExpired");
+            }
+        }
+
+        [HttpPost("[controller]/User/UpdateCitizenCardNo")]
+        public async Task<IActionResult> UpdateCitizenCardNoAsync(UpdateCitizenCardNo updateCitizenCardNo, string newCitizenCardNoCaptcha)
+        {
+            var code = HttpContext.Session.GetString("CaptchaCode_userProfile_newCitizenCardNo");
+            if (string.IsNullOrEmpty(code) || !string.Equals(code, newCitizenCardNoCaptcha, StringComparison.OrdinalIgnoreCase))
+                return Json(new { success = false, message = "驗證碼錯誤" });
+            var updated = await _accountInterface.UpdateCitizenCardNoAsync(updateCitizenCardNo);
+
+            if (updated.Success)
+            {
+                return Json(new { success = updated.Success, message = updated.Message });
+            }
+            else
+            {
+                return Json(new { success = updated.Success, message = updated.Message });
             }
         }
 

@@ -1,200 +1,217 @@
 ﻿@model RMIS.Models.Portal.LoginView
 
 @{
-    ViewData["Title"] = "桃園市養護工程處整合協作平台";
+    ViewData["Title"] = "桃園市工務局道路專案整合平台";
     Layout = "~/Views/Shared/_TestPortalLayout.cshtml";
 }
-   
+
 <div class="h-100 d-flex">
     <div class="container-fluid login mainshadow">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="logo"
-                        style="background-image: url(/img/logo.png);
+                     style="background-image: url(/img/logo.png);
                                 width: 100px;
                                 height: 100px;
                                 background-size: contain;
                                 background-repeat: no-repeat;
                                 background-position: center;">
                 </div>
-                <h4 class="text-center system_name fw-bold">桃園市工務局開瓶道路系統</h2>
-                    <div class="col-md-8">
-                        <form action="/Portal/Login" method="post">
-                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                <div class="col-sm-8 col-md-12 usericon">
-                                    <input class="form-control br25 w-100" placeholder="&emsp;&nbsp;帳號" type="text"
-                                        data-val="true" data-val-required="&#x8ACB;&#x8F38;&#x5165;&#x5E33;&#x865F;"
-                                        id="UserName" name="UserName" value="" />
-                                </div>
-                                <span class="text-danger field-validation-valid" data-valmsg-for="UserName"
-                                    data-valmsg-replace="true"></span>
-                            </div>
-                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                <div class="col-sm-8 col-md-12 pwdicon">
-                                    <input type="password" class="form-control br25 w-100"
-                                        placeholder="&emsp;&nbsp;密碼" data-val="true"
-                                        data-val-required="&#x8ACB;&#x8F38;&#x5165;&#x5BC6;&#x78BC;" id="Password"
-                                        name="Password" />
-                                </div>
-                                <span class="text-danger field-validation-valid" data-valmsg-for="Password"
-                                    data-valmsg-replace="true"></span>
-                            </div>
-                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                <div class="col-sm-12">
-                                    <div class="input-group">
-                                        <input id="loginCaptcha" type="text" name="loginCaptcha" class="form-control" placeholder="輸入驗證碼" required>
-                                        <span class="input-group-text p-0" style="background: transparent; border:none;">
-                                            <img class="captchaImage"
-                                                    data-type="login"
-                                                    alt="驗證碼"
-                                                    title="點擊更新驗證碼"
-                                                    style="cursor:pointer; border:1px solid #ccc; height:40px;" />
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-4 mt-2 text-end w-100">
-                                <a id="forgetBtn" data-bs-toggle="modal" data-bs-target="#forgetModal"
-                                    class="txtltbrown fw-bold">忘記密碼</a>
-                            </div>
-                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                <button type="submit" class="btn w-100 text-white br25 fs-5 mainshadow fw-bold"
-                                    style="background-color:#B7A591">登入</button>
-                            </div>
-                        </form>
-                        <div class="row justify-content-center">
-                            <div class="col-sm-4 col-md-12 mt-2 text-center">
-                                <a id="registerBtn" data-bs-toggle="modal" data-bs-target="#registerModal"
-                                    class="txtltbrown fw-bold">申請帳號</a>
-                            </div>
+                <h4 class="text-center system_name fw-bold">桃園市工務局道路專案整合平台</h4>
 
+                <div class="col-md-8">
+                    <!-- 狀態顯示 -->
+                    <div id="statusArea" class="mb-3">
+                        <div class="alert alert-info">
+                            <small>請確認已插入自然人憑證並連接讀卡機</small>
                         </div>
                     </div>
+
+                    <!-- 登入按鈕 -->
+                    <div class="form-group row d-flex justify-content-center mb-3">
+                        <button type="button"
+                                class="btn w-100 text-white br25 fs-5 mainshadow fw-bold"
+                                style="background-color:#B7A591"
+                                onclick="loginWithCertificate()">
+                            憑證登入
+                        </button>
+                    </div>
+
+                    <!-- 憑證資訊顯示 -->
+                    <div id="certInfoDisplay" class="card mt-3" style="display:none;">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">憑證資訊</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm mb-0">
+                                <tr>
+                                    <th>姓名：</th>
+                                    <td><span id="userName"></span></td>
+                                </tr>
+                                <tr>
+                                    <th>卡號：</th>
+                                    <td><span id="validity"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 除錯日誌 -->
+                    <div class="card mt-3">
+                        <div class="card-header bg-light">
+                            <small class="text-muted">執行日誌</small>
+                            <button class="btn btn-sm btn-outline-secondary float-end" onclick="clearLog()">清除</button>
+                        </div>
+                        <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                            <div id="logArea" style="font-family: monospace; font-size: 11px;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel">
-    <div class="modal-dialog modal-lg modal-dialog-centered ">
-        <div class="modal-content register-modal">
-            <form id="registerForm" class="needs-validation" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title" id="registerModalLabel">申請帳號</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group row mb-3">
-                        <label for="registerDisplayName" class="col-sm-3 col-form-label">使用者名稱</label>
-                        <div class="col-sm-9">
-                            <input id="registerDisplayName" class="form-control" type="text" name="DisplayName"
-                                required pattern="^[\u4e00-\u9fa5a-zA-Z0-9_]{2,20}$">
-                            <div class="invalid-feedback">
-                                使用者名稱需為 2~20 字，僅限中英文、數字與底線。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row mb-3">
-                        <label for="registerAccount" class="col-sm-3 col-form-label">帳號</label>
-                        <div class="col-sm-9">
-                            <input id="registerAccount" class="form-control" type="text" name="Account" required
-                                pattern="^[a-zA-Z0-9]{8,20}$">
-                            <div class="invalid-feedback">
-                                帳號需為 8~20 字英文或數字。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row mb-3">
-                        <label for="registerPassword" class="col-sm-3 col-form-label">密碼</label>
-                        <div class="col-sm-9">
-                            <input id="registerPassword" class="form-control" type="password" name="Password"
-                                required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$">
-                            <div class="invalid-feedback">
-                                密碼需包含大小寫英文字母與數字，長度 8~20。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row mb-3">
-                        <label for="registerConfirmPassword" class="col-sm-3 col-form-label">確認密碼</label>
-                        <div class="col-sm-9">
-                            <input id="registerConfirmPassword" class="form-control" type="password"
-                                name="ConfirmPassword" required>
-                            <div class="invalid-feedback">
-                                請再次輸入密碼。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row mb-3">
-                        <label for="DepartmentId" class="col-sm-3 col-form-label">部門</label>
-                        <div class="col-sm-9">
-                            <select id="DepartmentId" class="form-control" name="DepartmentId" required>
-                                <option value="" disabled selected>請選擇部門</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                請選擇部門。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row mb-3">
-                        <label for="RoleId" class="col-sm-3 col-form-label">身分</label>
-                        <div class="col-sm-9">
-                            <select id="RoleId" class="form-control" name="RoleId" required>
-                                <option value="" selected disabled>請選擇身分</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                請選擇身分。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row mb-3">
-                        <label for="Email" class="col-sm-3 col-form-label">信箱</label>
-                        <div class="col-sm-9">
-                            <input id="Email" class="form-control" name="Email" type="email" required>
-                            <div class="invalid-feedback">
-                                請輸入有效的信箱地址。
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group row mb-3">
-                        <label for="Phone" class="col-sm-3 col-form-label">手機</label>
-                        <div class="col-sm-9">
-                            <input id="Phone" class="form-control" type="tel" name="Phone" placeholder="09xxxxxxxx"
-                                pattern="^09\d{8}$" required>
-                            <div class="invalid-feedback">
-                                請輸入有效的台灣手機號碼（09xxxxxxxx）。
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">送出</button>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="forgetModal" tabindex="-1" aria-labelledby="forgetModalLabel">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <form id="forgetForm" class="needs-validation" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title" id="forgetModalLabel">忘記密碼</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group row mb-3">
-                        <label for="forgetDisplayName" class="col-sm-3 col-form-label">帳號</label>
-                        <div class="col-sm-9">
-                            <input id="forgetDisplayName" class="form-control" type="text" name="DisplayName">
-                        </div>
-                    </div>
 
-                    <div class="form-group row mb-3">
-                        <label for="forgetAccount" class="col-sm-3 col-form-label">信箱</label>
-                        <div class="col-sm-9">
-                            <input id="forgetAccount" class="form-control" type="text" name="Account">
-                        </div>
-                    </div>
+<script>
+    function addLog(message, type = 'info') {
+        const logArea = document.getElementById('logArea');
+        const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+        const colors = {
+            info: '#0d6efd',
+            success: '#198754',
+            error: '#dc3545',
+            warning: '#ffc107'
+        };
+
+        const logEntry = document.createElement('div');
+        logEntry.style.color = colors[type] || colors.info;
+        logEntry.style.marginBottom = '3px';
+        logEntry.textContent = `[${time}] ${message}`;
+
+        logArea.appendChild(logEntry);
+        logArea.scrollTop = logArea.scrollHeight;
+        console.log(`[${time}] ${message}`);
+    }
+
+    function clearLog() {
+        document.getElementById('logArea').innerHTML = '';
+    }
+
+    function updateStatus(message, type = 'info') {
+        const statusArea = document.getElementById('statusArea');
+        const alertClass = {
+            info: 'alert-info',
+            success: 'alert-success',
+            error: 'alert-danger',
+            warning: 'alert-warning'
+        };
+
+        statusArea.innerHTML = `
+                <div class="alert ${alertClass[type] || 'alert-info'}">
+                    <small>${message}</small>
                 </div>
-                <button type="submit" class="btn btn-primary">提交申請</button>
-            </form>
-        </div>
-    </div>
-</div>
+            `;
+    }
+
+    // 使用後端代理方式登入（解決 Mixed Content 問題）
+    async function loginWithCertificate() {
+        addLog('========== 開始憑證登入（後端代理）==========', 'info');
+        updateStatus('正在讀取憑證...', 'info');
+
+        try {
+            addLog('向後端請求讀取憑證...', 'info');
+
+            // 直接呼叫後端，後端會去呼叫 HiCOS API
+            const response = await fetch('/Portal/GetCertificateFromHiCOS', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            addLog('後端回應狀態: HTTP ' + response.status, 'info');
+
+            // 解析回應
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                addLog('✓ 憑證驗證成功', 'success');
+                addLog('使用者: ' + result.userName, 'success');
+
+                // 顯示憑證資訊
+                if (result.certInfo) {
+                    document.getElementById('userName').textContent = result.userName || '未知';
+                    document.getElementById('validity').textContent = result.certInfo.serialNumber || '未知';
+                    document.getElementById('certInfoDisplay').style.display = 'block';
+
+                    addLog('身分證字號: ' + result.certInfo.idNumber, 'info');
+                }
+
+                addLog('✓✓✓ 登入成功！', 'success');
+                updateStatus('登入成功！正在導向...', 'success');
+
+                // 導向首頁
+                // setTimeout(() => {
+                //     window.location.href = "/Home/Index";
+                // }, 1500);
+
+            } else {
+                // 處理錯誤
+                const errorMsg = result.error || result.message || '登入失敗';
+                addLog('✗ ' + errorMsg, 'error');
+
+                if (result.detail) {
+                    addLog('詳細資訊: ' + result.detail, 'error');
+                }
+
+                updateStatus('登入失敗', 'error');
+
+                // 根據不同錯誤給予不同提示
+                let userMessage = errorMsg;
+
+                if (errorMsg.includes('無法連接 HiCOS')) {
+                    userMessage = '無法連接 HiCOS 服務\n\n請確認：\n1. HiCOS 卡片管理工具已安裝\n2. HiCOS 服務正在執行\n3. 在工作管理員中可以看到 HiCOS 相關程序';
+                } else if (errorMsg.includes('找不到憑證')) {
+                    userMessage = '找不到憑證\n\n請確認：\n1. 自然人憑證已插入\n2. 讀卡機已連接且正常\n3. 開啟 HiCOS 卡片管理工具可以讀取憑證';
+                } else if (errorMsg.includes('尚未註冊')) {
+                    userMessage = '此憑證尚未註冊\n\n身分證字號：' + (result.idNumber || '未知') + '\n\n請先使用一般方式註冊帳號';
+                }
+
+                alert(userMessage);
+            }
+
+        } catch (error) {
+            addLog('✗ 請求錯誤: ' + error.message, 'error');
+            updateStatus('連線失敗', 'error');
+
+            let errorMsg = '連線失敗：' + error.message;
+
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMsg = '網路連線失敗\n\n請確認：\n1. 網路連線正常\n2. 後端服務正在執行\n3. Session 未過期';
+            }
+
+            alert(errorMsg);
+        }
+    }
+
+    // 頁面載入時顯示提示
+    window.addEventListener('load', () => {
+        addLog('頁面已載入', 'info');
+        addLog('使用後端代理方式讀取憑證', 'info');
+        addLog('優點：解決 HTTPS/HTTP Mixed Content 問題', 'info');
+        addLog('', 'info');
+        addLog('請確認：', 'info');
+        addLog('1. HiCOS 服務正在執行', 'info');
+        addLog('2. 自然人憑證已插入', 'info');
+        addLog('3. 讀卡機已連接', 'info');
+        addLog('', 'info');
+        updateStatus('準備就緒，請點擊按鈕登入', 'info');
+    });
+</script>
+
+<style>
+    #logArea:empty::before {
+        content: '尚無日誌...';
+        color: #999;
+    }
+</style>

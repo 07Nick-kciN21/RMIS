@@ -13,5 +13,6 @@ namespace RMIS.Models.Auth
         public bool IsSystemProtected { get; set; } = false;
         public Department Department { get; set; }
         public ICollection<IdentityUserRole<string>> UserRoles { get; set; }
+        public string CitizenCardNo { get; set; }
     }
 }

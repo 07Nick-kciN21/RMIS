@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using RMIS.Controllers;
 using RMIS.Data;
 using RMIS.Models.Account.Departments;
 using RMIS.Models.Account.Mapdatas;
@@ -26,6 +27,8 @@ namespace RMIS.Repositories
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AuthDbContext _authDbContext;
         private readonly MapDBContext _mapDBContext;
+        private readonly ILogger<AccountRepository> _logger;
+
 
         public AccountRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext)
         {
@@ -503,64 +506,57 @@ namespace RMIS.Repositories
 
         public async Task<UserManager> GetUserManagerDataAsync()
         {
-            var users = await _authDbContext.Users
-                .Include(u => u.Department)                
+            // 1. 先抓取 User 與關聯資料，避免在 Select 內部呼叫非同步方法
+            var userList = await _authDbContext.Users
+                .Include(u => u.Department)
                 .Include(u => u.UserRoles)
-                .OrderBy(u => u.Department.Order)
-                .ThenBy(u => u.UserRoles
-                    .Select(ur => _authDbContext.Roles
-                        .Where(r => r.Id == ur.RoleId)
-                        .Select(r => r.Order)
-                        .FirstOrDefault())
-                    .FirstOrDefault())
-                .ThenBy(u => u.Order) // 最後按照 User.Order 排序
+                .OrderBy(u => u.Department != null ? u.Department.Order : 0)
+                .ThenBy(u => _authDbContext.Roles
+                    .Where(r => u.UserRoles.Select(ur => ur.RoleId).Contains(r.Id))
+                    .Select(r => (int?)r.Order)
+                    .FirstOrDefault() ?? 0)
+                .ThenBy(u => u.Order)
                 .Select(u => new UserData
                 {
                     Id = u.Id,
                     DepartmentId = u.DepartmentId,
-                    Department = u.Department.Name,
+                    Department = u.Department != null ? u.Department.Name : "",
                     UserName = u.UserName,
                     DisplayName = u.DisplayName,
                     Email = u.Email,
                     Phone = u.PhoneNumber,
-                    RoleId = _authDbContext.UserRoles
-                                .Where(ur => ur.UserId == u.Id)
-                                .Select(ur => ur.RoleId)
-                                .First(),
-                    Role = _userManager.GetRolesAsync(u).Result.First(),
+                    // 取得 RoleId (安全處理)
+                    RoleId = u.UserRoles.Select(ur => ur.RoleId).FirstOrDefault(),
+                    // 直接從資料庫抓 RoleName，不要用 _userManager.GetRolesAsync(u).Result
+                    Role = _authDbContext.Roles
+                        .Where(r => u.UserRoles.Select(ur => ur.RoleId).Contains(r.Id))
+                        .Select(r => r.Name)
+                        .FirstOrDefault() ?? "No Role",
+                    CitizenCardNo = u.CitizenCardNo,
                     Order = u.Order,
                     Status = u.Status,
                     EmailConfirm = u.EmailConfirmed,
                     CreateAt = u.CreatedAt
                 }).ToListAsync();
 
+            // 2. 獲取部門列表
             var departments = await _authDbContext.Departments
-                .OrderBy(u => u.Order)
-                .Select(d => new UserDepartment
-                {
-                    Id = d.Id,
-                    Name = d.Name
-                }
-            ).ToListAsync();
+                .OrderBy(d => d.Order)
+                .Select(d => new UserDepartment { Id = d.Id, Name = d.Name })
+                .ToListAsync();
 
+            // 3. 獲取角色列表
             var roles = await _authDbContext.Roles
                 .OrderBy(r => r.Order)
-                .Select(r =>
-                new UserRole
-                {
-                    Id = r.Id,
-                    Name = r.Name
-                }
-            ).ToListAsync();
-            // 建立 UserManagerView 物件
-            var UserManagerData = new UserManager
+                .Select(r => new UserRole { Id = r.Id, Name = r.Name })
+                .ToListAsync();
+
+            return new UserManager
             {
-                Users = users,
+                Users = userList,
                 Roles = roles,
                 Departments = departments
             };
-
-            return UserManagerData;
         }
 
         public async Task<DepartmentManager> GetDepartmentManagerDataAsync()
@@ -886,6 +882,7 @@ namespace RMIS.Repositories
                 Phone = user.PhoneNumber,
                 Role = _userManager.GetRolesAsync(user).Result.First(),
                 Department = user.Department.Name,
+                CitizenCardNo = user.CitizenCardNo
             };
             return userData;
         }
@@ -1205,6 +1202,52 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 _authDbContext.ChangeTracker.Clear();
                 return (false, $"密碼修改失敗: {ex.Message}");
+            }
+        }
+        
+        public async Task<(bool Success, string Message)> UpdateCitizenCardNoAsync(UpdateCitizenCardNo updateCitizenCardNo)
+        {
+            using var transaction = await _authDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var serialNumber = updateCitizenCardNo.NewCitizenCardNo;
+                // 2. 檢查該序號是否已被其他帳號綁定 (唯一性檢查)
+                var isUsed = await _userManager.Users.AnyAsync(u => u.CitizenCardNo == serialNumber && u.Id != updateCitizenCardNo.UserId);
+                if (isUsed)
+                {
+                    return (false, $"此憑證已被其他帳號綁定");
+                }
+                var existUser = await _userManager.FindByIdAsync(updateCitizenCardNo.UserId);
+                if (existUser == null)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"帳號不存在");
+                }
+                if (existUser.IsSystemProtected)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, $"無法修改系統保護的使用者 {existUser.UserName}");
+                }
+
+                // 3. 更新序號
+                existUser.CitizenCardNo = serialNumber;
+                var result = await _userManager.UpdateAsync(existUser);
+
+                if (result.Succeeded)
+                {
+                    _logger?.LogInformation($"使用者 {existUser.UserName} 重新綁定憑證成功");
+                }
+                await transaction.CommitAsync();
+                return (true, "憑證綁定成功");
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _authDbContext.ChangeTracker.Clear();
+                return (false, $"憑證綁定失敗: {ex.Message}");
             }
         }
         public async Task<(bool Success, string? Data, string? Message)> GetPipelineAccessAsync(int id)

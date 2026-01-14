@@ -14,7 +14,6 @@ using System.Security;
 using System.Drawing.Drawing2D;
 using RMIS.Models.Account.Users;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 
 namespace RMIS.Controllers
 {
@@ -46,7 +45,7 @@ namespace RMIS.Controllers
         {
             string code = GenerateRandomCode(5);
             HttpContext.Session.SetString($"CaptchaCode_{type}", code);
-
+            Console.WriteLine($"CaptchaCode_{type}");
             using var bmp = new Bitmap(120, 40);
             using var graphics = Graphics.FromImage(bmp);
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -511,72 +510,50 @@ namespace RMIS.Controllers
             return View();
         }
 
+        /// <summary>
+        /// 透過 HiCOS 憑證資訊並登入
+        /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Test(LoginView model, string loginCaptcha, string returnUrl = null)
+        public async Task<IActionResult> LoginUseCertificate([FromBody] CitizenCardLogin citizenCardLogin, string returnUrl = null)
         {
-
-            string? storedCode = HttpContext.Session.GetString("CaptchaCode_login");
-            if (storedCode == null || loginCaptcha.ToUpper() != storedCode.ToUpper())
-            {
-                _logger?.LogOperation("登入", false, "驗證碼錯誤", model?.UserName ?? "Unknown");
-                ModelState.AddModelError("", "驗證碼錯誤");
-                return View();
-            }
-            if (!ModelState.IsValid)
-            {
-                foreach (var kvp in ModelState)
-                {
-                    var key = kvp.Key;
-                    foreach (var error in kvp.Value.Errors)
-                    {
-                        _logger?.LogOperation("登入", false, $"ModelState錯誤 - Field={key}, Error={error.ErrorMessage}", model?.UserName ?? "Unknown");
-                    }
-                }
-                return View(model);
-            }
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == model.UserName);
+            var clientIp = HttpContext.GetClientIpAddress();
+            var serialNumber = citizenCardLogin.serialNumber;
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.CitizenCardNo == serialNumber);
             // 1. 帳號不存在
             if (user == null)
             {
-                _logger?.LogOperation("登入", false, "帳號不存在", model.UserName);
+                _logger?.LogOperation("Login-POST", false, "帳號不存在", serialNumber, clientIp);
                 ModelState.AddModelError(string.Empty, "帳號或密碼錯誤");
-                return View(model);
-            }
-
-            // 2. 密碼錯誤
-            var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, lockoutOnFailure: false);
-            if (!result.Succeeded)
-            {
-                _logger?.LogOperation("登入", false, "密碼錯誤", model.UserName);
-                ModelState.AddModelError(string.Empty, "帳號或密碼錯誤");
-                return View(model);
+                return View();
             }
 
             // 3. 尚未驗證信箱
             if (!user.EmailConfirmed)
             {
-                _logger?.LogOperation("登入", false, "尚未驗證信箱", model.UserName);
+                _logger?.LogOperation("Login-POST", false, "尚未驗證信箱", user.UserName, clientIp);
                 ModelState.AddModelError(string.Empty, "此帳號尚未通過信箱驗證");
-                return View(model);
+                return View();
             }
 
             // 4. 帳號狀態為停用
             var statusCheck = await _accountInterface.CheckStatus(user);
             if (!statusCheck)
             {
-                _logger?.LogOperation("登入", false, "帳號未啟用", model.UserName);
+                _logger?.LogOperation("登入", false, "帳號未啟用", user.UserName, clientIp);
                 ModelState.AddModelError(string.Empty, "此帳號尚未啟用，請聯繫管理員");
-                return View(model);
+                return View();
             }
-
+            await _signInManager.SignInAsync(user, isPersistent: false);
             // 5. 成功登入，設定 Cookie
             var expireTime = DateTime.UtcNow.AddMinutes(30);
             Response.Cookies.Append("LoginExpireTime", expireTime.ToString("o"),
                 new CookieOptions { Expires = expireTime, HttpOnly = false });
 
-            _logger?.LogOperation("登入", true, "測試登入成功", model.UserName);
-            ViewBag.Username = model.UserName;
-            return RedirectToLocal(returnUrl);
+
+            _logger?.LogOperation("登入", true, "自然人憑證登入", user.UserName, clientIp);
+            ViewBag.Username = user.UserName;
+            var redirectUrl = string.IsNullOrEmpty(returnUrl) ? Url.Action("Index", "Home") : returnUrl;
+            return Json(new { success = true, redirectUrl = redirectUrl });
         }
     }
 }

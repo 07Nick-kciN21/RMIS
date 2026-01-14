@@ -45,6 +45,12 @@
                         </div>
                     </div>
                     <div class="form-group row" style="margin-bottom: 20px">
+                        <label asp-for="Email" class="col-sm-2 col-form-label">自然人憑證</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#resetCitizenCardNo">卡號綁定</button>
+                        </div>                        
+                    </div>
+                    <div class="form-group row" style="margin-bottom: 20px">
                         <label asp-for="Role" class="col-sm-2 col-form-label">身分</label>
                         <div class="col-sm-10">
                             <label asp-for="Role" class="form-control-plaintext">@Model.Role</label>
@@ -60,11 +66,7 @@
                         <label asp-for="Email" class="col-sm-2 col-form-label">信箱</label>
                         <div class="col-sm-10">
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#resetEmail">變更信箱</button>
-                        </div>
-                        @* <div class="col-sm-10">
-                            <input type="text" class="form-control" asp-for="Email">
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div> *@
+                        </div>                        
                     </div>
                     <div class="form-group row" style="margin-bottom: 20px">
                         <label asp-for="Phone" class="col-sm-2 col-form-label">電話</label>
@@ -195,8 +197,8 @@
                                                     <div class="input-group">
                                                         <input id="userProfile_newEmailCaptcha" type="text" name="userProfile_newEmailCaptcha" class="form-control" placeholder="輸入驗證碼" required>
                                                         <span class="input-group-text p-0" style="background: transparent; border:none;">
-                                                            <img class="userProfile_newEmail"
-                                                                    data-type="newEmail"
+                                                            <img class="captchaImage"
+                                                                    data-type="userProfile_newEmail"
                                                                     alt="驗證碼"
                                                                     title="點擊更新驗證碼"
                                                                     style="cursor:pointer; border:1px solid #ccc; height:40px;" />
@@ -213,6 +215,59 @@
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="resetCitizenCardNo" tabindex="-1" aria-labelledby="resetCitizenCardNo" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                <form id="resetCitizenCardNoForm" class="needs-validation" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">變更自然人憑證綁定</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form form-horizontal" method="post">
+                            <div class="form-body">
+                                <div class="row">
+                                    <input type="hidden" class="form-control" asp-for="Id" readonly>
+                                    <div class="col-md-12">
+                                        <div class="form-group row">
+                                            <label class="col-md-3 label-control" style="padding-top:0.75em;text-align:right" asp-for="CitizenCardNo">原憑證卡號</label>
+                                            <div class="col-md-8">
+                                                <label class="form-control" asp-for="CitizenCardNo">@Model.CitizenCardNo</label>
+                                                <div class="form-control-position" style="right: 15px;">
+                                                    <i class="fa fa-eye fa-eye-slash mimaShow" data-id="Org"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-12" style="margin-bottom: 20px">
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 label-control" style="padding-top:0.75em;text-align:right">驗證碼</label>
+                                            <div class="col-md-8">
+                                                <div class="input-group">
+                                                    <input id="userProfile_newCitizenCardNoCaptcha" type="text" name="userProfile_newCitizenCardNoCaptcha" class="form-control" required>
+                                                    <span class="input-group-text p-0" style="background: transparent; border:none;">
+                                                        <img class="captchaImage"
+                                                                data-type="userProfile_newCitizenCardNo"
+                                                                alt="驗證碼"
+                                                                title="點擊更新驗證碼"
+                                                                style="cursor:pointer; border:1px solid #ccc; height:40px;" />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>                                    
+                                    <div class="col-md-4 m-auto text-center">
+                                        <button type="submit" class="btn btn-block btn-min-width btn-info mtop"><i class="ft-save"></i> 重新綁定</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
                 </div>
             </div>
         </div>

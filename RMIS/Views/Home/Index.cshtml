@@ -1,6 +1,6 @@
 ﻿@model Dictionary<string, RMIS.Models.Account.Users.PermissionDetail>
 @{
-    ViewData["Title"] = "桃園市工務局開瓶道路系統";
+    ViewData["Title"] = "桃園市工務局道路專案整合平台";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <style>
@@ -69,7 +69,7 @@
     <div class="div1">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
-                <a class="navbar-brand head-logo" href="#">桃園市工務局開瓶道路系統</a>
+                <a class="navbar-brand head-logo" href="#">桃園市工務局道路專案整合平台</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -107,9 +107,9 @@
                                         </ul>
                                     </div>
                                 </div>
-                                @if ((Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status) ||
+                                @if (((Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status) ||
                                 (Model.ContainsKey("養工焦點") && Model["養工焦點"].Create && Model["養工焦點"].Status) ||
-                                (Model.ContainsKey("專案查詢") && Model["專案查詢"].Create && Model["專案查詢"].Status))
+                                (Model.ContainsKey("專案查詢") && Model["專案查詢"].Create && Model["專案查詢"].Status)) && 1 == 2)
                                 {
                                     <div class="nav-item dropdown">
                                         <button id="adminMenuBtn" class="dropdown-button" data-target="adminMenuContent">管理員</button>
@@ -172,10 +172,12 @@
                                             </ul>
                                         </div>
                                     </div>
+                                }      
+                                @if (1 == 2){                    
+                                    <div class="nav-item dropdown">
+                                        <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
+                                    </div>
                                 }
-                                <div class="nav-item dropdown">
-                                    <button id="addPhotoBtn" class="dropdown-button">正射影像</button>
-                                </div>
                                 @if (Model.ContainsKey("業務圖資") && Model["業務圖資"].Read && Model["業務圖資"].Status)
                                 {
                                     <div class="nav-item dropdown">
@@ -184,41 +186,49 @@
                                         </div>
                                     </div>
                                 }
-                                <div class="nav-item dropdown">
-                                    <button id="commonLinkBtn" class="dropdown-button" data-target="commonLinkContent">
-                                        常用連結
-                                    </button>
-                                    <div id="commonLinkContent" class="dropdown-content">
-                                        <ul id="commonLinkMenu" class="menu-background">
-                                            <li>
-                                                <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20130702.png" target="_blank">
-                                                    <h4>
-                                                        非都市土地使用分區圖
-                                                    </h4>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20140925.png" target="_blank">
-                                                    <h4>
-                                                        非都市土地使用分區圖(II)
-                                                    </h4>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/109%E5%B9%B4%E7%89%88%E5%9C%8B%E5%9C%9F%E5%88%A9%E7%94%A8%E8%89%B2%E7%A2%BC%E8%A1%A8.png" target="_blank">
-                                                    <h4>
-                                                        國土利用現況調查成果分類圖
-                                                    </h4>
-                                                </a>
-                                            </li>
-                                        </ul>
+                                @if (Model["專案查詢"].Status)
+                                {
+                                    <div class="nav-item dropdown">
+                                        <button id="roadProjectBtn" class="dropdown-button">專案查詢</button>
                                     </div>
-                                </div>
-                                <div class="nav-item dropdown">
-                                    <button id="" class="dropdown-button" role="button" data-bs-toggle="top-vav-list3" aria-expanded="false">
-                                        下載專區
-                                    </button>
-                                </div>
+                                }
+                                @if (1 == 2){      
+                                    <div class="nav-item dropdown">
+                                        <button id="commonLinkBtn" class="dropdown-button" data-target="commonLinkContent">
+                                            常用連結
+                                        </button>
+                                        <div id="commonLinkContent" class="dropdown-content">
+                                            <ul id="commonLinkMenu" class="menu-background">
+                                                <li>
+                                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20130702.png" target="_blank">
+                                                        <h4>
+                                                            非都市土地使用分區圖
+                                                        </h4>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/20140925.png" target="_blank">
+                                                        <h4>
+                                                            非都市土地使用分區圖(II)
+                                                        </h4>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="nav-link menu-title" href="https://maps.nlsc.gov.tw/demo/109%E5%B9%B4%E7%89%88%E5%9C%8B%E5%9C%9F%E5%88%A9%E7%94%A8%E8%89%B2%E7%A2%BC%E8%A1%A8.png" target="_blank">
+                                                        <h4>
+                                                            國土利用現況調查成果分類圖
+                                                        </h4>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="nav-item dropdown">
+                                        <button id="" class="dropdown-button" role="button" data-bs-toggle="top-vav-list3" aria-expanded="false">
+                                            下載專區
+                                        </button>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </nav>

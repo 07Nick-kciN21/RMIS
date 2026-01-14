@@ -31,6 +31,7 @@ namespace RMIS.Models.Account.Users
         public string Id { get; set; }
         public string UserName { get; set; }
         public string DisplayName { get; set; }
+        public string CitizenCardNo { get; set; }
         public string Department { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
@@ -54,6 +55,7 @@ namespace RMIS.Models.Account.Users
         public string Phone { get; set; }
         public string RoleId { get; set; }
         public string Role { get; set; }
+        public string? CitizenCardNo { get; set; }
         public int Order { get; set; }
         public bool Status { get; set; }
         public bool EmailConfirm { get; set; }
@@ -96,6 +98,12 @@ namespace RMIS.Models.Account.Users
     {
         public string UserId { get; set; }
         public string NewEmail { get; set; }
+    }
+
+    public class UpdateCitizenCardNo
+    {
+        public string UserId { get; set; }
+        public string NewCitizenCardNo { get; set; }
     }
     public class CreateUserView
     {

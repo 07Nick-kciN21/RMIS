@@ -47,4 +47,9 @@ namespace RMIS.Models.Portal
         public string Phone { get; set; }
     }
 
+    public class CitizenCardLogin
+    {
+        // 憑證卡號
+        public string serialNumber { get; set; } = string.Empty;
+    }
 }
