@@ -1,10 +1,11 @@
 import { addPipeline, removePipeline } from '/gis/js/index/ctrlMap/pipeline.js';
 import { getLayerProps, deleteLayerProps, addLayer2Map } from '/gis/js/index/ctrlMap/layers.js';
 import { add2List } from '/gis/js/index/ctrlMap/list.js';
-import { Map } from '/gis/js/index/map_test.js';
 
 let _fId = "flagPanel";
 let _appCore, _apiBaseUrl;
+let _initFlag = false;
+let $indexMap;
 const adminDists = [
     "桃園區",  
     "大溪區",
@@ -40,7 +41,7 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
-        $indexMap = _appCore.map.leafletMap;
+        $indexMap = _appCore.map.indexMap;
         initFlagPanel();
         // initEstateBuildItem();
     },
@@ -253,7 +254,6 @@ function updateFlagTable() {
 function renderTableBody(pageData){
     const flagTbody = $('#flagTbody');
     flagTbody.empty();
-    let $indexMap =  Map.getIndexMap();
     pageData.forEach(data => {
         const tableRow = $('<tr></tr>');
         // 目標按鈕，點擊時將地圖視角設置為該標記的座標，並在該位置添加一個方框

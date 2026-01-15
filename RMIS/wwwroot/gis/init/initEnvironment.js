@@ -2,7 +2,7 @@
 var initEnvironment = {
     url: {
         // apiBaseUrl: "http://localhost:40044",
-        apiBaseUrl: "https://localhost:7167/",
+        apiBaseUrl: "https://localhost:7167",
     },
     layerConfigs: {
         basemap: [

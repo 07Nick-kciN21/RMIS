@@ -1,5 +1,6 @@
 let _fId = "accidentPanel";
 let _appCore, _apiBaseUrl;
+let _initFlag = false;
 
 var instance = {
     id: _fId,
@@ -10,7 +11,7 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
-        $indexMap = _appCore.map.leafletMap;
+        $indexMap = _appCore.map.indexMap;
         initPainterPanel();
         // initEstateBuildItem();
     },

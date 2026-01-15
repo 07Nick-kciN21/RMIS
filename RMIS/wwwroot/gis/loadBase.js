@@ -2,15 +2,18 @@
 // loadBase.js - 功能載入器模板
 // 負責動態載入和管理所有功能模組的生命週期
 // ============================================================================
-import { PanelController } from './widgets/controller/panelController.js';
 import { LayerBarController } from './widgets/controller/leftLayerBarController.js';
+import { LayerManager } from './widgets/controller/layerManager.js';
+import { facilityLayerList } from './map/init/menu.js';
+
+import { PanelController } from './widgets/controller/panelController.js';
 import { painterPanel } from './widgets/panel/painter/painterPanel.js';
 import { searchPanel } from './widgets/panel/search/searchPanel.js';
 import { measurePanel } from './widgets/panel/measure/measurePanel.js';
 import { focusPanel } from './widgets/panel/focus/focusPanel.js';
 import { flagPanel } from './widgets/panel/flag/flagPanel.js';
 import { searchPropPanel } from './widgets/panel/searchprop/searchPropPanel.js';
-import { facilityLayerList } from './map/init/menu.js';
+import { projectPanel } from './widgets/panel/project/projectPanel.js';
 // 功能實例中心
 let objCenter = [];
 
@@ -36,13 +39,18 @@ var loadBase = {
     init: function (appCore) {
         console.log("開始載入功能模組...");
         var panelController = new PanelController();
-        var layerBarController = new LayerBarController();
-        // ====================================================================
-        // 地圖工具模組初始化區塊
+
+        var layerManager = new LayerManager(appCore);
+        appCore.layerManager = layerManager;
+        layerManager.init();
+
+        var layerBarController = new LayerBarController('#layerBarContainer', appCore);
+        appCore.layerBarController = layerBarController;
+        objCenter.push(facilityLayerList.set(appCore));
+
         // ====================================================================
         // 面板初始化
         // ====================================================================
-        objCenter.push(facilityLayerList.set(appCore));
         
         objCenter.push(painterPanel.set(appCore));
         objCenter.push(searchPanel.set(appCore));
@@ -50,6 +58,7 @@ var loadBase = {
         objCenter.push(focusPanel.set(appCore));
         objCenter.push(flagPanel.set(appCore));
         objCenter.push(searchPropPanel.set(appCore));
+        objCenter.push(projectPanel.set(appCore));
         console.log(objCenter);
         // 定義panel觸發事件
         $.each(objCenter, function (i, func) {
@@ -96,23 +105,7 @@ var loadBase = {
                 }
             });
             return instance;
-        }
-
-        appCore.layerList = new Proxy({}, {
-            set(target, key, value) {
-                target[key] = value;
-                layerBarController.add(key, value.name, value.datas, value.metaData);
-                return true;
-            },
-            deleteProperty(target, key) {
-                if (key in target) {
-                    layerBarController.remove(key);
-                    delete target[key];
-                    return true;
-                }
-                return false;
-            }
-        });
+        };       
     }
 };  
 

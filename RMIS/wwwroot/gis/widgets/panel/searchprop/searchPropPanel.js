@@ -1,6 +1,5 @@
 ﻿// Import required modules
 import { layerProps } from '/gis/js/index/ctrlMap/layers.js';
-import { Map } from '/gis/js/index/map_test.js';
 import { updatePropQuery, filterPropsByRules, parseRules } from './propQueryBuilder.js';
 import { handleDrawShape, filterPropsByShape, clearShape, getShape } from './shapeSearch.js';
 // Global variables
@@ -16,6 +15,7 @@ let pselectedId;
 let gselectedId;
 let _apiBaseUrl;
 let _appCore;
+let _initFlag = false;
 var instance = {
     id: _fId,
     set: function (appCore) {
@@ -25,7 +25,7 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
-        $indexMap = _appCore.map.leafletMap;
+        $indexMap = _appCore.map.indexMap;
         initSearchPropPanel();
     },
     open: function () {
@@ -359,7 +359,6 @@ function renderTableBody(pageData) {
     const $propTbody = $('#propTbody');
     $propTbody.empty();
 
-    $indexMap = Map.getIndexMap();
     pageData.forEach(item => {
         const tableRow = $('<tr></tr>');
         const button = $('<button>目標</button>').on('click', function () {
@@ -475,7 +474,6 @@ function getInverseColor(color) {
 
 // 設定地圖點擊事件處理，取消顯示
 function setupMapClickHandler() {
-    $indexMap = Map.getIndexMap();
     $indexMap.on('click', function () {
         if (highlightRectangle) {
             $indexMap.removeLayer(highlightRectangle);

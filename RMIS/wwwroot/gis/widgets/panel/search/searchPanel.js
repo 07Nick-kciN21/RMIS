@@ -1,7 +1,7 @@
 ﻿let _fId = "searchPanel";
-let _initFlag = false;
 let _apiBaseUrl = "";
 let _appCore;
+let _initFlag = false;
 let $indexMap;
 var instance = {
     id: _fId,
@@ -12,7 +12,7 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
-        $indexMap = _appCore.map.leafletMap;
+        $indexMap = _appCore.map.indexMap;
         initSearchPanel();
         // initEstateBuildItem();
     },

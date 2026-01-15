@@ -23,12 +23,12 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
-        $indexMap = _appCore.map.leafletMap;
+        $indexMap = _appCore.map.indexMap;
         initMeasurePanel();
     },
     open: function () {
         if (!_initFlag) { _initFlag = true; instance.init(); }
-        console.log(`${_fId} open`);
+        console.log(`${_fId} open`, _appCore);
     },
     close: function () {
         console.log(`${_fId} close`);
@@ -150,6 +150,7 @@ function initMeasurePanel() {
 
 function initMeasure() {
     drawnItems = new L.FeatureGroup();
+    console.log($indexMap);
     $indexMap.addLayer(drawnItems);
 
     // 初始化 Geoman 插件

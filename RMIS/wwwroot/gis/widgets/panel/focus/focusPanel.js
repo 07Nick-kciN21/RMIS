@@ -1,9 +1,8 @@
 import { addFocusPipeline, removePipeline } from '/gis/js/index/ctrlMap/pipeline.js';
 
 let _fId = "focusPanel";
+let _apiBaseUrl, _appCore;
 let _initFlag = false;
-let _apiBaseUrl = "";
-let _appCore;
 let $indexMap;
 let currentRow = null;
 let currentSquare = null;
@@ -23,7 +22,7 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
-        $indexMap = _appCore.map.leafletMap;
+        $indexMap = _appCore.map.indexMap;
         initDate();
         initFocusPanel();
     },

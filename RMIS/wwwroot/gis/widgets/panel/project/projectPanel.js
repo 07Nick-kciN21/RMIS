@@ -1,6 +1,13 @@
-import { Map } from '/gis/js/index/map_test.js';
-
 let _fId = "projectPanel";
+let _apiBaseUrl = "";
+let _appCore;
+let _initFlag = false;
+let currentRow = null;
+let $indexMap;
+let projectLayer;
+let filterProject = [];
+let pageSize = 10;
+let currentPage = 1;
 
 const adminDists = [
     "桃園區",  // value: 1
@@ -17,12 +24,6 @@ const adminDists = [
     "觀音區",  // value: 12
     "復興區"   // value: 13
 ];
-let currentRow = null;
-let $indexMap;
-let projectLayer = L.layerGroup();
-let filterProject = [];
-let pageSize = 10;
-let currentPage = 1;
 
 var instance = {
     id: _fId,
@@ -33,7 +34,8 @@ var instance = {
     },
     init: function () {
         console.log(`panel ${_fId} init`);
-        $indexMap = _appCore.map.leafletMap;
+        $indexMap = _appCore.map.indexMap;
+        projectLayer = appGlobal.L.layerGroup();
         initProjectPanel();
     },
     open: function () {
@@ -58,7 +60,7 @@ function convertInputValue(value) {
 }
 
 function initProjectPanel() {
-    $indexMap = Map.getIndexMap();
+    console.log(appGlobal.L);
     projectLayer.addTo($indexMap);
     $('#projectGoResult').click(function () {
         const formData = {

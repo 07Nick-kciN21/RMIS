@@ -1,7 +1,15 @@
 
 let _appCore;
 let mapId = "indexMap";
-let _pro4 = appGlobal._pro4;
+let _pro4 = appGlobal.proj4;
+
+let customIcon = L.icon({
+    iconUrl: '/img/location.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+
 let initMap = {
     initMap: function (appCore) { 
         _appCore = appCore;
@@ -46,24 +54,25 @@ let initMap = {
         const $offcanvasElement = $('#layerListBlock');
         const $indexMapElement = $('#indexMap');
 
-        // Offcanvas 開啟時壓縮地圖
-        $offcanvasElement.on('shown.bs.offcanvas', () => {
-            const width = $offcanvasElement.outerWidth();
-            $indexMapElement.css({
-                'transition': 'margin-left 0.3s ease, width 0.3s ease',
-                'margin-left': width + 'px',
-                'width': 'calc(100% - ' + width + 'px)'
-            }).on('transitionend', () => _appCore.map.indexMap.invalidateSize());
-        });
+        // // Offcanvas 開啟時壓縮地圖
+        // $offcanvasElement.on('shown.bs.offcanvas', () => {
+        //     const width = $offcanvasElement.outerWidth();
+        //     console.log('Offcanvas width:', width);
+        //     $indexMapElement.css({
+        //         'transition': 'margin-left 0.3s ease, width 0.3s ease',
+        //         'margin-left': width + 'px',
+        //         'width': 'calc(100% - ' + width + 'px)'
+        //     }).on('transitionend', () => _appCore.map.indexMap.invalidateSize());
+        // });
 
-        // Offcanvas 關閉時恢復地圖大小
-        $offcanvasElement.on('hidden.bs.offcanvas', () => {
-            $indexMapElement.css({ 'margin-left': '0', 'width': '100%' })
-                .on('transitionend', () => _appCore.map.indexMap.invalidateSize());
-        });
+        // // Offcanvas 關閉時恢復地圖大小
+        // $offcanvasElement.on('hidden.bs.offcanvas', () => {
+        //     $indexMapElement.css({ 'margin-left': '0', 'width': '100%' })
+        //         .on('transitionend', () => _appCore.map.indexMap.invalidateSize());
+        // });
 
-        // 根據螢幕寬度決定是否預設開啟 offcanvas
-        this.defaultOffCanvas();
+        // // 根據螢幕寬度決定是否預設開啟 offcanvas
+        // this.defaultOffCanvas();
 
         // 選單切換
         $('#menu-toggle').on('click', () => $('#head-nav').toggleClass('navbar-toggle'));
@@ -187,11 +196,11 @@ let initMap = {
     /**
      * 預設 Offcanvas 狀態
      */
-    defaultOffCanvas: function () {
-        const isSmallScreen = window.matchMedia("(max-width: 899px)").matches;
-        const offcanvas = new bootstrap.Offcanvas(document.getElementById('layerListBlock'));
-        isSmallScreen ? offcanvas.hide() : offcanvas.show();
-    },
+    // defaultOffCanvas: function () {
+    //     const isSmallScreen = window.matchMedia("(max-width: 899px)").matches;
+    //     const offcanvas = new bootstrap.Offcanvas(document.getElementById('layerListBlock'));
+    //     isSmallScreen ? offcanvas.hide() : offcanvas.show();
+    // },
 
     /**
      * 更新座標顯示
@@ -275,7 +284,6 @@ let initMap = {
      * @returns {{x: number, y: number}} - 轉換後的座標
      */
     convertWgs84ToTwd97: function (lat, lng) {
-        return;
         // 定義 WGS84 和 TWD97 座標系統
         _pro4.defs([
             ["EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs"],

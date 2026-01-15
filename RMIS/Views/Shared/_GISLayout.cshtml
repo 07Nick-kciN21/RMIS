@@ -10,20 +10,122 @@
     <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
     <link rel="stylesheet" href="~/lib//leaflet-geoman/leaflet-geoman.css" />
     
+    <!-- ✅ 本地樣式 -->
+    @* <link rel="stylesheet" href="~/css/index/dropdown.css" />
+    <link rel="stylesheet" href="~/css/index/offcanvas.css" />
+    <link rel="stylesheet" href="~/css/index/menu.css" />
+    <link rel="stylesheet" href="~/css/index/svg_list.css" />
+    <link rel="stylesheet" href="~/css/index/popup.css" />
+    <link rel="stylesheet" href="~/css/index/drawtool.css" />
+    <link rel="stylesheet" href="~/css/index/panel.css" />
+    <link rel="stylesheet" href="~/css/index/maptool.css" />
+    <link rel="stylesheet" href="~/css/index/modal.css" />
+    <link rel="stylesheet" href="~/css/index/pointEdit.css" /> *@
+
+
+    <!-- ✅ 外部樣式 (請視是否已有本機版本，建議改為 ~/lib/... 儲存) -->
+    <link rel="stylesheet" href="~/css/index/menu.css" />
+    <link rel="stylesheet" href="~/css/index/modal.css" />
+    <link rel="stylesheet" href="~/css/index/pointEdit.css" />
+    <link rel="stylesheet" href="~/css/index/popup.css" />
+    <link rel="stylesheet" href="~/css/index/drawtool.css" />
+    <link rel="stylesheet" href="~/css/index/panel.css" />
+    <link rel="stylesheet" href="~/css/index/dropdown.css" />
+    <link rel="stylesheet" href="~/css/new/index/style.css">
+    <link rel="stylesheet" href="~/css/new/index/maptool.css">
+    @* <link rel="stylesheet" href="~/css/new/index/menu.css"> *@
+    <link rel="stylesheet" href="~/css/new/index/svg_list.css">
+    <link rel="stylesheet" href="~/css/new/index/offcanvas.css">
+    <!-- ✅ 外部樣式 (請視是否已有本機版本，建議改為 ~/lib/... 儲存) -->
+    <link rel="stylesheet" href="~/lib/pikaday/pikaday.css" />
+    <link rel="stylesheet" href="~/lib/leaflet-draw/leaflet.draw.css" />
+    <link rel="stylesheet" href="~/lib/jQuery-QueryBuilder/query-builder.default.min.css" />
+    <link rel="stylesheet" href="~/lib/select2/select2.min.css" />
+    <link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.css" />
+    <link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.Default.css" />
+
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/lib/select2/select2.min.js"></script>
+    <script src="~/lib/jsrender/jsrender.min.js"></script>
 
-    <script src="~/lib/leaflet-geoman/leaflet-geoman.min.js"></script>
-
+    <!-- 非 Leaflet 相關的獨立函式庫 -->
     <script src="~/lib/turf/turf.js"></script>
+    <script src="~/lib/pikaday/pikaday.js"></script>
+    <script src="~/lib/jQuery-QueryBuilder/query-builder.standalone.min.js"></script>
+    <script src="~/lib/xlsx/xlsx.full.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <script>
+        requirejs.config({
+            baseUrl: '/',
+            paths: {
+                // Leaflet 核心
+                'leaflet': 'lib/leaflet/leaflet',
+                
+                // Leaflet 插件
+                'leaflet-geoman': 'lib/leaflet-geoman/leaflet-geoman.min',
+                'leaflet-draw': 'lib/leaflet-draw/leaflet.draw',
+                'leaflet-polylinedecorator': 'lib/leaflet-polylinedecorator/leaflet-polylinedecorator',
+                'leaflet-markercluster': 'lib/leaflet-markercluster/leaflet.markercluster',
+                'leaflet-omnivore': 'lib/leaflet-omnivore/leaflet-omnivore.min',
+                'leaflet-googlemutant': 'lib/leaflet-gridlayer-googlemutant/Leaflet.GoogleMutant',
+                'leaflet-pip': 'lib/leaflet-pip/leaflet-pip.min',
+                'leaflet-geometryutil': 'lib/leaflet-geometryutil/leaflet.geometryutil.min',
+                'leaflet-editable': 'lib/leaflet-editable/Leaflet.Editable',
+                
+                // 相依函式庫
+                'togeojson': 'lib/togeojson/togeojson',
+                'proj4': 'lib/proj4/proj4'
+            },
+            shim: {
+                'leaflet': {
+                    exports: 'L'
+                },
+                'leaflet-geoman': {
+                    deps: ['leaflet'],
+                    exports: 'L.PM'
+                },
+                'leaflet-draw': {
+                    deps: ['leaflet'],
+                    exports: 'L.Control.Draw'
+                },
+                'leaflet-polylinedecorator': {
+                    deps: ['leaflet']
+                },
+                'leaflet-markercluster': {
+                    deps: ['leaflet']
+                },
+                'togeojson': {
+                    exports: 'toGeoJSON'
+                },
+                'leaflet-omnivore': {
+                    deps: ['leaflet', 'togeojson'],
+                    exports: 'omnivore'
+                },
+                'leaflet-googlemutant': {
+                    deps: ['leaflet']
+                },
+                'leaflet-pip': {
+                    deps: ['leaflet']
+                },
+                'leaflet-geometryutil': {
+                    deps: ['leaflet']
+                },
+                'leaflet-editable': {
+                    deps: ['leaflet']
+                },
+                'proj4': {
+                    exports: 'proj4'
+                }
+            }
+        });
+    </script>
     <style>
         html, body {
             height: 100%;
             margin: 0;
-            padding: 0;
         }
         .content-wrapper {
             height: 100%;
@@ -34,11 +136,16 @@
 </head>
 <body>
     <div class="content-wrapper">
-        <header class="gx-0 custom-header">
+        @* <header class="gx-0 custom-header">
             @RenderSection("HomeHeaderNavList", required: false)
-        </header>
+        </header> *@
         
         @RenderBody()
     </div>
+    <script src="~/gis/global.js"></script>
+    <script src="~/gis/widgets/initFunc.js"></script>
+    <script src="~/gis/widgets/load-container.js"></script>
+    <script type="module" src="~/js/account/userProfilePopup.js"></script>
+    <script type="module" src="~/gis/main.js"></script>
 </body>
 </html>

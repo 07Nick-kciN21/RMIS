@@ -24,7 +24,7 @@ export function initMenu() {
 }
 
 // 業務圖資下拉選單控制
-function generateMenu(data, parent_name, index) {
+export function generateMenu(data, parent_name, index) {
     let html = '<ul';
     if (index > 0) {
         html += ' class="menu-sub"';

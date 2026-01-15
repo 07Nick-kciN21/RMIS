@@ -17,6 +17,10 @@
     min-width: 200px;
 }
 
+#userMenuContent {
+    left: 5px;
+}
+
 .active {
     background-color: #e9b02c;
     color: black;
@@ -43,11 +47,11 @@
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
     display: none;
-    left: 5px;
+    left: -5px;
     position: absolute;
     width: 140px;
     z-index: 1;
-}
+}    
     .dropdown-content li {
         background-color: #ffffff;
         position: relative;

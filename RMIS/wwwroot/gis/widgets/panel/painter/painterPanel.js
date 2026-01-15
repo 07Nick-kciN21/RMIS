@@ -1,7 +1,7 @@
 let _fId = "painterPanel";
-let _initFlag = false;
 let _apiBaseUrl = "";
 let _appCore;
+let _initFlag = false;
 let borderColor = '#FF0000';
 let fillColor = '#FF0000';
 let borderWidth = 1;
