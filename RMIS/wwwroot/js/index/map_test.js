@@ -25,29 +25,24 @@ const Map = {
         const $indexMapElement = $('#indexMap');
         let coordinateSwitch = 0;
 
-        // // 當 offcanvas 開啟時壓縮地圖
-        // $offcanvasElement.on('shown.bs.offcanvas', () => {
-        //     const width = $offcanvasElement.outerWidth();
-        //     $indexMapElement.css({
-        //         'transition': 'margin-left 0.3s ease, width 0.3s ease',
-        //         'margin-left': width + 'px',
-        //         'width': 'calc(100% - ' + width + 'px)'
-        //     }).on('transitionend', () => this.indexMap.invalidateSize());
-        // });
+        const $container = $('.div0'); // 取得 Grid 容器
+        const $toggleBtn = $('#tb-sidebar-toggle');
 
-        // // 當 offcanvas 關閉時恢復地圖大小
-        // $offcanvasElement.on('hidden.bs.offcanvas', () => {
-        //     $indexMapElement.css({ 'margin-left': '0', 'width': '100%' })
-        //         .on('transitionend', () => this.indexMap.invalidateSize());
-        // });
+        // 側欄切換功能
+        $toggleBtn.on('click', () => {
+            $container.toggleClass('sidebar-collapsed');
 
-        // // 根據螢幕寬度決定是否預設開啟 offcanvas
-        // const defaultOffCanvas = () => {
-        //     const isSmallScreen = window.matchMedia("(max-width: 899px)").matches;
-        //     const offcanvas = new bootstrap.Offcanvas(document.getElementById('layerListBlock'));
-        //     isSmallScreen ? offcanvas.hide() : offcanvas.show();
-        // };
-        // defaultOffCanvas();
+            // 當 CSS 動畫結束後，呼叫 invalidateSize 確保地圖不會破圖
+            // 'transitionend' 會在 grid-template-columns 改變完成後觸發
+            $container.one('transitionend', () => {
+                this.indexMap.invalidateSize();
+            });
+
+            // 備用機制：若瀏覽器不支援 transitionend，300-400ms 後強制重繪
+            setTimeout(() => {
+                this.indexMap.invalidateSize();
+            }, 450);
+        });
 
         $('#menu-toggle').on('click', () => $('#head-nav').toggleClass('navbar-toggle'));
 

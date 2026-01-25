@@ -21,7 +21,27 @@ body {
 .div0 {
     display: grid;
     gap: 18px;
-    grid-template-columns: 5% 75% minmax(270px, 18%);
+    /* 將中間改為 1fr 以便自動填滿剩餘空間，右側保留原本定義 */
+    grid-template-columns: 5% 1fr minmax(270px, 18%); 
+    transition: grid-template-columns 0.4s ease, gap 0.4s ease; /* 增加平滑動畫 */
+}
+
+/* 當側欄收縮時的狀態 */
+.div0.sidebar-collapsed {
+    /* 側欄寬度變為 0，地圖自動向右填滿 */
+    grid-template-columns: 5% 1fr 0px; 
+    gap: 18px 0px; /* 隱藏右側的間距 */
+}
+
+/* 處理側欄內容在收縮時的溢出與邊距 */
+.div0.sidebar-collapsed .div4 {
+    padding: 0;
+    margin: 0;
+    border: none;
+    overflow: hidden;
+    min-width: 0; /* 必須覆蓋原本的 min-width 否則收不起來 */
+    opacity: 0;
+    pointer-events: none;
 }
 
 .div1 {
@@ -52,6 +72,35 @@ body {
     grid-column-end: 4;
     padding: 10px;
     min-width: 270px;
+}
+
+/* 新增：地圖容器內的切換按鈕樣式 */
+.sidebar-toggle-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px; /* 固定在容器右側 */
+    z-index: 1000;
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid var(--bordergray);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    color: var(--brown);
+    transition: transform 0.3s ease;
+}
+
+.sidebar-toggle-btn:hover {
+    background: var(--lightgray);
+}
+
+/* 當收縮時，旋轉按鈕圖示方向 */
+.sidebar-collapsed .sidebar-toggle-btn {
+    transform: rotate(180deg);
 }
 
 .head-logo {
