@@ -32,6 +32,15 @@ const BoxManager = {
      * @param {Array} config - 包含按鈕 ID、分頁 ID 與標題的設定陣列
      */
     initLeftBox: function(config) {
+        const boxElement = document.getElementById('left-box');
+
+        if (typeof L !== 'undefined' && L.DomEvent) {
+            // 1. 隔絕點擊、雙擊與拖拽冒泡
+            L.DomEvent.disableClickPropagation(boxElement);
+            
+            // 2. 隔絕滾輪縮放冒泡
+            L.DomEvent.disableScrollPropagation(boxElement);
+        }
         const self = this;
         console.log('初始化 Left Box 功能綁定', config);
         // 1. 綁定設定檔中的按鈕

@@ -16,6 +16,7 @@ import { initProjectPanel } from './index/projectPanel.js';
 import { initAccidentPanel } from './index/accidentPanel.js';
 
 import BoxManager from './index/box.js';
+import ProjectBox from './index/projectBox.js';
 
 $(document).ready(function () {
     // 初始化地图
@@ -32,7 +33,7 @@ $(document).ready(function () {
     initPanel("flagPanel");
     initPanel("focusPanel");
     initPanel("accidentPanel");
-    initPanel("projectPanel");
+    // initPanel("projectPanel");
     initSearchPanel();
     initPainterPanel();
     initPhoto();
@@ -40,19 +41,15 @@ $(document).ready(function () {
     initMeasurePanel();
     initFlagPanel();
     initFocusPanel();
-    initProjectPanel();
     initAccidentPanel();
 
     BoxManager.initLeftBox([
         {
-            btnId: 'btn-open-testA',
-            pageId: 'page-test-A',
-            title: '系統統計分析 (測試A)'
-        },
-        {
-            btnId: 'btn-open-testB',
-            pageId: 'page-test-B',
-            title: '設施資訊編輯 (測試B)'
+            btnId: 'tb-projectPanel',
+            pageId: 'page-project',
+            title: '道路專案'
         }
     ]);
+
+    ProjectBox.init();
 });

@@ -52,7 +52,7 @@
 <body>
     <div class="content-wrapper">
         @RenderBody()
-
+        @RenderSection("projectBox", required: false)
         @RenderSection("painterPanel", required: false)
         @RenderSection("searchPropPanel", required: false)
         @RenderSection("flagPanel", required: false)

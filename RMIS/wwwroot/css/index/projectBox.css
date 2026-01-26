@@ -1,0 +1,165 @@
+/* ==========================================================================
+   ProjectBox.css - 專案查詢專用樣式 (遷移自 projectPanel.css)
+   ========================================================================== */
+
+/* 1. 表單容器佈局 */
+.box-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 2. 表單組微調 - 確保 Label 與 Input 對齊 */
+.box-form-group {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.box-label {
+    min-width: 80px;
+    font-size: 1rem !important; /* 覆蓋 Index.cshtml 的 2rem 設定 */
+    margin-bottom: 0;
+    color: #444;
+}
+
+/* 3. 經費輸入列佈局 */
+.box-input-row {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 5px;
+}
+
+.box-input-row .form-select {
+    width: 100px;
+}
+
+.box-unit {
+    font-size: 0.9rem;
+    color: #666;
+    width: 25px;
+}
+
+.box-separator {
+    padding: 0 8px;
+    color: #999;
+}
+
+/* 4. 執行按鈕列 */
+.box-button-bar {
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.box-btn-query {
+    width: 120px;
+    height: 40px;
+    font-weight: 600;
+}
+
+/* 5. 結果列表標題區 */
+.box-result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+}
+
+.box-result-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.box-count-badge {
+    font-size: 0.85rem;
+    padding: 2px 8px;
+    background: #e9ecef;
+    border-radius: 10px;
+    color: #495057;
+}
+
+.box-export-link {
+    margin-left: auto;
+    font-size: 0.9rem;
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.box-export-link:hover {
+    text-decoration: underline;
+}
+
+/* 6. 資料表格自定義樣式 (替代 .propTable) */
+.box-table-wrapper {
+    margin-top: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.box-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+}
+
+.box-data-table th {
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 10px 5px;
+    font-size: 0.9rem;
+    border-bottom: 2px solid #dee2e6;
+    border-right: 1px solid #eee;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.box-data-table td {
+    padding: 8px 5px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #eee;
+    border-right: 1px solid #eee;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* 偶數列背景色 */
+.box-data-table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* 7. 分頁控制區 */
+.box-pagination-wrapper {
+    padding: 15px 0;
+}
+
+.box-page-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.box-page-list {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+}
+
+/* 捲軸美化 */
+.box-inner-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.box-inner-scroll::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.box-inner-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}

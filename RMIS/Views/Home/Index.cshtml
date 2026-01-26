@@ -238,8 +238,6 @@
         </nav>
     </div>
     <div class="div2 map-controls">
-        <span id="btn-open-testA" class="mobileTool" title="測試功能A">A</span>
-        <span id="btn-open-testB" class="mobileTool" title="測試功能B">B</span>
         <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
         <span id="tb-zoomOut" class="mobileTool" title="縮小"></span>
         <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
@@ -300,6 +298,7 @@
                         </form>
                     </div>
                 </div>
+                @Html.Partial("~/Views/Home/Partials/_projectBox.cshtml")
             </div>
         </div>
 
@@ -387,12 +386,6 @@
 {
     @section focusPanel {
     @Html.Partial("~/Views/Home/Partials/_focusPanel.cshtml")
-    }
-}
-@if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status)
-{
-    @section projectPanel {
-    @Html.Partial("~/Views/Home/Partials/_projectPanel.cshtml")
     }
 }
 @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)

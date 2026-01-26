@@ -1,41 +1,123 @@
-/* 修改原有的 .map-fixed-box 為 .map-fixed-container */
+/* ==========================================================================
+   Box 核心容器樣式 (適配 Left-Box / Full-Box)
+   ========================================================================== */
+
+/* 基礎固定容器 - 替代原有的 .panel */
 .map-fixed-container {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: white;
-    z-index: 1050;
+    background-color: #ffffff;
+    z-index: 1050; /* 確保高於地圖層級 (Leaflet 約 400-800) */
     display: flex;
     flex-direction: column;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
     border-right: 1px solid #ddd;
+    pointer-events: auto; /* 確保捕捉滑鼠事件，防止穿透地圖 */
+    transition: width 0.3s ease;
 }
 
+/* 左半邊與全版面寬度控制 */
 #left-box { width: 50%; height: 100%; }
 #full-box { width: 100%; height: 100%; }
 
-.hidden { display: none !important; }
+/* ==========================================================================
+   Box 內部部件 (相似於 Panel 部件)
+   ========================================================================== */
 
-/* 標題與內容區 */
+/* 標題欄區塊 - 相似於 .panelHeading */
 .box-header {
-    background-color: #f8f9fa;
-    padding: 10px 15px;
+    background-color: #f8f9fa; /* 淺灰色調保持一致 */
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #eee;
+    border-bottom: 2px solid #eeeeee;
+    color: #333;
 }
 
+.box-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* 關閉按鈕 - 相似於 .closeButton */
+.btn-close-box {
+    background: none;
+    border: none;
+    font-size: 28px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.btn-close-box:hover {
+    color: #d9534f; /* 懸停變紅 */
+}
+
+/* 內容主體捲動區 - 整合原本的滾動設定 */
 .box-content {
     flex: 1;
     overflow-y: auto;
-    position: relative;
+    scrollbar-width: thin; /* 繼承專案查詢的 thin 設定 */
+    background-color: #fff;
 }
 
+/* 功能分頁基礎樣式 */
 .box-page {
-    padding: 15px;
+    padding: 20px;
     height: 100%;
 }
 
+/* ==========================================================================
+   表單與佈局微調 (針對 50% 寬度優化)
+   ========================================================================== */
+
+/* 修正全域 label 太大的問題 (原本是 2rem) */
+.box-page label {
+    font-size: 1rem !important; 
+    margin-bottom: 0;
+    font-weight: 500;
+    color: #555;
+}
+
+/* 原有的 form-group 在 Box 內的微調 */
+.box-page .form-group {
+    margin-bottom: 15px;
+}
+
+/* 表格容器適配 - 相似於 .panelList */
+.box-table-container {
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow-x: auto; /* 若表格太寬則內部捲動 */
+}
+
+/* 繼承原本的 .propTable 風格 */
+.box-page table.propTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.box-page table.propTable th {
+    background-color: #f4f4f4;
+    padding: 10px;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
+}
+
+.box-page table.propTable td {
+    padding: 8px;
+    border: 1px solid #eee;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
 /* 輔助類別 */
-.hidden { display: none !important; }
+.hidden {
+    display: none !important;
+}
