@@ -47,6 +47,7 @@
 <link rel="stylesheet" href="~/css/index/popup.css" />
 <link rel="stylesheet" href="~/css/index/drawtool.css" />
 <link rel="stylesheet" href="~/css/index/panel.css" />
+<link rel="stylesheet" href="~/css/index/box.css" />
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
 <link rel="stylesheet" href="~/css/new/index/style.css">
 <link rel="stylesheet" href="~/css/new/index/maptool.css">
@@ -237,6 +238,8 @@
         </nav>
     </div>
     <div class="div2 map-controls">
+        <span id="btn-open-testA" class="mobileTool" title="測試功能A">A</span>
+        <span id="btn-open-testB" class="mobileTool" title="測試功能B">B</span>
         <span id="tb-zoomIn" class="mobileTool" title="放大"></span>
         <span id="tb-zoomOut" class="mobileTool" title="縮小"></span>
         <span id="tb-searchPanel" class="mobileTool" title="道路快搜"></span>
@@ -254,6 +257,59 @@
     <div id="indexMap" class="div3">
         <div id="tb-sidebar-toggle" class="sidebar-toggle-btn" title="收合/展開側欄">
             <span>▶</span> 
+        </div>
+        <div id="left-box" class="map-fixed-container hidden">
+            <div class="box-header">
+                <span id="left-box-title" class="box-title">功能頁面</span>
+                <button type="button" class="btn-close-box" onclick="closeBox('left-box')">×</button>
+            </div>
+            
+            <div class="box-content">
+                <div id="page-test-A" class="box-page hidden">
+                    <div class="test-container">
+                        <h4>測試頁面 A：統計圖表區</h4>
+                        <hr />
+                        <div class="alert alert-info">
+                            這是一個測試容器，您可以將 Partial View 或地圖搜尋結果渲染於此。
+                        </div>
+                        <ul>
+                            <li>資料項 1：1,234</li>
+                            <li>資料項 2：5,678</li>
+                        </ul>
+                        <button class="btn btn-primary btn-sm" onclick="alert('觸發 A 功能')">執行功能 A</button>
+                    </div>
+                </div>
+
+                <div id="page-test-B" class="box-page hidden">
+                    <div class="test-container">
+                        <h4>測試頁面 B：屬性編輯區</h4>
+                        <hr />
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label" style="font-size: 1rem;">設施名稱</label>
+                                <input type="text" class="form-control" placeholder="請輸入名稱...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" style="font-size: 1rem;">管理單位</label>
+                                <select class="form-select">
+                                    <option>養工處</option>
+                                    <option>工務局</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-success">儲存變更</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="full-box" class="map-fixed-container hidden">
+            <div class="box-header">
+                <span id="full-box-title" class="box-title">全幅顯示</span>
+                <button type="button" class="btn-close-box" onclick="closeBox('full-box')">×</button>
+            </div>
+            <div class="box-content">
+                </div>
         </div>
         <div class="map-footer">
             <div id="scale-control" class="footer-tip"></div>
@@ -389,6 +445,28 @@
         let layerList = {};
         // 圖層管理
         let layers = {};
+
+        function openLeftBoxPage(pageId, title) {
+            // 顯示外層容器
+            $('#left-box').removeClass('hidden');
+            
+            // 隱藏所有分頁並顯示目標分頁
+            $('#left-box .box-page').addClass('hidden');
+            $(`#${pageId}`).removeClass('hidden');
+            
+            // 更新標題
+            if (title) {
+                $('#left-box-title').text(title);
+            }
+        }
+
+        /**
+         * 關閉 Box
+         */
+        function closeBox(boxId) {
+            $(`#${boxId}`).addClass('hidden');
+        }
     </script>
     <script type="module" src="~/js/main.js"></script>
+    
 }

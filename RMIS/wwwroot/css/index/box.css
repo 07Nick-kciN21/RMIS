@@ -1,0 +1,41 @@
+/* 修改原有的 .map-fixed-box 為 .map-fixed-container */
+.map-fixed-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: white;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    border-right: 1px solid #ddd;
+}
+
+#left-box { width: 50%; height: 100%; }
+#full-box { width: 100%; height: 100%; }
+
+.hidden { display: none !important; }
+
+/* 標題與內容區 */
+.box-header {
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.box-content {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+}
+
+.box-page {
+    padding: 15px;
+    height: 100%;
+}
+
+/* 輔助類別 */
+.hidden { display: none !important; }

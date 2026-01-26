@@ -15,6 +15,7 @@ import { initFocusPanel } from './index/focusPanel.js';
 import { initProjectPanel } from './index/projectPanel.js';
 import { initAccidentPanel } from './index/accidentPanel.js';
 
+import BoxManager from './index/box.js';
 
 $(document).ready(function () {
     // 初始化地图
@@ -41,4 +42,17 @@ $(document).ready(function () {
     initFocusPanel();
     initProjectPanel();
     initAccidentPanel();
+
+    BoxManager.initLeftBox([
+        {
+            btnId: 'btn-open-testA',
+            pageId: 'page-test-A',
+            title: '系統統計分析 (測試A)'
+        },
+        {
+            btnId: 'btn-open-testB',
+            pageId: 'page-test-B',
+            title: '設施資訊編輯 (測試B)'
+        }
+    ]);
 });
