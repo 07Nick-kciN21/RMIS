@@ -6,6 +6,7 @@ namespace RMIS.Models.sql
     {
         public Guid Id { get; set; }
         public string ProjectId { get; set; }
+        public int step { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Index { get; set; }
@@ -46,6 +47,6 @@ namespace RMIS.Models.sql
         // 街景的AreaId
         public Guid StreetViewId { get; set; }
         // 新增時間
-        public long CreateTime { get; set; }
+        public DateTime CreateTime { get; set; }
     }
 }

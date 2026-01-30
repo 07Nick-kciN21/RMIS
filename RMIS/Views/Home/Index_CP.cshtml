@@ -1,4 +1,4 @@
-@model Dictionary<string, RMIS.Models.Account.Users.PermissionDetail>
+﻿@model Dictionary<string, RMIS.Models.Account.Users.PermissionDetail>
 @{
     ViewData["Title"] = "桃園市工務局道路專案整合平台";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -262,7 +262,7 @@
             </div>
             
             <div class="box-content">
-                <partial name="~/Views/Home/Partials/_projectBox.cshtml" />
+                @Html.Partial("~/Views/Home/Partials/_projectBox.cshtml")
             </div>
         </div>
         <div id="right-box" class="map-fixed-container hidden">
@@ -271,8 +271,7 @@
                 <button type="button" class="btn-close-box" onclick="closeBox('right-box')">×</button>
             </div>
             <div class="box-content">
-                <partial name="~/Views/Home/Partials/_processBox.cshtml" />
-                <partial name="~/Views/Home/Partials/_processView.cshtml" />
+                @Html.Partial("~/Views/Home/Partials/_processBox.cshtml")
             </div>
         </div>
         <div id="full-box" class="map-fixed-container hidden">
@@ -342,50 +341,51 @@
 
 
 
+
 @section searchPanel {
-    <partial name="~/Views/Home/Partials/_searchPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_searchPanel.cshtml")
 }
 
 @section painterPanel {
-    <partial name="~/Views/Home/Partials/_painterPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_painterPanel.cshtml")
 }
 
 @section searchPropPanel {
-    <partial name="~/Views/Home/Partials/_searchPropPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_searchPropPanel.cshtml")
 }
 
 @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
 {
     @section focusPanel {
-        <partial name="~/Views/Home/Partials/_focusPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_focusPanel.cshtml")
     }
 }
 @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
 {
     @section accidentPanel {
-        <partial name="~/Views/Home/Partials/_accidentPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_accidentPanel.cshtml")
     }
 }
 @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
 {
     @section flagPanel {
-        <partial name="~/Views/Home/Partials/_flagPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_flagPanel.cshtml")
     }
 }
 
 @section measurePanel {
-    <partial name="~/Views/Home/Partials/_measurePanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_measurePanel.cshtml")
 }
 
 @section metaDataPanel {
-    <partial name="~/Views/Home/Partials/_metaDataPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_metaDataPanel.cshtml")
 }
 
 @section roadMaintPanel {
-    <partial name="~/Views/Home/Partials/_roadMaintPanel.cshtml" />
+    @Html.Partial("~/Views/Home/Partials/_roadMaintPanel.cshtml")
 }
 
-<partial name="~/Views/Home/Partials/_processAddModal.cshtml" />
+@Html.Partial("~/Views/Home/Partials/_processAddModal")
 
 <div id="customModal" class="modal-overlay hidden">
     <div class="Admin-Modal-content">

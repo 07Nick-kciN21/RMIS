@@ -1,0 +1,293 @@
+@* ==========================================================================
+   _processBox.cshtml - 專案歷程詳情頁面 (Full-Box 版本)
+   功能：顯示專案基本資訊、階段分頁切換、時間軸歷程紀錄、佐證文件
+   ========================================================================== *@
+
+<link rel="stylesheet" href="~/css/index/processBox.css" />
+
+<div id="page-process" class="box-page hidden">
+    <div class="process-box-container">
+        
+        @* ===== 1. 專案資訊卡片 (Header Card) ===== *@
+        <div class="process-info-card">
+            <div class="process-info-main">
+                <div class="process-info-left">
+                    @* 案號與建立日期 *@
+                    <div class="process-meta">
+                        <span class="process-id-badge" id="process-no">PJ-113-001</span>
+                        <span class="process-create-date">建立：<span id="process-create-date">2023-01-15</span></span>
+                    </div>
+                    @* 專案名稱 *@
+                    <h2 class="process-title" id="process-title">專案名稱載入中...</h2>
+                    @* 資訊標籤列 *@
+                    <div class="process-tags">
+                        <span class="process-tag">
+                            <span class="tag-label">預算</span>
+                            <span class="tag-value" id="process-budget">12,500 萬</span>
+                        </span>
+                        <span class="process-tag">
+                            <span class="tag-label">承辦人</span>
+                            <span class="tag-value" id="process-pm">陳技正</span>
+                        </span>
+                        <span class="process-tag process-tag-status">
+                            <span class="tag-label">狀態</span>
+                            <i class="fa fa-check-circle text-success"></i>
+                            <span class="tag-value" id="process-status">設計與施工階段</span>
+                        </span>
+                    </div>
+                </div>
+                @* 進度圓環 (可選) *@
+                <div class="process-info-right">
+                    <div class="process-progress-ring">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="circle" id="process-progress-path" stroke-dasharray="65, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <text x="18" y="20.35" class="percentage" id="process-progress-text">65%</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ===== 2. 階段分頁 Tabs ===== *@
+        <div class="process-stage-tabs">
+            <button type="button" class="stage-tab active" data-stage="stage1">
+                <i class="fa fa-file-text-o"></i>
+                爭取預算與前期規畫階段
+            </button>
+            <button type="button" class="stage-tab" data-stage="stage2">
+                <i class="fa fa-users"></i>
+                意願調查及用地取得階段
+            </button>
+            <button type="button" class="stage-tab" data-stage="stage3">
+                <i class="fa fa-cogs"></i>
+                設計與施工階段
+            </button>
+        </div>
+
+        @* ===== 3. 時間軸內容區 ===== *@
+        <div class="process-content-area">
+            @* 階段標題與新增按鈕 *@
+            <div class="process-stage-header">
+                <h3 class="stage-title">
+                    <span class="stage-indicator"></span>
+                    <span id="current-stage-name">爭取預算與前期規畫階段</span>
+                </h3>
+                <button type="button" class="btn btn-success btn-add-record">
+                    <i class="fa fa-plus"></i> 新增紀錄
+                </button>
+            </div>
+
+            @* 時間軸容器 *@
+            <div class="process-timeline" id="process-timeline">
+                @* === 時間軸垂直線 === *@
+                <div class="timeline-line"></div>
+
+                @* === 歷程紀錄卡片 (由 JS 動態產生，以下為範本結構) === *@
+                
+                @* 範例紀錄 1 *@
+                <div class="timeline-item" data-record-id="101">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="record-type type-milestone">重要里程碑</span>
+                                <h4 class="record-title">專案立案確認</h4>
+                            </div>
+                            <div class="record-date">
+                                <i class="fa fa-calendar"></i> 2023-01-15
+                            </div>
+                        </div>
+                        <p class="record-desc">
+                            完成可行性評估報告，確認道路開闢範圍及效益分析。
+                        </p>
+                        @* 附件區塊 *@
+                        <div class="record-attachments">
+                            <h5 class="attachments-title">
+                                <i class="fa fa-paperclip"></i> 佐證文件
+                            </h5>
+                            <div class="attachment-list">
+                                <div class="attachment-item">
+                                    <div class="attachment-info">
+                                        <i class="fa fa-file-pdf-o file-icon"></i>
+                                        <span class="file-name">可行性評估報告_v1.pdf</span>
+                                        <span class="file-size">(2.4 MB)</span>
+                                    </div>
+                                    <button type="button" class="btn-download" title="下載">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* 範例紀錄 2 *@
+                <div class="timeline-item" data-record-id="102">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="record-type type-meeting">會議紀錄</span>
+                                <h4 class="record-title">預算爭取簡報會議</h4>
+                            </div>
+                            <div class="record-date">
+                                <i class="fa fa-calendar"></i> 2023-02-20
+                            </div>
+                        </div>
+                        <p class="record-desc">
+                            向市府爭取年度預算，針對龍岡路拓寬必要性進行專案報告。決議：原則同意列入年度預算。
+                        </p>
+                        <div class="record-attachments">
+                            <h5 class="attachments-title">
+                                <i class="fa fa-paperclip"></i> 佐證文件
+                            </h5>
+                            <div class="attachment-list">
+                                <div class="attachment-item">
+                                    <div class="attachment-info">
+                                        <i class="fa fa-file-powerpoint-o file-icon"></i>
+                                        <span class="file-name">預算簡報資料.pptx</span>
+                                        <span class="file-size">(5.1 MB)</span>
+                                    </div>
+                                    <button type="button" class="btn-download" title="下載">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </div>
+                                <div class="attachment-item">
+                                    <div class="attachment-info">
+                                        <i class="fa fa-file-pdf-o file-icon"></i>
+                                        <span class="file-name">會議紀錄_20230220.pdf</span>
+                                        <span class="file-size">(1.2 MB)</span>
+                                    </div>
+                                    <button type="button" class="btn-download" title="下載">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* 範例紀錄 3 *@
+                <div class="timeline-item" data-record-id="103">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-card">
+                        <div class="card-header">
+                            <div class="card-title-group">
+                                <span class="record-type type-official">公文核定</span>
+                                <h4 class="record-title">預算核定函文</h4>
+                            </div>
+                            <div class="record-date">
+                                <i class="fa fa-calendar"></i> 2023-03-10
+                            </div>
+                        </div>
+                        <p class="record-desc">
+                            收受府函核定本案工程預算，案號：府工土字第1130001234號。
+                        </p>
+                        <div class="record-attachments">
+                            <h5 class="attachments-title">
+                                <i class="fa fa-paperclip"></i> 佐證文件
+                            </h5>
+                            <div class="attachment-list">
+                                <div class="attachment-item">
+                                    <div class="attachment-info">
+                                        <i class="fa fa-file-pdf-o file-icon"></i>
+                                        <span class="file-name">核定公文.pdf</span>
+                                        <span class="file-size">(0.5 MB)</span>
+                                    </div>
+                                    <button type="button" class="btn-download" title="下載">
+                                        <i class="fa fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            @* 結尾提示 *@
+            <div class="timeline-end-hint">
+                <span>本階段尚無更多紀錄</span>
+            </div>
+        </div>
+
+        @* ===== 4. Footer 操作列 ===== *@
+        <div class="process-footer">
+            <button type="button" class="btn btn-outline-secondary btn-close-box">
+                <i class="fa fa-arrow-left"></i> 返回列表
+            </button>
+        </div>
+
+    </div>
+</div>
+
+@* ===== JavaScript 控制邏輯 ===== *@
+<script>
+(function() {
+    'use strict';
+
+    // DOM 元素快取
+    const stageTabs = document.querySelectorAll('.stage-tab');
+    const currentStageName = document.getElementById('current-stage-name');
+    const timeline = document.getElementById('process-timeline');
+
+    // 階段名稱對照
+    const stageNames = {
+        'stage1': '爭取預算與前期規畫階段',
+        'stage2': '意願調查及用地取得階段',
+        'stage3': '設計與施工階段'
+    };
+
+    // 階段切換事件
+    stageTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // 移除所有 active
+            stageTabs.forEach(t => t.classList.remove('active'));
+            // 設定當前 active
+            this.classList.add('active');
+            // 更新階段標題
+            const stageId = this.getAttribute('data-stage');
+            currentStageName.textContent = stageNames[stageId] || '';
+            // TODO: 呼叫 API 載入該階段的歷程資料
+            loadStageRecords(stageId);
+        });
+    });
+
+    // 載入階段紀錄 (placeholder)
+    function loadStageRecords(stageId) {
+        console.log('載入階段:', stageId);
+        // 實際應用中，這裡會呼叫後端 API 取得資料並渲染時間軸
+    }
+
+    // 關閉按鈕事件
+    document.querySelectorAll('.btn-close-box').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // 隱藏 full-box 或切換頁面
+            const fullBox = document.getElementById('full-box');
+            if (fullBox) {
+                fullBox.classList.add('hidden');
+            }
+            // 或觸發自定義事件
+            document.dispatchEvent(new CustomEvent('closeProcessBox'));
+        });
+    });
+
+    // 新增紀錄按鈕事件
+    document.querySelector('.btn-add-record')?.addEventListener('click', function() {
+        console.log('開啟新增紀錄表單');
+        // TODO: 開啟新增紀錄的 Modal 或表單
+    });
+
+    // 下載按鈕事件委派
+    timeline?.addEventListener('click', function(e) {
+        const downloadBtn = e.target.closest('.btn-download');
+        if (downloadBtn) {
+            const fileName = downloadBtn.closest('.attachment-item')?.querySelector('.file-name')?.textContent;
+            console.log('下載檔案:', fileName);
+            // TODO: 實際下載邏輯
+        }
+    });
+
+})();
+</script>

@@ -17,6 +17,8 @@ import { initAccidentPanel } from './index/accidentPanel.js';
 
 import BoxManager from './index/box.js';
 import ProjectBox from './index/projectBox.js';
+import ProcessBox from './index/processBox.js';
+import ProcessView from './index/processView.js';
 
 $(document).ready(function () {
     // 初始化地图
@@ -43,13 +45,11 @@ $(document).ready(function () {
     initFocusPanel();
     initAccidentPanel();
 
-    BoxManager.initLeftBox([
-        {
-            btnId: 'tb-projectPanel',
-            pageId: 'page-project',
-            title: '道路專案'
-        }
-    ]);
+    BoxManager.initFullBox();
+    BoxManager.initRightBox();
+    BoxManager.initLeftBox();
 
     ProjectBox.init();
+    ProcessBox.init();
+    ProcessView.init();
 });

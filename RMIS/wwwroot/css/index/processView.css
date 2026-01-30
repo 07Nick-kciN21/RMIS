@@ -1,0 +1,757 @@
+/* ==========================================================================
+   processView.css - 單筆歷程紀錄檢視頁面專用樣式
+   依賴：box.css (基礎容器)
+   ========================================================================== */
+
+/* ==========================================================================
+   1. 容器與佈局
+   ========================================================================== */
+
+.process-view-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f8fafc;
+}
+
+/* ==========================================================================
+   2. 頁面標題列
+   ========================================================================== */
+
+.view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.view-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.view-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.view-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.view-breadcrumb .fa-angle-right {
+    font-size: 0.75rem;
+}
+
+.breadcrumb-project,
+.breadcrumb-stage {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.view-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.view-header-right {
+    display: flex;
+    gap: 10px;
+}
+
+.view-header-right .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   3. 主要內容區
+   ========================================================================== */
+
+.view-content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    scrollbar-width: thin;
+}
+
+.view-content-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.view-content-area::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.view-content-area::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+/* ==========================================================================
+   4. 區塊卡片樣式
+   ========================================================================== */
+
+.view-section {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.view-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.section-title i {
+    color: #3b82f6;
+    font-size: 1.1rem;
+}
+
+.file-count {
+    font-size: 0.85rem;
+    color: #64748b;
+    background: #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.section-body {
+    padding: 20px;
+}
+
+/* ==========================================================================
+   5. 基本資訊網格
+   ========================================================================== */
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* 佔據整行的欄位 */
+.info-item-wide {
+    grid-column: 1 / -1;
+}
+
+/* 隱藏元素 */
+.info-item.hidden,
+.view-section.hidden {
+    display: none !important;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+/* 紀錄類型標籤 */
+.record-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.record-type-badge.type-milestone {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.record-type-badge.type-meeting {
+    background-color: #f3e8ff;
+    color: #7c3aed;
+}
+
+.record-type-badge.type-official {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.record-type-badge.type-progress {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+/* 狀態標籤 */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.status-active {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.status-badge.status-pending {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-badge.status-completed {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+/* ==========================================================================
+   6. 詳細內容區塊
+   ========================================================================== */
+
+.detail-block {
+    margin-bottom: 20px;
+}
+
+.detail-block:last-child {
+    margin-bottom: 0;
+}
+
+.detail-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    margin: 0 0 10px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.detail-content {
+    font-size: 0.95rem;
+    color: #334155;
+    line-height: 1.8;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 3px solid #3b82f6;
+    white-space: pre-wrap;
+}
+
+.detail-content:empty::before,
+.detail-content:has(> :empty)::before {
+    content: '尚無資料';
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   7. 檔案列表
+   ========================================================================== */
+
+#page-process-view .file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#page-process-view .file-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+#page-process-view .file-list-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+#page-process-view .file-list-item .file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    flex: 1;
+}
+
+#page-process-view .file-list-item .file-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+#page-process-view .file-list-item .file-icon.fa-file-pdf-o {
+    color: #dc2626;
+}
+
+#page-process-view .file-list-item .file-icon.fa-file-powerpoint-o {
+    color: #ea580c;
+}
+
+#page-process-view .file-list-item .file-icon.fa-file-excel-o {
+    color: #16a34a;
+}
+
+#page-process-view .file-list-item .file-icon.fa-file-word-o {
+    color: #2563eb;
+}
+
+#page-process-view .file-list-item .file-icon.fa-file-image-o {
+    color: #8b5cf6;
+}
+
+#page-process-view .file-list-item .file-icon.fa-file-archive-o {
+    color: #d97706;
+}
+
+#page-process-view .file-list-item .file-icon.fa-file-o {
+    color: #64748b;
+}
+
+#page-process-view .file-list-item .file-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#page-process-view .file-list-item .file-size {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#page-process-view .file-list-item .file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+#page-process-view .file-list-item .btn-download-file,
+#page-process-view .file-list-item .btn-delete-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#page-process-view .file-list-item .btn-download-file img,
+#page-process-view .file-list-item .btn-delete-file img {
+    width: 18px;
+    height: 18px;
+}
+
+#page-process-view .file-list-item .btn-download-file:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+#page-process-view .file-list-item .btn-download-file:hover img {
+    filter: brightness(0) invert(1);
+}
+
+#page-process-view .file-list-item .btn-delete-file:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+}
+
+/* 無檔案狀態 */
+#page-process-view .file-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #94a3b8;
+}
+
+#page-process-view .file-empty i {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+#page-process-view .file-empty p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   8. 修改歷程列表
+   ========================================================================== */
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #eff6ff;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.history-icon i {
+    font-size: 0.9rem;
+    color: #3b82f6;
+}
+
+.history-icon .fa-plus-circle {
+    color: #22c55e;
+}
+
+.history-icon .fa-pencil {
+    color: #f59e0b;
+}
+
+.history-icon .fa-trash-o {
+    color: #ef4444;
+}
+
+.history-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.history-action {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.history-time {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.history-user {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* ==========================================================================
+   9. Footer 操作列
+   ========================================================================== */
+
+.view-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.view-footer .btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   10. 刪除確認 Modal
+   ========================================================================== */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.modal-backdrop:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+}
+
+.modal-backdrop:not(.hidden) .modal-container {
+    transform: scale(1);
+}
+
+.modal-sm {
+    max-width: 400px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.modal-title .text-danger {
+    color: #ef4444;
+}
+
+.btn-close-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-close-modal:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.modal-body {
+    padding: 24px 20px;
+}
+
+.delete-confirm-message {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+    text-align: center;
+}
+
+.delete-confirm-message strong {
+    display: block;
+    margin-top: 8px;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.delete-warning {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 0;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.modal-footer .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   11. 響應式調整
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .view-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .view-header-right {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .attachment-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .view-title {
+        font-size: 1.15rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .view-header-right .btn span {
+        display: none;
+    }
+    
+    .view-header-right .btn {
+        padding: 8px 12px;
+    }
+}
+
+/* ==========================================================================
+   12. 動畫效果
+   ========================================================================== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.view-section {
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.view-section:nth-child(1) { animation-delay: 0.05s; }
+.view-section:nth-child(2) { animation-delay: 0.1s; }
+.view-section:nth-child(3) { animation-delay: 0.15s; }
+.view-section:nth-child(4) { animation-delay: 0.2s; }
+.view-section:nth-child(5) { animation-delay: 0.25s; }

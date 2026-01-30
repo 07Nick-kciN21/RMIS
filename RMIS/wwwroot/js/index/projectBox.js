@@ -1,5 +1,7 @@
 import BoxManager from './box.js';
+import ProcessBox from './processBox.js';
 import { Map } from './map_test.js';
+
 
 /**
  * 道路專案查詢業務邏輯模組
@@ -23,6 +25,11 @@ const ProjectBox = {
         "復興區"   // value: 12
     ],
 
+    step:[
+        "爭取預算與前期規畫階段",
+        "意願調查及用地取得階段",
+        "設計與施工階段"
+    ],
     // 儲存全域查詢結果
     filterProject: [],
     
@@ -46,6 +53,9 @@ const ProjectBox = {
         self.projectLayer = L.layerGroup();
         self.projectLayer.addTo(self.$indexMap);
 
+        $('#roadProjectBtn').on('click', function() {
+            BoxManager.openLeftBoxPage('page-project', '專案查詢');
+        });
         // 綁定「顯示結果」按鈕點擊事件
         $('#projectGoResult').on('click', function() {
             self.fetchData();
@@ -186,7 +196,7 @@ const ProjectBox = {
                             定位
                         </button>
                     </td>
-                    ${hasUpdatePermission ? `<td><button class="btn btn-sm btn-outline-secondary btn-edit" data-id="${item.id}">操作</button></td>` : ''}
+                    ${hasUpdatePermission ? `<td><button class="btn btn-sm btn-outline-secondary btn-ProcessView" data-id="${item.projectId}">檢視歷程</button></td>` : ''}
                     <td>${item.proposer || ''}</td>
                     <td>${item.administrativeDistrict || ''}</td>
                     <td>${item.startEndLocation || ''}</td>
@@ -212,11 +222,11 @@ const ProjectBox = {
             self.locateProject(id);
         });
 
-        // 綁定編輯事件（如果有權限）
+        // 綁定操作按鈕事件（開啟歷程詳情）
         if (hasUpdatePermission) {
-            $('.btn-edit').on('click', function() {
+            $('.btn-ProcessView').on('click', function() {
                 const id = $(this).data('id');
-                self.editProject(id);
+                self.openProjectProcess(id);
             });
         }
 
@@ -224,6 +234,57 @@ const ProjectBox = {
         self.updatePagination(totalPages);
     },
 
+    /**
+     * 開啟專案歷程詳情（操作按鈕觸發）
+     * @param {string} projectId - 專案 ID
+     */
+    openProjectProcess: function(projectId) {
+        const self = this;
+
+        console.log('開啟專案歷程，ID:', projectId);
+        // 從 API 回傳的資料中尋找對應專案
+        let projectData = self.filterProject.find(p => p.projectId === projectId);
+        
+        // 如果找不到，使用測試資料
+        if (!projectData) {
+            projectData = self.MOCK_PROJECTS.find(p => p.projectId === projectId);
+        }
+        console.log('專案資料:', projectData);
+       
+        // 補充 API 資料用於顯示）
+        projectData = self.formatProjectData(projectData);
+        
+
+        // 呼叫 ProcessBox 開啟歷程詳情
+        ProcessBox.openProcessBox(projectData);
+    },
+
+    /**
+     * 格式化專案資料（補充 API 回傳資料中缺少的欄位）
+     * @param {Object} apiData - API 回傳的原始資料
+     * @returns {Object} - 格式化後的資料
+     */
+    formatProjectData: function(apiData) {
+        return {
+            id: apiData.projectId || '-',
+            name: apiData.startEndLocation || apiData.name || '未命名專案',
+            step: apiData.step || '執行中',
+            createDate: this.parseDate(apiData.createTime) || '-',
+            budget: apiData.totalBudget ? (apiData.totalBudget / 10000) + ' 萬' : '-',
+            pm: apiData.proposer || apiData.pm || '-',
+            progress: apiData.progress || 0,
+            // 保留原始資料供後續使用
+            _raw: apiData
+        };
+    },
+
+    parseDate: function(dateString) {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    },
     /**
      * 更新分頁控制項
      */

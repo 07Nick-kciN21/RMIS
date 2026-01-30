@@ -1231,7 +1231,7 @@ namespace RMIS.Repositories
                         CompensationBudget = ParseMoney(GetStr("補償經費")),
                         TotalBudget = ParseMoney(GetStr("合計經費")),
                         Remarks = GetStr("備註"),
-                        CreateTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                        CreateTime = DateTime.Now,
                         // 設定預拓範圍的AreaId
                         PlannedExpansionId = areaIdMapping.ContainsKey(projectId) ? areaIdMapping[projectId] : Guid.Empty,
                         StreetViewId = streetViewIdMapping.ContainsKey(projectId) ? streetViewIdMapping[projectId] : Guid.Empty // 如果需要設定街景AreaId，可以在此處理

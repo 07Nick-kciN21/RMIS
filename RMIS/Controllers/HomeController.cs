@@ -49,8 +49,7 @@ namespace RMIS.Controllers
                 return View(userPermissions);
             }
 
-            Console.WriteLine("Index page loaded");
-            return View();
+            return RedirectToAction("Login", "Portal");
         }
 
         [HttpGet]

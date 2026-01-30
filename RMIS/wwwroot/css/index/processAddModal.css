@@ -1,0 +1,458 @@
+/* ==========================================================================
+   processAddModal.css - 歷程紀錄新增表單 Modal 樣式
+   所有樣式限定在 #process-add-modal 範圍內，避免影響外部
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Modal 容器
+   ========================================================================== */
+
+#process-add-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#process-add-modal.hidden {
+    display: none !important;
+}
+
+/* 背景遮罩 */
+#process-add-modal .process-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(2px);
+}
+
+/* Modal 主容器 */
+#process-add-modal .process-modal-container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    animation: processModalSlideIn 0.3s ease;
+}
+
+@keyframes processModalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ==========================================================================
+   2. Modal Header
+   ========================================================================== */
+
+#process-add-modal .process-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 12px 12px 0 0;
+}
+
+#process-add-modal .process-modal-header .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+#process-add-modal .process-modal-header .modal-title i {
+    color: #3b82f6;
+}
+
+#process-add-modal .btn-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: #64748b;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#process-add-modal .btn-modal-close:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* ==========================================================================
+   3. Modal Body
+   ========================================================================== */
+
+#process-add-modal .process-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    scrollbar-width: thin;
+}
+
+#process-add-modal .process-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#process-add-modal .process-modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+/* ==========================================================================
+   4. 表單樣式
+   ========================================================================== */
+
+#process-add-modal .process-form {
+    display: block;
+}
+
+#process-add-modal .process-form.hidden {
+    display: none !important;
+}
+
+/* 表單區塊 */
+#process-add-modal .form-section {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+#process-add-modal .form-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+#process-add-modal .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0 0 16px 0;
+    padding-left: 12px;
+    border-left: 3px solid #3b82f6;
+}
+
+/* 表單列 */
+#process-add-modal .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+#process-add-modal .form-row:last-child {
+    margin-bottom: 0;
+}
+
+/* 表單群組 */
+#process-add-modal .form-group {
+    display: flex;
+    flex-direction: column;
+}
+/* 日期欄位組合樣式 */
+#process-add-modal .form-group .input-group {
+    display: flex;
+    gap: 8px;
+}
+
+#process-add-modal .form-group .input-group select {
+    flex: 0 0 100px;
+}
+
+#process-add-modal .form-group .input-group input[type="date"] {
+    flex: 1;
+}
+
+#process-add-modal .form-group.col-4 {
+    flex: 0 0 calc(33.333% - 11px);
+}
+
+#process-add-modal .form-group.col-6 {
+    flex: 0 0 calc(50% - 8px);
+}
+
+#process-add-modal .form-group.col-12 {
+    flex: 0 0 100%;
+}
+
+/* Label */
+#process-add-modal .form-group label {
+    font-size: 0.9rem !important;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+#process-add-modal .form-group label .required {
+    color: #dc2626;
+    margin-left: 2px;
+}
+
+/* Input & Select & Textarea */
+#process-add-modal .form-group .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+#process-add-modal .form-group .form-control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+#process-add-modal .form-group .form-control::placeholder {
+    color: #94a3b8;
+}
+
+#process-add-modal .form-group textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+#process-add-modal .form-group select.form-control {
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   5. 檔案上傳區域
+   ========================================================================== */
+
+#process-add-modal .file-upload-area {
+    position: relative;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 30px 20px;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#process-add-modal .file-upload-area:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+#process-add-modal .file-upload-area.dragover {
+    border-color: #3b82f6;
+    background: #dbeafe;
+}
+
+#process-add-modal .file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+#process-add-modal .file-upload-hint {
+    pointer-events: none;
+}
+
+#process-add-modal .file-upload-hint i {
+    font-size: 2.5rem;
+    color: #94a3b8;
+    margin-bottom: 10px;
+}
+
+#process-add-modal .file-upload-hint p {
+    font-size: 1rem;
+    color: #475569;
+    margin: 0 0 5px 0;
+}
+
+#process-add-modal .file-upload-hint span {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+/* 檔案列表 */
+#process-add-modal .file-list {
+    margin-top: 12px;
+}
+
+#process-add-modal .file-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+#process-add-modal .file-list-item:last-child {
+    margin-bottom: 0;
+}
+
+#process-add-modal .file-list-item .file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+}
+
+#process-add-modal .file-list-item .file-icon {
+    color: #3b82f6;
+    font-size: 1.2rem;
+}
+
+#process-add-modal .file-list-item .file-name {
+    font-size: 0.9rem;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#process-add-modal .file-list-item .file-size {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+#process-add-modal .file-list-item .btn-remove-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#process-add-modal .file-list-item .btn-remove-file:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* ==========================================================================
+   6. Modal Footer
+   ========================================================================== */
+
+#process-add-modal .process-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+}
+
+#process-add-modal .process-modal-footer .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#process-add-modal .process-modal-footer .btn-outline-secondary {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+#process-add-modal .process-modal-footer .btn-outline-secondary:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #475569;
+}
+
+#process-add-modal .process-modal-footer .btn-primary {
+    background: #3b82f6;
+    border: 1px solid #3b82f6;
+    color: #ffffff;
+}
+
+#process-add-modal .process-modal-footer .btn-primary:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+/* ==========================================================================
+   7. 響應式調整
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    #process-add-modal .process-modal-container {
+        width: 95%;
+        max-height: 95vh;
+        margin: 10px;
+    }
+
+    #process-add-modal .process-modal-header {
+        padding: 16px 20px;
+    }
+
+    #process-add-modal .process-modal-body {
+        padding: 20px;
+    }
+
+    #process-add-modal .form-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #process-add-modal .form-group.col-4,
+    #process-add-modal .form-group.col-6,
+    #process-add-modal .form-group.col-12 {
+        flex: 0 0 100%;
+    }
+
+    #process-add-modal .process-modal-footer {
+        padding: 12px 20px;
+    }
+
+    #process-add-modal .process-modal-footer .btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}

@@ -112,7 +112,7 @@ $(document).ready(function () {
         newWindow = window.open('/Admin/ExpansionRangeMap', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     
-    //#addPhotoBtn 按鈕被點擊時，開啟新視窗
+    //#addStreetPhotoBtn 按鈕被點擊時，開啟新視窗
     $('#addStreetPhotoBtn').on('click', function () {
         newWindow = window.open('/Admin/StreetViewPhotoMap', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });

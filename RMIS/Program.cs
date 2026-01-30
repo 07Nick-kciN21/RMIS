@@ -103,6 +103,7 @@ builder.Services.AddScoped<AdminInterface, AdminRepository>();
 builder.Services.AddScoped<AccountInterface, AccountRepository>();
 builder.Services.AddScoped<PortalInterface, PortalRepository>();
 builder.Services.AddScoped<MapdataInterface, MapdataRepository>();
+builder.Services.AddScoped<RoadProjectInterface, RoadProjectRepository>();
 
 // ✅ 註冊 RoleManager<ApplicationRole>
 builder.Services.AddScoped<RoleManager<ApplicationRole>>();

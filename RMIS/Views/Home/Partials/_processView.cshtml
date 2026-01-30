@@ -1,0 +1,237 @@
+@* ==========================================================================
+   _processView.cshtml - 單筆歷程紀錄檢視頁面
+   功能：顯示單筆歷程紀錄的完整詳細資訊
+   ========================================================================== *@
+
+<link rel="stylesheet" href="~/css/index/processView.css" />
+
+<div id="page-process-view" class="box-page hidden">
+    <div class="process-view-container">
+        
+        @* ===== 1. 頁面標題列 ===== *@
+        <div class="view-header">
+            <div class="view-header-left">
+                <div class="view-header-info">
+                    <span class="view-breadcrumb">
+                        <span class="breadcrumb-project" id="view-project-name">專案名稱</span>
+                        <i class="fa fa-angle-right"></i>
+                        <span class="breadcrumb-stage" id="view-stage-name">階段名稱</span>
+                    </span>
+                    <h2 class="view-title" id="view-record-title">紀錄標題載入中...</h2>
+                </div>
+            </div>
+            <div class="view-header-right">
+                <button type="button" class="btn btn-outline-primary btn-edit-record" id="btn-edit-record">
+                    <i class="fa fa-pencil"></i> 編輯
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-delete-record" id="btn-delete-record">
+                    <i class="fa fa-trash-o"></i> 刪除
+                </button>
+            </div>
+        </div>
+
+        @* ===== 2. 主要內容區 ===== *@
+        <div class="view-content-area">
+            
+            @* ===== 2.1 基本資訊卡片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-info-circle"></i> 基本資訊
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">紀錄類型</span>
+                            <span class="info-value">
+                                <span class="record-type-badge" id="view-record-type">重要里程碑</span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">建立日期</span>
+                            <span class="info-value" id="view-created-at">2023-01-15</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">所屬區域</span>
+                            <span class="info-value" id="view-district">中壢區</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">執行單位</span>
+                            <span class="info-value" id="view-execution-unit">工務局</span>
+                        </div>
+                        @* Stage 1 & 2 專用欄位 *@
+                        <div class="info-item info-stage12" id="info-construction-unit">
+                            <span class="info-label">施工單位</span>
+                            <span class="info-value" id="view-construction-unit">OO營造有限公司</span>
+                        </div>
+                        @* Stage 2 專用欄位 *@
+                        <div class="info-item info-stage2 hidden" id="info-category">
+                            <span class="info-label">類別</span>
+                            <span class="info-value" id="view-category">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.1.1 工程資訊卡片 (Stage 3 專用) ===== *@
+            <div class="view-section info-stage3 hidden" id="section-construction-info">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-building"></i> 工程資訊
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item info-item-wide">
+                            <span class="info-label">預算(年度)來源核定經費</span>
+                            <span class="info-value" id="view-budget-approved">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">開口合約/專業發包</span>
+                            <span class="info-value" id="view-contract-type">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">工期</span>
+                            <span class="info-value" id="view-construction-period">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">上網公告/預計開工</span>
+                            <span class="info-value" id="view-announcement-date">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">決標日期/預計完工</span>
+                            <span class="info-value" id="view-award-date">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.2 前次會議辦理情形 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-history"></i> 前次會議辦理情形
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="detail-block">
+                        <h4 class="detail-label">辦理情形</h4>
+                        <div class="detail-content" id="view-previous-status">
+                            尚無資料
+                        </div>
+                    </div>
+                    <div class="detail-block">
+                        <h4 class="detail-label">會議裁示</h4>
+                        <div class="detail-content" id="view-previous-resolution">
+                            尚無資料
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.3 本次會議辦理情形 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-file-text-o"></i> 本次會議辦理情形
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="detail-block">
+                        <h4 class="detail-label">辦理情形</h4>
+                        <div class="detail-content" id="view-current-meeting-status">
+                            尚無資料
+                        </div>
+                    </div>
+                    <div class="detail-block">
+                        <h4 class="detail-label">會議裁示</h4>
+                        <div class="detail-content" id="view-current-resolution">
+                            尚無資料
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.4 佐證文件 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-paperclip"></i> 佐證文件
+                    </h3>
+                    <span class="file-count" id="view-file-count">0 個檔案</span>
+                </div>
+                <div class="section-body">
+                    <div class="file-list" id="view-file-list">
+                        @* 檔案項目由 JS 動態產生 *@
+                    </div>
+                    <div class="file-empty" id="view-file-empty">
+                        <i class="fa fa-folder-open-o"></i>
+                        <p>尚無上傳文件</p>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.5 歷程記錄 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-clock-o"></i> 修改歷程
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="history-list" id="view-history-list">
+                        @* 歷程項目由 JS 動態產生 *@
+                        <div class="history-item">
+                            <div class="history-icon">
+                                <i class="fa fa-plus-circle"></i>
+                            </div>
+                            <div class="history-content">
+                                <span class="history-action">建立紀錄</span>
+                                <span class="history-time" id="view-created-time">2023-01-15 10:30:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        @* ===== 3. Footer 操作列 ===== *@
+        <div class="view-footer">
+            <button type="button" class="btn btn-outline-secondary btn-back-list" id="btn-back-to-list">
+                <i class="fa fa-arrow-left"></i> 返回歷程列表
+            </button>
+        </div>
+
+    </div>
+</div>
+
+@* ===== 刪除確認 Modal ===== *@
+<div id="delete-confirm-modal" class="modal-backdrop hidden">
+    <div class="modal-container modal-sm">
+        <div class="modal-header">
+            <h4 class="modal-title">
+                <i class="fa fa-exclamation-triangle text-danger"></i> 確認刪除
+            </h4>
+            <button type="button" class="btn-close-modal" id="btn-close-delete-modal">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p class="delete-confirm-message">
+                確定要刪除此筆歷程紀錄嗎？<br>
+                <strong id="delete-record-title">紀錄標題</strong>
+            </p>
+            <p class="delete-warning">
+                <i class="fa fa-warning"></i> 此操作無法復原
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" id="btn-cancel-delete">取消</button>
+            <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+                <i class="fa fa-trash-o"></i> 確認刪除
+            </button>
+        </div>
+    </div>
+</div>

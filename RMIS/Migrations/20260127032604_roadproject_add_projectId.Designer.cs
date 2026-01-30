@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMIS.Data;
 
@@ -11,9 +12,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260127032604_roadproject_add_projectId")]
+    partial class roadproject_add_projectId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -494,9 +497,6 @@ namespace RMIS.Migrations
                     b.Property<int>("TotalBudget")
                         .HasColumnType("int");
 
-                    b.Property<int>("step")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("RoadProjects");
@@ -533,9 +533,6 @@ namespace RMIS.Migrations
 
                     b.Property<string>("PreviousMeetingStatus")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("ProcessId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ProjectId")
                         .IsRequired()
@@ -593,9 +590,6 @@ namespace RMIS.Migrations
                     b.Property<string>("PreviousMeetingStatus")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ProcessId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("ProjectId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -637,6 +631,9 @@ namespace RMIS.Migrations
                     b.Property<string>("ConstructionPeriod")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ConstructionUnit")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ContractType")
                         .HasColumnType("nvarchar(max)");
 
@@ -661,20 +658,11 @@ namespace RMIS.Migrations
                     b.Property<string>("PreviousMeetingStatus")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("ProcessId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("ProjectId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ProjectName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("RecordTitle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RecordType")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SupportingDocument")
@@ -683,42 +671,6 @@ namespace RMIS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("road_project_process_3");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.RoadProjectProcessFile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Base64String")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileSize")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FileType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("ProcessId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UploadUser")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RoadProjectProcessFiles");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.Area", b =>

@@ -1,0 +1,748 @@
+/* ==========================================================================
+   processBox.css - 專案歷程詳情頁面專用樣式
+   依賴：box.css (基礎容器), projectBox.css (共用元件)
+   ========================================================================== */
+
+/* ==========================================================================
+   1. 容器與佈局
+   ========================================================================== */
+
+.process-box-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f8fafc;
+}
+
+/* ==========================================================================
+   2. 專案資訊卡片 (Header Card)
+   ========================================================================== */
+
+.process-info-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px 25px;
+    margin: 20px;
+    margin-bottom: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.process-info-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.process-info-left {
+    flex: 1;
+}
+
+.process-info-right {
+    flex-shrink: 0;
+    margin-left: 20px;
+}
+
+/* 案號與日期 */
+.process-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.process-id-badge {
+    background-color: #e2e8f0;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-weight: 600;
+}
+
+.process-create-date {
+    color: #94a3b8;
+}
+
+/* 專案名稱 */
+.process-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+}
+
+/* 資訊標籤列 */
+.process-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.process-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.process-tag .tag-label {
+    color: #94a3b8;
+}
+
+.process-tag .tag-value {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.process-tag-status .fa-check-circle {
+    color: #22c55e;
+}
+
+/* 進度圓環 */
+.process-progress-ring {
+    width: 80px;
+    height: 80px;
+}
+
+.circular-chart {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.circle-bg {
+    fill: none;
+    stroke: #e2e8f0;
+    stroke-width: 3;
+}
+
+.circle {
+    fill: none;
+    stroke: #3b82f6;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dasharray 0.5s ease;
+}
+
+.percentage {
+    fill: #1e293b;
+    font-size: 0.5rem;
+    font-weight: 700;
+    text-anchor: middle;
+}
+
+/* ==========================================================================
+   3. 階段分頁 Tabs
+   ========================================================================== */
+
+.process-stage-tabs {
+    display: flex;
+    background: #ffffff;
+    border-bottom: 2px solid #e2e8f0;
+    margin: 0 20px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+}
+
+.process-stage-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
+.stage-tab {
+    flex: 1;
+    min-width: 180px;
+    padding: 14px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.stage-tab:hover {
+    background-color: #f8fafc;
+    color: #475569;
+}
+
+.stage-tab.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.stage-tab i {
+    font-size: 1rem;
+}
+
+/* ==========================================================================
+   4. 時間軸內容區
+   ========================================================================== */
+
+.process-content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    scrollbar-width: thin;
+}
+
+.process-content-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.process-content-area::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.process-content-area::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+/* 階段標題列 */
+.process-stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f1f5f9;
+}
+
+.stage-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.stage-indicator {
+    width: 5px;
+    height: 24px;
+    background: #2563eb;
+    border-radius: 3px;
+}
+
+.btn-add-record {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   5. 時間軸樣式
+   ========================================================================== */
+
+.process-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+/* 垂直線 */
+.timeline-line {
+    position: absolute;
+    left: 7px;
+    top: 20px;
+    bottom: 20px;
+    width: 2px;
+    background: linear-gradient(to bottom, #cbd5e1, #e2e8f0);
+    border-radius: 1px;
+}
+
+/* 時間軸項目 */
+.timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+/* 時間軸圓點 */
+.timeline-dot {
+    position: absolute;
+    left: -30px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    background: #3b82f6;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px #dbeafe, 0 2px 4px rgba(59, 130, 246, 0.3);
+    z-index: 2;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.timeline-item:hover .timeline-dot {
+    transform: scale(1.2);
+    background: #2563eb;
+}
+
+/* ==========================================================================
+   6. 時間軸卡片
+   ========================================================================== */
+
+.timeline-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.timeline-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+}
+
+/* 卡片標題列 */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* 紀錄類型標籤 */
+.record-type {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+.record-type.type-milestone {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.record-type.type-meeting {
+    background-color: #f3e8ff;
+    color: #7c3aed;
+}
+
+.record-type.type-official {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.record-type.type-progress {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+/* 紀錄標題 */
+.record-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* 日期 */
+.record-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #64748b;
+    font-family: 'Consolas', 'Monaco', monospace;
+    white-space: nowrap;
+}
+
+.record-date i {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+/* 紀錄描述 */
+.record-desc {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.7;
+    margin: 0 0 16px 0;
+    padding-left: 12px;
+    border-left: 2px solid #e2e8f0;
+}
+
+/* ==========================================================================
+   7. 附件區塊
+   ========================================================================== */
+
+.record-attachments {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.attachments-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 12px 0;
+}
+
+.attachments-title i {
+    color: #94a3b8;
+}
+
+.attachment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.attachment-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+}
+
+.attachment-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+}
+
+.file-icon {
+    font-size: 1.2rem;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.file-icon.fa-file-pdf-o {
+    color: #dc2626;
+}
+
+.file-icon.fa-file-powerpoint-o {
+    color: #ea580c;
+}
+
+.file-icon.fa-file-excel-o {
+    color: #16a34a;
+}
+
+.file-icon.fa-file-word-o {
+    color: #2563eb;
+}
+
+.file-icon.fa-file-image-o {
+    color: #8b5cf6;
+}
+
+.file-icon.fa-file-archive-o {
+    color: #d97706;
+}
+
+.file-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.btn-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-download:hover {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+/* ==========================================================================
+   8. 結尾提示
+   ========================================================================== */
+
+.timeline-end-hint {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.timeline-end-hint span {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 6px 16px;
+    border-radius: 20px;
+}
+
+/* ==========================================================================
+   9. Footer 操作列
+   ========================================================================== */
+
+.process-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.process-footer .btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   10. 響應式調整
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .process-info-main {
+        flex-direction: column;
+    }
+    
+    .process-info-right {
+        margin-left: 0;
+        margin-top: 15px;
+        align-self: flex-end;
+    }
+    
+    .process-tags {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .process-tag {
+        width: fit-content;
+    }
+    
+    .stage-tab {
+        min-width: 150px;
+        padding: 12px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .record-date {
+        align-self: flex-start;
+    }
+    
+    .process-stage-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .btn-add-record {
+        justify-content: center;
+    }
+}
+
+/* ==========================================================================
+   processBox.css - 補充樣式
+   新增：record-desc-wrapper 與 btn-view-more 樣式
+   ========================================================================== */
+
+/* ==========================================================================
+   描述區塊包裝器
+   ========================================================================== */
+
+.record-desc-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.record-desc-wrapper .record-desc {
+    flex: 1;
+    margin: 0;
+    /* 限制顯示行數 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   「更多...」按鈕樣式
+   ========================================================================== */
+
+.btn-view-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #3b82f6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-view-more:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #2563eb;
+}
+
+.btn-view-more:active {
+    background: #dbeafe;
+    transform: scale(0.98);
+}
+
+.btn-view-more i {
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+}
+
+.btn-view-more:hover i {
+    transform: translateX(2px);
+}
+
+/* ==========================================================================
+   時間軸卡片可點擊效果
+   ========================================================================== */
+
+.timeline-card {
+    cursor: pointer;
+}
+
+.timeline-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e1;
+}
+
+/* 附件區域不觸發卡片點擊 */
+.record-attachments {
+    cursor: default;
+}
+
+.record-attachments:hover {
+    /* 防止附件區域影響卡片的 hover 效果 */
+}
+
+/* ==========================================================================
+   響應式調整
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .record-desc-wrapper {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn-view-more {
+        align-self: flex-end;
+    }
+}
+
+/* ==========================================================================
+   11. 動畫效果
+   ========================================================================== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.timeline-item {
+    animation: fadeInUp 0.3s ease forwards;
+}
+
+.timeline-item:nth-child(1) { animation-delay: 0.05s; }
+.timeline-item:nth-child(2) { animation-delay: 0.1s; }
+.timeline-item:nth-child(3) { animation-delay: 0.15s; }
+.timeline-item:nth-child(4) { animation-delay: 0.2s; }
+.timeline-item:nth-child(5) { animation-delay: 0.25s; }
