@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using RMIS.Data;
+using RMIS.Models;
 using RMIS.Models.sql;
 using RMIS.Repositories;
 using static RMIS.Models.Map.RoadProject;
@@ -11,10 +15,125 @@ namespace RMIS.Controllers
     public class RoadProjectController : ControllerBase
     {
         private readonly RoadProjectInterface _roadProjectInterface;
+        private readonly MapDBContext _mapDBContext;
+        private readonly FilePathSettings _filePaths;
 
-        public RoadProjectController(RoadProjectInterface roadProjectInterface)
+        public RoadProjectController(RoadProjectInterface roadProjectInterface, MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths)
         {
             _roadProjectInterface = roadProjectInterface;
+            _mapDBContext = mapDBContext;
+            _filePaths = filePaths.Value;
+        }
+
+        /// <summary>
+        /// 根據專案 ID 取得單一道路專案詳細資料
+        /// </summary>
+        /// <param name="projectId">專案 ID (ProjectId 或 Guid Id)</param>
+        [HttpGet("GetProject/{projectId}")]
+        public async Task<IActionResult> GetProject(string projectId)
+        {
+            // 嘗試以 ProjectId 查詢
+            var project = await _mapDBContext.RoadProjects
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+            // 如果找不到，嘗試以 Guid Id 查詢
+            if (project == null && Guid.TryParse(projectId, out Guid guidId))
+            {
+                project = await _mapDBContext.RoadProjects
+                    .FirstOrDefaultAsync(p => p.Id == guidId);
+            }
+
+            if (project == null)
+            {
+                return NotFound(new { success = false, message = $"找不到專案 ID: {projectId}" });
+            }
+
+            return Ok(project);
+        }
+
+        /// <summary>
+        /// 新增道路專案
+        /// </summary>
+        [HttpPost("AddProject")]
+        public async Task<IActionResult> AddProject([FromBody] RoadProject project)
+        {
+            if (project == null)
+            {
+                return BadRequest(new { success = false, message = "接收不到資料" });
+            }
+
+            try
+            {
+                // 設定 ID 和建立時間
+                project.Id = Guid.NewGuid();
+                project.CreateTime = DateTime.Now;
+
+                // 設定 Index (取得最大值 + 1)
+                var maxIndex = await _mapDBContext.RoadProjects.MaxAsync(r => (int?)r.Index) ?? 0;
+                project.Index = maxIndex + 1;
+
+                // 如果沒有提供 ProjectId，自動產生
+                if (string.IsNullOrEmpty(project.ProjectId))
+                {
+                    project.ProjectId = $"RP{DateTime.Now:yyyyMMddHHmmss}";
+                }
+
+                // 自動組合起訖位置
+                if (string.IsNullOrEmpty(project.StartEndLocation) && !string.IsNullOrEmpty(project.StartPoint))
+                {
+                    project.StartEndLocation = string.IsNullOrEmpty(project.EndPoint)
+                        ? project.StartPoint
+                        : $"{project.StartPoint}至{project.EndPoint}";
+                }
+
+                // 設定預設備註
+                if (string.IsNullOrEmpty(project.Remarks))
+                {
+                    project.Remarks = "無";
+                }
+
+                // 設定預設的 Guid
+                if (project.PlannedExpansionId == Guid.Empty)
+                {
+                    project.PlannedExpansionId = Guid.NewGuid();
+                }
+                if (project.StreetViewId == Guid.Empty)
+                {
+                    project.StreetViewId = Guid.NewGuid();
+                }
+
+                await _mapDBContext.RoadProjects.AddAsync(project);
+                await _mapDBContext.SaveChangesAsync();
+
+                return Ok(new { success = true, projectId = project.ProjectId, id = project.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"新增失敗：{ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// 取得最新的道路專案列表
+        /// </summary>
+        /// <param name="count">取得筆數，預設 5 筆</param>
+        [HttpGet("GetLatestProjects")]
+        public async Task<IActionResult> GetLatestProjects(int count = 5)
+        {
+            var projects = await _mapDBContext.RoadProjects
+                .OrderByDescending(p => p.CreateTime)
+                .Take(count)
+                .Select(p => new
+                {
+                    p.ProjectId,
+                    ProjectName = p.StartEndLocation ?? $"{p.StartPoint} - {p.EndPoint}",
+                    p.step,
+                    p.CreateTime,
+                    p.AdministrativeDistrict
+                })
+                .ToListAsync();
+
+            return Ok(projects);
         }
 
         [HttpPost("AddProcess1")]
@@ -230,7 +349,7 @@ namespace RMIS.Controllers
             try
             {
                 // 從實體路徑讀取檔案
-                var basePath = @"C:\RoadProjectProcessFile";
+                var basePath = _filePaths.ProcessFile;
                 var filePath = Path.Combine(basePath, file.ProcessId.ToString(), file.FileName);
 
                 if (!System.IO.File.Exists(filePath))

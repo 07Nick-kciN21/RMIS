@@ -1,0 +1,592 @@
+/* ==========================================================================
+   roadProjectAdd.css - 道路專案新增頁面樣式
+   ========================================================================== */
+
+/* ===== Container ===== */
+#page-project-add {
+    height: 100%;
+    overflow: hidden;
+}
+
+#page-project-add .project-add-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f8fafc;
+    overflow: hidden;
+}
+
+/* ===== Header ===== */
+#page-project-add .add-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+#page-project-add .add-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#page-project-add .add-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    color: #1e293b;
+}
+
+/* ===== Content Area ===== */
+#page-project-add .add-content-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+}
+
+/* ===== Section ===== */
+#page-project-add .add-section {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+
+#page-project-add .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#page-project-add .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#page-project-add .section-title i {
+    color: #64748b;
+    font-size: 14px;
+}
+
+#page-project-add .section-body {
+    padding: 16px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ===== Form Grid ===== */
+#page-project-add .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+}
+
+#page-project-add .form-grid-3col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+#page-project-add .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#page-project-add .form-group-wide {
+    grid-column: span 2;
+}
+
+#page-project-add .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+}
+
+#page-project-add .form-label.required::after {
+    content: ' *';
+    color: #ef4444;
+}
+
+#page-project-add .form-control,
+#page-project-add .form-select {
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #1e293b;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#page-project-add .form-control:focus,
+#page-project-add .form-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#page-project-add .form-control:read-only {
+    background-color: #f8fafc;
+    color: #64748b;
+}
+
+#page-project-add .form-control::placeholder {
+    color: #94a3b8;
+}
+
+#page-project-add .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ===== Autocomplete Dropdown ===== */
+#page-project-add .autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+#page-project-add .autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#page-project-add .autocomplete-dropdown.hidden {
+    display: none;
+}
+
+#page-project-add .autocomplete-item {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #334155;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    line-height: 1.4;
+}
+
+#page-project-add .autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+#page-project-add .autocomplete-item:hover {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+/* ===== Preview Map ===== */
+#page-project-add #add-preview-map {
+    width: 100%;
+    height: 450px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+#page-project-add .preview-map-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+#page-project-add .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+#page-project-add .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+#page-project-add .legend-swatch-range {
+    background: rgba(59, 130, 246, 0.3);
+    border: 2px solid #3b82f6;
+}
+
+#page-project-add .legend-swatch-start {
+    background: #fff;
+    border: 2px solid #22c55e;
+    border-radius: 50%;
+}
+
+#page-project-add .legend-swatch-end {
+    background: #fff;
+    border: 2px solid #ef4444;
+    border-radius: 50%;
+}
+
+#page-project-add .legend-swatch-photo {
+    background: #fff;
+    border: 2px solid #f97316;
+    border-radius: 50%;
+}
+
+/* ===== Draggable Markers (divIcon) ===== */
+#page-project-add .range-marker-start,
+#page-project-add .range-marker-end,
+#page-project-add .range-marker-middle,
+#page-project-add .range-marker-photo {
+    border-radius: 50%;
+    background: #fff;
+    box-sizing: border-box;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+#page-project-add .range-marker-start {
+    width: 16px; height: 16px;
+    border: 3px solid #22c55e;
+}
+
+#page-project-add .range-marker-end {
+    width: 16px; height: 16px;
+    border: 3px solid #ef4444;
+}
+
+#page-project-add .range-marker-middle {
+    width: 14px; height: 14px;
+    border: 3px solid #3b82f6;
+}
+
+#page-project-add .range-marker-photo {
+    width: 14px; height: 14px;
+    border: 3px solid #f97316;
+}
+
+/* ===== Preview Map Add-Point Mode ===== */
+#page-project-add #add-preview-map.adding-point {
+    cursor: crosshair;
+}
+
+#page-project-add #btn-toggle-add-range-point.active {
+    background-color: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+
+#page-project-add #btn-toggle-add-photo-point.active {
+    background-color: #f97316;
+    color: #fff;
+    border-color: #f97316;
+}
+
+/* ===== Range Table Inline Inputs ===== */
+#page-project-add .data-table .range-lat-input,
+#page-project-add .data-table .range-lng-input {
+    padding: 5px 6px;
+    font-size: 13px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: #334155;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+#page-project-add .data-table .range-lat-input:hover,
+#page-project-add .data-table .range-lng-input:hover {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+}
+
+#page-project-add .data-table .range-lat-input:focus,
+#page-project-add .data-table .range-lng-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* ===== Range Table Delete Button ===== */
+#page-project-add .btn-delete-range-point {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 6px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#page-project-add .btn-delete-range-point:hover {
+    color: #fff;
+    background: #ef4444;
+    border-color: #ef4444;
+    transform: scale(1.05);
+}
+
+#page-project-add .btn-delete-range-point:active {
+    transform: scale(0.95);
+}
+
+/* ===== Section Action Button ===== */
+#page-project-add .section-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* ===== Data Table ===== */
+#page-project-add .data-table-wrapper {
+    overflow-x: auto;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#page-project-add .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+#page-project-add .data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+#page-project-add .data-table th {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#page-project-add .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+#page-project-add .data-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+#page-project-add .data-table .empty-row td {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 20px;
+}
+
+#page-project-add .data-table .empty-row:hover {
+    background-color: transparent;
+}
+
+/* ===== Section Header Actions ===== */
+#page-project-add .section-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ===== Photo List ===== */
+#page-project-add .photo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#page-project-add .empty-photo-hint {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 20px;
+}
+
+#page-project-add .photo-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    position: relative;
+}
+
+#page-project-add .photo-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#page-project-add .photo-item-index {
+    font-weight: 600;
+    color: #475569;
+    font-size: 13px;
+}
+
+#page-project-add .photo-item-remove {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+#page-project-add .photo-item-remove:hover {
+    color: #dc2626;
+    background: #fef2f2;
+    border-radius: 4px;
+}
+
+#page-project-add .photo-item-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+
+#page-project-add .photo-item-content .form-group {
+    margin: 0;
+}
+
+#page-project-add .photo-item-file {
+    grid-column: span 3;
+}
+
+#page-project-add .photo-file-input {
+    padding: 8px;
+    font-size: 13px;
+}
+
+#page-project-add .photo-preview {
+    grid-column: span 3;
+    max-width: 200px;
+    max-height: 150px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    display: none;
+}
+
+#page-project-add .photo-preview.has-image {
+    display: block;
+}
+
+/* ===== Input with Unit ===== */
+#page-project-add .input-with-unit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#page-project-add .input-with-unit .form-control {
+    flex: 1;
+}
+
+#page-project-add .input-unit {
+    font-size: 13px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* ===== Footer ===== */
+#page-project-add .add-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 20px;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+#page-project-add .add-footer .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+#page-project-add .btn-cancel {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+}
+
+#page-project-add .btn-cancel:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+#page-project-add .btn-submit {
+    background-color: #3b82f6;
+    border: 1px solid #3b82f6;
+    color: white;
+}
+
+#page-project-add .btn-submit:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+    #page-project-add .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #page-project-add .form-grid-3col {
+        grid-template-columns: 1fr;
+    }
+
+    #page-project-add .form-group-wide {
+        grid-column: span 1;
+    }
+
+    #page-project-add .add-footer {
+        flex-direction: column;
+    }
+
+    #page-project-add .add-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

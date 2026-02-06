@@ -15,10 +15,20 @@ namespace RMIS.Models.Map
         public class ProcessRecordDTO
         {
             public int Id { get; set; }
+            public Guid ProcessId { get; set; }
             public string RecordType { get; set; } = string.Empty;  // Process1, Process2, Process3
             public string RecordTitle { get; set; } = string.Empty;
             public DateTime? CreatedAt { get; set; }
             public string CurrentStatus { get; set; } = string.Empty;
+            public List<ProcessFileDTO> Files { get; set; } = new();
+        }
+
+        public class ProcessFileDTO
+        {
+            public int Id { get; set; }
+            public string FileName { get; set; } = string.Empty;
+            public string FileType { get; set; } = string.Empty;
+            public string FileSize { get; set; } = string.Empty;
         }
 
         public class Process1ViewDTO

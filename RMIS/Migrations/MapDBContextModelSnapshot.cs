@@ -421,6 +421,10 @@ namespace RMIS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CaseType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("CompensationBudget")
                         .HasColumnType("int");
 
@@ -456,10 +460,15 @@ namespace RMIS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PrivateLand")
-                        .HasColumnType("int");
+                    b.Property<string>("PrivateLand")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProjectId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProjectName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -467,18 +476,33 @@ namespace RMIS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PublicLand")
-                        .HasColumnType("int");
+                    b.Property<string>("PublicLand")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PublicPrivateLand")
-                        .HasColumnType("int");
+                    b.Property<string>("PublicPrivateLand")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RCCount")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Remarks")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<float>("RoadLength")
-                        .HasColumnType("real");
+                    b.Property<string>("ReviewResult")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReviewYear")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoadLength")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StartEndLocation")
                         .IsRequired()
@@ -491,11 +515,16 @@ namespace RMIS.Migrations
                     b.Property<Guid>("StreetViewId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("TinHouseCount")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("TotalBudget")
                         .HasColumnType("int");
 
-                    b.Property<int>("step")
-                        .HasColumnType("int");
+                    b.Property<string>("step")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

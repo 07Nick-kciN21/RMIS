@@ -168,6 +168,13 @@ export function addLineToLayer(points, newLayer, color, name) {
 
 export function addPolygonToLayer(points, newLayer, color, name) {
     var $indexMap = Map.getIndexMap();
+
+    // 檢查 points 是否為空
+    if (!points || points.length === 0) {
+        console.warn('addPolygonToLayer: points is empty, skipping');
+        return;
+    }
+
     var pointGroup = [];
     var prop = points[0][1];
 
@@ -453,10 +460,18 @@ function popupProjectFrom(prop){
         // if (!propMap[key]) return;
         let value = prop[key];
     
-        // 如果是CurrentRoadWidth、PlannedRoadWidth，轉換成json格式，並顯示路寬與路況
+        // 如果是CurrentRoadWidth、PlannedRoadWidth，檢查是否為嵌套 JSON 格式
         if (["現況路寬", "計畫路寬"].includes(key)) {
-            const parsedValue = JSON.parse(value);
-            value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
+            // 檢查是否為 JSON 對象格式（舊資料格式）
+            if (typeof value === 'string' && value.startsWith('{')) {
+                try {
+                    const parsedValue = JSON.parse(value);
+                    value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
+                } catch (e) {
+                    // 解析失敗則直接使用原值
+                }
+            }
+            // 新資料格式直接是字串，不需處理
         }
     
         // 如果是ConstructionBudget等，則轉換成萬元

@@ -1,5 +1,8 @@
 import BoxManager from './box.js';
 import ProcessBox from './processBox.js';
+import RoadProjectView from './roadProjectView.js';
+import RoadProjectAdd from './roadProjectAdd.js';
+import RoadProjectImport from './roadProjectImport.js';
 import { Map } from './map_test.js';
 
 
@@ -73,6 +76,26 @@ const ProjectBox = {
             self.updateProjectTable();
         });
 
+        // 綁定新增專案按鈕
+        $('#btnAddProject').on('click', function() {
+            RoadProjectAdd.openAdd();
+        });
+
+        // 綁定匯入專案按鈕
+        $('#btnImportProject').on('click', function() {
+            RoadProjectImport.openImport();
+        });
+
+        // 監聽專案新增完成事件，重新查詢
+        $(document).on('projectAdded', function() {
+            self.fetchData();
+        });
+
+        // 綁定關閉按鈕事件，清除定位圖層
+        $('#left-box .btn-close-box').on('click', function() {
+            self.clearProjectLayer();
+        });
+
         console.log("ProjectBox 業務邏輯初始化完成 (Fetch JSON 模式)");
     },
 
@@ -108,6 +131,7 @@ const ProjectBox = {
             roadLength: self.convertInputValue($('#projectRoadLength').val()), // 道路長度
             currentRoadWidth: self.convertInputValue($('#projectCurrentRoadWidth').val()), // 現況路寬
             plannedRoadWidth: self.convertInputValue($('#projectPlannedRoadWidth').val()), // 計畫路寬
+            step: self.convertSelectValue($('#projectStep').val()), // 階段
             budgets: { // 經費資料（巢狀結構）
                 constructionBudget: { // 工程經費
                     option: self.convertSelectValue($('#constructionBudgetOption').val()),
@@ -190,36 +214,48 @@ const ProjectBox = {
             }
 
             let row = `
-                <tr>
+                <tr data-project-index="${startIndex + currentPageData.indexOf(item)}">
                     <td>
                         <button class="btn btn-sm btn-outline-primary btn-locate" data-id="${item.id}">
                             定位
                         </button>
                     </td>
-                    ${hasUpdatePermission ? `<td><button class="btn btn-sm btn-outline-secondary btn-ProcessView" data-id="${item.projectId}">檢視歷程</button></td>` : ''}
+                    ${hasUpdatePermission ? `<td><button class="btn btn-sm btn-outline-secondary btn-ProcessView" data-id="${item.projectId}">歷程</button></td>` : ''}
                     <td>${item.proposer || ''}</td>
                     <td>${item.administrativeDistrict || ''}</td>
-                    <td>${item.startEndLocation || ''}</td>
+                    <td class="td-clickable" style="cursor: pointer; color: #2563eb;">${item.startEndLocation || ''}</td>
                     <td>${totalBudgetDisplay}</td>
                 </tr>`;
             $tbody.append(row);
         });
 
+
         // 綁定定位事件
         $('.btn-locate').on('click', function() {
             const id = $(this).data('id');
-            
+
             // 移除之前選中列的樣式
             if (self.currentRow) {
                 self.currentRow.removeClass('selectRow');
             }
-            
+
             // 標記當前列
             self.currentRow = $(this).closest('tr');
             self.currentRow.addClass('selectRow');
-            
+
             // 執行定位
             self.locateProject(id);
+        });
+
+        // 綁定起訖位置點擊事件（開啟專案詳情）
+        $('.td-clickable').on('click', function() {
+            const $row = $(this).closest('tr');
+            const projectIndex = $row.data('project-index');
+            const projectData = self.filterProject[projectIndex];
+
+            if (projectData) {
+                self.openProjectView(projectData);
+            }
         });
 
         // 綁定操作按鈕事件（開啟歷程詳情）
@@ -257,6 +293,15 @@ const ProjectBox = {
 
         // 呼叫 ProcessBox 開啟歷程詳情
         ProcessBox.openProcessBox(projectData);
+    },
+
+    /**
+     * 開啟專案詳情檢視
+     * @param {Object} projectData - 專案資料
+     */
+    openProjectView: function(projectData) {
+        console.log('開啟專案詳情:', projectData);
+        RoadProjectView.openView(projectData);
     },
 
     /**
@@ -451,40 +496,45 @@ const ProjectBox = {
      */
     createPopupForm: function(propData) {
         const prop = JSON.parse(propData);
-        
+
         let table = '<table class="popup-table-content" cellpadding="5" cellspacing="0">';
-        
+
         Object.entries(prop).forEach(([key, value]) => {
             // 跳過街景照片欄位
             if (key === "街景照片") {
                 return;
             }
-            
-            // 處理路寬 JSON 格式
-            if (["現況路寬", "計畫路寬"].includes(key)) {
-                try {
-                    const parsedValue = JSON.parse(value);
-                    value = `${parsedValue["路寬"]} | ${parsedValue["路況"]}`;
-                } catch (e) {
-                    // 不是 JSON 格式，直接使用原值
-                }
-            }
-            
+
             // 處理土地筆數
             if (["公有土地", "私有土地", "公私土地"].includes(key)) {
                 value += "筆";
             }
-            
+
             table += `<tr><th style="width: 40%;">${key}</th><td>${value}</td></tr>`;
         });
-        
+
         table += '</table>';
-        
+
         return `
             <div class="popup-table">
                 ${table}
             </div>
         `;
+    },
+
+    /**
+     * 清除定位圖層
+     */
+    clearProjectLayer: function() {
+        const self = this;
+        if (self.projectLayer) {
+            self.projectLayer.clearLayers();
+        }
+        // 清除選中列樣式
+        if (self.currentRow) {
+            self.currentRow.removeClass('selectRow');
+            self.currentRow = null;
+        }
     },
 
     /**

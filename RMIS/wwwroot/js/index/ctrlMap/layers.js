@@ -65,11 +65,23 @@ function createNewLayer(result, pipelineId) {
     console.log("createNewLayer");
     console.log(result.name);
     result.areas.forEach(function (area) {
+        // 跳過空的 points 陣列
+        if (!area.points || area.points.length === 0) {
+            console.warn('Skipping area with empty points:', area.id);
+            return;
+        }
         // item1: 該點座標
         // item2: 點的屬性資料，如果為plane或arrowline，則只有第一個點有屬性資料需要儲存
         let points = area.points.map(function (point) {
             var item = { "座標": [point.latitude, point.longitude] };
-            var item2 = point.prop != null ? JSON.parse(point.prop.replace(/NaN/g, 'null')) : null;
+            var item2 = null;
+            if (point.prop != null && point.prop.trim() !== '') {
+                try {
+                    item2 = JSON.parse(point.prop.replace(/NaN/g, 'null'));
+                } catch (e) {
+                    console.error('JSON parse error for prop:', point.prop, e);
+                }
+            }
             const merged = { ...item, ...item2 } 
             if(item2 != null){
                 layerProps[pipelineId].push(merged);

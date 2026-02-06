@@ -130,6 +130,31 @@ namespace RMIS.Controllers
             }
         }
 
+        [HttpGet("getPoints/{projectId}")]
+        public async Task<IActionResult> GetPoints(Guid projectId)
+        {
+            var result = await _adminInterface.GetPointsByProjectIdAsync(projectId);
+            return Ok(result);
+        }
+
+        [HttpPost("updatePoints")]
+        public async Task<IActionResult> UpdatePoints([FromBody] UpdatePointsInput input)
+        {
+            try
+            {
+                var result = await _adminInterface.UpdateProjectPointsAsync(input.ProjectId, input.RangePoints, input.PhotoPoints);
+                if (result)
+                {
+                    return Ok(new { success = true, message = "座標點已更新" });
+                }
+                return BadRequest(new { success = false, message = "找不到指定的專案" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpPost("updateProjectPhoto")]
         public async Task<IActionResult> UpdateProjectPhoto([FromForm] UpdateProjectPhotoInput projectPhoto)
         {

@@ -1,0 +1,213 @@
+@* ==========================================================================
+   _roadProjectView.cshtml - 道路專案檢視頁面
+   功能：顯示道路專案的完整詳細資訊
+   ========================================================================== *@
+
+<link rel="stylesheet" href="~/css/index/roadProjectView.css" />
+
+<div id="page-project-view" class="box-page hidden">
+    <div class="project-view-container">
+
+        @* ===== 1. 頁面標題列 ===== *@
+        <div class="view-header">
+            <div class="view-header-left">
+                <div class="view-header-info">
+                    <span class="view-breadcrumb">
+                        <span class="breadcrumb-label">道路專案</span>
+                        <i class="fa fa-angle-right"></i>
+                        <span class="breadcrumb-district" id="pv-district">行政區</span>
+                    </span>
+                    <h2 class="view-title" id="pv-title">專案名稱載入中...</h2>
+                </div>
+            </div>
+            <div class="view-header-right">
+                <button type="button" class="btn btn-primary btn-sm" id="btn-edit-project">
+                    <i class="fa fa-pencil"></i> 編輯專案
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="btn-delete-project">
+                    <i class="fa fa-trash"></i> 刪除專案
+                </button>
+            </div>
+        </div>
+
+        @* ===== 2. 主要內容區 ===== *@
+        <div class="view-content-area">
+
+            @* ===== 2.1 基本資訊卡片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-info-circle"></i> 基本資訊
+                    </h3>
+                    <span class="stage-badge" id="pv-stage-badge">階段</span>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">專案編號</span>
+                            <span class="info-value" id="pv-project-id">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">提案人</span>
+                            <span class="info-value" id="pv-proposer">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">行政區</span>
+                            <span class="info-value" id="pv-admin-district">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">建立日期</span>
+                            <span class="info-value" id="pv-create-date">-</span>
+                        </div>
+                        <div class="info-item info-item-wide">
+                            <span class="info-label">起訖位置</span>
+                            <span class="info-value" id="pv-location">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.2 道路資訊卡片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-road"></i> 道路資訊
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">道路長度</span>
+                            <span class="info-value" id="pv-road-length">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">現況路寬</span>
+                            <span class="info-value" id="pv-current-width">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">計畫路寬</span>
+                            <span class="info-value" id="pv-planned-width">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.3 土地資訊卡片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-map"></i> 土地資訊
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid info-grid-3col">
+                        <div class="info-item info-item-card">
+                            <span class="info-label">公有土地</span>
+                            <span class="info-value info-value-lg" id="pv-public-land">-</span>
+                            <span class="info-unit">筆</span>
+                        </div>
+                        <div class="info-item info-item-card">
+                            <span class="info-label">私有土地</span>
+                            <span class="info-value info-value-lg" id="pv-private-land">-</span>
+                            <span class="info-unit">筆</span>
+                        </div>
+                        <div class="info-item info-item-card">
+                            <span class="info-label">公私土地</span>
+                            <span class="info-value info-value-lg" id="pv-mixed-land">-</span>
+                            <span class="info-unit">筆</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.4 經費資訊卡片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-money"></i> 經費資訊
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="budget-grid">
+                        <div class="budget-item">
+                            <span class="budget-label">工程經費</span>
+                            <span class="budget-value" id="pv-construction-budget">-</span>
+                        </div>
+                        <div class="budget-item">
+                            <span class="budget-label">用地經費</span>
+                            <span class="budget-value" id="pv-land-budget">-</span>
+                        </div>
+                        <div class="budget-item">
+                            <span class="budget-label">補償經費</span>
+                            <span class="budget-value" id="pv-compensation-budget">-</span>
+                        </div>
+                        <div class="budget-item budget-item-total">
+                            <span class="budget-label">合計經費</span>
+                            <span class="budget-value budget-value-total" id="pv-total-budget">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.5 建築物資訊卡片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-building"></i> 建築物資訊
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item info-item-card">
+                            <span class="info-label">RC數量</span>
+                            <span class="info-value info-value-lg" id="pv-rc-count">-</span>
+                        </div>
+                        <div class="info-item info-item-card">
+                            <span class="info-label">鐵皮屋數量</span>
+                            <span class="info-value info-value-lg" id="pv-tin-house-count">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.6 審議資訊卡片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-gavel"></i> 審議資訊
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">審議年度</span>
+                            <span class="info-value" id="pv-review-year">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">案件類型</span>
+                            <span class="info-value" id="pv-case-type">-</span>
+                        </div>
+                        <div class="info-item info-item-wide">
+                            <span class="info-label">審議結果</span>
+                            <span class="info-value" id="pv-review-result">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.7 備註 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-sticky-note-o"></i> 備註
+                    </h3>
+                </div>
+                <div class="section-body">
+                    <div class="remarks-content" id="pv-remarks">
+                        尚無備註
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

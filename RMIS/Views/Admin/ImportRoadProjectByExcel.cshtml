@@ -1,0 +1,110 @@
+@{
+    ViewData["Title"] = "匯入道路專案";
+}
+
+<link rel="stylesheet" href="~/css/admin/importRoadProject.css" />
+
+<div class="import-container">
+    <div class="import-header">
+        <h2>Excel 匯入道路專案</h2>
+        <p class="import-desc">上傳 Excel 檔案及照片壓縮檔以批次匯入道路專案</p>
+    </div>
+
+    <form id="import-form" enctype="multipart/form-data">
+        <div class="form-section">
+            <h3><i class="fa fa-file-excel-o"></i> Excel 檔案</h3>
+            <div class="file-upload-area" id="excel-upload-area">
+                <input type="file" id="excel-file" name="ExcelFile" accept=".xlsx,.xls" required>
+                <div class="upload-placeholder">
+                    <i class="fa fa-cloud-upload"></i>
+                    <p>點擊或拖曳上傳 Excel 檔案 (.xlsx)</p>
+                    <span class="file-name" id="excel-file-name"></span>
+                </div>
+            </div>
+            <div class="form-hint">
+                <a href="#" id="download-template">下載範本檔案</a>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fa fa-file-archive-o"></i> 照片壓縮檔 (選填)</h3>
+            <div class="file-upload-area" id="zip-upload-area">
+                <input type="file" id="photo-zip-file" name="PhotoZipFile" accept=".zip">
+                <div class="upload-placeholder">
+                    <i class="fa fa-cloud-upload"></i>
+                    <p>點擊或拖曳上傳照片壓縮檔 (.zip)</p>
+                    <span class="file-name" id="zip-file-name"></span>
+                </div>
+            </div>
+            <div class="form-hint">
+                <p>壓縮檔目錄結構：</p>
+                <pre>{專案代號}/
+    photo1.jpg
+    photo2.jpg
+    ...</pre>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fa fa-table"></i> Excel 欄位說明</h3>
+            <div class="column-table-wrapper">
+                <table class="column-table">
+                    <thead>
+                        <tr>
+                            <th>欄位</th>
+                            <th>說明</th>
+                            <th>必填</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>A - 專案代號</td><td>唯一識別碼，如 RP20240101001</td><td>是</td></tr>
+                        <tr><td>B - 提案人</td><td>提案人姓名</td><td>是</td></tr>
+                        <tr><td>C - 行政區</td><td>如：桃園區、中壢區</td><td>是</td></tr>
+                        <tr><td>D - 階段</td><td>1/2/3 (預設為 1)</td><td>否</td></tr>
+                        <tr><td>E - 起點</td><td>起點路名</td><td>否</td></tr>
+                        <tr><td>F - 終點</td><td>終點路名</td><td>否</td></tr>
+                        <tr><td>G - 起訖位置</td><td>自動組合或手動輸入</td><td>否</td></tr>
+                        <tr><td>H - 道路長度</td><td>如：500 公尺</td><td>否</td></tr>
+                        <tr><td>I - 現況路寬</td><td>如：8 公尺</td><td>否</td></tr>
+                        <tr><td>J - 計畫路寬</td><td>如：12 公尺</td><td>否</td></tr>
+                        <tr><td>K - 公有土地</td><td>筆數</td><td>否</td></tr>
+                        <tr><td>L - 私有土地</td><td>筆數</td><td>否</td></tr>
+                        <tr><td>M - 公私土地</td><td>筆數</td><td>否</td></tr>
+                        <tr><td>N - 工程經費</td><td>萬元</td><td>否</td></tr>
+                        <tr><td>O - 用地經費</td><td>萬元</td><td>否</td></tr>
+                        <tr><td>P - 補償經費</td><td>萬元</td><td>否</td></tr>
+                        <tr><td>Q - 合計經費</td><td>萬元</td><td>否</td></tr>
+                        <tr><td>R - 備註</td><td>備註說明</td><td>否</td></tr>
+                        <tr><td>S - 審議年度</td><td>如：113</td><td>否</td></tr>
+                        <tr><td>T - 案件類型</td><td>案件分類</td><td>否</td></tr>
+                        <tr><td>U - 工程名稱</td><td>工程名稱</td><td>否</td></tr>
+                        <tr><td>V - RC數量</td><td>棟數</td><td>否</td></tr>
+                        <tr><td>W - 鐵皮屋數量</td><td>棟數</td><td>否</td></tr>
+                        <tr><td>X - 審議結果</td><td>審議結果</td><td>否</td></tr>
+                        <tr><td>Y - 拓寬範圍座標</td><td>JSON: [{"lat":24.1,"lng":121.4},...]</td><td>否</td></tr>
+                        <tr><td>Z - 街景照片座標</td><td>JSON: [{"lat":24.1,"lng":121.4,"photoName":"a.jpg"},...]</td><td>否</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btn-import">
+                <i class="fa fa-upload"></i> 開始匯入
+            </button>
+        </div>
+    </form>
+
+    <div id="import-result" class="import-result hidden">
+        <div class="result-icon"></div>
+        <div class="result-message"></div>
+        <div class="result-details"></div>
+    </div>
+
+    <div id="import-loading" class="import-loading hidden">
+        <div class="loading-spinner"></div>
+        <p>匯入中，請稍候...</p>
+    </div>
+</div>
+
+<script type="module" src="~/js/admin/importRoadProjectByExcel.js"></script>

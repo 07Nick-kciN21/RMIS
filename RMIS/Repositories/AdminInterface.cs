@@ -27,11 +27,13 @@ namespace RMIS.Repositories
 
         // Road Project (道路工程)
         Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput);
-        Task<(bool Success, string Message)> AddRoadProjectByExcelAsync(AddRoadProjectByExcelInput roadProjectByExcel);
+        Task<bool> DeleteRoadProjectAsync(Guid projectId);
+        Task<ImportRoadProjectResult> ImportRoadProjectByExcelAsync(ImportRoadProjectByExcelInput input);
         Task<List<RoadProject>> GetProjectByAsync(GetRoadProjectInput data);
         Task<PointsByProjectId> GetPointsByProjectIdAsync(Guid projectId);
         Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput);
         Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput);
+        Task<bool> UpdateProjectPointsAsync(Guid projectId, List<range> rangePoints, List<photo>? photoPoints);
 
         // Construct Notice (施工公告)
         Task<int> AddConstructNoticeByExcelAsync(AddConstructNoticeByExcelInput roadProjectByExcelInput);

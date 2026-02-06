@@ -1,0 +1,350 @@
+@* ==========================================================================
+   _roadProjectEdit.cshtml - 道路專案編輯頁面
+   功能：編輯道路專案資料（不含拓寬範圍與街景照片）
+   ========================================================================== *@
+
+<link rel="stylesheet" href="~/css/index/roadProjectEdit.css" />
+
+<div id="page-project-edit" class="box-page hidden">
+    <div class="project-edit-container">
+
+        @* ===== 1. 頁面標題列 ===== *@
+        <div class="edit-header">
+            <div class="edit-header-info">
+                <h2 class="edit-title">編輯道路專案</h2>
+            </div>
+        </div>
+
+        @* ===== 2. 表單內容區 ===== *@
+        <div class="edit-content-area">
+            <form id="project-edit-form">
+
+                @* ===== 2.1 基本資訊 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-info-circle"></i> 基本資訊
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">專案編號</label>
+                                <input type="text" id="edit-project-id" name="projectId" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">提案人</label>
+                                <input type="text" id="edit-proposer" name="proposer" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">行政區</label>
+                                <select id="edit-district" name="administrativeDistrict" class="form-select" required>
+                                    <option value="">請選擇</option>
+                                    <option value="桃園區">桃園區</option>
+                                    <option value="大溪區">大溪區</option>
+                                    <option value="中壢區">中壢區</option>
+                                    <option value="楊梅區">楊梅區</option>
+                                    <option value="蘆竹區">蘆竹區</option>
+                                    <option value="大園區">大園區</option>
+                                    <option value="龜山區">龜山區</option>
+                                    <option value="八德區">八德區</option>
+                                    <option value="龍潭區">龍潭區</option>
+                                    <option value="平鎮區">平鎮區</option>
+                                    <option value="新屋區">新屋區</option>
+                                    <option value="觀音區">觀音區</option>
+                                    <option value="復興區">復興區</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">階段</label>
+                                <select id="edit-step" name="step" class="form-select" required>
+                                    <option value="">請選擇</option>
+                                    <option value="1">爭取預算與前期規畫階段</option>
+                                    <option value="2">意願調查及用地取得階段</option>
+                                    <option value="3">設計與施工階段</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.2 位置資訊 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-map-marker"></i> 位置資訊
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">起點</label>
+                                <input type="text" id="edit-start-point" name="startPoint" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">終點</label>
+                                <input type="text" id="edit-end-point" name="endPoint" class="form-control">
+                            </div>
+                            <div class="form-group form-group-wide">
+                                <label class="form-label">起訖位置</label>
+                                <input type="text" id="edit-location" name="startEndLocation" class="form-control" placeholder="自動組合或手動輸入">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">道路長度</label>
+                                <div class="input-with-unit">
+                                    <input type="text" id="edit-road-length" name="roadLength" class="form-control">
+                                    <span class="input-unit">公尺</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.9 拓寬範圍 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-draw-polygon"></i> 拓寬範圍
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="data-table-wrapper">
+                            <table id="edit-expansion-range-table" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 70px;">順序</th>
+                                        <th>緯度</th>
+                                        <th>經度</th>
+                                        <th style="width: 100px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit-expansion-range-tbody">
+                                    <tr class="empty-row">
+                                        <td colspan="4">尚無資料，請點圖新增範圍點</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.10 街景照片 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-camera"></i> 街景照片
+                        </h3>
+                        <div class="section-header-actions">
+                            <button type="button" id="btn-edit-add-street-photo" class="btn btn-sm btn-outline-primary section-action-btn">
+                                <i class="fa fa-plus"></i> 新增一筆
+                            </button>
+                            <button type="button" id="btn-edit-toggle-add-photo-point" class="btn btn-sm btn-outline-primary section-action-btn">
+                                <i class="fa fa-crosshairs"></i> 點預覽圖選取
+                            </button>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div id="edit-street-photo-list" class="photo-list">
+                            <div class="empty-photo-hint">尚無照片，請點擊「新增一筆」或「點預覽圖選取」</div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.11 座標預覽 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-map-o"></i> 座標預覽
+                        </h3>
+                        <button type="button" id="btn-edit-toggle-add-range-point" class="btn btn-sm btn-outline-primary section-action-btn">
+                            <i class="fa fa-plus"></i> 點圖新增範圍點
+                        </button>
+                    </div>
+                    <div class="section-body">
+                        <div id="edit-preview-map"></div>
+                        <div class="preview-map-legend">
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-range"></span> 拓寬範圍</span>
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-start"></span> 起點</span>
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-end"></span> 終點</span>
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-photo"></span> 街景照片</span>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.3 路寬資訊 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-road"></i> 路寬資訊
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">現況路寬</label>
+                                <input type="text" id="edit-current-width" name="currentRoadWidth" class="form-control" placeholder="如: 8公尺">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">計畫路寬</label>
+                                <input type="text" id="edit-planned-width" name="plannedRoadWidth" class="form-control" placeholder="如: 12公尺">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.4 土地資訊 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-map"></i> 土地資訊
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid form-grid-3col">
+                            <div class="form-group">
+                                <label class="form-label">公有土地</label>
+                                <div class="input-with-unit">
+                                    <input type="text" id="edit-public-land" name="publicLand" class="form-control">
+                                    <span class="input-unit">筆</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">私有土地</label>
+                                <div class="input-with-unit">
+                                    <input type="text" id="edit-private-land" name="privateLand" class="form-control">
+                                    <span class="input-unit">筆</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">公私土地</label>
+                                <div class="input-with-unit">
+                                    <input type="text" id="edit-mixed-land" name="publicPrivateLand" class="form-control">
+                                    <span class="input-unit">筆</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.5 經費資訊 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-money"></i> 經費資訊
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">工程經費</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="edit-construction-budget" name="constructionBudget" class="form-control" value="0">
+                                    <span class="input-unit">萬</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">用地經費</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="edit-land-budget" name="landAcquisitionBudget" class="form-control" value="0">
+                                    <span class="input-unit">萬</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">補償經費</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="edit-compensation-budget" name="compensationBudget" class="form-control" value="0">
+                                    <span class="input-unit">萬</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">合計經費</label>
+                                <div class="input-with-unit">
+                                    <input type="number" id="edit-total-budget" name="totalBudget" class="form-control" value="0" readonly>
+                                    <span class="input-unit">萬</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.6 建築物資訊 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-building"></i> 建築物資訊
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">RC數量</label>
+                                <div class="input-with-unit">
+                                    <input type="text" id="edit-rc-count" name="rcCount" class="form-control">
+                                    <span class="input-unit">棟</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">鐵皮屋數量</label>
+                                <div class="input-with-unit">
+                                    <input type="text" id="edit-tin-house-count" name="tinHouseCount" class="form-control">
+                                    <span class="input-unit">棟</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.7 審議資訊 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-gavel"></i> 審議資訊
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">審議年度</label>
+                                <input type="text" id="edit-review-year" name="reviewYear" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">案件類型</label>
+                                <input type="text" id="edit-case-type" name="caseType" class="form-control">
+                            </div>
+                            <div class="form-group form-group-wide">
+                                <label class="form-label">審議結果</label>
+                                <input type="text" id="edit-review-result" name="reviewResult" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ===== 2.8 備註 ===== *@
+                <div class="edit-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-sticky-note-o"></i> 備註
+                        </h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group">
+                            <textarea id="edit-remarks" name="remarks" class="form-control form-textarea" rows="3" placeholder="請輸入備註內容..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        @* ===== 3. Footer 操作列 ===== *@
+        <div class="edit-footer">
+            <button type="button" class="btn btn-outline-secondary btn-cancel" id="btn-cancel-project-edit">
+                <i class="fa fa-times"></i> 取消
+            </button>
+            <button type="button" class="btn btn-primary btn-submit" id="btn-submit-project-edit">
+                <i class="fa fa-check"></i> 儲存
+            </button>
+        </div>
+
+    </div>
+</div>

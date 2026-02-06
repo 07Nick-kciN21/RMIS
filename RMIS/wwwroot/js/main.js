@@ -19,6 +19,10 @@ import BoxManager from './index/box.js';
 import ProjectBox from './index/projectBox.js';
 import ProcessBox from './index/processBox.js';
 import ProcessView from './index/processView.js';
+import RoadProjectView from './index/roadProjectView.js';
+import RoadProjectAdd from './index/roadProjectAdd.js';
+import RoadProjectEdit from './index/roadProjectEdit.js';
+import RoadProjectImport from './index/roadProjectImport.js';
 
 $(document).ready(function () {
     // 初始化地图
@@ -52,4 +56,8 @@ $(document).ready(function () {
     ProjectBox.init();
     ProcessBox.init();
     ProcessView.init();
+    RoadProjectView.init();
+    RoadProjectAdd.init();
+    RoadProjectEdit.init();
+    RoadProjectImport.init();
 });

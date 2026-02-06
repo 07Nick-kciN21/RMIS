@@ -7,6 +7,8 @@ using RMIS.Models.sql;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
+using Microsoft.Extensions.Options;
+using RMIS.Models;
 
 namespace RMIS.Repositories
 {
@@ -17,14 +19,16 @@ namespace RMIS.Repositories
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AuthDbContext _authDbContext;
         private readonly MapDBContext _mapDBContext;
+        private readonly FilePathSettings _filePaths;
 
-        public MapdataRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext)
+        public MapdataRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
             _authDbContext = authDbContext;
             _mapDBContext = mapDBContext;
+            _filePaths = filePaths.Value;
         }
         public async Task<MapdataManager> GetMapdataManagerDataAsync()
         {
@@ -534,12 +538,12 @@ namespace RMIS.Repositories
                         StartPoint = GetStr("起點"),
                         EndPoint = GetStr("終點"),
                         StartEndLocation = GetStr("起訖位置"),
-                        RoadLength = float.TryParse(GetStr("道路長度").Replace("公尺", ""), out var rl) ? rl : 0,
+                        RoadLength = GetStr("道路長度"),
                         CurrentRoadWidth = parseRoadWidth(GetStr("現況路寬")),
                         PlannedRoadWidth = parseRoadWidth(GetStr("計畫路寬")),
-                        PublicLand = GetInt("公有土地"),
-                        PrivateLand = GetInt("私有土地"),
-                        PublicPrivateLand = GetInt("公私土地"),
+                        PublicLand = GetStr("公有土地"),
+                        PrivateLand = GetStr("私有土地"),
+                        PublicPrivateLand = GetStr("公私土地"),
                         ConstructionBudget = ParseMoney(GetStr("工程經費")),
                         LandAcquisitionBudget = ParseMoney(GetStr("用地經費")),
                         CompensationBudget = ParseMoney(GetStr("補償經費")),
@@ -551,8 +555,8 @@ namespace RMIS.Repositories
                         StreetViewId = streetViewIdMapping.ContainsKey(projectId) ? streetViewIdMapping[projectId] : Guid.Empty // 如果需要設定街景AreaId，可以在此處理
                     };
                     roadProjects.Add(project);
-                    // 建立資料夾，路徑C:/Users/KingSu/Pictures/RMIS_IMG/roadProject/{projectId}
-                    var directoryPath = $"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject/{projectId}";
+                    // 建立資料夾
+                    var directoryPath = Path.Combine(_filePaths.RoadProjectPhoto, projectId);
                     Console.WriteLine(directoryPath);
                     if (!Directory.Exists(directoryPath))
                     {
@@ -601,7 +605,7 @@ namespace RMIS.Repositories
 
                 // 將 Base64 字串轉換為 byte[]
                 var imageBytes = Convert.FromBase64String(base64Data);
-                var directoryPath = @"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject";
+                var directoryPath = _filePaths.RoadProjectPhoto;
                 // 儲存路徑（伺服器上的某個目錄）
                 var savePath = Path.Combine(directoryPath, roadProjectDic);
                 if (!Directory.Exists(savePath))

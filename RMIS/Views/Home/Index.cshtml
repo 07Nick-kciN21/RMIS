@@ -48,6 +48,7 @@
 <link rel="stylesheet" href="~/css/index/drawtool.css" />
 <link rel="stylesheet" href="~/css/index/panel.css" />
 <link rel="stylesheet" href="~/css/index/box.css" />
+<link rel="stylesheet" href="~/css/index/dashboardBox.css" />
 <link rel="stylesheet" href="~/css/index/dropdown.css" />
 <link rel="stylesheet" href="~/css/new/index/style.css">
 <link rel="stylesheet" href="~/css/new/index/maptool.css">
@@ -61,6 +62,8 @@
 <link rel="stylesheet" href="~/lib/select2/select2.min.css" />
 <link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.css" />
 <link rel="stylesheet" href="~/lib/leaflet-markercluster/MarkerCluster.Default.css" />
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- ✅ ES Module -->
 <script type="module" src="~/js/account/userProfilePopup.js"></script>
 
@@ -155,8 +158,8 @@
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/AddRoadProjectByExcel">
-                                                            <h4>上傳道路專案</h4>
+                                                        <a class="nav-link menu-title modal-link" data-action="/Admin/ImportRoadProjectByExcel">
+                                                            <h4>匯入道路專案</h4>
                                                         </a>
                                                     </li>
                                                 }
@@ -250,6 +253,7 @@
         <span id="tb-flagPanel" title="權管土地"></span>
         <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
         <span id="tb-accidentPanel" title="交通事故"></span>
+        <span id="tb-dashboard" class="mobileTool" title="決策儀錶板"></span>
     </div>
     <div id="indexMap" class="div3">
         <div id="tb-sidebar-toggle" class="sidebar-toggle-btn" title="收合/展開側欄">
@@ -273,15 +277,20 @@
             <div class="box-content">
                 <partial name="~/Views/Home/Partials/_processBox.cshtml" />
                 <partial name="~/Views/Home/Partials/_processView.cshtml" />
+                <partial name="~/Views/Home/Partials/_roadProjectView.cshtml" />
+                <partial name="~/Views/Home/Partials/_roadProjectAdd.cshtml" />
+                <partial name="~/Views/Home/Partials/_roadProjectEdit.cshtml" />
+                <partial name="~/Views/Home/Partials/_roadProjectImport.cshtml" />
             </div>
         </div>
         <div id="full-box" class="map-fixed-container hidden">
             <div class="box-header">
                 <span id="full-box-title" class="box-title">全幅顯示</span>
-                <button type="button" class="btn-close-box" onclick="closeBox('full-box')">×</button>
+                <button type="button" class="btn-close-box" onclick="closeBox('full-box'); DashboardBox.close();">×</button>
             </div>
             <div class="box-content">
-                </div>
+                <partial name="~/Views/Home/Partials/_dashboardBox.cshtml" />
+            </div>
         </div>
         <div class="map-footer">
             <div id="scale-control" class="footer-tip"></div>
@@ -416,14 +425,31 @@
         function openLeftBoxPage(pageId, title) {
             // 顯示外層容器
             $('#left-box').removeClass('hidden');
-            
+
             // 隱藏所有分頁並顯示目標分頁
             $('#left-box .box-page').addClass('hidden');
             $(`#${pageId}`).removeClass('hidden');
-            
+
             // 更新標題
             if (title) {
                 $('#left-box-title').text(title);
+            }
+        }
+
+        /**
+         * 開啟 Full Box 頁面
+         */
+        function openFullBoxPage(pageId, title) {
+            // 顯示外層容器
+            $('#full-box').removeClass('hidden');
+
+            // 隱藏所有分頁並顯示目標分頁
+            $('#full-box .box-page').addClass('hidden');
+            $(`#${pageId}`).removeClass('hidden');
+
+            // 更新標題
+            if (title) {
+                $('#full-box-title').text(title);
             }
         }
 
@@ -433,7 +459,15 @@
         function closeBox(boxId) {
             $(`#${boxId}`).addClass('hidden');
         }
+
+        /**
+         * 開啟儀表板
+         */
+        function openDashboard() {
+            DashboardBox.open();
+        }
     </script>
+    <script src="~/js/index/dashboardBox.js"></script>
     <script type="module" src="~/js/main.js"></script>
-    
+
 }

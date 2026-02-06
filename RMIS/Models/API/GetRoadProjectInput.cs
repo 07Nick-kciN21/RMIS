@@ -2,56 +2,59 @@ namespace RMIS.Models.API
 {
     public class GetRoadProjectInput
     {
-        // ¦æ¬F°Ï
+        // è¡Œæ”¿å€
         public string? AdminDistrict { get; set; }
 
-        // °_ÂI
+        // èµ·é»
         public string? StartPoint { get; set; }
 
-        // ²×ÂI
+        // çµ‚é»
         public string? EndPoint { get; set; }
 
-        // ¹D¸ôªø«×
+        // é“è·¯é•·åº¦
         public int? RoadLength { get; set; }
 
-        // ²{ªp¸ô¼e
+        // ç¾æ³è·¯å¯¬
         public int? CurrentRoadWidth { get; set; }
 
-        // ­pµe¸ô¼e
+        // è¨ˆç•«è·¯å¯¬
         public int? PlannedRoadWidth { get; set; }
 
-        // ¸g¶O¸ê®Æ
+        // éšæ®µ
+        public string? Step { get; set; }
+
+        // ç¶“è²»è³‡è¨Š
         public BudgetInfo? Budgets { get; set; }
     }
 
-    // ¤lª«¥ó BudgetInfo¡A¥Î©ó³B²z¸g¶O¬ÛÃö¸ê®Æ
+    // ï¿½lï¿½ï¿½ï¿½ï¿½ BudgetInfoï¿½Aï¿½Î©ï¿½Bï¿½zï¿½gï¿½Oï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public class BudgetInfo
     {
-        // ¤uµ{¸g¶O
+        // ï¿½uï¿½{ï¿½gï¿½O
         public BudgetOption? ConstructionBudget { get; set; }
 
-        // ¥Î¦a¸g¶O
+        // ï¿½Î¦aï¿½gï¿½O
         public BudgetOption? LandAcquisitionBudget { get; set; }
 
-        // ¸ÉÀv¸g¶O
+        // ï¿½ï¿½ï¿½vï¿½gï¿½O
         public BudgetOption? CompensationBudget { get; set; }
 
-        // ¦X­p¸g¶O½d³ò
+        // ï¿½Xï¿½pï¿½gï¿½Oï¿½dï¿½ï¿½
         public BudgetRange? TotalBudgetRange { get; set; }
     }
 
-    // ¤ñ¸û¿ï¶µ¸ê®Æ
+    // ï¿½ï¿½ï¿½ï¿½ï¶µï¿½ï¿½ï¿½
     public class BudgetOption
     {
-        public string? Option { get; set; } // ¤ñ¸û¹Bºâ²Å¸¹¡A¨Ò¦p "¤j©ó"¡B"¤p©ó"
-        public int? Value { get; set; }  // ¹ïÀ³ªº¼Æ­È
+        public string? Option { get; set; } // ï¿½ï¿½ï¿½ï¿½Bï¿½ï¿½Å¸ï¿½ï¿½Aï¿½Ò¦p "ï¿½jï¿½ï¿½"ï¿½B"ï¿½pï¿½ï¿½"
+        public int? Value { get; set; }  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ­ï¿½
     }
 
-    // ½d³ò¸ê®Æ
+    // ï¿½dï¿½ï¿½ï¿½ï¿½
     public class BudgetRange
     {
-        public int? Start { get; set; } // ½d³ò°_©l­È
-        public int? End { get; set; }   // ½d³òµ²§ô­È
+        public int? Start { get; set; } // ï¿½dï¿½ï¿½_ï¿½lï¿½ï¿½
+        public int? End { get; set; }   // ï¿½dï¿½òµ²§ï¿½ï¿½ï¿½
     }
 
 }

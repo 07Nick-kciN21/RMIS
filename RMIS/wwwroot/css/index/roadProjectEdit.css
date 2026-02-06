@@ -1,0 +1,564 @@
+/* ==========================================================================
+   roadProjectEdit.css - 道路專案編輯頁面樣式
+   ========================================================================== */
+
+/* ===== Container ===== */
+#page-project-edit {
+    height: 100%;
+    overflow: hidden;
+}
+
+#page-project-edit .project-edit-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #f8fafc;
+    overflow: hidden;
+}
+
+/* ===== Header ===== */
+#page-project-edit .edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+#page-project-edit .edit-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#page-project-edit .edit-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+    color: #1e293b;
+}
+
+/* ===== Content Area ===== */
+#page-project-edit .edit-content-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+}
+
+/* ===== Section ===== */
+#page-project-edit .edit-section {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+}
+
+#page-project-edit .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#page-project-edit .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#page-project-edit .section-title i {
+    color: #64748b;
+    font-size: 14px;
+}
+
+#page-project-edit .section-body {
+    padding: 16px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ===== Form Grid ===== */
+#page-project-edit .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+}
+
+#page-project-edit .form-grid-3col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+#page-project-edit .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#page-project-edit .form-group-wide {
+    grid-column: span 2;
+}
+
+#page-project-edit .form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+}
+
+#page-project-edit .form-label.required::after {
+    content: ' *';
+    color: #ef4444;
+}
+
+#page-project-edit .form-control,
+#page-project-edit .form-select {
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #1e293b;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#page-project-edit .form-control:focus,
+#page-project-edit .form-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#page-project-edit .form-control:read-only {
+    background-color: #f8fafc;
+    color: #64748b;
+}
+
+#page-project-edit .form-control::placeholder {
+    color: #94a3b8;
+}
+
+#page-project-edit .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ===== Input with Unit ===== */
+#page-project-edit .input-with-unit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#page-project-edit .input-with-unit .form-control {
+    flex: 1;
+}
+
+#page-project-edit .input-unit {
+    font-size: 13px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* ===== Footer ===== */
+#page-project-edit .edit-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 20px;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+#page-project-edit .edit-footer .btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+#page-project-edit .btn-cancel {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+}
+
+#page-project-edit .btn-cancel:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+#page-project-edit .btn-submit {
+    background-color: #3b82f6;
+    border: 1px solid #3b82f6;
+    color: white;
+}
+
+#page-project-edit .btn-submit:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* ===== Section Header Actions ===== */
+#page-project-edit .section-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ===== Section Action Button ===== */
+#page-project-edit .section-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* ===== Data Table ===== */
+#page-project-edit .data-table-wrapper {
+    overflow-x: auto;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#page-project-edit .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+#page-project-edit .data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+#page-project-edit .data-table th {
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#page-project-edit .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+#page-project-edit .data-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+#page-project-edit .data-table .empty-row td {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 20px;
+}
+
+#page-project-edit .data-table .empty-row:hover {
+    background-color: transparent;
+}
+
+/* ===== Range Table Inline Inputs ===== */
+#page-project-edit .data-table .edit-range-lat-input,
+#page-project-edit .data-table .edit-range-lng-input {
+    padding: 5px 6px;
+    font-size: 13px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: #334155;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+#page-project-edit .data-table .edit-range-lat-input:hover,
+#page-project-edit .data-table .edit-range-lng-input:hover {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+}
+
+#page-project-edit .data-table .edit-range-lat-input:focus,
+#page-project-edit .data-table .edit-range-lng-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* ===== Range Table Delete Button ===== */
+#page-project-edit .edit-btn-delete-range-point {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 6px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#page-project-edit .edit-btn-delete-range-point:hover {
+    color: #fff;
+    background: #ef4444;
+    border-color: #ef4444;
+    transform: scale(1.05);
+}
+
+#page-project-edit .edit-btn-delete-range-point:active {
+    transform: scale(0.95);
+}
+
+/* ===== Preview Map ===== */
+#page-project-edit #edit-preview-map {
+    width: 100%;
+    height: 450px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+#page-project-edit .preview-map-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+#page-project-edit .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+#page-project-edit .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+#page-project-edit .legend-swatch-range {
+    background: rgba(59, 130, 246, 0.3);
+    border: 2px solid #3b82f6;
+}
+
+#page-project-edit .legend-swatch-start {
+    background: #fff;
+    border: 2px solid #22c55e;
+    border-radius: 50%;
+}
+
+#page-project-edit .legend-swatch-end {
+    background: #fff;
+    border: 2px solid #ef4444;
+    border-radius: 50%;
+}
+
+#page-project-edit .legend-swatch-photo {
+    background: #fff;
+    border: 2px solid #f97316;
+    border-radius: 50%;
+}
+
+/* ===== Draggable Markers (divIcon) ===== */
+#page-project-edit .range-marker-start,
+#page-project-edit .range-marker-end,
+#page-project-edit .range-marker-middle,
+#page-project-edit .range-marker-photo {
+    border-radius: 50%;
+    background: #fff;
+    box-sizing: border-box;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+#page-project-edit .range-marker-start {
+    width: 16px; height: 16px;
+    border: 3px solid #22c55e;
+}
+
+#page-project-edit .range-marker-end {
+    width: 16px; height: 16px;
+    border: 3px solid #ef4444;
+}
+
+#page-project-edit .range-marker-middle {
+    width: 14px; height: 14px;
+    border: 3px solid #3b82f6;
+}
+
+#page-project-edit .range-marker-photo {
+    width: 14px; height: 14px;
+    border: 3px solid #f97316;
+}
+
+/* ===== Preview Map Add-Point Mode ===== */
+#page-project-edit #edit-preview-map.adding-point {
+    cursor: crosshair;
+}
+
+#page-project-edit #btn-edit-toggle-add-range-point.active {
+    background-color: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+
+#page-project-edit #btn-edit-toggle-add-photo-point.active {
+    background-color: #f97316;
+    color: #fff;
+    border-color: #f97316;
+}
+
+/* ===== Photo List ===== */
+#page-project-edit .photo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#page-project-edit .empty-photo-hint {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 20px;
+}
+
+#page-project-edit .photo-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+#page-project-edit .photo-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#page-project-edit .photo-item-index {
+    font-weight: 600;
+    color: #475569;
+    font-size: 13px;
+}
+
+#page-project-edit .edit-btn-remove-photo {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+
+#page-project-edit .edit-btn-remove-photo:hover {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+#page-project-edit .photo-item-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+
+#page-project-edit .photo-item-content .form-group {
+    margin: 0;
+}
+
+#page-project-edit .photo-item-file {
+    grid-column: span 3;
+}
+
+#page-project-edit .edit-photo-file-input {
+    padding: 8px;
+    font-size: 13px;
+}
+
+#page-project-edit .photo-preview {
+    grid-column: span 3;
+    max-width: 200px;
+    max-height: 150px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    display: none;
+}
+
+#page-project-edit .photo-preview.has-image {
+    display: block;
+}
+
+/* ===== Marker Popup Styles ===== */
+.edit-marker-popup .leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.edit-marker-popup .leaflet-popup-content {
+    margin: 10px 12px;
+    line-height: 1.4;
+}
+
+.edit-marker-popup .photo-popup-content img {
+    display: block;
+    margin-top: 8px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+    #page-project-edit .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #page-project-edit .form-grid-3col {
+        grid-template-columns: 1fr;
+    }
+
+    #page-project-edit .form-group-wide {
+        grid-column: span 1;
+    }
+
+    #page-project-edit .edit-footer {
+        flex-direction: column;
+    }
+
+    #page-project-edit .edit-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

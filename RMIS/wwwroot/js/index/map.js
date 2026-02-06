@@ -121,7 +121,12 @@ export function initMap(mapId) {
         // 取得使用者的位置，並將地圖移至該位置，直接縮放為19
         indexMap.locate({ setView: false, maxZoom: 19 });
     });
-    
+
+    // 決策儀錶板
+    $('#tb-dashboard').on('click', function () {
+        DashboardBox.open();
+    });
+
     // 當定位成功時進一步設置縮放級別
     indexMap.on('locationfound', function (e) {
         indexMap.setView(e.latlng, 19); // 強制設置縮放級別為 19

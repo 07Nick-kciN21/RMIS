@@ -634,13 +634,34 @@ const ProcessView = {
         console.log('下載檔案:', fileId, fileName);
 
         const downloadUrl = `/api/RoadProject/DownloadProcessFile/${fileId}`;
-        const $link = $('<a>')
-            .attr('href', downloadUrl)
-            .attr('download', fileName || 'download')
-            .css('display', 'none')
-            .appendTo('body');
-        $link[0].click();
-        $link.remove();
+
+        // 使用 fetch 檢查並下載檔案
+        fetch(downloadUrl, { method: 'GET' })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('檔案不存在');
+                    }
+                    throw new Error(`下載失敗 (${response.status})`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // 建立下載連結
+                const url = window.URL.createObjectURL(blob);
+                const $link = $('<a>')
+                    .attr('href', url)
+                    .attr('download', fileName || 'download')
+                    .css('display', 'none')
+                    .appendTo('body');
+                $link[0].click();
+                $link.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('下載檔案失敗:', error);
+                alert(`下載失敗：${error.message}`);
+            });
     },
 
     /**

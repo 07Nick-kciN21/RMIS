@@ -123,6 +123,12 @@
     background-position: center;
 }
 
+#tb-dashboard {
+    /* 決策儀錶板 */
+    background-image: url('/svg/dashboard.svg');
+    background-position: center;
+}
+
 #mapSelect {
     width: 250px;
     top: -350px;

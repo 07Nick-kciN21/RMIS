@@ -6,7 +6,7 @@ namespace RMIS.Models.sql
     {
         public Guid Id { get; set; }
         public string ProjectId { get; set; }
-        public int step { get; set; }
+        public string step { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Index { get; set; }
@@ -21,17 +21,17 @@ namespace RMIS.Models.sql
         /// 起訖位置
         public string StartEndLocation { get; set; }
         /// 道路長度
-        public float RoadLength { get; set; }
+        public string RoadLength { get; set; }
         /// 現況路寬
         public string CurrentRoadWidth { get; set; }
         /// 計畫路寬
         public string PlannedRoadWidth { get; set; }
         /// 公有土地數量
-        public int PublicLand { get; set; }
+        public string PublicLand { get; set; }
         /// 私有土地數量
-        public int PrivateLand { get; set; }
+        public string PrivateLand { get; set; }
         /// 公私土地數量
-        public int PublicPrivateLand { get; set; }
+        public string PublicPrivateLand { get; set; }
         /// 工程經費（單位：萬元）
         public int ConstructionBudget { get; set; }
         /// 用地經費（單位：萬元）
@@ -42,6 +42,35 @@ namespace RMIS.Models.sql
         public int TotalBudget { get; set; }
         /// 備註
         public string Remarks { get; set; }
+        /// <summary>
+        /// 審議年度
+        /// </summary>
+        public string ReviewYear { get; set; }
+
+        /// <summary>
+        /// 案件類型
+        /// </summary>
+        public string CaseType { get; set; }
+
+        /// <summary>
+        /// 工程名稱
+        /// </summary>
+        public string ProjectName { get; set; }
+
+        /// <summary>
+        /// RC數量(棟)
+        /// </summary>
+        public string RCCount { get; set; }
+
+        /// <summary>
+        /// 鐵皮屋數量(棟)
+        /// </summary>
+        public string TinHouseCount { get; set; }
+
+        /// <summary>
+        /// 審議結果
+        /// </summary>
+        public string ReviewResult { get; set; }
         // 預拓範圍的AreaId
         public Guid PlannedExpansionId { get; set; }
         // 街景的AreaId

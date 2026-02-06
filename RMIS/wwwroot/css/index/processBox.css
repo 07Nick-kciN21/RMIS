@@ -433,67 +433,68 @@
     color: #94a3b8;
 }
 
-.attachment-list {
+/* ==========================================================================
+   檔案列表樣式（與 processView 共用）
+   ========================================================================== */
+
+#page-process .file-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.attachment-item {
+#page-process .file-list-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 12px 14px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    padding: 10px 12px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    cursor: pointer;
 }
 
-.attachment-item:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
-}
-
-.attachment-info {
+#page-process .file-list-item .file-info {
     display: flex;
     align-items: center;
     gap: 10px;
     overflow: hidden;
+    flex: 1;
 }
 
-.file-icon {
+#page-process .file-list-item .file-icon {
     font-size: 1.2rem;
-    color: #3b82f6;
     flex-shrink: 0;
 }
 
-.file-icon.fa-file-pdf-o {
+#page-process .file-list-item .file-icon.fa-file-pdf-o {
     color: #dc2626;
 }
 
-.file-icon.fa-file-powerpoint-o {
+#page-process .file-list-item .file-icon.fa-file-powerpoint-o {
     color: #ea580c;
 }
 
-.file-icon.fa-file-excel-o {
+#page-process .file-list-item .file-icon.fa-file-excel-o {
     color: #16a34a;
 }
 
-.file-icon.fa-file-word-o {
+#page-process .file-list-item .file-icon.fa-file-word-o {
     color: #2563eb;
 }
 
-.file-icon.fa-file-image-o {
+#page-process .file-list-item .file-icon.fa-file-image-o {
     color: #8b5cf6;
 }
 
-.file-icon.fa-file-archive-o {
+#page-process .file-list-item .file-icon.fa-file-archive-o {
     color: #d97706;
 }
 
-.file-name {
+#page-process .file-list-item .file-icon.fa-file-o {
+    color: #64748b;
+}
+
+#page-process .file-list-item .file-name {
     font-size: 0.9rem;
     font-weight: 500;
     color: #334155;
@@ -502,29 +503,46 @@
     text-overflow: ellipsis;
 }
 
-.file-size {
+#page-process .file-list-item .file-size {
     font-size: 0.8rem;
     color: #94a3b8;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.btn-download {
+#page-process .file-list-item .file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+#page-process .file-list-item .btn-download-file {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 32px;
     height: 32px;
     background: transparent;
-    border: none;
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
-    color: #94a3b8;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.btn-download:hover {
-    background: #dbeafe;
-    color: #2563eb;
+#page-process .file-list-item .btn-download-file img {
+    width: 18px;
+    height: 18px;
+}
+
+#page-process .file-list-item .btn-download-file:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+#page-process .file-list-item .btn-download-file:hover img {
+    filter: brightness(0) invert(1);
 }
 
 /* ==========================================================================

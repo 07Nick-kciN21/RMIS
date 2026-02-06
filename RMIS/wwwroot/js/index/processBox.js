@@ -88,19 +88,12 @@ const ProcessBox = {
             self.openAddRecordForm();
         });
 
-        // 綁定下載按鈕事件（事件委派）
-        $(document).on('click', '.btn-download', function(e) {
+        // 綁定下載按鈕事件（事件委派，僅限按鈕）
+        $(document).on('click', '#page-process .btn-download-file', function(e) {
             e.stopPropagation();
-            const $item = $(this).closest('.attachment-item');
+            const $item = $(this).closest('.file-list-item');
             const fileId = $item.data('file-id');
             const fileName = $item.find('.file-name').text();
-            self.downloadFile(fileId, fileName);
-        });
-
-        // 綁定附件項目點擊事件（整列可點擊下載）
-        $(document).on('click', '.attachment-item', function() {
-            const fileId = $(this).data('file-id');
-            const fileName = $(this).find('.file-name').text();
             self.downloadFile(fileId, fileName);
         });
 
@@ -343,11 +336,18 @@ const ProcessBox = {
 
         return processList.map((record, index) => ({
             id: record.id || index + 1,
+            processId: record.processId,
             date: self.formatDate(record.createdAt),
             type: record.recordType || '進度說明',
             title: record.recordTitle || '無標題',
             desc: record.currentStatus || '',
-            files: record.files || [],
+            // 轉換檔案格式
+            files: (record.files || []).map(f => ({
+                id: f.id,
+                name: f.fileName,
+                type: f.fileType,
+                size: f.fileSize
+            })),
             // 保留原始資料，供 processView 使用
             _raw: record
         }));
@@ -437,17 +437,19 @@ const ProcessBox = {
             const fileItems = record.files.map(file => {
                 const ext = self.getFileExtension(file.name);
                 const iconClass = self.fileIcons[ext] || self.fileIcons['default'];
-                
+
                 return `
-                    <div class="attachment-item" data-file-id="${file.id || ''}">
-                        <div class="attachment-info">
+                    <div class="file-list-item" data-file-id="${file.id || ''}">
+                        <div class="file-info">
                             <i class="fa ${iconClass} file-icon"></i>
                             <span class="file-name">${self.escapeHtml(file.name)}</span>
                             <span class="file-size">(${file.size || '-'})</span>
                         </div>
-                        <button type="button" class="btn-download" title="下載">
-                            <i class="fa fa-download"></i>
-                        </button>
+                        <div class="file-actions">
+                            <button type="button" class="btn-download-file" title="下載">
+                                <img src="/svg/download.svg" alt="下載" />
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -457,7 +459,7 @@ const ProcessBox = {
                     <h5 class="attachments-title">
                         <i class="fa fa-paperclip"></i> 佐證文件
                     </h5>
-                    <div class="attachment-list">
+                    <div class="file-list">
                         ${fileItems}
                     </div>
                 </div>
@@ -530,15 +532,35 @@ const ProcessBox = {
 
         console.log('下載檔案:', fileId, fileName);
 
-        // 使用 RoadProject API 下載
         const downloadUrl = `/api/RoadProject/DownloadProcessFile/${fileId}`;
-        const $link = $('<a>')
-            .attr('href', downloadUrl)
-            .attr('download', fileName || 'download')
-            .css('display', 'none')
-            .appendTo('body');
-        $link[0].click();
-        $link.remove();
+
+        // 使用 fetch 檢查並下載檔案
+        fetch(downloadUrl, { method: 'GET' })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('檔案不存在');
+                    }
+                    throw new Error(`下載失敗 (${response.status})`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // 建立下載連結
+                const url = window.URL.createObjectURL(blob);
+                const $link = $('<a>')
+                    .attr('href', url)
+                    .attr('download', fileName || 'download')
+                    .css('display', 'none')
+                    .appendTo('body');
+                $link[0].click();
+                $link.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('下載檔案失敗:', error);
+                alert(`下載失敗：${error.message}`);
+            });
     },
 
     /**

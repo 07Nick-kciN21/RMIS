@@ -1,0 +1,217 @@
+@* 儀表板 - Dashboard Box *@
+<div id="dashboard-page" class="box-page hidden">
+    <div class="dashboard-container animate-fade-in">
+
+        <!-- 頂部區塊：KPI 指標卡 + 最新立案 -->
+        <div class="dashboard-top-section">
+
+            <!-- 左側：KPI 指標卡 (2x2) -->
+            <div class="kpi-grid">
+                <!-- 專案總數量 -->
+                <div class="kpi-card" data-hover="blue">
+                    <div class="kpi-card-header">
+                        <span class="kpi-card-label">專案總數量</span>
+                        <div class="kpi-card-icon blue">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="kpi-card-value"><span id="kpi-total-count">--</span><span class="unit">案</span></div>
+                        <div class="kpi-card-sub positive" id="kpi-total-trend">載入中...</div>
+                    </div>
+                </div>
+
+                <!-- 道路總長度 -->
+                <div class="kpi-card" data-hover="green">
+                    <div class="kpi-card-header">
+                        <span class="kpi-card-label">道路總長度</span>
+                        <div class="kpi-card-icon green">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="kpi-card-value"><span id="kpi-total-length">--</span><span class="unit">km</span></div>
+                        <div class="kpi-card-sub">累計開闢長度</div>
+                    </div>
+                </div>
+
+                <!-- 總經費預算 -->
+                <div class="kpi-card" data-hover="amber">
+                    <div class="kpi-card-header">
+                        <span class="kpi-card-label">總經費預算</span>
+                        <div class="kpi-card-icon amber">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="kpi-card-value"><span id="kpi-total-budget">--</span><span class="unit">億</span></div>
+                        <div class="kpi-progress">
+                            <div class="kpi-progress-bar" id="kpi-budget-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 工程發包費 -->
+                <div class="kpi-card" data-hover="purple">
+                    <div class="kpi-card-header">
+                        <span class="kpi-card-label">工程發包費</span>
+                        <div class="kpi-card-icon purple">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="kpi-card-value"><span id="kpi-contract-amount">--</span><span class="unit">億</span></div>
+                        <div class="kpi-card-sub" id="kpi-contract-percent">佔總經費 --%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：最新立案列表 -->
+            <div class="latest-projects-card">
+                <div class="card-header">
+                    <h3 class="card-header-title">最新立案</h3>
+                    <a class="card-header-link" id="btn-view-all-projects">更多</a>
+                </div>
+                <div class="latest-projects-list" id="latest-projects-list">
+                    <!-- 由 JS 動態填入 -->
+                    <div class="latest-project-item">
+                        <div class="project-info">
+                            <div class="project-name">載入中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 篩選列 -->
+        <div class="filter-bar">
+            <div class="filter-label">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                數據篩選
+            </div>
+
+            <div class="filter-group">
+                <label>行政區</label>
+                <select id="filter-district">
+                    <option value="">全區</option>
+                    <option value="中壢區">中壢區</option>
+                    <option value="桃園區">桃園區</option>
+                    <option value="平鎮區">平鎮區</option>
+                    <option value="楊梅區">楊梅區</option>
+                    <option value="八德區">八德區</option>
+                    <option value="大溪區">大溪區</option>
+                    <option value="龜山區">龜山區</option>
+                    <option value="蘆竹區">蘆竹區</option>
+                    <option value="大園區">大園區</option>
+                    <option value="觀音區">觀音區</option>
+                    <option value="新屋區">新屋區</option>
+                    <option value="龍潭區">龍潭區</option>
+                    <option value="復興區">復興區</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>年度</label>
+                <select id="filter-year">
+                    <option value="">全部年度</option>
+                    <option value="114">114 年度</option>
+                    <option value="113">113 年度</option>
+                    <option value="112">112 年度</option>
+                    <option value="111">111 年度</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>經費</label>
+                <select id="filter-budget">
+                    <option value="">不限金額</option>
+                    <option value="1000">1000 萬以下</option>
+                    <option value="1000-5000">1000 - 5000 萬</option>
+                    <option value="5000">5000 萬以上</option>
+                </select>
+            </div>
+
+            <button class="filter-btn" id="btn-apply-filter">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                </svg>
+                套用分析
+            </button>
+        </div>
+
+        <!-- 圖表區塊 -->
+        <div class="charts-grid">
+
+            <!-- 經費分配結構 (圓餅圖) -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4 class="chart-title blue">經費分配結構</h4>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-canvas-container">
+                        <canvas id="chart-budget-allocation"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 行政區案件數量統計 (長條圖) -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4 class="chart-title green">行政區案件數量統計</h4>
+                    <span class="chart-subtitle">單位：件</span>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-canvas-container">
+                        <canvas id="chart-district-count"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 案件狀態佔比 (甜甜圈圖) -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h4 class="chart-title purple">案件狀態佔比</h4>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-canvas-container">
+                        <canvas id="chart-status-ratio"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- S 曲線圖表 (全寬) -->
+        <div class="chart-card s-curve-chart">
+            <div class="chart-header">
+                <h4 class="chart-title slate">113年度 預算執行S曲線</h4>
+                <div class="chart-legend">
+                    <span class="legend-item">
+                        <span class="legend-line target"></span>
+                        預定進度 (Target)
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-line actual"></span>
+                        實際進度 (Actual)
+                    </span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="chart-canvas-container" style="height: 160px;">
+                    <canvas id="chart-s-curve"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

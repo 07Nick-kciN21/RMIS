@@ -1,0 +1,191 @@
+[
+  {
+    "place_id": 215670447,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 292914137,
+    "lat": "25.0185717",
+    "lon": "121.3085802",
+    "class": "highway",
+    "type": "primary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 大檜溪, 春日里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "25.0154077",
+      "25.0216379",
+      "121.3077202",
+      "121.3090808"
+    ]
+  },
+  {
+    "place_id": 212237815,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 298630656,
+    "lat": "24.9927702",
+    "lon": "121.3171938",
+    "class": "highway",
+    "type": "secondary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 大樹林, 東山里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "24.9914940",
+      "24.9940504",
+      "121.3167049",
+      "121.3176921"
+    ]
+  },
+  {
+    "place_id": 213769142,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 297392969,
+    "lat": "25.0114958",
+    "lon": "121.3101145",
+    "class": "highway",
+    "type": "primary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 大興里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "25.0103695",
+      "25.0126256",
+      "121.3096553",
+      "121.3105816"
+    ]
+  },
+  {
+    "place_id": 215510235,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1305044418,
+    "lat": "25.0230955",
+    "lon": "121.3071274",
+    "class": "highway",
+    "type": "primary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 水汴頭, 汴洲里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "25.0224437",
+      "25.0237472",
+      "121.3068557",
+      "121.3073990"
+    ]
+  },
+  {
+    "place_id": 405977467,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1383215138,
+    "lat": "25.0068858",
+    "lon": "121.3120017",
+    "class": "highway",
+    "type": "primary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 下竹圍, 青溪里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "25.0062341",
+      "25.0075353",
+      "121.3117559",
+      "121.3122419"
+    ]
+  },
+  {
+    "place_id": 391135857,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1340978928,
+    "lat": "25.0097786",
+    "lon": "121.3109162",
+    "class": "highway",
+    "type": "primary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 大業里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "25.0091605",
+      "25.0103978",
+      "121.3106638",
+      "121.3111713"
+    ]
+  },
+  {
+    "place_id": 212149543,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 86602218,
+    "lat": "24.9943395",
+    "lon": "121.3165916",
+    "class": "highway",
+    "type": "secondary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 東門, 東門里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "24.9940504",
+      "24.9946301",
+      "121.3164821",
+      "121.3167049"
+    ]
+  },
+  {
+    "place_id": 215782015,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 289433084,
+    "lat": "25.0008386",
+    "lon": "121.3140659",
+    "class": "highway",
+    "type": "tertiary",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 下竹圍, 青溪里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "25.0007860",
+      "25.0008911",
+      "121.3140064",
+      "121.3141254"
+    ]
+  },
+  {
+    "place_id": 212096100,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "way",
+    "osm_id": 1112685978,
+    "lat": "24.9906842",
+    "lon": "121.3179403",
+    "class": "highway",
+    "type": "unclassified",
+    "place_rank": 26,
+    "importance": 0.0533982536049439,
+    "addresstype": "road",
+    "name": "春日路",
+    "display_name": "春日路, 萬壽里, 桃園區, 桃園市, 330, 臺灣",
+    "boundingbox": [
+      "24.9904685",
+      "24.9909000",
+      "121.3179353",
+      "121.3179454"
+    ]
+  }
+]

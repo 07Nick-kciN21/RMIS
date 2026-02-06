@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公共工程專案管理平台 - 決策儀錶板</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", "Segoe UI", sans-serif;
+            background-color: #f1f5f9;
+            color: #334155;
+        }
+        .table-bordered th, .table-bordered td { border: 1px solid #e2e8f0; }
+        
+        /* 動畫設定 */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        .animate-slide-in-right { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* 自定義捲軸 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* 圖表格線樣式 */
+        .chart-grid-line {
+            border-top: 1px dashed #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- 1. SVG 圖示元件庫 ---
+        const Icon = ({ name, className = "w-5 h-5" }) => {
+            const paths = {
+                dashboard: <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />,
+                list: <path d="M4 6h16M4 12h16M4 18h16" />,
+                search: <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />,
+                filter: <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />,
+                folder: <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />,
+                chevronRight: <path d="M9 5l7 7-7 7" />,
+                x: <path d="M6 18L18 6M6 6l12 12" />,
+                calendar: <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
+                fileText: <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
+                paperclip: <path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />,
+                download: <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />,
+                trendingUp: <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
+                money: <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
+                road: <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />,
+                chartPie: <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5zM5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />,
+                barChart: <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                    {paths[name] || <circle cx="12" cy="12" r="10" />}
+                </svg>
+            );
+        };
+
+        // --- 2. 模擬資料 (Mock Data) ---
+        const PROJECTS_DATA = [
+            { id: 'PJ-113-001', name: '中壢區龍岡路三段拓寬工程', status: '設計與施工', createDate: '2023-01-15', budget: 12500, pm: '陳技正', dept: '工務科', district: '中壢區', length: 1200 },
+            { id: 'PJ-113-004', name: '平鎮區金陵路四段瓶頸打通', status: '用地取得', createDate: '2023-05-20', budget: 4200, pm: '林副理', dept: '養護隊', district: '平鎮區', length: 450 },
+            { id: 'PJ-113-008', name: '楊梅區校前路人行道改善', status: '前期規劃', createDate: '2023-09-10', budget: 1800, pm: '張工程師', dept: '工務科', district: '楊梅區', length: 800 },
+            { id: 'PJ-113-012', name: '桃園區大興西路路平專案', status: '設計與施工', createDate: '2023-10-05', budget: 3500, pm: '王技佐', dept: '養護隊', district: '桃園區', length: 2100 },
+            { id: 'PJ-113-015', name: '八德區介壽路排水改善工程', status: '前期規劃', createDate: '2023-11-12', budget: 2200, pm: '李技正', dept: '工務科', district: '八德區', length: 600 },
+        ];
+
+        // --- 3. 優化後的圖表元件 ---
+
+        // 3.1 帶格線與Y軸的長條圖
+        const EnhancedBarChart = ({ data }) => {
+            const max = Math.max(...data.map(d => d.value));
+            // 計算適當的 Y 軸刻度 (這裡簡化為 3 等分)
+            const steps = [max, Math.round(max * 0.66), Math.round(max * 0.33), 0];
+            
+            return (
+                <div className="relative h-56 pt-2 pb-6 w-full">
+                    {/* 背景格線層 */}
+                    <div className="absolute inset-0 flex flex-col justify-between pl-8 pb-6">
+                        {steps.map((step, i) => (
+                            <div key={i} className="relative w-full border-t border-dashed border-slate-200 h-0">
+                                <span className="absolute -left-8 -top-2.5 text-[10px] text-slate-400 font-mono w-6 text-right">
+                                    {step}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* 長條圖層 */}
+                    <div className="relative h-full flex items-end justify-between pl-8 space-x-2 z-10">
+                        {data.map((d, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center group h-full justify-end">
+                                <div className="w-full bg-slate-100/50 rounded-t-sm relative h-full flex items-end hover:bg-slate-100 transition-colors">
+                                    <div 
+                                        style={{ height: `${(d.value / max) * 100}%` }} 
+                                        className="w-full mx-auto max-w-[40px] bg-emerald-600 hover:bg-emerald-700 transition-all duration-500 rounded-t-sm shadow-sm relative group-hover:-translate-y-1"
+                                    >
+                                        {/* Hover Tooltip */}
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                                            {d.value} 件
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-[10px] text-slate-600 mt-2 font-bold truncate w-full text-center border-t border-transparent pt-1 group-hover:text-emerald-700">
+                                    {d.label}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // 3.2 帶清楚圖例的圓餅圖
+        const EnhancedPieChart = ({ data, type = "pie" }) => {
+            let currentAngle = 0;
+            const style = {
+                background: `conic-gradient(
+                    ${data.map(d => {
+                        const start = currentAngle;
+                        const end = currentAngle + d.percent;
+                        currentAngle = end;
+                        return `${d.color} ${start}% ${end}%`;
+                    }).join(', ')}
+                )`
+            };
+
+            return (
+                <div className="flex flex-col md:flex-row items-center justify-center h-full gap-4">
+                    {/* 圖表本體 */}
+                    <div className="relative shrink-0">
+                        <div className="w-36 h-36 rounded-full border-4 border-white shadow-md ring-1 ring-slate-100" style={style}></div>
+                        {/* Donut 中空效果 */}
+                        {type === "donut" && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-16 h-16 bg-white rounded-full shadow-inner flex flex-col items-center justify-center text-slate-500">
+                                    <span className="text-[10px]">總計</span>
+                                    <span className="text-sm font-bold text-slate-700">100%</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* 結構化圖例 (表格樣式) */}
+                    <div className="w-full md:w-auto">
+                        <table className="w-full text-xs">
+                            <tbody>
+                                {data.map((d, i) => (
+                                    <tr key={i} className="border-b border-dashed border-slate-100 last:border-0 hover:bg-slate-50">
+                                        <td className="py-1.5 pr-2">
+                                            <div className="flex items-center">
+                                                <div className="w-2.5 h-2.5 rounded-sm mr-2 shadow-sm" style={{ backgroundColor: d.color }}></div>
+                                                <span className="text-slate-600 font-medium">{d.label}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-1.5 text-right font-bold text-slate-700 font-mono">
+                                            {d.value}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 4. 儀錶板元件 ---
+        const DashboardView = () => {
+            return (
+                <div className="animate-fade-in space-y-6 pb-12">
+                    {/* Top Section: KPI Cards & Latest List */}
+                    {/* 修改重點：grid-cols-1 lg:grid-cols-2 (左右各半) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        {/* 左側：KPI 指標卡 (改為 2x2 排列) */}
+                        {/* 修改重點：grid-cols-2 (強制雙欄)，移除 col-span 設定 */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-sm border border-slate-300 shadow-sm flex flex-col justify-between h-32 hover:border-blue-300 transition-colors group">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-xs font-bold text-slate-500 group-hover:text-blue-600">專案總數量</span>
+                                    <div className="p-1.5 bg-blue-50 rounded text-blue-600"><Icon name="folder" className="w-4 h-4" /></div>
+                                </div>
+                                <div>
+                                    <div className="text-3xl font-bold text-slate-800 font-mono">42 <span className="text-sm font-normal text-slate-400 font-sans">案</span></div>
+                                    <div className="text-xs text-green-600 flex items-center mt-1 font-medium"><Icon name="trendingUp" className="w-3 h-3 mr-1" />較上月 +3</div>
+                                </div>
+                            </div>
+                            <div className="bg-white p-4 rounded-sm border border-slate-300 shadow-sm flex flex-col justify-between h-32 hover:border-emerald-300 transition-colors group">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-xs font-bold text-slate-500 group-hover:text-emerald-600">道路總長度</span>
+                                    <div className="p-1.5 bg-emerald-50 rounded text-emerald-600"><Icon name="road" className="w-4 h-4" /></div>
+                                </div>
+                                <div>
+                                    <div className="text-3xl font-bold text-slate-800 font-mono">8.5 <span className="text-sm font-normal text-slate-400 font-sans">km</span></div>
+                                    <div className="text-xs text-slate-400 mt-1 font-medium">累計開闢長度</div>
+                                </div>
+                            </div>
+                            <div className="bg-white p-4 rounded-sm border border-slate-300 shadow-sm flex flex-col justify-between h-32 hover:border-amber-300 transition-colors group">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-xs font-bold text-slate-500 group-hover:text-amber-600">總經費預算</span>
+                                    <div className="p-1.5 bg-amber-50 rounded text-amber-600"><Icon name="money" className="w-4 h-4" /></div>
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold text-slate-800 font-mono">12.8 <span className="text-sm font-normal text-slate-400 font-sans">億</span></div>
+                                    <div className="w-full bg-slate-100 h-1.5 mt-2 rounded-full overflow-hidden">
+                                        <div className="bg-amber-500 h-full" style={{ width: '70%' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white p-4 rounded-sm border border-slate-300 shadow-sm flex flex-col justify-between h-32 hover:border-purple-300 transition-colors group">
+                                <div className="flex justify-between items-start">
+                                    <span className="text-xs font-bold text-slate-500 group-hover:text-purple-600">工程發包費</span>
+                                    <div className="p-1.5 bg-purple-50 rounded text-purple-600"><Icon name="fileText" className="w-4 h-4" /></div>
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold text-slate-800 font-mono">8.4 <span className="text-sm font-normal text-slate-400 font-sans">億</span></div>
+                                    <div className="text-xs text-slate-400 mt-1 font-medium">佔總經費 65%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 右側：最新專案列表 (變寬為 50%) */}
+                        <div className="bg-white rounded-sm border border-slate-300 shadow-sm flex flex-col h-full overflow-hidden">
+                            <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                                <h3 className="text-sm font-bold text-slate-700 flex items-center">
+                                    <div className="w-1 h-3 bg-blue-600 mr-2 rounded-full"></div> 最新立案
+                                </h3>
+                                <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">更多</button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-0">
+                                <table className="w-full text-left text-xs">
+                                    <tbody className="divide-y divide-slate-100">
+                                        {PROJECTS_DATA.slice(0, 4).map(p => (
+                                            <tr key={p.id} className="hover:bg-slate-50 group">
+                                                <td className="p-3">
+                                                    <div className="font-bold text-slate-700 truncate w-full group-hover:text-blue-700 transition" title={p.name}>{p.name}</div>
+                                                    <div className="text-slate-400 font-mono scale-90 origin-left mt-0.5">{p.createDate}</div>
+                                                </td>
+                                                <td className="p-3 text-right">
+                                                    <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[10px] border font-medium ${
+                                                        p.status.includes('設計') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                                                    }`}>{p.status}</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Middle Section: Filter Bar (橫向篩選) */}
+                    <div className="bg-white p-4 rounded-sm border border-slate-300 shadow-sm flex flex-col md:flex-row items-center gap-4 bg-gradient-to-r from-white to-slate-50">
+                        <div className="flex items-center text-sm font-bold text-slate-700 border-r border-slate-200 pr-4 mr-2">
+                            <Icon name="filter" className="w-4 h-4 mr-2 text-slate-500" />
+                            數據篩選
+                        </div>
+                        
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                            <div className="flex items-center space-x-2">
+                                <label className="text-xs font-bold text-slate-500 whitespace-nowrap">行政區</label>
+                                <select className="w-full text-sm border border-slate-300 rounded-sm p-1.5 bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition shadow-sm">
+                                    <option>全區</option>
+                                    <option>中壢區</option>
+                                    <option>桃園區</option>
+                                    <option>平鎮區</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <label className="text-xs font-bold text-slate-500 whitespace-nowrap">年度</label>
+                                <select className="w-full text-sm border border-slate-300 rounded-sm p-1.5 bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition shadow-sm">
+                                    <option>113 年度</option>
+                                    <option>112 年度</option>
+                                    <option>111 年度</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <label className="text-xs font-bold text-slate-500 whitespace-nowrap">經費</label>
+                                <select className="w-full text-sm border border-slate-300 rounded-sm p-1.5 bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition shadow-sm">
+                                    <option>不限金額</option>
+                                    <option>1000 萬以下</option>
+                                    <option>1000 - 5000 萬</option>
+                                    <option>5000 萬以上</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button className="bg-slate-700 text-white px-5 py-1.5 rounded-sm text-sm font-medium hover:bg-slate-800 transition shadow-sm w-full md:w-auto flex items-center justify-center">
+                            <Icon name="chartPie" className="w-4 h-4 mr-1.5" />
+                            套用分析
+                        </button>
+                    </div>
+
+                    {/* Bottom Section: Charts Grid (優化重點區域) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                        
+                        {/* Chart 1: 經費分配表 (高度固定 h-80) */}
+                        <div className="bg-white rounded-sm border border-slate-300 shadow-sm flex flex-col h-[340px]">
+                            <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                                <h4 className="text-sm font-bold text-slate-700 flex items-center">
+                                    <div className="w-1 h-3.5 bg-blue-600 mr-2 rounded-sm"></div> 經費分配結構
+                                </h4>
+                            </div>
+                            <div className="flex-1 flex items-center justify-center p-4">
+                                <EnhancedPieChart data={[
+                                    { label: '工程費', value: '65%', percent: 65, color: '#2563eb' }, // blue-600
+                                    { label: '用地費', value: '25%', percent: 25, color: '#f59e0b' }, // amber-500
+                                    { label: '規設費', value: '10%', percent: 10, color: '#64748b' }, // slate-500
+                                ]} />
+                            </div>
+                        </div>
+
+                        {/* Chart 2: 各行政區專案數量 (跨兩欄) */}
+                        <div className="bg-white rounded-sm border border-slate-300 shadow-sm lg:col-span-2 flex flex-col h-[340px]">
+                            <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <h4 className="text-sm font-bold text-slate-700 flex items-center">
+                                    <div className="w-1 h-3.5 bg-emerald-600 mr-2 rounded-sm"></div> 行政區案件數量統計
+                                </h4>
+                                <div className="text-[10px] text-slate-400 font-mono">單位：件</div>
+                            </div>
+                            <div className="flex-1 p-6 flex items-end">
+                                <EnhancedBarChart data={[
+                                    { label: '中壢區', value: 12 },
+                                    { label: '桃園區', value: 15 },
+                                    { label: '平鎮區', value: 8 },
+                                    { label: '楊梅區', value: 5 },
+                                    { label: '八德區', value: 9 },
+                                    { label: '大溪區', value: 3 },
+                                ]} />
+                            </div>
+                        </div>
+
+                         {/* Chart 3: 案件狀態佔比 (Donut) */}
+                         <div className="bg-white rounded-sm border border-slate-300 shadow-sm flex flex-col h-[340px]">
+                            <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                                <h4 className="text-sm font-bold text-slate-700 flex items-center">
+                                    <div className="w-1 h-3.5 bg-purple-600 mr-2 rounded-sm"></div> 案件狀態佔比
+                                </h4>
+                            </div>
+                            <div className="flex-1 flex items-center justify-center p-4">
+                                <EnhancedPieChart type="donut" data={[
+                                    { label: '施工中', value: '40%', percent: 40, color: '#22c55e' }, // green-500
+                                    { label: '規劃中', value: '30%', percent: 30, color: '#3b82f6' }, // blue-500
+                                    { label: '用地取得', value: '30%', percent: 30, color: '#ef4444' }, // red-500
+                                ]} />
+                            </div>
+                        </div>
+
+                        {/* Chart 4: 年度執行率 (Simple Line Area 模擬) */}
+                        <div className="bg-white rounded-sm border border-slate-300 shadow-sm col-span-1 md:col-span-2 lg:col-span-4 p-5 h-64 flex flex-col">
+                            <div className="flex justify-between items-center mb-6">
+                                <h4 className="text-sm font-bold text-slate-700 flex items-center">
+                                    <div className="w-1 h-3.5 bg-slate-700 mr-2 rounded-sm"></div> 113年度 預算執行S曲線
+                                </h4>
+                                <div className="flex space-x-6 text-xs bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                                    <span className="flex items-center"><div className="w-3 h-0.5 bg-slate-300 mr-2"></div>預定進度 (Target)</span>
+                                    <span className="flex items-center"><div className="w-3 h-0.5 bg-blue-600 mr-2"></div>實際進度 (Actual)</span>
+                                </div>
+                            </div>
+                            <div className="flex-1 w-full relative">
+                                {/* 網格線背景 */}
+                                <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-slate-300 font-mono">
+                                    <div className="border-t border-dashed border-slate-200 w-full h-0 relative"><span className="absolute -top-2 left-0">100%</span></div>
+                                    <div className="border-t border-dashed border-slate-200 w-full h-0 relative"><span className="absolute -top-2 left-0">75%</span></div>
+                                    <div className="border-t border-dashed border-slate-200 w-full h-0 relative"><span className="absolute -top-2 left-0">50%</span></div>
+                                    <div className="border-t border-dashed border-slate-200 w-full h-0 relative"><span className="absolute -top-2 left-0">25%</span></div>
+                                    <div className="border-b border-slate-300 w-full h-0 relative"><span className="absolute -top-2 left-0">0%</span></div>
+                                </div>
+                                
+                                {/* 模擬曲線 (SVG) */}
+                                <svg className="w-full h-full absolute inset-0 pl-8 pb-1" preserveAspectRatio="none">
+                                    {/* 預定 (灰虛線) */}
+                                    <path d="M0 100 C 100 95, 200 80, 400 50 S 800 10, 1200 5" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="5 5" />
+                                    {/* 實際 (藍實線) */}
+                                    <path d="M0 100 C 100 98, 200 85, 400 65 S 600 50, 700 45" fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" />
+                                    {/* 終點圓點 */}
+                                    <circle cx="700" cy="45" r="4" fill="#2563eb" stroke="white" strokeWidth="2" />
+                                    {/* Tooltip */}
+                                    <g transform="translate(700, 25)">
+                                        <rect x="-25" y="-20" width="50" height="20" rx="2" fill="#1e293b" />
+                                        <text x="0" y="-6" textAnchor="middle" fill="white" fontSize="10">58.2%</text>
+                                        <path d="M0 0 L-4 0 L0 4 L4 0 Z" fill="#1e293b" transform="translate(0,0)" />
+                                    </g>
+                                </svg>
+                            </div>
+                            <div className="flex justify-between text-xs text-slate-500 mt-2 pl-8 font-mono">
+                                <span>JAN</span><span>MAR</span><span>JUN</span><span>SEP</span><span>DEC</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 5. 主應用程式 (整合列表與儀錶板) ---
+        function App() {
+            const [view, setView] = useState('dashboard'); 
+            const [selectedProject, setSelectedProject] = useState(null);
+            const [activeStage, setActiveStage] = useState('stage3');
+            
+            const handleOpenDetail = (project) => {
+                setSelectedProject(project);
+                if (project.status.includes('設計')) setActiveStage('stage3');
+                else if (project.status.includes('用地')) setActiveStage('stage2');
+                else setActiveStage('stage1');
+            };
+            const handleCloseDetail = () => setSelectedProject(null);
+
+            return (
+                <div className="min-h-screen flex flex-col bg-slate-100/50">
+                    {/* Header */}
+                    <header className="bg-slate-800 text-white shadow-md border-b border-slate-900 sticky top-0 z-30 h-14">
+                        <div className="container mx-auto max-w-7xl px-4 h-full flex justify-between items-center">
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setView('dashboard')}>
+                                    <div className="bg-blue-600 p-1.5 rounded-sm">
+                                        <Icon name="folder" className="w-5 h-5 text-white" />
+                                    </div>
+                                    <h1 className="text-lg font-bold tracking-wide">公共工程專案歷程管理系統</h1>
+                                </div>
+                                
+                                <nav className="hidden md:flex ml-8 space-x-1">
+                                    <button 
+                                        onClick={() => setView('dashboard')}
+                                        className={`px-3 py-1.5 text-sm font-medium rounded-sm flex items-center transition ${view === 'dashboard' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
+                                    >
+                                        <Icon name="dashboard" className="w-4 h-4 mr-1.5" /> 決策儀錶板
+                                    </button>
+                                    <button 
+                                        onClick={() => setView('list')}
+                                        className={`px-3 py-1.5 text-sm font-medium rounded-sm flex items-center transition ${view === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}
+                                    >
+                                        <Icon name="list" className="w-4 h-4 mr-1.5" /> 案件管理列表
+                                    </button>
+                                </nav>
+                            </div>
+                            <div className="flex items-center space-x-3 text-sm">
+                                <span className="text-slate-300">工程科 陳技正</span>
+                                <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center text-xs font-bold">陳</div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="flex-1 container mx-auto max-w-7xl p-6">
+                        {view === 'dashboard' ? (
+                            <DashboardView />
+                        ) : (
+                            <div className="animate-fade-in">
+                                <div className="bg-white p-5 rounded-sm border border-slate-300 shadow-sm mb-6 flex justify-between items-end">
+                                    <div>
+                                        <h2 className="text-base font-bold text-slate-800 mb-2">案件查詢作業</h2>
+                                        <div className="flex gap-4">
+                                            <input type="text" placeholder="輸入關鍵字..." className="border border-slate-300 p-2 text-sm rounded-sm w-64 focus:border-blue-500 outline-none" />
+                                            <button className="bg-blue-700 text-white px-4 py-2 text-sm rounded-sm hover:bg-blue-800">查詢</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white border border-slate-300 rounded-sm overflow-hidden shadow-sm">
+                                    <table className="w-full text-left table-bordered text-sm">
+                                        <thead className="bg-slate-100 text-slate-700 font-bold">
+                                            <tr>
+                                                <th className="p-3">專案編號</th>
+                                                <th className="p-3">工程名稱</th>
+                                                <th className="p-3">狀態</th>
+                                                <th className="p-3">經費 (萬)</th>
+                                                <th className="p-3 w-24">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {PROJECTS_DATA.map(p => (
+                                                <tr key={p.id} className="hover:bg-blue-50">
+                                                    <td className="p-3 font-mono">{p.id}</td>
+                                                    <td className="p-3 font-medium text-blue-800">{p.name}</td>
+                                                    <td className="p-3">
+                                                        <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[10px] border ${
+                                                            p.status.includes('設計') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                                                        }`}>{p.status}</span>
+                                                    </td>
+                                                    <td className="p-3 font-mono">{p.budget}</td>
+                                                    <td className="p-3 text-center">
+                                                        <button onClick={() => handleOpenDetail(p)} className="text-blue-600 hover:underline font-bold">檢視</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                     {/* 歷程詳情滑出面板 */}
+                    {selectedProject && (
+                        <div className="fixed inset-0 bg-slate-800/60 backdrop-blur-sm z-50 flex justify-end">
+                            <div className="absolute inset-0" onClick={handleCloseDetail}></div>
+                            <div className="bg-white w-full md:w-[800px] h-full shadow-2xl flex flex-col animate-slide-in-right relative z-10 border-l border-slate-400">
+                                <div className="bg-slate-100 border-b border-slate-300 p-5 flex justify-between">
+                                    <h2 className="text-xl font-bold text-slate-800">{selectedProject.name}</h2>
+                                    <button onClick={handleCloseDetail} className="text-slate-500 hover:text-slate-700"><Icon name="x" /></button>
+                                </div>
+                                <div className="p-6">
+                                    <p className="text-slate-500 text-sm">此處為歷程詳細資料區塊 (詳細互動邏輯已簡化)...</p>
+                                    <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded text-center text-slate-400">
+                                        若需查看完整歷程功能，請切換至完整版代碼。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

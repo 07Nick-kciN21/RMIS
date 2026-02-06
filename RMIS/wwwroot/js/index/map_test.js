@@ -77,6 +77,18 @@ const Map = {
             this.indexMap.locate({ setView: false, maxZoom: 19 });
         });
 
+        // 決策儀錶板
+        console.log('Binding dashboard button, element count:', $('#tb-dashboard').length);
+        $('#tb-dashboard').on('click', () => {
+            console.log('Dashboard button clicked');
+            console.log('DashboardBox:', typeof DashboardBox);
+            if (typeof DashboardBox !== 'undefined') {
+                DashboardBox.open();
+            } else {
+                console.error('DashboardBox is not defined');
+            }
+        });
+
         this.indexMap.on('locationfound', e => {
             this.indexMap.setView(e.latlng, 19);
             L.marker(e.latlng).addTo(this.indexMap);

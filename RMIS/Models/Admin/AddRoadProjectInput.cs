@@ -8,7 +8,7 @@
 
         // 行政區
         public string? AdminDistrict { get; set; }
- 
+
         // 起點
         public string? StartPoint { get; set; }
 
@@ -22,13 +22,13 @@
         public int? CurrentRoadWidth { get; set; }
 
         // 現況類別
-        public string CurrentRoadType { get; set; }
+        public string? CurrentRoadType { get; set; }
 
         // 計畫路寬
         public int PlannedRoadWidth { get; set; }
 
         //計畫類別
-        public string PlannedRoadType { get; set; }
+        public string? PlannedRoadType { get; set; }
 
         // 公有土地
         public int PublicLand { get; set; }
@@ -54,10 +54,31 @@
         // 備註
         public string? Remark { get; set; }
 
+        // 階段
+        public string? Step { get; set; }
+
+        // 審議年度
+        public string? ReviewYear { get; set; }
+
+        // 案件類型
+        public string? CaseType { get; set; }
+
+        // 工程名稱
+        public string? ProjectName { get; set; }
+
+        // RC數量
+        public string? RCCount { get; set; }
+
+        // 鐵皮屋數量
+        public string? TinHouseCount { get; set; }
+
+        // 審議結果
+        public string? ReviewResult { get; set; }
+
         // 欲拓範圍
-        public List<range> ExpansionRange { get; set; }
+        public List<range>? ExpansionRange { get; set; }
         // 街景照片
-        public List<photo> StreetViewPhoto { get; set; }        
+        public List<photo>? StreetViewPhoto { get; set; }
     }
     public class range
     {

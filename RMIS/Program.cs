@@ -40,7 +40,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
         )
         .WriteTo.File(
-            path: "C:/Users/KingSu/Documents/Logs/log-.log",
+            path: context.Configuration["FilePaths:Log"] ?? "C:/Users/KingSu/Documents/Logs/log-.log",
             rollingInterval: RollingInterval.Day,
             shared: true,
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
@@ -113,6 +113,9 @@ builder.Services.AddScoped<UserManager<ApplicationUser>>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
+// 註冊 FilePathSettings
+builder.Services.Configure<RMIS.Models.FilePathSettings>(builder.Configuration.GetSection("FilePaths"));
+
 var app = builder.Build();
 
 app.UseSession();
@@ -122,6 +125,7 @@ app.UseRouting(); // 🔹 必須先執行 Routing
 app.UseAuthentication(); // ✅ 確保認證 Middleware 在 Authorization 之前
 app.UseAuthorization();
 
+app.UseMiddleware<SessionExpirationMiddleware>(); // ✅ 檢查 Session 過期，過期則清除 Cookie 並重導向
 app.UseMiddleware<LoggingMiddleware>(); // ✅ 確保日誌記錄中間件啟動
 
 // Configure the HTTP request pipeline.
@@ -139,8 +143,8 @@ app.UseStaticFiles(); // 允許讀取 wwwroot 內的靜態文件
 // ✅ 設定自訂靜態檔案目錄
 var staticFilePaths = new Dictionary<string, string>
 {
-    { "/roadProject", @"C:/Users/KingSu/Pictures/RMIS_IMG/roadProject" },
-    { "/constructNotice", @"C:/Users/KingSu/Pictures/RMIS_IMG/constructNotice" }
+    { "/roadProject", app.Configuration["FilePaths:RoadProjectPhoto"]! },
+    { "/constructNotice", app.Configuration["FilePaths:ConstructNoticePhoto"]! }
 };
 
 foreach (var path in staticFilePaths)

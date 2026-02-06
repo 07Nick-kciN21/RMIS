@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using RMIS.Data;
+using RMIS.Models;
 using RMIS.Models.sql;
 using static RMIS.Models.Map.RoadProject;
 
@@ -8,10 +10,12 @@ namespace RMIS.Repositories
     public class RoadProjectRepository : RoadProjectInterface
     {
         private readonly MapDBContext _mapDBContext;
+        private readonly FilePathSettings _filePaths;
 
-        public RoadProjectRepository(MapDBContext mapDBContext)
+        public RoadProjectRepository(MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths)
         {
             _mapDBContext = mapDBContext;
+            _filePaths = filePaths.Value;
         }
 
         public async Task<string> AddProcess1Async(RoadProjectProcess1 process)
@@ -29,6 +33,15 @@ namespace RMIS.Repositories
                 process.ProcessId = Guid.NewGuid();
 
                 _mapDBContext.RoadProjectProcess1.Add(process);
+
+                // 更新 RoadProject 的 step 為 1 (前期規劃)
+                var roadProject = await _mapDBContext.RoadProjects
+                    .FirstOrDefaultAsync(rp => rp.ProjectId == process.ProjectId);
+                if (roadProject != null)
+                {
+                    roadProject.step = "1";
+                }
+
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -62,6 +75,15 @@ namespace RMIS.Repositories
                 process.ProcessId = Guid.NewGuid();
 
                 _mapDBContext.RoadProjectProcess2.Add(process);
+
+                // 更新 RoadProject 的 step 為 2 (用地取得)
+                var roadProject = await _mapDBContext.RoadProjects
+                    .FirstOrDefaultAsync(rp => rp.ProjectId == process.ProjectId);
+                if (roadProject != null)
+                {
+                    roadProject.step = "2";
+                }
+
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -95,6 +117,15 @@ namespace RMIS.Repositories
                 process.ProcessId = Guid.NewGuid();
 
                 _mapDBContext.RoadProjectProcess3.Add(process);
+
+                // 更新 RoadProject 的 step 為 3 (設計與施工)
+                var roadProject = await _mapDBContext.RoadProjects
+                    .FirstOrDefaultAsync(rp => rp.ProjectId == process.ProjectId);
+                if (roadProject != null)
+                {
+                    roadProject.step = "3";
+                }
+
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -133,46 +164,82 @@ namespace RMIS.Repositories
 
         public async Task<ProjectProcessesList> GetProcessRecordsAsync(string projectId)
         {
+            // 取得所有 Process 紀錄
+            var process1List = await _mapDBContext.RoadProjectProcess1
+                .Where(p => p.ProjectId == projectId)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var process2List = await _mapDBContext.RoadProjectProcess2
+                .Where(p => p.ProjectId == projectId)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            var process3List = await _mapDBContext.RoadProjectProcess3
+                .Where(p => p.ProjectId == projectId)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            // 收集所有 ProcessId
+            var allProcessIds = process1List.Select(p => p.ProcessId)
+                .Concat(process2List.Select(p => p.ProcessId))
+                .Concat(process3List.Select(p => p.ProcessId))
+                .ToList();
+
+            // 一次查詢所有相關檔案
+            var allFiles = await _mapDBContext.RoadProjectProcessFiles
+                .Where(f => allProcessIds.Contains(f.ProcessId))
+                .ToListAsync();
+
+            // 建立 ProcessId -> Files 的對照表
+            var filesLookup = allFiles
+                .GroupBy(f => f.ProcessId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(f => new ProcessFileDTO
+                    {
+                        Id = f.Id,
+                        FileName = f.FileName,
+                        FileType = f.FileType,
+                        FileSize = f.FileSize
+                    }).ToList()
+                );
+
+            // 組裝結果
             var result = new ProjectProcessesList
             {
-                Process1List = await _mapDBContext.RoadProjectProcess1
-                    .Where(p => p.ProjectId == projectId)
-                    .OrderByDescending(p => p.CreatedAt)
-                    .Select(p => new ProcessRecordDTO
-                    {
-                        Id = p.Id,
-                        RecordType = p.RecordType,
-                        RecordTitle = p.RecordTitle,
-                        CreatedAt = p.CreatedAt,
-                        CurrentStatus = p.CurrentStatus
-                    })
-                    .ToListAsync(),
+                Process1List = process1List.Select(p => new ProcessRecordDTO
+                {
+                    Id = p.Id,
+                    ProcessId = p.ProcessId,
+                    RecordType = p.RecordType,
+                    RecordTitle = p.RecordTitle,
+                    CreatedAt = p.CreatedAt,
+                    CurrentStatus = p.CurrentStatus,
+                    Files = filesLookup.TryGetValue(p.ProcessId, out var files1) ? files1 : new List<ProcessFileDTO>()
+                }).ToList(),
 
-                Process2List = await _mapDBContext.RoadProjectProcess2
-                    .Where(p => p.ProjectId == projectId)
-                    .OrderByDescending(p => p.CreatedAt)
-                    .Select(p => new ProcessRecordDTO
-                    {
-                        Id = p.Id,
-                        RecordType = p.RecordType,
-                        RecordTitle = p.RecordTitle,
-                        CreatedAt = p.CreatedAt,
-                        CurrentStatus = p.CurrentStatus
-                    })
-                    .ToListAsync(),
+                Process2List = process2List.Select(p => new ProcessRecordDTO
+                {
+                    Id = p.Id,
+                    ProcessId = p.ProcessId,
+                    RecordType = p.RecordType,
+                    RecordTitle = p.RecordTitle,
+                    CreatedAt = p.CreatedAt,
+                    CurrentStatus = p.CurrentStatus,
+                    Files = filesLookup.TryGetValue(p.ProcessId, out var files2) ? files2 : new List<ProcessFileDTO>()
+                }).ToList(),
 
-                Process3List = await _mapDBContext.RoadProjectProcess3
-                    .Where(p => p.ProjectId == projectId)
-                    .OrderByDescending(p => p.CreatedAt)
-                    .Select(p => new ProcessRecordDTO
-                    {
-                        Id = p.Id,
-                        RecordType = p.RecordType,
-                        RecordTitle = p.RecordTitle,
-                        CreatedAt = p.CreatedAt,
-                        CurrentStatus = p.CurrentStatus
-                    })
-                    .ToListAsync()
+                Process3List = process3List.Select(p => new ProcessRecordDTO
+                {
+                    Id = p.Id,
+                    ProcessId = p.ProcessId,
+                    RecordType = p.RecordType,
+                    RecordTitle = p.RecordTitle,
+                    CreatedAt = p.CreatedAt,
+                    CurrentStatus = p.CurrentStatus,
+                    Files = filesLookup.TryGetValue(p.ProcessId, out var files3) ? files3 : new List<ProcessFileDTO>()
+                }).ToList()
             };
 
             return result;
@@ -191,7 +258,7 @@ namespace RMIS.Repositories
                 }
 
                 // 設定實體路徑
-                var basePath = @"C:\RoadProjectProcessFile";
+                var basePath = _filePaths.ProcessFile;
                 var processFolder = Path.Combine(basePath, file.ProcessId.ToString());
 
                 // 建立資料夾（如果不存在）
@@ -280,7 +347,7 @@ namespace RMIS.Repositories
                 }
 
                 // 記錄檔案資訊以便回滾
-                var basePath = @"C:\RoadProjectProcessFile";
+                var basePath = _filePaths.ProcessFile;
                 var filePath = Path.Combine(basePath, file.ProcessId.ToString(), file.FileName);
 
                 if (File.Exists(filePath))
@@ -433,7 +500,7 @@ namespace RMIS.Repositories
                 .Where(f => f.ProcessId == processId)
                 .ToListAsync();
 
-            var basePath = @"C:\RoadProjectProcessFile";
+            var basePath = _filePaths.ProcessFile;
             var processFolder = Path.Combine(basePath, processId.ToString());
 
             // 備份並刪除實體檔案

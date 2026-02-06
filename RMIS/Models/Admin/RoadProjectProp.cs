@@ -2,6 +2,7 @@
 {
     public class RoadProjectProp
     {
+        public string Step { get; set; }
         public string Proposer { get; set; }
         public string AdministrativeDistrict { get; set; }
         public string StartEndLocation { get; set; }
@@ -11,10 +12,15 @@
         public int PublicLand { get; set; }
         public int PrivateLand { get; set; }
         public int PublicPrivateLand { get; set; }
-        public int ConstructionBudget { get; set; }
-        public int LandAcquisitionBudget { get; set; }
-        public int CompensationBudget { get; set; }
-        public int TotalBudget { get; set; }
+        public long ConstructionBudget { get; set; }
+        public long LandAcquisitionBudget { get; set; }
+        public long CompensationBudget { get; set; }
+        public long TotalBudget { get; set; }
+        public string ReviewYear { get; set; }
+        public string CaseType { get; set; }
+        public string RCCount { get; set; }
+        public string TinHouseCount { get; set; }
+        public string ReviewResult { get; set; }
         public string Remarks { get; set; }
     }
 }

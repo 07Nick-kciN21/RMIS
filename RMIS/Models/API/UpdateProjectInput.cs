@@ -4,6 +4,10 @@
     {
         // 專案Id
         public Guid Id { get; set; }
+        // 專案編號
+        public string ProjectId { get; set; }
+        // 階段
+        public string Step { get; set; }
         // 提案人
         public string Proposer { get; set; }
         // 行政區
@@ -27,13 +31,23 @@
         // 公私土地數量
         public int PublicPrivateLand { get; set; }
         // 工程經費（單位：萬元）
-        public int ConstructionBudget { get; set; }
+        public long ConstructionBudget { get; set; }
         // 用地經費（單位：萬元）
-        public int LandAcquisitionBudget { get; set; }
+        public long LandAcquisitionBudget { get; set; }
         // 補償經費（單位：萬元）
-        public int CompensationBudget { get; set; }
+        public long CompensationBudget { get; set; }
         // 合計經費（單位：萬元）
-        public int TotalBudget { get; set; }
+        public long TotalBudget { get; set; }
+        // 審議年度
+        public string ReviewYear { get; set; }
+        // 案件類型
+        public string CaseType { get; set; }
+        // RC數量
+        public string RCCount { get; set; }
+        // 鐵皮屋數量
+        public string TinHouseCount { get; set; }
+        // 審議結果
+        public string ReviewResult { get; set; }
         // 備註
         public string Remarks { get; set; }
     }

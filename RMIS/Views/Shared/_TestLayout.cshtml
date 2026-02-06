@@ -46,6 +46,14 @@
             display: flex;
             flex-direction: column;
         }
+
+        /* 確保延長登入對話框在最上層 */
+        #extendSessionModal {
+            z-index: 99999 !important;
+        }
+        #extendSessionModal ~ .modal-backdrop {
+            z-index: 99998 !important;
+        }
     </style>
 </head>
 <body>
