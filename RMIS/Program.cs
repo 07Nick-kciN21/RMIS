@@ -98,6 +98,9 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddDbContext<MapDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString")));
 
+// 註冊 HttpClient
+builder.Services.AddHttpClient();
+
 // 註冊 Repository
 builder.Services.AddScoped<AdminInterface, AdminRepository>();
 builder.Services.AddScoped<AccountInterface, AccountRepository>();

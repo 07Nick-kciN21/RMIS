@@ -57,6 +57,12 @@ namespace RMIS.Models.Admin
         /// 街景照片座標 JSON: [{"lat":24.123,"lng":121.456,"photoName":"xxx.jpg"},...]
         /// </summary>
         public string StreetViewPhotoJson { get; set; } = "";
+
+        /// <summary>
+        /// 座標是否由 OpenStreetMap API 自動取得（非 Excel 原始資料）
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool GeocodedByApi { get; set; } = false;
     }
 
     /// <summary>

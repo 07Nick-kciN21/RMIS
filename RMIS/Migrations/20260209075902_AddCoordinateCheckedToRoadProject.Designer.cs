@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMIS.Data;
 
@@ -11,9 +12,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260209075902_AddCoordinateCheckedToRoadProject")]
+    partial class AddCoordinateCheckedToRoadProject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -409,29 +412,6 @@ namespace RMIS.Migrations
                     b.HasIndex("AreaId");
 
                     b.ToTable("Points");
-                });
-
-            modelBuilder.Entity("RMIS.Models.sql.ProcessEditLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("OperationType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("ProcessId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("RecordTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("process_edit_log");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.RoadProject", b =>

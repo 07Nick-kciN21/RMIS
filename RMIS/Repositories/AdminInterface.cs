@@ -34,6 +34,7 @@ namespace RMIS.Repositories
         Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput);
         Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput);
         Task<bool> UpdateProjectPointsAsync(Guid projectId, List<range> rangePoints, List<photo>? photoPoints);
+        Task<bool> ConfirmCoordinateAsync(Guid projectId);
 
         // Construct Notice (施工公告)
         Task<int> AddConstructNoticeByExcelAsync(AddConstructNoticeByExcelInput roadProjectByExcelInput);

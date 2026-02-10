@@ -25,6 +25,7 @@ namespace RMIS.Data
         public DbSet<RoadProjectProcess2> RoadProjectProcess2 { get; set; }
         public DbSet<RoadProjectProcess3> RoadProjectProcess3 { get; set; }
         public DbSet<RoadProjectProcessFile> RoadProjectProcessFiles { get; set; }
+        public DbSet<ProcessEditLog> ProcessEditLogs { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
@@ -42,6 +43,10 @@ namespace RMIS.Data
             modelBuilder.Entity<RoadProject>()
                 .Property(r => r.CreateTime)
                 .HasDefaultValueSql("GETUTCDATE()");
+
+            modelBuilder.Entity<RoadProject>()
+                .Property(r => r.CoordinateChecked)
+                .HasDefaultValue(true);
         }
     }
 }

@@ -1075,18 +1075,18 @@ const ProcessBox = {
             self.removeFileItem(fileId);
         });
 
-        // 拖曳上傳效果
-        $(document).on('dragover', '.file-upload-area', function(e) {
+        // 拖曳上傳效果（限定在歷程 modal 內）
+        $(document).on('dragover', '#process-add-modal .file-upload-area', function(e) {
             e.preventDefault();
             $(this).addClass('dragover');
         });
 
-        $(document).on('dragleave', '.file-upload-area', function(e) {
+        $(document).on('dragleave', '#process-add-modal .file-upload-area', function(e) {
             e.preventDefault();
             $(this).removeClass('dragover');
         });
 
-        $(document).on('drop', '.file-upload-area', function(e) {
+        $(document).on('drop', '#process-add-modal .file-upload-area', function(e) {
             e.preventDefault();
             $(this).removeClass('dragover');
             const files = e.originalEvent.dataTransfer.files;

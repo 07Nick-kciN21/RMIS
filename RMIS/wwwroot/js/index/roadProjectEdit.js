@@ -115,6 +115,13 @@ const RoadProjectEdit = {
         this.resetMapState();
         BoxManager.openRightBoxPage('page-project-edit', '編輯專案');
 
+        // 顯示/隱藏座標未確認警示
+        if (project.coordinateChecked === false) {
+            $('#edit-coord-warning').removeClass('hidden');
+        } else {
+            $('#edit-coord-warning').addClass('hidden');
+        }
+
         const self = this;
         setTimeout(function() {
             self.initPreviewMap();
@@ -149,7 +156,7 @@ const RoadProjectEdit = {
      */
     loadPoints: async function(projectId) {
         try {
-            const response = await fetch(`/api/AdminAPI/getPoints/${projectId}`);
+            const response = await fetch(`/api/RoadProject/getPoints/${projectId}`);
             if (!response.ok) return;
             const data = await response.json();
 
@@ -504,12 +511,10 @@ const RoadProjectEdit = {
 
         const marker = L.marker(latlng, { icon: icon, draggable: true });
         if (popupContent) {
-            // 設定 popup 選項，支援較寬的內容（照片預覽）
-            marker.bindPopup(popupContent, {
-                maxWidth: 250,
-                minWidth: 100,
-                className: 'edit-marker-popup'
-            });
+            const isPhoto = (iconClass === 'range-marker-photo');
+            marker.bindPopup(popupContent, isPhoto
+                ? { maxWidth: 450, className: 'edit-marker-popup' }
+                : { maxWidth: 250, minWidth: 100, className: 'edit-marker-popup' });
         }
         marker.on('dragend', function(e) { onDrag(e.target.getLatLng()); });
         return marker;
@@ -540,17 +545,20 @@ const RoadProjectEdit = {
             allCoords.push([Number(this.rangeList[0].Latitude), Number(this.rangeList[0].Longitude)]);
         }
 
+        // 取得路名
+        const roadName = $('#edit-location').val() || '';
+
         // ── 起點標記（可拖曳）──
         if (this.startCoord) {
             const startPopup = `
-                <div style="min-width: 120px;">
-                    <div style="font-weight: bold; color: #22c55e; margin-bottom: 4px;">起點</div>
-                    <div style="font-size: 12px; color: #666;">
+                <div style="min-width:120px;">
+                    <div style="font-weight:bold;color:#22c55e;margin-bottom:4px;">起點</div>
+                    ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
+                    <div style="font-size:12px;color:#666;">
                         <div>緯度：${this.startCoord.lat.toFixed(6)}</div>
                         <div>經度：${this.startCoord.lng.toFixed(6)}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
             this.createDraggableMarker(
                 [this.startCoord.lat, this.startCoord.lng],
                 'range-marker-start', startPopup,
@@ -561,14 +569,14 @@ const RoadProjectEdit = {
         // ── 終點標記（可拖曳）──
         if (this.endCoord) {
             const endPopup = `
-                <div style="min-width: 120px;">
-                    <div style="font-weight: bold; color: #ef4444; margin-bottom: 4px;">終點</div>
-                    <div style="font-size: 12px; color: #666;">
+                <div style="min-width:120px;">
+                    <div style="font-weight:bold;color:#ef4444;margin-bottom:4px;">終點</div>
+                    ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
+                    <div style="font-size:12px;color:#666;">
                         <div>緯度：${this.endCoord.lat.toFixed(6)}</div>
                         <div>經度：${this.endCoord.lng.toFixed(6)}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
             this.createDraggableMarker(
                 [this.endCoord.lat, this.endCoord.lng],
                 'range-marker-end', endPopup,
@@ -579,14 +587,14 @@ const RoadProjectEdit = {
         // ── 中間範圍點標記（可拖曳）──
         this.middleRangePoints.forEach(function(p, idx) {
             const middlePopup = `
-                <div style="min-width: 120px;">
-                    <div style="font-weight: bold; color: #3b82f6; margin-bottom: 4px;">範圍點 ${idx + 1}</div>
-                    <div style="font-size: 12px; color: #666;">
+                <div style="min-width:120px;">
+                    <div style="font-weight:bold;color:#3b82f6;margin-bottom:4px;">範圍點 ${idx + 1}</div>
+                    ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
+                    <div style="font-size:12px;color:#666;">
                         <div>緯度：${p.lat.toFixed(6)}</div>
                         <div>經度：${p.lng.toFixed(6)}</div>
                     </div>
-                </div>
-            `;
+                </div>`;
             self.createDraggableMarker(
                 [p.lat, p.lng],
                 'range-marker-middle', middlePopup,
@@ -609,23 +617,19 @@ const RoadProjectEdit = {
                     photoSrc = `/roadProject/${item.existingUrl}`;
                 }
 
-                const popupContent = `
-                    <div class="photo-popup-content" style="min-width: 200px;">
-                        <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">
-                            照片 ${index + 1}${item.existingUrl ? ' (既有)' : ''}
-                        </div>
-                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-                            <div>緯度：${lat.toFixed(6)}</div>
-                            <div>經度：${lng.toFixed(6)}</div>
-                            ${item.PhotoName ? `<div>檔名：${item.PhotoName}</div>` : ''}
-                        </div>
-                        ${photoSrc ? `<img src="${photoSrc}" style="max-width: 180px; max-height: 120px; border-radius: 4px; border: 1px solid #ddd;" alt="街景照片">` : '<div style="color: #999; font-size: 12px;">尚未上傳照片</div>'}
-                    </div>
-                `;
+                const popupDiv = document.createElement('div');
+                popupDiv.id = 'photoPopup';
+                if (photoSrc) {
+                    const img = document.createElement('img');
+                    img.src = photoSrc.startsWith('data:') ? photoSrc : `${photoSrc}?v=${new Date().getTime()}`;
+                    img.style.width = '450px';
+                    img.style.height = '300px';
+                    popupDiv.appendChild(img);
+                }
 
                 self.createDraggableMarker(
                     [lat, lng],
-                    'range-marker-photo', popupContent,
+                    'range-marker-photo', popupDiv,
                     function(ll) {
                         $(`.edit-photo-lat-input[data-index="${index}"]`).val(ll.lat.toFixed(6));
                         $(`.edit-photo-lng-input[data-index="${index}"]`).val(ll.lng.toFixed(6));
@@ -813,7 +817,15 @@ const RoadProjectEdit = {
             return self.submitPoints();
         })
         .then(function() {
+            // 第三步：若座標未確認，儲存時自動確認
+            if (self.currentProject.coordinateChecked === false) {
+                return fetch(`/api/RoadProject/confirmCoordinate/${self.currentProject.id}`, { method: 'POST' })
+                    .then(function(r) { return r.json(); });
+            }
+        })
+        .then(function() {
             alert('專案更新成功！');
+            $(document).trigger('projectUpdated');
             RoadProjectView.openViewById(self.currentProject.id);
         })
         .catch(function(error) {
@@ -852,7 +864,7 @@ const RoadProjectEdit = {
             photoPoints: photoPoints
         };
 
-        return fetch('/api/AdminAPI/updatePoints', {
+        return fetch('/api/RoadProject/updatePoints', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pointsPayload)

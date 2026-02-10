@@ -67,6 +67,7 @@ const RoadProjectView = {
                 RoadProjectEdit.openEdit(self.currentProject);
             }
         });
+
         console.log('RoadProjectView 模組初始化完成');
     },
 
@@ -111,6 +112,13 @@ const RoadProjectView = {
         $('.view-loading, .view-error').remove();
         $('.view-section').show();
 
+        // 座標未確認警示
+        if (project.coordinateChecked === false) {
+            $('#pv-coord-warning').removeClass('hidden');
+        } else {
+            $('#pv-coord-warning').addClass('hidden');
+        }
+
         // 更新標題與路徑導航 [cite: 1, 2, 3]
         const title = project.startEndLocation || project.projectName || '道路專案';
         $('#pv-title').text(title);
@@ -149,6 +157,9 @@ const RoadProjectView = {
 
         // 更新備註 [cite: 1, 42, 43]
         $('#pv-remarks').text(project.remarks || '尚無備註');
+
+        // 載入街景照片
+        self.loadStreetViewPhotos(project.id || project.projectId);
     },
     // 輔助方法：確保 Input 被換回 Span
     refreshSpanField: function(id, value) {
@@ -160,7 +171,75 @@ const RoadProjectView = {
         }
     },
     /**
-     * 格式化工具 
+     * 載入街景照片
+     */
+    loadStreetViewPhotos: function(projectId) {
+        const self = this;
+        $('#pv-photo-gallery').html('<div class="photo-empty"><i class="fa fa-spinner fa-spin"></i> 載入中...</div>');
+        $('#pv-photo-count').text('0 張');
+
+        fetch(`/api/RoadProject/getPoints/${projectId}`)
+            .then(response => response.json())
+            .then(data => {
+                const photoPoints = data.photoPoints || [];
+                self.renderPhotoGallery(projectId, photoPoints);
+            })
+            .catch(() => {
+                $('#pv-photo-gallery').html('<div class="photo-empty">照片載入失敗</div>');
+            });
+    },
+
+    /**
+     * 渲染照片區塊
+     */
+    renderPhotoGallery: function(projectId, photoPoints) {
+        const $gallery = $('#pv-photo-gallery');
+        $('#pv-photo-count').text(`${photoPoints.length} 張`);
+
+        if (photoPoints.length === 0) {
+            $gallery.html('<div class="photo-empty">尚無街景照片</div>');
+            return;
+        }
+
+        let html = '';
+        photoPoints.forEach(function(p) {
+            let photoName = '';
+            let photoUrl = '';
+            try {
+                const parsed = JSON.parse(p.url || '{}');
+                const existingUrl = parsed.url || '';
+                photoName = existingUrl.split('/').pop();
+                photoUrl = `/roadProject/${existingUrl}`;
+            } catch(e) {
+                const existingUrl = p.url || '';
+                photoName = existingUrl.split('/').pop();
+                photoUrl = `/roadProject/${existingUrl}`;
+            }
+
+            const lat = p.latitude ? p.latitude.toFixed(6) : '-';
+            const lng = p.longitude ? p.longitude.toFixed(6) : '-';
+
+            html += `
+                <div class="photo-card">
+                    <img src="${photoUrl}" alt="${photoName}" onclick="document.getElementById('pv-photo-lightbox').classList.add('active');document.getElementById('pv-lightbox-img').src=this.src;" onerror="this.style.display='none'"/>
+                    <div class="photo-card-info">
+                        <span class="photo-name" title="${photoName}">${photoName}</span>
+                        <span class="photo-coord">${lat}, ${lng}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        $gallery.html(html);
+
+        // 確保 lightbox 存在
+        if ($('#pv-photo-lightbox').length === 0) {
+            $('body').append('<div id="pv-photo-lightbox" onclick="this.classList.remove(\'active\')"><img id="pv-lightbox-img" src="" /></div>');
+        }
+    },
+
+    /**
+     * 格式化工具
      */
     formatRoadWidth: function(width) {
         if (!width) return '-';
@@ -187,20 +266,138 @@ const RoadProjectView = {
     },
 
     /**
-     * 地圖定位 
+     * 建立地圖標記（不可拖曳）
+     */
+    createMarker: function(latlng, iconClass, popupContent) {
+        const isSmall = (iconClass === 'range-marker-middle' || iconClass === 'range-marker-photo');
+        const size = isSmall ? [14, 14] : [16, 16];
+        const anchor = isSmall ? [7, 7] : [8, 8];
+
+        const icon = L.divIcon({
+            className: iconClass,
+            iconSize: size,
+            iconAnchor: anchor,
+            popupAnchor: [0, -10]
+        });
+
+        const marker = L.marker(latlng, { icon: icon, draggable: false });
+        if (popupContent) {
+            const isPhoto = (iconClass === 'range-marker-photo');
+            marker.bindPopup(popupContent, isPhoto ? { maxWidth: 450 } : { maxWidth: 250, minWidth: 100 });
+        }
+        return marker;
+    },
+
+    /**
+     * 地圖定位（顯示拓寬範圍、起終點、中間點、街景照片標記）
      */
     locateProject: function(projectId) {
         const self = this;
-        fetch(`/api/MapAPI/GetPointsByProjectId?projectId=${projectId}`, { method: 'POST' })
+        fetch(`/api/RoadProject/getPoints/${projectId}`)
         .then(response => response.json())
         .then(data => {
             self.projectLayer.clearLayers();
-            const rangePoints = data['points']['rangePoints'] || [];
-            if (rangePoints.length === 0) return alert('此專案無座標資料');
+            const rangePoints = data.rangePoints || [];
+            const photoPoints = data.photoPoints || [];
 
-            const coords = rangePoints.map(p => [p.latitude, p.longitude]);
-            const polygon = L.polygon(coords, { color: 'red' }).addTo(self.projectLayer);
-            self.$indexMap.fitBounds(polygon.getBounds(), { padding: [50, 50] });
+            if (rangePoints.length === 0 && photoPoints.length === 0) {
+                return alert('此專案無座標資料');
+            }
+
+            const allCoords = [];
+
+            // 拓寬範圍線/面
+            if (rangePoints.length >= 3) {
+                const coords = rangePoints.map(p => [p.latitude, p.longitude]);
+                L.polygon(coords, { color: '#3b82f6', weight: 2, fillOpacity: 0.15 }).addTo(self.projectLayer);
+                coords.forEach(c => allCoords.push(c));
+            } else if (rangePoints.length === 2) {
+                const coords = rangePoints.map(p => [p.latitude, p.longitude]);
+                L.polyline(coords, { color: '#3b82f6', weight: 2 }).addTo(self.projectLayer);
+                coords.forEach(c => allCoords.push(c));
+            }
+
+            // 起點標記
+            if (rangePoints.length >= 1) {
+                const sp = rangePoints[0];
+                self.createMarker([sp.latitude, sp.longitude], 'range-marker-start', `
+                    <div style="min-width:120px;">
+                        <div style="font-weight:bold;color:#22c55e;margin-bottom:4px;">起點</div>
+                        <div style="font-size:12px;color:#666;">
+                            <div>緯度：${sp.latitude.toFixed(6)}</div>
+                            <div>經度：${sp.longitude.toFixed(6)}</div>
+                        </div>
+                    </div>
+                `).addTo(self.projectLayer);
+            }
+
+            // 終點標記
+            if (rangePoints.length >= 2) {
+                const ep = rangePoints[rangePoints.length - 1];
+                self.createMarker([ep.latitude, ep.longitude], 'range-marker-end', `
+                    <div style="min-width:120px;">
+                        <div style="font-weight:bold;color:#ef4444;margin-bottom:4px;">終點</div>
+                        <div style="font-size:12px;color:#666;">
+                            <div>緯度：${ep.latitude.toFixed(6)}</div>
+                            <div>經度：${ep.longitude.toFixed(6)}</div>
+                        </div>
+                    </div>
+                `).addTo(self.projectLayer);
+            }
+
+            // 中間範圍點標記
+            if (rangePoints.length > 2) {
+                rangePoints.slice(1, -1).forEach(function(p, idx) {
+                    self.createMarker([p.latitude, p.longitude], 'range-marker-middle', `
+                        <div style="min-width:120px;">
+                            <div style="font-weight:bold;color:#3b82f6;margin-bottom:4px;">範圍點 ${idx + 1}</div>
+                            <div style="font-size:12px;color:#666;">
+                                <div>緯度：${p.latitude.toFixed(6)}</div>
+                                <div>經度：${p.longitude.toFixed(6)}</div>
+                            </div>
+                        </div>
+                    `).addTo(self.projectLayer);
+                });
+            }
+
+            // 街景照片標記
+            photoPoints.forEach(function(p, index) {
+                if (!p.latitude || !p.longitude) return;
+
+                let photoName = '';
+                let photoSrc = '';
+                try {
+                    const parsed = JSON.parse(p.url || '{}');
+                    const existingUrl = parsed.url || '';
+                    photoName = existingUrl.split('/').pop();
+                    photoSrc = `/roadProject/${existingUrl}`;
+                } catch(e) {
+                    const existingUrl = p.url || '';
+                    photoName = existingUrl.split('/').pop();
+                    photoSrc = `/roadProject/${existingUrl}`;
+                }
+
+                const popupDiv = document.createElement('div');
+                popupDiv.id = 'photoPopup';
+                if (photoSrc) {
+                    const img = document.createElement('img');
+                    img.src = `${photoSrc}?v=${new Date().getTime()}`;
+                    img.style.width = '450px';
+                    img.style.height = '300px';
+                    popupDiv.appendChild(img);
+                }
+
+                const marker = self.createMarker([p.latitude, p.longitude], 'range-marker-photo', popupDiv);
+                marker.addTo(self.projectLayer);
+                allCoords.push([p.latitude, p.longitude]);
+            });
+
+            // 自動縮放至所有點位
+            if (allCoords.length > 1) {
+                self.$indexMap.fitBounds(L.latLngBounds(allCoords), { padding: [50, 50] });
+            } else if (allCoords.length === 1) {
+                self.$indexMap.setView(allCoords[0], 17);
+            }
         });
     },
 

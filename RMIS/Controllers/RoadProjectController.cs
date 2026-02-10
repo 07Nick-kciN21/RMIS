@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RMIS.Data;
 using RMIS.Models;
+using RMIS.Models.Admin;
+using RMIS.Models.API;
+using RMIS.Models.Auth;
 using RMIS.Models.sql;
 using RMIS.Repositories;
 using static RMIS.Models.Map.RoadProject;
@@ -15,12 +19,24 @@ namespace RMIS.Controllers
     public class RoadProjectController : ControllerBase
     {
         private readonly RoadProjectInterface _roadProjectInterface;
+        private readonly AdminInterface _adminInterface;
+        private readonly AccountInterface _accountInterface;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly MapDBContext _mapDBContext;
         private readonly FilePathSettings _filePaths;
 
-        public RoadProjectController(RoadProjectInterface roadProjectInterface, MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths)
+        public RoadProjectController(
+            RoadProjectInterface roadProjectInterface,
+            AdminInterface adminInterface,
+            AccountInterface accountInterface,
+            UserManager<ApplicationUser> userManager,
+            MapDBContext mapDBContext,
+            IOptions<FilePathSettings> filePaths)
         {
             _roadProjectInterface = roadProjectInterface;
+            _adminInterface = adminInterface;
+            _accountInterface = accountInterface;
+            _userManager = userManager;
             _mapDBContext = mapDBContext;
             _filePaths = filePaths.Value;
         }
@@ -114,6 +130,125 @@ namespace RMIS.Controllers
         }
 
         /// <summary>
+        /// 依篩選條件取得 RoadProjects 查詢
+        /// </summary>
+        private IQueryable<RoadProject> ApplyDashboardFilter(string district, string year, string budget)
+        {
+            var query = _mapDBContext.RoadProjects.AsQueryable();
+
+            if (!string.IsNullOrEmpty(district))
+                query = query.Where(p => p.AdministrativeDistrict == district);
+
+            if (!string.IsNullOrEmpty(year))
+                query = query.Where(p => p.ReviewYear == year);
+
+            if (!string.IsNullOrEmpty(budget))
+            {
+                if (budget == "1000")
+                    query = query.Where(p => p.TotalBudget < 1000);
+                else if (budget == "1000-5000")
+                    query = query.Where(p => p.TotalBudget >= 1000 && p.TotalBudget <= 5000);
+                else if (budget == "5000")
+                    query = query.Where(p => p.TotalBudget > 5000);
+            }
+
+            return query;
+        }
+
+        [HttpGet("GetDashboardKPI")]
+        public async Task<IActionResult> GetDashboardKPI(string district = "", string year = "", string budget = "")
+        {
+            var query = ApplyDashboardFilter(district, year, budget);
+            var now = DateTime.Now;
+            var firstDayOfMonth = new DateTime(now.Year, now.Month, 1);
+
+            var totalCount = await query.CountAsync();
+            var lastMonthCount = await query
+                .Where(p => p.CreateTime < firstDayOfMonth)
+                .CountAsync();
+            var monthDiff = totalCount - lastMonthCount;
+
+            var totalBudgetWan = await query.SumAsync(p => (long)p.TotalBudget);
+            var totalBudgetYi = Math.Round(totalBudgetWan / 10000.0, 2);
+
+            return Ok(new
+            {
+                totalCount,
+                monthDiff,
+                totalBudget = totalBudgetYi
+            });
+        }
+
+        [HttpGet("GetStatusRatio")]
+        public async Task<IActionResult> GetStatusRatio(string district = "", string year = "", string budget = "")
+        {
+            var query = ApplyDashboardFilter(district, year, budget);
+            var total = await query.CountAsync();
+            if (total == 0)
+                return Ok(new { labels = new string[0], data = new double[0], colors = new string[0] });
+
+            var stepMap = new Dictionary<string, string>
+            {
+                { "1", "前期規劃" }, { "2", "用地取得" }, { "3", "設計與施工" }
+            };
+            var colorMap = new Dictionary<string, string>
+            {
+                { "1", "#3b82f6" }, { "2", "#ef4444" }, { "3", "#22c55e" }
+            };
+
+            var groups = await query
+                .GroupBy(p => p.step)
+                .Select(g => new { step = g.Key, count = g.Count() })
+                .ToListAsync();
+
+            var labels = groups.Select(g => stepMap.ContainsKey(g.step) ? stepMap[g.step] : $"階段 {g.step}").ToArray();
+            var data = groups.Select(g => Math.Round(g.count * 100.0 / total, 1)).ToArray();
+            var colors = groups.Select(g => colorMap.ContainsKey(g.step) ? colorMap[g.step] : "#94a3b8").ToArray();
+
+            return Ok(new { labels, data, colors });
+        }
+
+        [HttpGet("GetDistrictCount")]
+        public async Task<IActionResult> GetDistrictCount(string district = "", string year = "", string budget = "")
+        {
+            var query = ApplyDashboardFilter(district, year, budget);
+            var data = await query
+                .Where(p => p.AdministrativeDistrict != null && p.AdministrativeDistrict != "")
+                .GroupBy(p => p.AdministrativeDistrict)
+                .Select(g => new { label = g.Key, count = g.Count() })
+                .OrderByDescending(x => x.count)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                labels = data.Select(x => x.label).ToArray(),
+                data = data.Select(x => x.count).ToArray()
+            });
+        }
+
+        [HttpGet("GetBudgetAllocation")]
+        public async Task<IActionResult> GetBudgetAllocation(string district = "", string year = "", string budget = "")
+        {
+            var query = ApplyDashboardFilter(district, year, budget);
+            var construction = await query.SumAsync(p => (long)p.ConstructionBudget);
+            var land = await query.SumAsync(p => (long)p.LandAcquisitionBudget);
+            var compensation = await query.SumAsync(p => (long)p.CompensationBudget);
+            var total = construction + land + compensation;
+
+            return Ok(new
+            {
+                labels = new[] { "工程費", "用地費", "補償費" },
+                data = total > 0
+                    ? new[] {
+                        Math.Round(construction * 100.0 / total, 1),
+                        Math.Round(land * 100.0 / total, 1),
+                        Math.Round(compensation * 100.0 / total, 1)
+                    }
+                    : new[] { 0.0, 0.0, 0.0 }
+            });
+        }
+
+        /// <summary>
         /// 取得最新的道路專案列表
         /// </summary>
         /// <param name="count">取得筆數，預設 5 筆</param>
@@ -146,6 +281,7 @@ namespace RMIS.Controllers
 
             if (result == "success")
             {
+                await AddProcessEditLog(process1.ProcessId, "建立");
                 return Ok(new { success = true, processId = process1.ProcessId });
             }
             return BadRequest(new { success = false, message = result });
@@ -161,6 +297,7 @@ namespace RMIS.Controllers
 
             if (result == "success")
             {
+                await AddProcessEditLog(process2.ProcessId, "建立");
                 return Ok(new { success = true, processId = process2.ProcessId });
             }
             return BadRequest(new { success = false, message = result });
@@ -176,6 +313,7 @@ namespace RMIS.Controllers
 
             if (result == "success")
             {
+                await AddProcessEditLog(process3.ProcessId, "建立");
                 return Ok(new { success = true, processId = process3.ProcessId });
             }
             return BadRequest(new { success = false, message = result });
@@ -428,6 +566,7 @@ namespace RMIS.Controllers
 
             if (result == "success")
             {
+                await AddProcessEditLog(process.ProcessId, "編輯");
                 return Ok(new { success = true, processId = process.ProcessId });
             }
             return BadRequest(new { success = false, message = result });
@@ -442,6 +581,7 @@ namespace RMIS.Controllers
 
             if (result == "success")
             {
+                await AddProcessEditLog(process.ProcessId, "編輯");
                 return Ok(new { success = true, processId = process.ProcessId });
             }
             return BadRequest(new { success = false, message = result });
@@ -456,9 +596,32 @@ namespace RMIS.Controllers
 
             if (result == "success")
             {
+                await AddProcessEditLog(process.ProcessId, "編輯");
                 return Ok(new { success = true, processId = process.ProcessId });
             }
             return BadRequest(new { success = false, message = result });
+        }
+
+        [HttpGet("GetProcessEditLogs/{processId}")]
+        public async Task<IActionResult> GetProcessEditLogs(Guid processId)
+        {
+            var logs = await _mapDBContext.ProcessEditLogs
+                .Where(l => l.ProcessId == processId)
+                .OrderBy(l => l.RecordTime)
+                .Select(l => new { l.Id, l.ProcessId, l.RecordTime, l.OperationType })
+                .ToListAsync();
+            return Ok(logs);
+        }
+
+        private async Task AddProcessEditLog(Guid processId, string operationType)
+        {
+            _mapDBContext.ProcessEditLogs.Add(new ProcessEditLog
+            {
+                ProcessId = processId,
+                RecordTime = DateTime.Now,
+                OperationType = operationType
+            });
+            await _mapDBContext.SaveChangesAsync();
         }
 
         private string GetContentType(string fileType)
@@ -491,6 +654,106 @@ namespace RMIS.Controllers
             string[] sizes = { "Bytes", "KB", "MB", "GB" };
             int i = (int)Math.Floor(Math.Log(bytes) / Math.Log(1024));
             return Math.Round(bytes / Math.Pow(1024, i), 2) + " " + sizes[i];
+        }
+
+        // ===== 從 AdminAPI 轉移的道路專案相關 API =====
+
+        [HttpPost("updateProjectData")]
+        public async Task<IActionResult> UpdateProjectData([FromForm] UpdateProjectInput projectData)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "專案查詢");
+
+                if (!currentUserPermission.Update)
+                {
+                    return Ok(new { success = false, message = "無權限更新資料" });
+                }
+                var updated = await _adminInterface.UpdateProjectDataAsync(projectData);
+                if (updated)
+                {
+                    return Ok(new { success = true, message = "資料已更新" });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "資料未更新" });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("getPoints/{projectId}")]
+        public async Task<IActionResult> GetPoints(Guid projectId)
+        {
+            var result = await _adminInterface.GetPointsByProjectIdAsync(projectId);
+            return Ok(result);
+        }
+
+        [HttpPost("confirmCoordinate/{projectId}")]
+        public async Task<IActionResult> ConfirmCoordinate(Guid projectId)
+        {
+            try
+            {
+                var result = await _adminInterface.ConfirmCoordinateAsync(projectId);
+                if (result)
+                    return Ok(new { success = true, message = "座標已確認" });
+                return BadRequest(new { success = false, message = "找不到指定的專案" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("updatePoints")]
+        public async Task<IActionResult> UpdatePoints([FromBody] UpdatePointsInput input)
+        {
+            try
+            {
+                var result = await _adminInterface.UpdateProjectPointsAsync(input.ProjectId, input.RangePoints, input.PhotoPoints);
+                if (result)
+                {
+                    return Ok(new { success = true, message = "座標點已更新" });
+                }
+                return BadRequest(new { success = false, message = "找不到指定的專案" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("updateProjectPhoto")]
+        public async Task<IActionResult> UpdateProjectPhoto([FromForm] UpdateProjectPhotoInput projectPhoto)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "專案查詢");
+
+                if (!currentUserPermission.Update)
+                {
+                    return Ok(new { success = false, message = "無權限更新照片" });
+                }
+                var updated = await _adminInterface.UpdateProjectPhotoAsync(projectPhoto);
+                if (updated)
+                {
+                    return Ok(new { success = true, message = "照片已更新" });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "照片更新失敗" });
+                }
+            }
+            catch
+            {
+                return StatusCode(500, new { success = false, message = "照片未更新" });
+            }
         }
     }
 }

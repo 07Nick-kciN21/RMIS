@@ -372,7 +372,7 @@ function popupPhoto(prop){
             var formData = new FormData();
             formData.append('Photo', fileInput.files[0]);
             formData.append('PhotoName', url["url"]);
-            fetch(`/api/AdminAPI/updateProjectPhoto`, {
+            fetch(`/api/RoadProject/updateProjectPhoto`, {
                 method: 'POST',
                 body: formData
             }).then(response => {

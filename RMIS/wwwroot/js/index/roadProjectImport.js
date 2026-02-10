@@ -19,9 +19,9 @@ const RoadProjectImport = {
     init: function() {
         const self = this;
 
-        // 綁定取消按鈕事件
+        // 綁定清除上傳按鈕事件
         $(document).on('click', '#btn-cancel-project-import', function() {
-            self.closeImport();
+            self.clearUpload();
         });
 
         // 綁定提交按鈕事件
@@ -180,6 +180,15 @@ const RoadProjectImport = {
 
         // 使用 BoxManager 開啟右側 Box
         BoxManager.openRightBoxPage('page-project-import', '道路專案匯入');
+    },
+
+    /**
+     * 清除上傳的檔案
+     */
+    clearUpload: function() {
+        this.removeExcelFile();
+        this.removeZipFile();
+        $('#importResultSection').addClass('hidden');
     },
 
     /**

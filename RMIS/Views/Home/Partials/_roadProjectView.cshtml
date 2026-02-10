@@ -30,6 +30,12 @@
             </div>
         </div>
 
+        @* ===== 1.5 座標未確認警示 ===== *@
+        <div id="pv-coord-warning" class="coord-warning-banner hidden">
+            <i class="fa fa-exclamation-triangle"></i>
+            <span>座標由系統自動取得，請至編輯頁面確認座標位置</span>
+        </div>
+
         @* ===== 2. 主要內容區 ===== *@
         <div class="view-content-area">
 
@@ -195,7 +201,22 @@
                 </div>
             </div>
 
-            @* ===== 2.7 備註 ===== *@
+            @* ===== 2.7 街景照片 ===== *@
+            <div class="view-section">
+                <div class="section-header">
+                    <h3 class="section-title">
+                        <i class="fa fa-camera"></i> 街景照片
+                    </h3>
+                    <span class="photo-count" id="pv-photo-count">0 張</span>
+                </div>
+                <div class="section-body">
+                    <div id="pv-photo-gallery" class="photo-gallery">
+                        <div class="photo-empty">尚無街景照片</div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== 2.8 備註 ===== *@
             <div class="view-section">
                 <div class="section-header">
                     <h3 class="section-title">

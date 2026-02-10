@@ -91,6 +91,16 @@ const ProjectBox = {
             self.fetchData();
         });
 
+        // 監聽專案刪除完成事件，重新查詢
+        $(document).on('projectDeleted', function() {
+            self.fetchData();
+        });
+
+        // 監聽專案更新完成事件，重新查詢
+        $(document).on('projectUpdated', function() {
+            self.fetchData();
+        });
+
         // 綁定關閉按鈕事件，清除定位圖層
         $('#left-box .btn-close-box').on('click', function() {
             self.clearProjectLayer();
@@ -213,8 +223,11 @@ const ProjectBox = {
                 totalBudgetDisplay = item.totalBudget === 0 ? '0' : (item.totalBudget / 10000) + '萬';
             }
 
+            const isUnchecked = item.coordinateChecked === false;
+            const colCount = hasUpdatePermission ? 6 : 5;
+
             let row = `
-                <tr data-project-index="${startIndex + currentPageData.indexOf(item)}">
+                <tr data-project-index="${startIndex + currentPageData.indexOf(item)}" class="${isUnchecked ? 'coord-unchecked-row' : ''}">
                     <td>
                         <button class="btn btn-sm btn-outline-primary btn-locate" data-id="${item.id}">
                             定位
@@ -226,6 +239,19 @@ const ProjectBox = {
                     <td class="td-clickable" style="cursor: pointer; color: #2563eb;">${item.startEndLocation || ''}</td>
                     <td>${totalBudgetDisplay}</td>
                 </tr>`;
+
+            if (isUnchecked) {
+                row += `
+                <tr class="coord-warning-row" data-project-id="${item.id}">
+                    <td colspan="${colCount}">
+                        <div class="inline-coord-warning">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            <span>座標由系統自動取得，尚未確認</span>
+                        </div>
+                    </td>
+                </tr>`;
+            }
+
             $tbody.append(row);
         });
 
@@ -373,6 +399,29 @@ const ProjectBox = {
     /**
      * 定位專案到地圖 - 完整實作
      */
+    /**
+     * 建立地圖標記（不可拖曳）
+     */
+    createLocateMarker: function(latlng, iconClass, popupContent) {
+        const isSmall = (iconClass === 'range-marker-middle' || iconClass === 'range-marker-photo');
+        const size = isSmall ? [14, 14] : [16, 16];
+        const anchor = isSmall ? [7, 7] : [8, 8];
+
+        const icon = L.divIcon({
+            className: iconClass,
+            iconSize: size,
+            iconAnchor: anchor,
+            popupAnchor: [0, -10]
+        });
+
+        const marker = L.marker(latlng, { icon: icon, draggable: false });
+        if (popupContent) {
+            const isPhoto = (iconClass === 'range-marker-photo');
+            marker.bindPopup(popupContent, isPhoto ? { maxWidth: 450 } : { maxWidth: 250, minWidth: 100 });
+        }
+        return marker;
+    },
+
     locateProject: function(projectId) {
         const self = this;
 
@@ -388,8 +437,6 @@ const ProjectBox = {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('專案座標資料:', data);
-            
             // 清除舊的圖層
             self.projectLayer.clearLayers();
 
@@ -397,98 +444,147 @@ const ProjectBox = {
             const rangePoints = data['points']['rangePoints'] || [];
             const photoPoints = data['points']['photoPoints'] || [];
 
-            if (rangePoints.length === 0) {
+            if (rangePoints.length === 0 && photoPoints.length === 0) {
                 alert('此專案無座標資料');
                 return;
             }
-            // 1. 累加所有點的經緯度
-            let centerLat = 0;
-            let centerLng = 0;
-            rangePoints.forEach(point => {
-                centerLat += point.latitude;
-                centerLng += point.longitude;
-            });
 
-            // 2. 計算平均值得到中心點
-            centerLat = centerLat / rangePoints.length;
-            centerLng = centerLng / rangePoints.length;
-            
-            // 先設定視圖到目標位置
-            self.$indexMap.setView([centerLat, centerLng], 18);
-            
-            // 計算偏移量，因為左側50%被遮擋，需要向右平移
-            // 取得地圖容器尺寸
-            const mapSize = self.$indexMap.getSize();
-            
-            // 向右偏移地圖寬度的 25%（因為左半邊被遮擋，所以移到右側可見區域的中心）
-            const offsetX = -mapSize.x * 0.25;
-            
-            // 使用 panBy 平移地圖
-            self.$indexMap.panBy([offsetX, 0], {
-                animate: true,
-                duration: 0.5
-            });
+            const allCoords = [];
 
-            // 添加照片標記點 (photoPoints)
-            photoPoints.forEach(point => {
-                const marker = L.marker([point['latitude'], point['longitude']])
+            // ── 拓寬範圍線/面 ──
+            if (rangePoints.length >= 3) {
+                const coords = rangePoints.map(p => [p.latitude, p.longitude]);
+                const polygon = L.polygon(coords, { color: '#3b82f6', weight: 2, fillOpacity: 0.15 })
                     .addTo(self.projectLayer);
-                
-                // 產生照片彈出視窗內容
-                const popupContent = self.createPhotoPopup(point['url']);
-                
-                marker.bindPopup(popupContent, {
-                    maxWidth: 450,
-                    maxHeight: 350
+                coords.forEach(c => allCoords.push(c));
+
+                // 綁定專案資訊彈出視窗
+                const prop = rangePoints[0]['prop'];
+                if (prop) {
+                    polygon.bindPopup(`
+                        <div>
+                            <text style="font-size: 25px; font-weight: bolder;">
+                                圖層：道路專案
+                            </text>
+                            <div style="font-size: 20px;">
+                                ${self.createPopupForm(prop)}
+                            </div>
+                        </div>`, {
+                        maxWidth: 350,
+                        maxHeight: 450
+                    });
+                }
+            } else if (rangePoints.length === 2) {
+                const coords = rangePoints.map(p => [p.latitude, p.longitude]);
+                L.polyline(coords, { color: '#3b82f6', weight: 2 }).addTo(self.projectLayer);
+                coords.forEach(c => allCoords.push(c));
+            }
+
+            // 從 prop 解析路名
+            let roadName = '';
+            if (rangePoints.length >= 1 && rangePoints[0].prop) {
+                try {
+                    const propData = JSON.parse(rangePoints[0].prop);
+                    roadName = propData['起訖位置'] || '';
+                } catch(e) {}
+            }
+
+            // ── 起點標記（綠色）──
+            if (rangePoints.length >= 1) {
+                const sp = rangePoints[0];
+                self.createLocateMarker([sp.latitude, sp.longitude], 'range-marker-start', `
+                    <div style="min-width:120px;">
+                        <div style="font-weight:bold;color:#22c55e;margin-bottom:4px;">起點</div>
+                        ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
+                        <div style="font-size:12px;color:#666;">
+                            <div>緯度：${sp.latitude.toFixed(6)}</div>
+                            <div>經度：${sp.longitude.toFixed(6)}</div>
+                        </div>
+                    </div>
+                `).addTo(self.projectLayer);
+            }
+
+            // ── 終點標記（紅色）──
+            if (rangePoints.length >= 2) {
+                const ep = rangePoints[rangePoints.length - 1];
+                self.createLocateMarker([ep.latitude, ep.longitude], 'range-marker-end', `
+                    <div style="min-width:120px;">
+                        <div style="font-weight:bold;color:#ef4444;margin-bottom:4px;">終點</div>
+                        ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
+                        <div style="font-size:12px;color:#666;">
+                            <div>緯度：${ep.latitude.toFixed(6)}</div>
+                            <div>經度：${ep.longitude.toFixed(6)}</div>
+                        </div>
+                    </div>
+                `).addTo(self.projectLayer);
+            }
+
+            // ── 中間範圍點標記（藍色）──
+            if (rangePoints.length > 2) {
+                rangePoints.slice(1, -1).forEach(function(p, idx) {
+                    self.createLocateMarker([p.latitude, p.longitude], 'range-marker-middle', `
+                        <div style="min-width:120px;">
+                            <div style="font-weight:bold;color:#3b82f6;margin-bottom:4px;">範圍點 ${idx + 1}</div>
+                            ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
+                            <div style="font-size:12px;color:#666;">
+                                <div>緯度：${p.latitude.toFixed(6)}</div>
+                                <div>經度：${p.longitude.toFixed(6)}</div>
+                            </div>
+                        </div>
+                    `).addTo(self.projectLayer);
                 });
+            }
+
+            // ── 街景照片標記（橘色）──
+            photoPoints.forEach(function(point, index) {
+                if (!point.latitude || !point.longitude) return;
+
+                let photoName = '';
+                let photoSrc = '';
+                try {
+                    const parsed = JSON.parse(point.url || '{}');
+                    const existingUrl = parsed.url || '';
+                    photoName = existingUrl.split('/').pop();
+                    photoSrc = `/roadProject/${existingUrl}`;
+                } catch(e) {
+                    const existingUrl = point.url || '';
+                    photoName = existingUrl.split('/').pop();
+                    photoSrc = `/roadProject/${existingUrl}`;
+                }
+
+                const popupDiv = document.createElement('div');
+                popupDiv.id = 'photoPopup';
+                if (photoSrc) {
+                    const img = document.createElement('img');
+                    img.src = `${photoSrc}?v=${new Date().getTime()}`;
+                    img.style.width = '450px';
+                    img.style.height = '300px';
+                    popupDiv.appendChild(img);
+                }
+
+                const marker = self.createLocateMarker([point.latitude, point.longitude], 'range-marker-photo', popupDiv);
+                marker.addTo(self.projectLayer);
+                allCoords.push([point.latitude, point.longitude]);
             });
 
-            // 添加範圍多邊形 (rangePoints)
-            const polygonCoords = rangePoints.map(coord => [coord.latitude, coord.longitude]);
-            const polygon = L.polygon(polygonCoords, {color: 'red'})
-                .addTo(self.projectLayer);
-            
-            // 取得專案屬性資料
-            const prop = rangePoints[0]['prop'];
-            
-            // 綁定專案資訊彈出視窗
-            polygon.bindPopup(`
-                <div>
-                    <text style="font-size: 25px; font-weight: bolder;">
-                        圖層：道路專案
-                    </text>
-                    <div style="font-size: 20px;">
-                        ${self.createPopupForm(prop)}
-                    </div>
-                </div>`, {
-                maxWidth: 350,
-                maxHeight: 450
-            });
+            // ── 視圖定位（保留左側偏移邏輯）──
+            if (allCoords.length > 0) {
+                let centerLat = 0, centerLng = 0;
+                allCoords.forEach(c => { centerLat += c[0]; centerLng += c[1]; });
+                centerLat /= allCoords.length;
+                centerLng /= allCoords.length;
+
+                self.$indexMap.setView([centerLat, centerLng], 18);
+
+                const mapSize = self.$indexMap.getSize();
+                const offsetX = -mapSize.x * 0.25;
+                self.$indexMap.panBy([offsetX, 0], { animate: true, duration: 0.5 });
+            }
         })
         .catch(error => {
             console.error('定位失敗:', error);
             alert('定位失敗，請稍後再試');
         });
-    },
-
-    /**
-     * 產生照片彈出視窗內容
-     */
-    createPhotoPopup: function(urlData) {
-        const url = JSON.parse(urlData);
-        
-        const popupContent = document.createElement('div');
-        popupContent.id = 'photoPopup';
-
-        // 添加圖片
-        const img = document.createElement('img');
-        const src = `/roadProject/${url["url"]}?v=${new Date().getTime()}`;
-        img.src = src;
-        img.style.width = '450px';
-        img.style.height = '300px';
-        popupContent.appendChild(img);
-
-        return popupContent;
     },
 
     /**

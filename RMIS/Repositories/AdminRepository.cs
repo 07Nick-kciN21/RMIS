@@ -33,17 +33,20 @@ namespace RMIS.Repositories
         private readonly ILogger<AdminRepository> _logger;
         private readonly MapdataInterface _mapdataInterface;
         private readonly FilePathSettings _filePaths;
+        private readonly IHttpClientFactory _httpClientFactory;
         public AdminRepository(MapDBContext mapDBContext,
                                ILogger<AdminRepository> loger,
                                AuthDbContext authDbContext,
                                MapdataInterface mapdataInterface,
-                               IOptions<FilePathSettings> filePaths)
+                               IOptions<FilePathSettings> filePaths,
+                               IHttpClientFactory httpClientFactory)
         {
             _mapDBContext = mapDBContext;
             _logger = loger;
             _authDbContext = authDbContext;
             _mapdataInterface = mapdataInterface;
             _filePaths = filePaths.Value;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<AddPipelineInput> getPipelineInput(UserAuthInfo userAuthInfo)
@@ -1561,6 +1564,9 @@ namespace RMIS.Repositories
                     return result;
                 }
 
+                // 1.5 為沒有拓寬範圍座標的資料，透過路名自動查詢座標
+                await GeocodeImportRowsAsync(rows);
+
                 // 2. 檢查重複的 ProjectId
                 var projectIds = rows.Select(r => r.ProjectId).Where(id => !string.IsNullOrEmpty(id)).ToList();
                 var existingIds = await _mapDBContext.RoadProjects
@@ -1580,6 +1586,37 @@ namespace RMIS.Repositories
                 if (input.PhotoZipFile != null && input.PhotoZipFile.Length > 0)
                 {
                     photoDict = await ExtractPhotoZipAsync(input.PhotoZipFile);
+                }
+
+                // 3.1 驗證 Excel 中引用的照片是否都存在於壓縮檔中
+                var photoErrors = new List<string>();
+                foreach (var row in rows)
+                {
+                    var photoCoords = ParsePhotoCoordinatesJson(row.StreetViewPhotoJson);
+                    if (photoCoords.Count == 0) continue;
+
+                    if (!photoDict.ContainsKey(row.ProjectId))
+                    {
+                        photoErrors.Add($"專案 {row.ProjectId}: 壓縮檔中找不到對應的照片目錄「{row.ProjectId}」");
+                        continue;
+                    }
+
+                    var availablePhotos = photoDict[row.ProjectId];
+                    foreach (var photo in photoCoords)
+                    {
+                        if (!availablePhotos.Contains(photo.photoName))
+                        {
+                            photoErrors.Add($"專案 {row.ProjectId}: 壓縮檔中找不到照片「{photo.photoName}」");
+                        }
+                    }
+                }
+
+                if (photoErrors.Count > 0)
+                {
+                    result.Success = false;
+                    result.Message = "照片檔案驗證失敗，匯入已中止";
+                    result.Errors = photoErrors;
+                    return result;
                 }
 
                 // 4. 建立專案資料
@@ -1777,7 +1814,8 @@ namespace RMIS.Repositories
                 RCCount = row.RCCount,
                 TinHouseCount = row.TinHouseCount,
                 ReviewResult = row.ReviewResult,
-                CreateTime = DateTime.Now
+                CreateTime = DateTime.Now,
+                CoordinateChecked = !row.GeocodedByApi
             };
 
             // 建立 Property JSON
@@ -1934,6 +1972,122 @@ namespace RMIS.Repositories
             return coords;
         }
 
+        /// <summary>
+        /// 透過 Nominatim API 搜尋路名座標
+        /// 回傳第一筆符合條件（包含「臺灣」且包含行政區）的座標，若無結果則回傳 null
+        /// </summary>
+        private async Task<(double lat, double lng)?> SearchNominatimAsync(string district, string roadName)
+        {
+            if (string.IsNullOrWhiteSpace(roadName)) return null;
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Add("User-Agent", "RMIS/1.0");
+
+                var query = Uri.EscapeDataString($"台灣桃園市{district}{roadName}");
+                var url = $"https://nominatim.openstreetmap.org/search?q={query}&format=json";
+
+                var response = await client.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return null;
+
+                var json = await response.Content.ReadAsStringAsync();
+                var results = System.Text.Json.JsonSerializer.Deserialize<List<NominatimResult>>(json);
+
+                if (results == null || results.Count == 0) return null;
+
+                // 過濾：display_name 必須包含「臺灣」且包含行政區
+                var filtered = results.FirstOrDefault(r =>
+                    r.display_name != null &&
+                    r.display_name.Contains("臺灣") &&
+                    (string.IsNullOrEmpty(district) || r.display_name.Contains(district)));
+
+                if (filtered == null) return null;
+
+                if (double.TryParse(filtered.lat, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat) &&
+                    double.TryParse(filtered.lon, NumberStyles.Float, CultureInfo.InvariantCulture, out var lng))
+                {
+                    return (lat, lng);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Nominatim 搜尋失敗: {District} {RoadName}", district, roadName);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 為沒有拓寬範圍座標的匯入資料，透過路名自動查詢起點/終點座標
+        /// </summary>
+        private async Task GeocodeImportRowsAsync(List<ExcelRoadProjectRow> rows)
+        {
+            foreach (var row in rows)
+            {
+                // 已有拓寬範圍座標的跳過
+                var existingCoords = ParseCoordinatesJson(row.ExpansionRangeJson);
+                if (existingCoords.Count > 0) continue;
+
+                // 沒有起點/終點路名也無法查詢
+                if (string.IsNullOrWhiteSpace(row.StartPoint) && string.IsNullOrWhiteSpace(row.EndPoint))
+                    continue;
+
+                var coords = new List<Dictionary<string, double>>();
+
+                // 查詢起點座標
+                if (!string.IsNullOrWhiteSpace(row.StartPoint))
+                {
+                    var startResult = await SearchNominatimAsync(row.AdministrativeDistrict, row.StartPoint);
+                    if (startResult.HasValue)
+                    {
+                        coords.Add(new Dictionary<string, double>
+                        {
+                            { "lat", startResult.Value.lat },
+                            { "lng", startResult.Value.lng }
+                        });
+                    }
+
+                    // Nominatim 使用政策：每秒最多 1 次請求
+                    await Task.Delay(1100);
+                }
+
+                // 查詢終點座標
+                if (!string.IsNullOrWhiteSpace(row.EndPoint))
+                {
+                    var endResult = await SearchNominatimAsync(row.AdministrativeDistrict, row.EndPoint);
+                    if (endResult.HasValue)
+                    {
+                        coords.Add(new Dictionary<string, double>
+                        {
+                            { "lat", endResult.Value.lat },
+                            { "lng", endResult.Value.lng }
+                        });
+                    }
+
+                    await Task.Delay(1100);
+                }
+
+                if (coords.Count > 0)
+                {
+                    row.ExpansionRangeJson = System.Text.Json.JsonSerializer.Serialize(coords);
+                    row.GeocodedByApi = true;
+                    _logger.LogInformation("專案 {ProjectId}: 透過路名查詢取得 {Count} 個座標點",
+                        row.ProjectId, coords.Count);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Nominatim API 回傳結果模型
+        /// </summary>
+        private class NominatimResult
+        {
+            public string lat { get; set; } = "";
+            public string lon { get; set; } = "";
+            public string display_name { get; set; } = "";
+        }
+
         private string parseRoadWidthSimple(int? roadWidth, string roadType)
         {
             // 直接返回簡單字串格式，不使用嵌套 JSON
@@ -2015,6 +2169,16 @@ namespace RMIS.Repositories
             }
 
         }
+        public async Task<bool> ConfirmCoordinateAsync(Guid projectId)
+        {
+            var project = await _mapDBContext.RoadProjects.FindAsync(projectId);
+            if (project == null) return false;
+
+            project.CoordinateChecked = true;
+            await _mapDBContext.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> UpdateProjectPointsAsync(Guid projectId, List<range> rangePoints, List<photo>? photoPoints)
         {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();

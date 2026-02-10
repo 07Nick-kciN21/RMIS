@@ -205,6 +205,17 @@ const ProcessView = {
             return data;
         })
         .then(data => {
+            // 取得修改歷程記錄
+            if (data.processId) {
+                return self.fetchEditLogs(data.processId)
+                    .then(logs => {
+                        data.editLogs = logs;
+                        return data;
+                    });
+            }
+            return data;
+        })
+        .then(data => {
             // 渲染頁面
             self.renderView(data, self.currentProject, self.currentStage);
         })
@@ -243,6 +254,26 @@ const ProcessView = {
         })
         .catch(error => {
             console.error('取得佐證文件錯誤:', error);
+            return [];
+        });
+    },
+
+    /**
+     * 從 API 取得修改歷程記錄
+     * @param {string} processId - Process GUID
+     * @returns {Promise<Array>} - 歷程記錄列表
+     */
+    fetchEditLogs: function(processId) {
+        return fetch(`/api/RoadProject/GetProcessEditLogs/${processId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            if (!response.ok) return [];
+            return response.json();
+        })
+        .catch(error => {
+            console.error('取得修改歷程失敗:', error);
             return [];
         });
     },
@@ -484,58 +515,39 @@ const ProcessView = {
         const $container = $('#view-history-list');
         $container.empty();
 
-        // 建立紀錄
-        const createdTime = self.formatDateTime(record.createdAt);
-        $container.append(`
-            <div class="history-item">
-                <div class="history-icon">
-                    <i class="fa fa-plus-circle"></i>
-                </div>
-                <div class="history-content">
-                    <span class="history-action">建立紀錄</span>
-                    <span class="history-time">${createdTime}</span>
-                </div>
-            </div>
-        `);
+        const logs = record.editLogs || [];
 
-        // 如果有更新時間且與建立時間不同
-        if (record.updatedAt && record.updatedAt !== record.createdAt) {
-            const updatedTime = self.formatDateTime(record.updatedAt);
+        if (logs.length === 0) {
+            // 無歷程記錄時顯示建立時間
+            const createdTime = self.formatDateTime(record.createdAt);
             $container.append(`
                 <div class="history-item">
                     <div class="history-icon">
-                        <i class="fa fa-pencil"></i>
+                        <i class="fa fa-plus-circle"></i>
                     </div>
                     <div class="history-content">
-                        <span class="history-action">更新紀錄</span>
-                        <span class="history-time">${updatedTime}</span>
+                        <span class="history-action">建立紀錄</span>
+                        <span class="history-time">${createdTime}</span>
                     </div>
                 </div>
             `);
+            return;
         }
 
-        // 如果有歷程記錄陣列
-        if (record.history && Array.isArray(record.history)) {
-            record.history.forEach(item => {
-                const icon = item.action === 'create' ? 'fa-plus-circle' : 
-                            item.action === 'update' ? 'fa-pencil' : 'fa-info-circle';
-                const actionText = item.action === 'create' ? '建立紀錄' : 
-                                  item.action === 'update' ? '更新紀錄' : item.action;
-                
-                $container.append(`
-                    <div class="history-item">
-                        <div class="history-icon">
-                            <i class="fa ${icon}"></i>
-                        </div>
-                        <div class="history-content">
-                            <span class="history-action">${self.escapeHtml(actionText)}</span>
-                            <span class="history-time">${self.formatDateTime(item.time)}</span>
-                            ${item.user ? `<span class="history-user">${self.escapeHtml(item.user)}</span>` : ''}
-                        </div>
+        logs.forEach(log => {
+            const icon = log.operationType === '建立' ? 'fa-plus-circle' : 'fa-pencil';
+            $container.append(`
+                <div class="history-item">
+                    <div class="history-icon">
+                        <i class="fa ${icon}"></i>
                     </div>
-                `);
-            });
-        }
+                    <div class="history-content">
+                        <span class="history-action">${self.escapeHtml(log.operationType + '紀錄')}</span>
+                        <span class="history-time">${self.formatDateTime(log.recordTime)}</span>
+                    </div>
+                </div>
+            `);
+        });
     },
 
     /**

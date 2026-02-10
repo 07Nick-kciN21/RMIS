@@ -49,6 +49,17 @@ const DashboardBox = (function () {
     };
 
     /**
+     * 取得目前篩選參數
+     */
+    function getFilterParams() {
+        return {
+            district: $('#filter-district').val() || '',
+            year: $('#filter-year').val() || '',
+            budget: $('#filter-budget').val() || ''
+        };
+    }
+
+    /**
      * 初始化儀表板
      */
     function init() {
@@ -68,18 +79,36 @@ const DashboardBox = (function () {
     }
 
     /**
+     * 重新載入所有數據（套用篩選）
+     */
+    function reloadDashboard() {
+        loadKPIData();
+        initCharts();
+    }
+
+    /**
      * 載入 KPI 數據
      */
     function loadKPIData() {
-        const kpi = mockData.kpi;
-
-        $('#kpi-total-count').text(kpi.totalCount);
-        $('#kpi-total-trend').text(`較上月 ${kpi.totalTrend}`);
-        $('#kpi-total-length').text(kpi.totalLength);
-        $('#kpi-total-budget').text(kpi.totalBudget);
-        $('#kpi-budget-progress').css('width', kpi.budgetProgress + '%');
-        $('#kpi-contract-amount').text(kpi.contractAmount);
-        $('#kpi-contract-percent').text(`佔總經費 ${kpi.contractPercent}%`);
+        $.ajax({
+            url: '/api/RoadProject/GetDashboardKPI',
+            data: getFilterParams(),
+            method: 'GET',
+            success: function(kpi) {
+                $('#kpi-total-count').text(kpi.totalCount);
+                const sign = kpi.monthDiff >= 0 ? '+' : '';
+                $('#kpi-total-trend')
+                    .text(`較上月 ${sign}${kpi.monthDiff}`)
+                    .removeClass('positive negative')
+                    .addClass(kpi.monthDiff >= 0 ? 'positive' : 'negative');
+                $('#kpi-total-budget').text(kpi.totalBudget);
+            },
+            error: function() {
+                $('#kpi-total-count').text('--');
+                $('#kpi-total-trend').text('載入失敗');
+                $('#kpi-total-budget').text('--');
+            }
+        });
     }
 
     /**
@@ -131,23 +160,23 @@ const DashboardBox = (function () {
      */
     function getStepText(step) {
         const stepMap = {
-            1: '前期規劃',
-            2: '用地取得',
-            3: '設計與施工'
+            '1': '前期規劃',
+            '2': '用地取得',
+            '3': '設計與施工'
         };
-        return stepMap[step] || `階段 ${step}`;
+        return stepMap[String(step)] || `階段 ${step}`;
     }
 
     /**
      * 取得階段對應的 CSS class
      */
     function getStepClass(step) {
-        switch (step) {
-            case 1: return 'planning';
-            case 2: return 'land';
-            case 3: return 'design';
-            default: return 'planning';
-        }
+        const classMap = {
+            '1': 'planning',
+            '2': 'land',
+            '3': 'design'
+        };
+        return classMap[String(step)] || 'planning';
     }
 
     /**
@@ -179,40 +208,51 @@ const DashboardBox = (function () {
         const ctx = document.getElementById('chart-budget-allocation');
         if (!ctx) return;
 
-        const data = mockData.budgetAllocation;
+        const colors = ['#2563eb', '#f59e0b', '#64748b'];
 
-        chartBudgetAllocation = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    data: data.data,
-                    backgroundColor: data.colors,
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            pointStyle: 'rectRounded',
-                            font: { size: 11 }
-                        }
+        $.ajax({
+            url: '/api/RoadProject/GetBudgetAllocation',
+            data: getFilterParams(),
+            method: 'GET',
+            success: function(data) {
+                if (chartBudgetAllocation) { chartBudgetAllocation.destroy(); chartBudgetAllocation = null; }
+                chartBudgetAllocation = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: colors,
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.raw}%`;
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    usePointStyle: true,
+                                    pointStyle: 'rectRounded',
+                                    font: { size: 11 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw}%`;
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                });
+            },
+            error: function() {
+                console.error('載入經費分配資料失敗');
             }
         });
     }
@@ -224,46 +264,56 @@ const DashboardBox = (function () {
         const ctx = document.getElementById('chart-district-count');
         if (!ctx) return;
 
-        const data = mockData.districtCount;
-
-        chartDistrictCount = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: '案件數',
-                    data: data.data,
-                    backgroundColor: '#059669',
-                    borderRadius: 4,
-                    barThickness: 32
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#e2e8f0',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            font: { size: 10 },
-                            color: '#94a3b8'
-                        }
+        $.ajax({
+            url: '/api/RoadProject/GetDistrictCount',
+            data: getFilterParams(),
+            method: 'GET',
+            success: function(data) {
+                if (chartDistrictCount) { chartDistrictCount.destroy(); chartDistrictCount = null; }
+                chartDistrictCount = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: '案件數',
+                            data: data.data,
+                            backgroundColor: '#059669',
+                            borderRadius: 4,
+                            barThickness: 32
+                        }]
                     },
-                    x: {
-                        grid: { display: false },
-                        ticks: {
-                            font: { size: 10, weight: '600' },
-                            color: '#64748b'
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e2e8f0',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    stepSize: 1,
+                                    font: { size: 10 },
+                                    color: '#94a3b8'
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    font: { size: 10, weight: '600' },
+                                    color: '#64748b'
+                                }
+                            }
                         }
                     }
-                }
+                });
+            },
+            error: function() {
+                console.error('載入行政區案件數量失敗');
             }
         });
     }
@@ -275,41 +325,50 @@ const DashboardBox = (function () {
         const ctx = document.getElementById('chart-status-ratio');
         if (!ctx) return;
 
-        const data = mockData.statusRatio;
-
-        chartStatusRatio = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    data: data.data,
-                    backgroundColor: data.colors,
-                    borderWidth: 2,
-                    borderColor: '#fff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '55%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            usePointStyle: true,
-                            pointStyle: 'rectRounded',
-                            font: { size: 11 }
-                        }
+        $.ajax({
+            url: '/api/RoadProject/GetStatusRatio',
+            data: getFilterParams(),
+            method: 'GET',
+            success: function(data) {
+                if (chartStatusRatio) { chartStatusRatio.destroy(); chartStatusRatio = null; }
+                chartStatusRatio = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: data.colors,
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.raw}%`;
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '55%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    usePointStyle: true,
+                                    pointStyle: 'rectRounded',
+                                    font: { size: 11 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw}%`;
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                });
+            },
+            error: function() {
+                console.error('載入案件狀態佔比失敗');
             }
         });
     }
@@ -323,6 +382,7 @@ const DashboardBox = (function () {
 
         const data = mockData.sCurve;
 
+        if (chartSCurve) { chartSCurve.destroy(); chartSCurve = null; }
         chartSCurve = new Chart(ctx, {
             type: 'line',
             data: {
@@ -398,13 +458,8 @@ const DashboardBox = (function () {
     function bindEvents() {
         // 套用篩選
         $('#btn-apply-filter').on('click', function() {
-            const district = $('#filter-district').val();
-            const year = $('#filter-year').val();
-            const budget = $('#filter-budget').val();
-
-            console.log('套用篩選:', { district, year, budget });
-            // TODO: 呼叫 API 重新載入數據
-            alert('篩選功能開發中...');
+            console.log('套用篩選:', getFilterParams());
+            reloadDashboard();
         });
 
         // 查看更多專案

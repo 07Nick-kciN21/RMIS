@@ -218,7 +218,7 @@ function popUpPhoto(prop){
                 var formData = new FormData();
                 formData.append('Photo', fileInput.files[0]);
                 formData.append('PhotoName', url["url"]);
-                fetch(`/api/AdminAPI/updateProjectPhoto`, {
+                fetch(`/api/RoadProject/updateProjectPhoto`, {
                     method: 'POST',
                     body: formData
                 })
@@ -458,7 +458,7 @@ function renderTableBody(pageData){
             // console.log(updateForm);
             // 取得更新後的所有值
             // 透過/api/AdminAPI/UpdateRoadProject更新資料
-            fetch(`/api/AdminAPI/updateProjectData`, {  
+            fetch(`/api/RoadProject/updateProjectData`, {  
                 method: 'POST',
                 body: updateForm
             })
