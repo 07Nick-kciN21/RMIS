@@ -60,17 +60,6 @@
 <body>
     <div class="content-wrapper">
         @RenderBody()
-        @RenderSection("projectBox", required: false)
-        @RenderSection("painterPanel", required: false)
-        @RenderSection("searchPropPanel", required: false)
-        @RenderSection("flagPanel", required: false)
-        @RenderSection("focusPanel", required: false)
-        @RenderSection("measurePanel", required: false)
-        @RenderSection("metaDataPanel", required: false)
-        @RenderSection("projectPanel", required: false)
-        @RenderSection("roadMaintPanel", required: false)
-        @RenderSection("searchPanel", required: false)
-        @RenderSection("accidentPanel", required: false)
 
     </div>
     @await RenderSectionAsync("Scripts", required: false)

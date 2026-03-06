@@ -9,14 +9,18 @@
 
     function handlePanelMove(e) {
         if (isDragging) {
-            let newLeft = e.touches ? e.touches[0].clientX - offsetX : e.clientX - offsetX;
-            let newTop = e.touches ? e.touches[0].clientY - offsetY : e.clientY - offsetY;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
             const containerRect = $container[0].getBoundingClientRect();
-            const panelRect = $panel[0].getBoundingClientRect();
+            const panelWidth = $panel[0].offsetWidth;
+            const panelHeight = $panel[0].offsetHeight;
 
-            newLeft = Math.max(containerRect.left, Math.min(newLeft, containerRect.right - panelRect.width));
-            newTop = Math.max(containerRect.top, Math.min(newTop, containerRect.bottom - panelRect.height));
+            let newLeft = clientX - offsetX - containerRect.left;
+            let newTop = clientY - offsetY - containerRect.top;
+
+            newLeft = Math.max(0, Math.min(newLeft, containerRect.width - panelWidth));
+            newTop = Math.max(0, Math.min(newTop, containerRect.height - panelHeight));
 
             $panel.css({ left: `${newLeft}px`, top: `${newTop}px` });
         }
@@ -25,8 +29,9 @@
     // Event listeners for dragging functionality
     $panelHeading.on('pointerdown', (e) => {
         isDragging = true;
-        offsetX = e.clientX - $panel.offset().left;
-        offsetY = e.clientY - $panel.offset().top;
+        const panelRect = $panel[0].getBoundingClientRect();
+        offsetX = e.clientX - panelRect.left;
+        offsetY = e.clientY - panelRect.top;
         $panel.css('z-index', 1052);
         $panel.siblings('.panel').css('z-index', 1051);
         e.preventDefault();
@@ -44,7 +49,12 @@
     }
 
     enablePanelDrag();
-    
+
+    // 防止事件穿透到地圖（滾動、點擊、拖曳）
+    $panel.on('wheel mousedown pointerdown dblclick', (e) => {
+        e.stopPropagation();
+    });
+
     $(document).on('pointerup', () => {
         isDragging = false;
     });

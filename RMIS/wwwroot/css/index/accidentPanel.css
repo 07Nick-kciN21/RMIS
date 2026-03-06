@@ -23,30 +23,171 @@
 
 #accidentPanel #acc2 .form-group{
     margin-bottom: 10px;
-    display: flex; 
+    display: flex;
     align-items: center;
 }
 
 #accidentPanel #acc2 .form-group label {
     width: 30%;
+    flex-shrink: 0;
 }
 
-#accidentPanel #acc2 .form-group select, 
+#accidentPanel #acc2 .form-group select,
 #accidentPanel #acc2 .form-group div {
     width: 70%;
 }
 
-#accidentPanel #acc2 #focusTbody{
-    border: 1px solid gray;
-    border-radius: 0px;
-    margin: 15px;
+#accidentPanel #acc2 .acc-date-row {
+    flex-wrap: wrap;
 }
 
-#accidentPanel #acc2 #focusTbody td{
-    table-layout: fixed;
-    white-space: normal;
+#accidentPanel #acc2 .acc-date-selects {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 70%;
 }
 
-#accidentPanel #acc2 #focusTable{
-    width: 500px;
+#accidentPanel #acc2 .acc-date-selects select {
+    width: auto;
+    flex: 1;
+    min-width: 55px;
+    padding: 4px 2px;
+    font-size: 13px;
+    border-radius: 0;
+}
+
+#accidentPanel #acc2 .acc-date-selects span {
+    font-size: 13px;
+    color: #666;
+    flex-shrink: 0;
+}
+
+#accidentPanel #acc2 #accidentTable {
+    width: 100%;
+    font-size: 12px;
+}
+
+#accidentPanel #acc2 #accidentTable th {
+    background-color: #f5f5f5;
+    padding: 4px 6px;
+    white-space: nowrap;
+}
+
+#accidentPanel #acc2 #accidentTable td {
+    padding: 3px 6px;
+    white-space: nowrap;
+}
+
+/* 熱區時間軸 */
+.acc-timeline-control {
+    background: rgba(255, 255, 255, 0.92);
+    padding: 8px 14px 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    width: 320px;
+    user-select: none;
+}
+
+.acc-timeline-label {
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.acc-timeline-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+
+.acc-timeline-inner {
+    width: 780px;
+    padding-bottom: 4px;
+}
+
+.acc-timeline-slider {
+    width: 100%;
+    cursor: pointer;
+    accent-color: #e74c3c;
+    display: block;
+}
+
+.acc-timeline-ticks {
+    position: relative;
+    height: 18px;
+    margin-top: 2px;
+}
+
+.acc-timeline-tick {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #555;
+    white-space: nowrap;
+}
+
+/* 前後期比對覆蓋層 */
+#accCmpOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 3000;
+    display: flex;
+}
+
+.acc-cmp-map {
+    flex: 1;
+    height: 100%;
+}
+
+.acc-cmp-map + .acc-cmp-map {
+    border-left: 3px solid #fff;
+}
+
+#accCmpClose {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3001;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    padding: 5px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    white-space: nowrap;
+}
+
+#accCmpClose:hover {
+    background: #f0f0f0;
+}
+
+.acc-cmp-month-ctrl {
+    background: rgba(255, 255, 255, 0.92);
+    padding: 6px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+}
+
+.acc-cmp-select {
+    font-size: 12px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 2px 4px;
+    cursor: pointer;
+}
+
+.acc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e74c3c;
+    border: 1px solid #c0392b;
 }

@@ -256,8 +256,28 @@
         <span id="tb-dashboard" class="mobileTool" title="決策儀錶板"></span>
     </div>
     <div id="indexMap" class="div3">
+        @* ✅ Panel 面板 (放在 indexMap 內，確保 position:absolute 定位正確) *@
+        <partial name="~/Views/Home/Partials/_searchPanel.cshtml" />
+        <partial name="~/Views/Home/Partials/_painterPanel.cshtml" />
+        <partial name="~/Views/Home/Partials/_searchPropPanel.cshtml" />
+        <partial name="~/Views/Home/Partials/_measurePanel.cshtml" />
+        <partial name="~/Views/Home/Partials/_metaDataPanel.cshtml" />
+        <partial name="~/Views/Home/Partials/_roadMaintPanel.cshtml" />
+        @if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
+        {
+            <partial name="~/Views/Home/Partials/_focusPanel.cshtml" />
+        }
+        @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
+        {
+            <partial name="~/Views/Home/Partials/_accidentPanel.cshtml" />
+        }
+        @if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
+        {
+            <partial name="~/Views/Home/Partials/_flagPanel.cshtml" />
+        }
+
         <div id="tb-sidebar-toggle" class="sidebar-toggle-btn" title="收合/展開側欄">
-            <span>▶</span> 
+            <span>▶</span>
         </div>
         <div id="left-box" class="map-fixed-container hidden">
             <div class="box-header">
@@ -351,48 +371,6 @@
 
 
 
-@section searchPanel {
-    <partial name="~/Views/Home/Partials/_searchPanel.cshtml" />
-}
-
-@section painterPanel {
-    <partial name="~/Views/Home/Partials/_painterPanel.cshtml" />
-}
-
-@section searchPropPanel {
-    <partial name="~/Views/Home/Partials/_searchPropPanel.cshtml" />
-}
-
-@if (Model.ContainsKey("養工焦點") && Model["養工焦點"].Read && Model["養工焦點"].Status)
-{
-    @section focusPanel {
-        <partial name="~/Views/Home/Partials/_focusPanel.cshtml" />
-    }
-}
-@if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)
-{
-    @section accidentPanel {
-        <partial name="~/Views/Home/Partials/_accidentPanel.cshtml" />
-    }
-}
-@if (Model.ContainsKey("權管土地") && Model["權管土地"].Read && Model["權管土地"].Status)
-{
-    @section flagPanel {
-        <partial name="~/Views/Home/Partials/_flagPanel.cshtml" />
-    }
-}
-
-@section measurePanel {
-    <partial name="~/Views/Home/Partials/_measurePanel.cshtml" />
-}
-
-@section metaDataPanel {
-    <partial name="~/Views/Home/Partials/_metaDataPanel.cshtml" />
-}
-
-@section roadMaintPanel {
-    <partial name="~/Views/Home/Partials/_roadMaintPanel.cshtml" />
-}
 
 <partial name="~/Views/Home/Partials/_processAddModal.cshtml" />
 

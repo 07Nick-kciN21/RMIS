@@ -26,6 +26,13 @@ namespace RMIS.Data
         public DbSet<RoadProjectProcess3> RoadProjectProcess3 { get; set; }
         public DbSet<RoadProjectProcessFile> RoadProjectProcessFiles { get; set; }
         public DbSet<ProcessEditLog> ProcessEditLogs { get; set; }
+
+        /// <summary>
+        /// 取得指定民國年份的交通事故 DbSet（101~113）
+        /// </summary>
+        public DbSet<Accident> GetAccidentSet(int minguo) =>
+            Set<Accident>($"Accident{minguo}");
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
@@ -47,6 +54,13 @@ namespace RMIS.Data
             modelBuilder.Entity<RoadProject>()
                 .Property(r => r.CoordinateChecked)
                 .HasDefaultValue(true);
+
+            // 交通事故 101~113（民國年）各自對應獨立資料表
+            for (int year = 101; year <= 113; year++)
+            {
+                modelBuilder.SharedTypeEntity<Accident>($"Accident{year}")
+                    .ToTable($"accident_{year}");
+            }
         }
     }
 }

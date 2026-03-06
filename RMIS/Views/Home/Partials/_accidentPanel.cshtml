@@ -55,57 +55,126 @@
             </div>
         </div>
         <div id="acc2" class="panelBody" style="display: none">
-            <div class="form-group">
-                @* 日期範圍 *@
+            <div class="form-group acc-date-row">
                 <label>日期範圍</label>
-                <input type="text" id="accStartDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
-                ⇔
-                <input type="text" id="accEndDate" class="form-control" style="flex-grow: 1;border-radius:0; width: 30%;" readonly>
+                <div class="acc-date-selects">
+                    <select id="accStartYear" class="form-select">
+                        <option value="101">101</option>
+                        <option value="102">102</option>
+                        <option value="103">103</option>
+                        <option value="104">104</option>
+                        <option value="105">105</option>
+                        <option value="106">106</option>
+                        <option value="107">107</option>
+                        <option value="108">108</option>
+                        <option value="109">109</option>
+                        <option value="110">110</option>
+                        <option value="111">111</option>
+                        <option value="112">112</option>
+                        <option value="113" selected>113</option>
+                    </select>
+                    <span>/</span>
+                    <select id="accStartMonth" class="form-select">
+                        <option value="1" selected>01</option>
+                        <option value="2">02</option>
+                        <option value="3">03</option>
+                        <option value="4">04</option>
+                        <option value="5">05</option>
+                        <option value="6">06</option>
+                        <option value="7">07</option>
+                        <option value="8">08</option>
+                        <option value="9">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                    </select>
+                    <span>~</span>
+                    <select id="accEndYear" class="form-select">
+                        <option value="101">101</option>
+                        <option value="102">102</option>
+                        <option value="103">103</option>
+                        <option value="104">104</option>
+                        <option value="105">105</option>
+                        <option value="106">106</option>
+                        <option value="107">107</option>
+                        <option value="108">108</option>
+                        <option value="109">109</option>
+                        <option value="110">110</option>
+                        <option value="111">111</option>
+                        <option value="112">112</option>
+                        <option value="113" selected>113</option>
+                    </select>
+                    <span>/</span>
+                    <select id="accEndMonth" class="form-select">
+                        <option value="1">01</option>
+                        <option value="2">02</option>
+                        <option value="3">03</option>
+                        <option value="4">04</option>
+                        <option value="5">05</option>
+                        <option value="6">06</option>
+                        <option value="7">07</option>
+                        <option value="8">08</option>
+                        <option value="9">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12" selected>12</option>
+                    </select>
+                </div>
             </div>
             <div class="form-group">
                 <label>行政區</label>
                 <select id="acc2AdminDict" class="form-select" style="flex-grow: 1;border-radius:0;">
-                    <option value="-1">請選擇</option>
-                    <option value="0">桃園區</option>
-                    <option value="1">大溪區</option>
-                    <option value="2">中壢區</option>
-                    <option value="3">楊梅區</option>
-                    <option value="4">蘆竹區</option>
-                    <option value="5">大園區</option>
-                    <option value="6">龜山區</option>
-                    <option value="7">八德區</option>
-                    <option value="8">龍潭區</option>
-                    <option value="9">平鎮區</option>
-                    <option value="10">新屋區</option>
-                    <option value="11">觀音區</option>
-                    <option value="12">復興區</option>
+                    <option value="">請選擇</option>
+                    <option value="桃園區">桃園區</option>
+                    <option value="大溪區">大溪區</option>
+                    <option value="中壢區">中壢區</option>
+                    <option value="楊梅區">楊梅區</option>
+                    <option value="蘆竹區">蘆竹區</option>
+                    <option value="大園區">大園區</option>
+                    <option value="龜山區">龜山區</option>
+                    <option value="八德區">八德區</option>
+                    <option value="龍潭區">龍潭區</option>
+                    <option value="平鎮區">平鎮區</option>
+                    <option value="新屋區">新屋區</option>
+                    <option value="觀音區">觀音區</option>
+                    <option value="復興區">復興區</option>
                 </select>
             </div>
             <div class="form-group">
-                @* 路名 *@
-                <label>路名</label>
-                <input type="text" id="accRoad" class="form-control" placeholder="搜尋道路" style="flex-grow: 1;border-radius:0; width: 30%;">
+                <label>事故類型</label>
+                <select id="accType" class="form-select" style="flex-grow: 1;border-radius:0;">
+                    <option value="" selected>全部</option>
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>事故地點</label>
+                <input type="text" id="accRoad" class="form-control" placeholder="選填" style="flex-grow: 1;border-radius:0;">
             </div>
             <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">
                 <button id="acc2GoResult" class="btn js-modal-toggle goResult">進行篩選</button>
             </div>
-            <div id="accidentResultDiv" class="panelList">
-                <table id="accidentTable" class="propTable">
-                <thead id="accidentThead">
-                    <th>事故類型</th>
-                    <th>事故發生</th>
-                    <th>行政區</th>
-                    <th>事故地點</th>
-                    <th>死亡人數</th>
-                    <th>受傷人數</th>
-                    <th>事故車種</th>
-                    <th>經度</th>
-                    <th>緯度</th>
-                </thead>
-                <tbody id="accidentTbody">
-                </tbody>
-            </table>
+            <div id="accidentResultCount" style="padding: 0 10px; font-size: 14px; color: #666; display: none;">
+                <span>查詢結果：<strong id="accTotalCount">0</strong> 筆</span>
             </div>
+            <div id="accidentResultDiv" class="panelList" style="display: none;">
+                <table id="accidentTable" class="propTable">
+                    <thead id="accidentThead">
+                        <th>操作</th>
+                        <th>事故類型</th>
+                        <th>事故日期</th>
+                        <th>時間</th>
+                        <th>行政區</th>
+                        <th>事故地點</th>
+                        <th>交叉路口</th>
+                        <th>其他地點</th>
+                    </thead>
+                    <tbody id="accidentTbody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="accidentPagination" style="text-align: center; padding: 5px;"></div>
         </div>
         @if (Model["交通事故"].Export){
             <div id="acc3" class="panelBody" style="display: none">
@@ -131,13 +200,9 @@
                 <div class="form-group">
                     <label>年分</label>
                     <select id="acc3Year" class="form-select">
-                            <option value="108">108</option>
-                            <option value="109">109</option>
-                            <option value="110">110</option>
-                            <option value="111">111</option>
-                            <option value="112">112</option>
-                            <option value="113">113</option>
-                            <option value="114">114</option>
+                            @for (int y = 101; y <= 113; y++) {
+                                <option value="@y">@y</option>
+                            }
                     </select>
                 </div>
                 <div class="form-group" style="clear: both; padding: 8px; width: 100%; margin: 0 auto; text-align: center; justify-content: center;">

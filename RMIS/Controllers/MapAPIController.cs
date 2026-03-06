@@ -448,7 +448,108 @@ namespace RMIS.Controllers
             {
                 return StatusCode(500, new { success = false, message = "取得權管土地資料失敗", error = ex.Message });
             }
-            
+
+        }
+
+        [HttpGet("ExportAccidentData")]
+        public async Task<IActionResult> ExportAccidentData([FromQuery] int year, [FromQuery] string area)
+        {
+            if (string.IsNullOrWhiteSpace(area))
+                return BadRequest("請選擇行政區");
+
+            var data = await _adminInterface.ExportAccidentDataAsync(year, area);
+
+            static string FormatDate(string? d) =>
+                d?.Length == 8 ? $"{d[..4]}/{d[4..6]}/{d[6..8]}" : d ?? "";
+
+            static string JoinRoad(string? road, string? sec, string? lane, string? alley) =>
+                string.Concat(
+                    road ?? "",
+                    !string.IsNullOrWhiteSpace(sec)   ? sec   + "段" : "",
+                    !string.IsNullOrWhiteSpace(lane)  ? lane  + "巷" : "",
+                    !string.IsNullOrWhiteSpace(alley) ? alley + "弄" : "");
+
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("交通事故");
+
+            string[] headers = { "日期", "時間", "事故類型", "行政區", "事故地點", "交叉路口", "其他地點", "緯度", "經度" };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                ws.Cells[1, i + 1].Value = headers[i];
+                ws.Cells[1, i + 1].Style.Font.Bold = true;
+            }
+
+            int row = 2;
+            foreach (var r in data)
+            {
+                ws.Cells[row, 1].Value = FormatDate(r.Date);
+                ws.Cells[row, 2].Value = r.Time ?? "";
+                ws.Cells[row, 3].Value = r.Type ?? "";
+                ws.Cells[row, 4].Value = r.Area ?? "";
+                ws.Cells[row, 5].Value = JoinRoad(r.Road, r.Section, r.Lane, r.Alley);
+                ws.Cells[row, 6].Value = JoinRoad(r.IntersectionRoad, r.IntersectionSection, r.IntersectionLane, r.IntersectionAlley);
+                ws.Cells[row, 7].Value = r.RoadOther ?? "";
+                ws.Cells[row, 8].Value = r.Latitude ?? "";
+                ws.Cells[row, 9].Value = r.Longitude ?? "";
+                row++;
+            }
+
+            ws.Cells[ws.Dimension?.Address ?? "A1:I1"].AutoFitColumns();
+
+            var bytes = package.GetAsByteArray();
+            var filename = $"交通事故_{area}_{year}.xlsx";
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+        }
+
+        [HttpPost("SyncAccidentData")]
+        public async Task<IActionResult> SyncAccidentData([FromQuery] int year)
+        {
+            try
+            {
+                if (year < 101 || year > 113)
+                    return BadRequest(new { success = false, message = "年份須介於 101~113" });
+
+                var count = await _adminInterface.SyncAccidentDataAsync(year);
+                return Ok(new { success = true, message = $"民國 {year} 年同步完成", count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "交通事故同步失敗", error = ex.Message });
+            }
+        }
+
+        [HttpGet("GetAccidentPointsByMonth")]
+        public async Task<IActionResult> GetAccidentPointsByMonth([FromQuery] int year, [FromQuery] int month)
+        {
+            if (year < 101 || year > 113 || month < 1 || month > 12)
+                return BadRequest(new { success = false, message = "參數不正確" });
+
+            var points = await _adminInterface.GetAccidentPointsByMonthAsync(year, month);
+            var data = points.Select(p => new { lat = p.Lat, lng = p.Lng });
+            return Ok(new { success = true, data });
+        }
+
+        [HttpPost("GetAccidentData")]
+        public async Task<IActionResult> GetAccidentData([FromBody] AccidentQueryInput input)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(input.Area))
+                    return BadRequest(new { success = false, message = "請選擇行政區" });
+
+                if (input.StartYear < 101 || input.EndYear > 113 || input.StartYear > input.EndYear)
+                    return BadRequest(new { success = false, message = "日期範圍不正確" });
+
+                if (input.StartYear == input.EndYear && input.StartMonth > input.EndMonth)
+                    return BadRequest(new { success = false, message = "起始月份不可大於結束月份" });
+
+                var data = await _adminInterface.GetAccidentDataAsync(input);
+                return Ok(new { success = true, data, total = data.Count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "取得交通事故資料失敗", error = ex.Message });
+            }
         }
     }
 }

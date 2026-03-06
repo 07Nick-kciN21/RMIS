@@ -2797,5 +2797,321 @@ namespace RMIS.Repositories
                 Console.WriteLine(ex);
             }
         }
+
+        // ========== 交通事故 ==========
+
+        private static readonly Dictionary<int, string> AccidentYearRidMap = new()
+        {
+            { 101, "71296d4d-8d86-4571-aae9-f8af3d0507d7" },
+            { 102, "0cb05123-552d-48a6-b312-44797fa66bbd" },
+            { 103, "aa37fee4-3c2c-46e4-b583-c002ca7ceeed" },
+            { 104, "57d95a20-f876-4166-b21d-e1cda7565ec5" },
+            { 105, "844868e4-dfec-4148-973b-1006a82dd2da" },
+            { 106, "911a53af-be4e-4dbf-939e-b435227ff56a" },
+            { 107, "12a7c38f-67c8-421f-b968-c5ad144c4360" },
+            { 108, "f2fd3c7c-4331-4ace-900d-724f5af5aab2" },
+            { 109, "f09b983d-d2e1-415a-81d5-7afe6347f954" },
+            { 110, "bab715d5-d0d5-4fcf-9fb8-e24dd52f9ab9" },
+            { 111, "af934167-c82d-4ca9-92e7-9ec69074ce1f" },
+            { 112, "e88f783c-6375-43b7-93d6-6ec2a839da8b" },
+            { 113, "16f535c0-2c16-4e1d-a103-d10e55c78fbb" }
+        };
+
+        public async Task<List<AccidentRecord>> GetAccidentDataAsync(AccidentQueryInput input)
+        {
+            var yearsToQuery = AccidentYearRidMap.Keys
+                .Where(y => y >= input.StartYear && y <= input.EndYear)
+                .OrderBy(y => y)
+                .ToList();
+
+            if (yearsToQuery.Count == 0)
+                return new List<AccidentRecord>();
+
+            int startYearAD = input.StartYear + 1911;
+            int endYearAD   = input.EndYear   + 1911;
+            string startDate = $"{startYearAD}{input.StartMonth:D2}01";
+            string endDate   = $"{endYearAD}{input.EndMonth:D2}31";
+
+            var allRecords = new List<AccidentRecord>();
+
+            foreach (var year in yearsToQuery)
+            {
+                var dbSet = _mapDBContext.GetAccidentSet(year);
+
+                IQueryable<Accident> query = dbSet
+                    .Where(r => string.Compare(r.Date, startDate) >= 0 &&
+                                string.Compare(r.Date, endDate)   <= 0 &&
+                                r.Area == input.Area);
+
+                if (!string.IsNullOrWhiteSpace(input.Road))
+                    query = query.Where(r => r.Road.Contains(input.Road));
+
+                if (!string.IsNullOrWhiteSpace(input.AccidentType))
+                    query = query.Where(r => r.AccidentType == input.AccidentType);
+
+                var records = await query
+                    .Select(r => new AccidentRecord
+                    {
+                        Year                = r.Year,
+                        Date                = r.Date,
+                        Time                = r.Time,
+                        Area                = r.Area,
+                        Road                = r.Road,
+                        Section             = r.Section,
+                        Lane                = r.Lane,
+                        Alley               = r.Alley,
+                        IntersectionRoad    = r.IntersectionRoad,
+                        IntersectionSection = r.IntersectionSection,
+                        IntersectionLane    = r.IntersectionLane,
+                        IntersectionAlley   = r.IntersectionAlley,
+                        RoadOther           = r.RoadOther,
+                        Type                = r.AccidentType,
+                        Latitude            = r.Latitude  ?? "",
+                        Longitude           = r.Longitude ?? "",
+                    })
+                    .ToListAsync();
+
+                allRecords.AddRange(records);
+            }
+
+            return allRecords
+                .OrderBy(r => r.Date)
+                .ThenBy(r => r.Time)
+                .ToList();
+        }
+        public async Task<List<AccidentRecord>> ExportAccidentDataAsync(int year, string area)
+        {
+            if (!AccidentYearRidMap.ContainsKey(year))
+                return new List<AccidentRecord>();
+
+            var dbSet = _mapDBContext.GetAccidentSet(year);
+            IQueryable<Accident> query = dbSet.Where(r => r.Area == area);
+            var result = await query
+                .Select(r => new AccidentRecord
+                {
+                    Year = r.Year,
+                    Date = r.Date,
+                    Time = r.Time,
+                    Area = r.Area,
+                    Road = r.Road,
+                    Section = r.Section,
+                    Lane = r.Lane,
+                    Alley = r.Alley,
+                    IntersectionRoad = r.IntersectionRoad,
+                    IntersectionSection = r.IntersectionSection,
+                    IntersectionLane = r.IntersectionLane,
+                    IntersectionAlley = r.IntersectionAlley,
+                    RoadOther = r.RoadOther,
+                    Type = r.AccidentType,
+                    Latitude = r.Latitude ?? "",
+                    Longitude = r.Longitude ?? "",
+                })
+                .OrderBy(r => r.Date)
+                .ThenBy(r => r.Time)
+                .ToListAsync();
+            return result;
+        }
+
+        public async Task<List<(string Lat, string Lng)>> GetAccidentPointsByMonthAsync(int minguo, int month)
+        {
+            if (!AccidentYearRidMap.ContainsKey(minguo))
+                return new List<(string, string)>();
+
+            int yearAD = minguo + 1911;
+            string datePrefix = $"{yearAD}{month:D2}";
+
+            var dbSet = _mapDBContext.GetAccidentSet(minguo);
+            return await dbSet
+                .Where(r => r.Date.StartsWith(datePrefix)
+                         && r.Latitude != null && r.Longitude != null
+                         && r.Latitude != "" && r.Longitude != ""
+                         && (r.AccidentType == "A1" || r.AccidentType == "A2"))
+                .Select(r => ValueTuple.Create(r.Latitude!, r.Longitude!))
+                .ToListAsync();
+        }
+
+        public async Task<int> SyncAccidentDataAsync(int minguo)
+        {
+            if (!AccidentYearRidMap.TryGetValue(minguo, out var rid))
+                return 0;
+
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(60);
+
+            var url = $"https://opendata.tycg.gov.tw/api/v1/dataset.api_access?rid={rid}&format=JSON&limit=200000";
+            var response = await client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("交通事故同步失敗，年度: {Year}, 狀態碼: {StatusCode}", minguo, response.StatusCode);
+                return 0;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var records = (minguo <= 105
+                ? ParseOldFormatAccidents(json)
+                : ParseNewFormatAccidents(json))
+                .DistinctBy(r => (r.Date, r.Time, r.Area, r.Road, r.AccidentType))
+                .ToList();
+
+            var dbSet = _mapDBContext.GetAccidentSet(minguo);
+            await _mapDBContext.Database.ExecuteSqlRawAsync($"DELETE FROM accident_{minguo}");
+            await dbSet.AddRangeAsync(records);
+            return await _mapDBContext.SaveChangesAsync();
+        }
+
+        private static List<Accident> ParseOldFormatAccidents(string json)
+        {
+            var result = new List<Accident>();
+            using var doc = JsonDocument.Parse(json);
+            foreach (var el in doc.RootElement.EnumerateArray())
+            {
+                string yearStr  = el.TryGetProperty("year",      out var y)  ? y.GetString()  ?? "" : "";
+                string monthStr = el.TryGetProperty("month",     out var mo) ? mo.GetString() ?? "" : "";
+                string dayStr   = el.TryGetProperty("date",      out var d)  ? d.GetString()  ?? "" : "";
+                string timeStr  = el.TryGetProperty("time",      out var t)  ? t.GetString()  ?? "" : "";
+
+                // 民國年 → 西元年，組合 YYYYMMDD
+                string date = "";
+                if (int.TryParse(yearStr, out int minguo) &&
+                    int.TryParse(monthStr, out int month) &&
+                    int.TryParse(dayStr, out int day))
+                {
+                    date = $"{minguo + 1911}{month:D2}{day:D2}";
+                }
+
+                result.Add(new Accident
+                {
+                    Year         = int.TryParse(yearStr, out int y2) ? (y2 + 1911).ToString() : yearStr,
+                    Date         = date,
+                    Time         = NormalizeOldTime(timeStr),
+                    AccidentType = el.TryGetProperty("type",        out var tp) ? tp.GetString() ?? "" : "",
+                    LocationType = "",
+                    County       = el.TryGetProperty("county",      out var co) ? co.GetString() ?? "" : "",
+                    CountyCode   = el.TryGetProperty("countycode",  out var cc) ? cc.GetString() ?? "" : "",
+                    Area         = el.TryGetProperty("area",        out var ar) ? ar.GetString() ?? "" : "",
+                    AreaCode     = el.TryGetProperty("areacode",    out var ac) ? ac.GetString() ?? "" : "",
+                    Road         = el.TryGetProperty("road",        out var ro) ? ro.GetString() ?? "" : "",
+                    Section              = null,
+                    Lane                 = null,
+                    Alley                = null,
+                    IntersectionRoad     = null,
+                    IntersectionSection  = null,
+                    IntersectionLane     = null,
+                    IntersectionAlley    = null,
+                    RoadOther            = null,
+                    Longitude    = el.TryGetProperty("longitude",   out var lon) ? lon.GetString() : null,
+                    Latitude     = el.TryGetProperty("latitude",    out var lat) ? lat.GetString() : null,
+                });
+            }
+            return result;
+        }
+
+        private static List<Accident> ParseNewFormatAccidents(string json)
+        {
+            var result = new List<Accident>();
+            using var doc = JsonDocument.Parse(json);
+            foreach (var el in doc.RootElement.EnumerateArray())
+            {
+                result.Add(new Accident
+                {
+                    Year         = el.TryGetProperty("year",                 out var v1)  ? v1.GetString()  ?? "" : "",
+                    Date         = el.TryGetProperty("date",                 out var v2)  ? v2.GetString()  ?? "" : "",
+                    Time         = NormalizeNewTime(el.TryGetProperty("time", out var v3)  ? v3.GetString()  ?? "" : ""),
+                    AccidentType = el.TryGetProperty("accident_type",        out var v4)  ? v4.GetString()  ?? "" : "",
+                    LocationType = el.TryGetProperty("location_type",        out var v5)  ? v5.GetString()  : null,
+                    County       = el.TryGetProperty("county",               out var v6)  ? v6.GetString()  ?? "" : "",
+                    CountyCode   = el.TryGetProperty("countycode",           out var v7)  ? v7.GetString()  ?? "" : "",
+                    Area         = el.TryGetProperty("area",                 out var v8)  ? v8.GetString()  ?? "" : "",
+                    AreaCode     = el.TryGetProperty("areacode",             out var v9)  ? v9.GetString()  ?? "" : "",
+                    Road         = el.TryGetProperty("road",                 out var v10) ? v10.GetString() ?? "" : "",
+                    Section            = ArabicToChineseSection(el.TryGetProperty("section",            out var v11) ? v11.GetString() : null),
+                    Lane               = el.TryGetProperty("lane",               out var v12) ? v12.GetString() : null,
+                    Alley              = el.TryGetProperty("alley",              out var v13) ? v13.GetString() : null,
+                    IntersectionRoad   = el.TryGetProperty("intersection_road",  out var v14) ? v14.GetString() : null,
+                    IntersectionSection= ArabicToChineseSection(el.TryGetProperty("intersection_section",out var v15) ? v15.GetString() : null),
+                    IntersectionLane   = el.TryGetProperty("intersection_lane",  out var v16) ? v16.GetString() : null,
+                    IntersectionAlley  = el.TryGetProperty("intersection_alley", out var v17) ? v17.GetString() : null,
+                    RoadOther          = el.TryGetProperty("road_other",         out var v18) ? v18.GetString() : null,
+                    Longitude  = el.TryGetProperty("longitude",  out var v19) ? v19.GetString() : null,
+                    Latitude   = el.TryGetProperty("latitude",   out var v20) ? v20.GetString() : null,
+                });
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 將阿拉伯數字路段編號轉為中文，例如 "3" → "三"，非數字則原樣回傳
+        /// </summary>
+        private static string? ArabicToChineseSection(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return value;
+            if (!int.TryParse(value, out int num) || num <= 0) return value;
+
+            if (num >= 100) return value; // 超出範圍，原樣回傳
+
+            string[] ones = { "", "一", "二", "三", "四", "五", "六", "七", "八", "九" };
+            if (num < 10)  return ones[num];
+            if (num == 10) return "十";
+            if (num < 20)  return "十" + ones[num % 10];
+            if (num % 10 == 0) return ones[num / 10] + "十";
+            return ones[num / 10] + "十" + ones[num % 10];
+        }
+
+        /// <summary>
+        /// 舊格式 time (如 "02:17:12658PM") → 數字編碼 (如 "141712")
+        /// </summary>
+        private static string NormalizeOldTime(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return "";
+            try
+            {
+                bool isPM = raw.IndexOf("PM", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool isAM = raw.IndexOf("AM", StringComparison.OrdinalIgnoreCase) >= 0;
+
+                var cleaned = Regex.Replace(raw, @"[AaPp][Mm]", "").Trim();
+                var parts = cleaned.Split(':');
+                if (parts.Length < 2) return raw;
+
+                int h = int.Parse(parts[0]);
+                int m = int.Parse(parts[1]);
+                int s = parts.Length >= 3 && parts[2].Length >= 2
+                    ? int.Parse(parts[2].Substring(0, 2))
+                    : 0;
+
+                if (isPM && h != 12) h += 12;
+                if (isAM && h == 12) h = 0;
+
+                return $"{h:D2}:{m:D2}:{s:D2}";
+            }
+            catch
+            {
+                return raw;
+            }
+        }
+
+        /// <summary>
+        /// 新格式 time (如 "20108" 或 "141712") → hh:mm:ss 24小時制
+        /// </summary>
+        private static string NormalizeNewTime(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return "";
+            try
+            {
+                // 左補零至 6 碼，統一以 HHMMSS 解析
+                var padded = raw.PadLeft(6, '0');
+                if (padded.Length > 6) padded = padded.Substring(padded.Length - 6);
+
+                int h = int.Parse(padded.Substring(0, 2));
+                int m = int.Parse(padded.Substring(2, 2));
+                int s = int.Parse(padded.Substring(4, 2));
+
+                if (h > 23 || m > 59 || s > 59) return raw;
+                return $"{h:D2}:{m:D2}:{s:D2}";
+            }
+            catch
+            {
+                return raw;
+            }
+        }
     }
 }

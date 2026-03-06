@@ -63,6 +63,8 @@ body {
     grid-row-end: 3;
     grid-column-start: 2;
     grid-column-end: 3;
+    position: relative;
+    overflow: hidden;
 }
 
 .div4 {

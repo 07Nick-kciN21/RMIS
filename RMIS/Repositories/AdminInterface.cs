@@ -49,5 +49,11 @@ namespace RMIS.Repositories
 
         // Layer (圖層)
         Task<int> DeleteLayerDataAsync(Guid? layerId);
+
+        // Accident (交通事故)
+        Task<List<AccidentRecord>> GetAccidentDataAsync(AccidentQueryInput input);
+        Task<List<AccidentRecord>> ExportAccidentDataAsync(int year, string area);
+        Task<List<(string Lat, string Lng)>> GetAccidentPointsByMonthAsync(int minguo, int month);
+        Task<int> SyncAccidentDataAsync(int minguo);
     }
 }
