@@ -18,6 +18,11 @@ using RMIS.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+});
+
 // 圖形驗證用
 // 加入 Session 支援
 builder.Services.AddDistributedMemoryCache(); // 必須的
@@ -96,7 +101,8 @@ builder.Services.AddControllersWithViews()
 
 // 註冊 MapDBContext
 builder.Services.AddDbContext<MapDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString"),
+        x => x.UseNetTopologySuite()));
 
 // 註冊 HttpClient
 builder.Services.AddHttpClient();
@@ -152,17 +158,18 @@ var staticFilePaths = new Dictionary<string, string>
 
 foreach (var path in staticFilePaths)
 {
-    if (Directory.Exists(path.Value)) // ✅ 檢查目錄是否存在
+    var absolutePath = Path.GetFullPath(path.Value, app.Environment.ContentRootPath);
+    if (Directory.Exists(absolutePath)) // ✅ 檢查目錄是否存在
     {
         app.UseStaticFiles(new StaticFileOptions
         {
-            FileProvider = new PhysicalFileProvider(path.Value),
+            FileProvider = new PhysicalFileProvider(absolutePath),
             RequestPath = path.Key
         });
     }
     else
     {
-        Console.WriteLine($"靜態檔案目錄不存在: {path.Value}");
+        Console.WriteLine($"靜態檔案目錄不存在: {absolutePath}");
     }
 }
 

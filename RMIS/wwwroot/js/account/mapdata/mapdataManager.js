@@ -81,10 +81,10 @@ function updateMapdataTable(mapdatas){
         //     // updatePipelineWindow = openWindow(updatePipelineWindow, `/Mapdata/Update/Pipeline?id=${mapdata.id}`, "updatePipelineWindow", windowWidth, windowHeight);
         // });
         var deleteBtn = $(`<button class="delete-mapdata read">刪除</button>`).on("click", function () {
-            console.log(`/Mapdata/Delete/Pipeline?departmentId=${mapdata.id}`);
+            console.log(`/Mapdata/Delete?id=${mapdata.id}`);
             if (confirm("確定要刪除圖資？")) {
                 $.ajax({
-                    url: `/Mapdata/Delete/Pipeline?id=${mapdata.id}`,
+                    url: `/Mapdata/Delete?id=${mapdata.id}`,
                     type: "POST",
                     xhrFields: {
                         withCredentials: true // 確保攜帶 Cookie

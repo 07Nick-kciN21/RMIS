@@ -801,19 +801,12 @@ const RoadProjectAdd = {
         const file = input.files[0];
         if (!file) return;
 
-        const self = this;
-        const reader = new FileReader();
+        this.photoList[index].Photo = file;
+        this.photoList[index].PhotoName = file.name;
 
-        reader.onload = function(e) {
-            self.photoList[index].Photo = e.target.result;
-            self.photoList[index].PhotoName = file.name;
-
-            // 更新預覽圖
-            const $preview = $(`#photo-preview-${index}`);
-            $preview.attr('src', e.target.result).addClass('has-image');
-        };
-
-        reader.readAsDataURL(file);
+        // 更新預覽圖
+        const $preview = $(`#photo-preview-${index}`);
+        $preview.attr('src', URL.createObjectURL(file)).addClass('has-image');
     },
 
     /**
@@ -831,7 +824,7 @@ const RoadProjectAdd = {
 
         this.photoList.forEach((item, index) => {
             const hasPreview = item.Photo ? 'has-image' : '';
-            const previewSrc = item.Photo || '';
+            const previewSrc = item.Photo ? URL.createObjectURL(item.Photo) : '';
 
             $list.append(`
                 <div class="photo-item" data-index="${index}">
@@ -927,7 +920,9 @@ const RoadProjectAdd = {
             formData.append(`StreetViewPhoto[${index}].Id`, index);
             formData.append(`StreetViewPhoto[${index}].Latitude`, lat);
             formData.append(`StreetViewPhoto[${index}].Longitude`, lng);
-            formData.append(`StreetViewPhoto[${index}].Photo`, item.Photo || '');
+            if (item.Photo) {
+                formData.append(`StreetViewPhoto[${index}].Photo`, item.Photo, item.PhotoName || '');
+            }
             formData.append(`StreetViewPhoto[${index}].PhotoName`, item.PhotoName || '');
         });
 

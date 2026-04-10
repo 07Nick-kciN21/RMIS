@@ -10,6 +10,11 @@ namespace RMIS.Models.sql
         public string ProjectId { get; set; }
 
         /// <summary>
+        /// 項次 (同專案同階段的順序)
+        /// </summary>
+        public int OrderIndex { get; set; }
+
+        /// <summary>
         /// 行政區
         /// </summary>
         public string? District { get; set; }

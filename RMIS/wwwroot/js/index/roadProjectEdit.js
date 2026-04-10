@@ -610,10 +610,10 @@ const RoadProjectEdit = {
                 // 建立 popup 內容（含座標資訊與圖片預覽）
                 let photoSrc = '';
                 if (item.Photo) {
-                    // 新上傳的 base64
-                    photoSrc = item.Photo;
+                    // 新上傳的檔案
+                    photoSrc = URL.createObjectURL(item.Photo);
                 } else if (item.existingUrl) {
-                    // 既有照片從伺服器讀取
+                    // 既有照片從伺服器靜態路徑讀取
                     photoSrc = `/roadProject/${item.existingUrl}`;
                 }
 
@@ -621,7 +621,7 @@ const RoadProjectEdit = {
                 popupDiv.id = 'photoPopup';
                 if (photoSrc) {
                     const img = document.createElement('img');
-                    img.src = photoSrc.startsWith('data:') ? photoSrc : `${photoSrc}?v=${new Date().getTime()}`;
+                    img.src = photoSrc.startsWith('blob:') ? photoSrc : `${photoSrc}?v=${new Date().getTime()}`;
                     img.style.width = '450px';
                     img.style.height = '300px';
                     popupDiv.appendChild(img);
@@ -681,23 +681,16 @@ const RoadProjectEdit = {
         const file = input.files[0];
         if (!file) return;
 
-        const self = this;
-        const reader = new FileReader();
+        this.photoList[index].Photo = file;
+        this.photoList[index].PhotoName = file.name;
+        this.photoList[index].existingUrl = '';  // 新上傳取代既有
 
-        reader.onload = function(e) {
-            self.photoList[index].Photo = e.target.result;
-            self.photoList[index].PhotoName = file.name;
-            self.photoList[index].existingUrl = '';  // 新上傳取代既有
-
-            const $preview = $(`#edit-photo-preview-${index}`);
-            $preview.attr('src', e.target.result).addClass('has-image');
-        };
-
-        reader.readAsDataURL(file);
+        const $preview = $(`#edit-photo-preview-${index}`);
+        $preview.attr('src', URL.createObjectURL(file)).addClass('has-image');
     },
 
     /**
-     * 渲染照片列表（既有照片從伺服器讀取預覽，新上傳用 base64）
+     * 渲染照片列表（既有照片從伺服器靜態路徑讀取預覽，新上傳直接使用 File 物件）
      */
     renderPhotoList: function() {
         const $list = $('#edit-street-photo-list');
@@ -714,8 +707,8 @@ const RoadProjectEdit = {
             let hasPreview = '';
 
             if (item.Photo) {
-                // 新上傳的 base64
-                previewSrc = item.Photo;
+                // 新上傳的檔案
+                previewSrc = URL.createObjectURL(item.Photo);
                 hasPreview = 'has-image';
             } else if (item.existingUrl) {
                 // 既有照片從伺服器靜態文件讀取
@@ -841,33 +834,32 @@ const RoadProjectEdit = {
         const self = this;
 
         // 收集範圍點
-        const rangePoints = this.rangeList.map(function(item, index) {
-            return { Id: index, Latitude: item.Latitude, Longitude: item.Longitude };
+        const formData = new FormData();
+        formData.append('ProjectId', self.currentProject.id);
+
+        // 範圍點
+        this.rangeList.forEach(function(item, index) {
+            formData.append(`RangePoints[${index}].Id`, index);
+            formData.append(`RangePoints[${index}].Latitude`, item.Latitude);
+            formData.append(`RangePoints[${index}].Longitude`, item.Longitude);
         });
 
-        // 收集照片點（從 DOM 讀取最新座標）
-        const photoPoints = this.photoList.map(function(item, index) {
+        // 照片點（從 DOM 讀取最新座標）
+        this.photoList.forEach(function(item, index) {
             const lat = $(`.edit-photo-lat-input[data-index="${index}"]`).val() || item.Latitude;
             const lng = $(`.edit-photo-lng-input[data-index="${index}"]`).val() || item.Longitude;
-            return {
-                Id: index,
-                Photo: item.Photo || '',          // 新上傳的 base64，既有照片為空
-                PhotoName: item.PhotoName || '',   // 既有或新上傳的裝名
-                Latitude: Number(lat),
-                Longitude: Number(lng)
-            };
+            formData.append(`PhotoPoints[${index}].Id`, index);
+            formData.append(`PhotoPoints[${index}].PhotoName`, item.PhotoName || '');
+            formData.append(`PhotoPoints[${index}].Latitude`, Number(lat));
+            formData.append(`PhotoPoints[${index}].Longitude`, Number(lng));
+            if (item.Photo) {
+                formData.append(`PhotoPoints[${index}].Photo`, item.Photo, item.PhotoName || '');
+            }
         });
-
-        const pointsPayload = {
-            projectId: self.currentProject.id,
-            rangePoints: rangePoints,
-            photoPoints: photoPoints
-        };
 
         return fetch('/api/RoadProject/updatePoints', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(pointsPayload)
+            body: formData
         })
         .then(function(response) {
             if (!response.ok) return response.json().then(function(err) { throw err; });

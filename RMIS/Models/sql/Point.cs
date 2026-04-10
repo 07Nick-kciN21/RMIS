@@ -1,4 +1,6 @@
-﻿namespace RMIS.Models.sql
+﻿using NetTopologySuite.Geometries;
+
+namespace RMIS.Models.sql
 {
     public class Point
     {
@@ -9,5 +11,6 @@
         public string? Property { get; set; }
         public Guid AreaId { get; set; }
         public Area Area { get; set; }
+        public Geometry? GeoLocation { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using RMIS.Data;
@@ -12,9 +13,11 @@ using RMIS.Data;
 namespace RMIS.Migrations
 {
     [DbContext(typeof(MapDBContext))]
-    partial class MapDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260311012324_AddPointGeoLocation")]
+    partial class AddPointGeoLocation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1928,9 +1931,6 @@ namespace RMIS.Migrations
                     b.Property<string>("ExecutionUnit")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
-
                     b.Property<string>("PreviousMeetingResolution")
                         .HasColumnType("nvarchar(max)");
 
@@ -1989,9 +1989,6 @@ namespace RMIS.Migrations
 
                     b.Property<string>("ExecutionUnit")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
 
                     b.Property<string>("PreviousMeetingResolution")
                         .HasColumnType("nvarchar(max)");
@@ -2060,9 +2057,6 @@ namespace RMIS.Migrations
 
                     b.Property<string>("ExecutionUnit")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("OrderIndex")
-                        .HasColumnType("int");
 
                     b.Property<string>("PreviousMeetingResolution")
                         .HasColumnType("nvarchar(max)");

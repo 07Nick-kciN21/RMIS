@@ -425,99 +425,15 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult DownloadImportTemplate()
         {
-            // 建立範本 Excel
-            using var package = new OfficeOpenXml.ExcelPackage();
-            var ws = package.Workbook.Worksheets.Add("道路專案範本");
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "Sample", "道路專案匯入範本.zip");
+            return PhysicalFile(path, "application/zip", "道路專案匯入範本.zip");
+        }
 
-            // 設定標題列
-            string[] headers = { "專案編號", "申請人", "行政區", "階段", "起點", "終點", "起訖位置",
-                "道路長度", "現況路寬", "計畫路寬", "公有土地", "私有土地", "公私土地",
-                "工程經費", "用地經費", "補償經費", "總經費", "備註", "審查年度", "案件類型",
-                "專案名稱", "RC數量", "鐵皮屋數量", "審查結果", "拓寬範圍座標", "街景照片座標" };
-
-            for (int i = 0; i < headers.Length; i++)
-            {
-                ws.Cells[1, i + 1].Value = headers[i];
-                ws.Cells[1, i + 1].Style.Font.Bold = true;
-            }
-
-            // 範例資料
-            ws.Cells[2, 1].Value = "PROJ001";
-            ws.Cells[2, 2].Value = "張三";
-            ws.Cells[2, 3].Value = "桃園區";
-            ws.Cells[2, 4].Value = "1";
-            ws.Cells[2, 5].Value = "中正路100號";
-            ws.Cells[2, 6].Value = "中正路200號";
-            ws.Cells[2, 7].Value = "中正路100號~200號";
-            ws.Cells[2, 8].Value = "500";
-            ws.Cells[2, 9].Value = "8";
-            ws.Cells[2, 10].Value = "12";
-            ws.Cells[2, 11].Value = "5";
-            ws.Cells[2, 12].Value = "3";
-            ws.Cells[2, 13].Value = "2";
-            ws.Cells[2, 14].Value = "10000000";
-            ws.Cells[2, 15].Value = "5000000";
-            ws.Cells[2, 16].Value = "3000000";
-            ws.Cells[2, 17].Value = "18000000";
-            ws.Cells[2, 18].Value = "備註說明";
-            ws.Cells[2, 19].Value = "113";
-            ws.Cells[2, 20].Value = "一般案件";
-            ws.Cells[2, 21].Value = "中正路拓寬工程";
-            ws.Cells[2, 22].Value = "2";
-            ws.Cells[2, 23].Value = "1";
-            ws.Cells[2, 24].Value = "通過";
-            ws.Cells[2, 25].Value = "[{\"lat\":24.9936,\"lng\":121.3010},{\"lat\":24.9940,\"lng\":121.3015}]";
-            ws.Cells[2, 26].Value = "[{\"lat\":24.9938,\"lng\":121.3012,\"photoName\":\"photo1.jpg\"}]";
-
-            ws.Cells.AutoFitColumns();
-
-            // 建立 ZIP 檔案
-            using var memoryStream = new MemoryStream();
-            using (var archive = new System.IO.Compression.ZipArchive(memoryStream, System.IO.Compression.ZipArchiveMode.Create, true))
-            {
-                // 加入 Excel 檔案
-                var excelEntry = archive.CreateEntry("道路專案匯入範本.xlsx");
-                using (var entryStream = excelEntry.Open())
-                {
-                    package.SaveAs(entryStream);
-                }
-
-                // 加入範例照片目錄說明檔
-                var readmeEntry = archive.CreateEntry("PROJ001/README.txt");
-                using (var entryStream = readmeEntry.Open())
-                using (var writer = new StreamWriter(entryStream, System.Text.Encoding.UTF8))
-                {
-                    writer.WriteLine("照片壓縮檔目錄結構說明");
-                    writer.WriteLine("========================");
-                    writer.WriteLine("");
-                    writer.WriteLine("目錄結構:");
-                    writer.WriteLine("  {專案編號}/");
-                    writer.WriteLine("    photo1.jpg");
-                    writer.WriteLine("    photo2.jpg");
-                    writer.WriteLine("    ...");
-                    writer.WriteLine("");
-                    writer.WriteLine("範例:");
-                    writer.WriteLine("  PROJ001/");
-                    writer.WriteLine("    photo1.jpg  <-- 對應 Excel 中街景照片座標的 photoName");
-                    writer.WriteLine("    photo2.jpg");
-                    writer.WriteLine("");
-                    writer.WriteLine("注意事項:");
-                    writer.WriteLine("1. 目錄名稱必須與 Excel 中的「專案編號」一致");
-                    writer.WriteLine("2. 照片檔名必須與 Excel 中「街景照片座標」欄位的 photoName 一致");
-                    writer.WriteLine("3. 支援 jpg、png 等常見圖片格式");
-                }
-
-                // 加入一個空白的範例圖片位置說明
-                var placeholderEntry = archive.CreateEntry("PROJ001/photo1.jpg.txt");
-                using (var entryStream = placeholderEntry.Open())
-                using (var writer = new StreamWriter(entryStream, System.Text.Encoding.UTF8))
-                {
-                    writer.WriteLine("請將此檔案替換為實際的 photo1.jpg 圖片檔案");
-                }
-            }
-
-            memoryStream.Position = 0;
-            return File(memoryStream.ToArray(), "application/zip", "道路專案匯入範本.zip");
+        [HttpGet]
+        public IActionResult DownloadProcessImportTemplate()
+        {
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "Sample", "專案歷程匯入範本.zip");
+            return PhysicalFile(path, "application/zip", "專案歷程匯入範本.zip");
         }
 
         [HttpGet]

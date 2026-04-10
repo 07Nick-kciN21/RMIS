@@ -32,6 +32,16 @@ namespace RMIS.Repositories
                 process.CreatedAt = DateTime.Now;
                 process.ProcessId = Guid.NewGuid();
 
+                // 自動計算 OrderIndex (取同專案同階段最大值 + 1)
+                if (process.OrderIndex <= 0)
+                {
+                    var maxOrder = await _mapDBContext.RoadProjectProcess1
+                        .Where(p => p.ProjectId == process.ProjectId)
+                        .Select(p => (int?)p.OrderIndex)
+                        .MaxAsync() ?? 0;
+                    process.OrderIndex = maxOrder + 1;
+                }
+
                 _mapDBContext.RoadProjectProcess1.Add(process);
 
                 // 更新 RoadProject 的 step 為 1 (前期規劃)
@@ -74,6 +84,16 @@ namespace RMIS.Repositories
                 process.CreatedAt = DateTime.Now;
                 process.ProcessId = Guid.NewGuid();
 
+                // 自動計算 OrderIndex
+                if (process.OrderIndex <= 0)
+                {
+                    var maxOrder = await _mapDBContext.RoadProjectProcess2
+                        .Where(p => p.ProjectId == process.ProjectId)
+                        .Select(p => (int?)p.OrderIndex)
+                        .MaxAsync() ?? 0;
+                    process.OrderIndex = maxOrder + 1;
+                }
+
                 _mapDBContext.RoadProjectProcess2.Add(process);
 
                 // 更新 RoadProject 的 step 為 2 (用地取得)
@@ -115,6 +135,16 @@ namespace RMIS.Repositories
                 process.Id = 0;
                 process.CreatedAt = DateTime.Now;
                 process.ProcessId = Guid.NewGuid();
+
+                // 自動計算 OrderIndex
+                if (process.OrderIndex <= 0)
+                {
+                    var maxOrder = await _mapDBContext.RoadProjectProcess3
+                        .Where(p => p.ProjectId == process.ProjectId)
+                        .Select(p => (int?)p.OrderIndex)
+                        .MaxAsync() ?? 0;
+                    process.OrderIndex = maxOrder + 1;
+                }
 
                 _mapDBContext.RoadProjectProcess3.Add(process);
 
@@ -257,9 +287,8 @@ namespace RMIS.Repositories
                     return "錯誤：接收到的檔案資料為空。";
                 }
 
-                // 設定實體路徑
-                var basePath = _filePaths.ProcessFile;
-                var processFolder = Path.Combine(basePath, file.ProcessId.ToString());
+                // 設定實體路徑: {ProcessFile}/{ProjectId}/{Step}/{OrderIndex}
+                var processFolder = await GetProcessFolderAsync(file.ProcessId);
 
                 // 建立資料夾（如果不存在）
                 if (!Directory.Exists(processFolder))
@@ -330,6 +359,12 @@ namespace RMIS.Repositories
                 .FirstOrDefaultAsync(f => f.Id == fileId);
         }
 
+        public async Task<string> GetProcessFilePathAsync(Guid processId, string fileName)
+        {
+            var folder = await GetProcessFolderAsync(processId);
+            return Path.Combine(folder, fileName);
+        }
+
         public async Task<string> DeleteProcessFileAsync(int fileId)
         {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
@@ -347,8 +382,8 @@ namespace RMIS.Repositories
                 }
 
                 // 記錄檔案資訊以便回滾
-                var basePath = _filePaths.ProcessFile;
-                var filePath = Path.Combine(basePath, file.ProcessId.ToString(), file.FileName);
+                var processFolder = await GetProcessFolderAsync(file.ProcessId);
+                var filePath = Path.Combine(processFolder, file.FileName);
 
                 if (File.Exists(filePath))
                 {
@@ -500,8 +535,7 @@ namespace RMIS.Repositories
                 .Where(f => f.ProcessId == processId)
                 .ToListAsync();
 
-            var basePath = _filePaths.ProcessFile;
-            var processFolder = Path.Combine(basePath, processId.ToString());
+            var processFolder = await GetProcessFolderAsync(processId);
 
             // 備份並刪除實體檔案
             foreach (var file in files)
@@ -541,6 +575,35 @@ namespace RMIS.Repositories
                 }
                 await File.WriteAllBytesAsync(path, content);
             }
+        }
+
+        /// <summary>
+        /// 依 ProcessId 查詢對應的 (ProjectId, Step, OrderIndex)
+        /// </summary>
+        private async Task<(string projectId, int step, int orderIndex)?> GetProcessInfoAsync(Guid processId)
+        {
+            var p1 = await _mapDBContext.RoadProjectProcess1.FirstOrDefaultAsync(p => p.ProcessId == processId);
+            if (p1 != null) return (p1.ProjectId, 1, p1.OrderIndex);
+
+            var p2 = await _mapDBContext.RoadProjectProcess2.FirstOrDefaultAsync(p => p.ProcessId == processId);
+            if (p2 != null) return (p2.ProjectId, 2, p2.OrderIndex);
+
+            var p3 = await _mapDBContext.RoadProjectProcess3.FirstOrDefaultAsync(p => p.ProcessId == processId);
+            if (p3 != null) return (p3.ProjectId, 3, p3.OrderIndex);
+
+            return null;
+        }
+
+        /// <summary>
+        /// 依 ProcessId 建立實體文件目錄路徑: {ProcessFile}/{ProjectId}/{Step}/{OrderIndex}
+        /// </summary>
+        private async Task<string> GetProcessFolderAsync(Guid processId)
+        {
+            var info = await GetProcessInfoAsync(processId);
+            if (info.HasValue)
+                return Path.Combine(_filePaths.ProcessFile, info.Value.projectId, info.Value.step.ToString(), info.Value.orderIndex.ToString());
+            // fallback: 使用 ProcessId (舊資料相容)
+            return Path.Combine(_filePaths.ProcessFile, processId.ToString());
         }
 
         public async Task<string> UpdateProcess1Async(RoadProjectProcess1 process)

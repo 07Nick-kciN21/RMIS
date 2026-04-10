@@ -486,9 +486,8 @@ namespace RMIS.Controllers
 
             try
             {
-                // 從實體路徑讀取檔案
-                var basePath = _filePaths.ProcessFile;
-                var filePath = Path.Combine(basePath, file.ProcessId.ToString(), file.FileName);
+                // 從實體路徑讀取檔案: {ProcessFile}/{ProjectId}/{Step}/{OrderIndex}/{FileName}
+                var filePath = await _roadProjectInterface.GetProcessFilePathAsync(file.ProcessId, file.FileName);
 
                 if (!System.IO.File.Exists(filePath))
                 {
@@ -711,7 +710,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("updatePoints")]
-        public async Task<IActionResult> UpdatePoints([FromBody] UpdatePointsInput input)
+        public async Task<IActionResult> UpdatePoints([FromForm] UpdatePointsInput input)
         {
             try
             {

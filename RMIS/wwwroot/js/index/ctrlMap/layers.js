@@ -6,6 +6,60 @@ export let layerProps = {};
 export let layers = {};
 let _indexMap;
 
+// viewport 模式管理：僅 point 圖層使用
+const _viewportLayers = {}; // layerId -> { svg, name, pipelineId, leafletLayer }
+let _viewportTimer = null;
+
+function _onMapViewChanged() {
+    clearTimeout(_viewportTimer);
+    _viewportTimer = setTimeout(() => {
+        Object.keys(_viewportLayers).forEach(layerId => {
+            if (_indexMap.hasLayer(_viewportLayers[layerId].leafletLayer)) {
+                _loadViewportPoints(layerId);
+            }
+        });
+    }, 400);
+}
+
+async function _loadViewportPoints(layerId) {
+    const vl = _viewportLayers[layerId];
+    if (!vl) return;
+    const bounds = _indexMap.getBounds();
+    try {
+        const res = await fetch('/api/MapAPI/GetPointsByViewport', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                layerId,
+                minLat: bounds.getSouth(),
+                maxLat: bounds.getNorth(),
+                minLon: bounds.getWest(),
+                maxLon: bounds.getEast()
+            })
+        });
+        const data = await res.json();
+        if (!data.success) return;
+
+        vl.leafletLayer.clearLayers();
+        const pipelineId = vl.pipelineId;
+        if (layerProps[pipelineId] == null) layerProps[pipelineId] = [];
+
+        const points = data.points.map(p => {
+            let item2 = null;
+            if (p.property && p.property.trim() !== '') {
+                try { item2 = JSON.parse(p.property.replace(/NaN/g, 'null')); } catch (e) { }
+            }
+            const merged = { '座標': [p.latitude, p.longitude], ...item2 };
+            if (item2 != null) layerProps[pipelineId].push(merged);
+            return [[p.latitude, p.longitude], p.property, merged, null];
+        });
+        addMarkersToLayer(points, vl.leafletLayer, data.svg, data.layerName);
+        console.log(`Viewport loaded ${data.total} points for layer ${layerId}`);
+    } catch (e) {
+        console.error('Viewport load failed', e);
+    }
+}
+
 // var layers = {
 //     set: function(map){
 //         _indexMap = map;
@@ -28,7 +82,31 @@ export function addLayer2Map(id ,LayerData) {
     if (!layerProps[pipelineId]) {
         layerProps[pipelineId] = [];
     }
+
+    // 確保地圖移動事件只綁一次
+    if (!_indexMap._viewportListenerBound) {
+        _indexMap.on('moveend zoomend', _onMapViewChanged);
+        _indexMap._viewportListenerBound = true;
+    }
+
     const ajaxCalls = LayerData.map(function (Ldata) {
+        // point 圖層改用 viewport 模式
+        if (Ldata.kind === 'point') {
+            const leafletLayer = L.layerGroup();
+            _indexMap.addLayer(leafletLayer);
+            layers[Ldata.id] = leafletLayer;
+            _viewportLayers[Ldata.id] = {
+                svg: Ldata.svg,
+                name: Ldata.name,
+                pipelineId,
+                leafletLayer
+            };
+            _loadViewportPoints(Ldata.id);
+            console.log(`[Viewport] point layer ${Ldata.id}`);
+            return;
+        }
+
+        // 其他類型（line / plane / arrowline）保持原有全量載入
         return $.ajax({
             url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
             method: 'POST',
@@ -162,6 +240,9 @@ export function removeLayer2Map(id) {
     if (layers[id]) {
         _indexMap.removeLayer(layers[id]);
         delete layers[id];
+        if (_viewportLayers[id]) {
+            delete _viewportLayers[id];
+        }
         console.log("Remove layer success", id);
     } else {
         console.log("Layer not found for id:", id);

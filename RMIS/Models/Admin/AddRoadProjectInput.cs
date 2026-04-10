@@ -1,4 +1,6 @@
-﻿namespace RMIS.Models.Admin
+﻿using Microsoft.AspNetCore.Http;
+
+namespace RMIS.Models.Admin
 {
     public class AddRoadProjectInput
     {
@@ -19,13 +21,13 @@
         public float RoadLength { get; set; }
 
         // 現況路寬
-        public int? CurrentRoadWidth { get; set; }
+        public string? CurrentRoadWidth { get; set; }
 
         // 現況類別
         public string? CurrentRoadType { get; set; }
 
         // 計畫路寬
-        public int PlannedRoadWidth { get; set; }
+        public string? PlannedRoadWidth { get; set; }
 
         //計畫類別
         public string? PlannedRoadType { get; set; }
@@ -89,7 +91,7 @@
     public class photo
     {
         public int Id { get; set; } // 序列
-        public string Photo { get; set; } // 圖檔
+        public IFormFile? Photo { get; set; } // 圖檔
         public string PhotoName { get; set; } // 圖片描述
         public double Latitude { get; set; } // 經度
         public double Longitude { get; set; } // 緯度

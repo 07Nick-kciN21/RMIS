@@ -2,13 +2,15 @@ import BoxManager from './box.js';
 
 /**
  * 道路專案匯入模組
- * 功能：匯入 Excel 道路專案資料與照片壓縮檔
+ * 功能：匯入 Excel 道路專案資料、照片壓縮檔、歷程 Excel、歷程文件壓縮檔
  */
 const RoadProjectImport = {
 
     // 已選擇的檔案
     excelFile: null,
     zipFile: null,
+    processExcelFile: null,
+    processDocZipFile: null,
 
     // 是否正在匯入中
     isImporting: false,
@@ -19,51 +21,55 @@ const RoadProjectImport = {
     init: function() {
         const self = this;
 
-        // 綁定清除上傳按鈕事件
+        // 清除上傳
         $(document).on('click', '#btn-cancel-project-import', function() {
             self.clearUpload();
         });
 
-        // 綁定提交按鈕事件
+        // 提交
         $(document).on('click', '#btn-submit-project-import', function() {
             self.submitImport();
         });
 
-        // 綁定 Excel 上傳區域點擊事件
-        $(document).on('click', '#excelUploadArea', function() {
-            $('#excelFileInput').click();
-        });
+        // 上傳區域點擊
+        $(document).on('click', '#excelUploadArea',          function() { $('#excelFileInput').click(); });
+        $(document).on('click', '#zipUploadArea',            function() { $('#zipFileInput').click(); });
+        $(document).on('click', '#processExcelUploadArea',   function() { $('#processExcelFileInput').click(); });
+        $(document).on('click', '#processDocZipUploadArea',  function() { $('#processDocZipFileInput').click(); });
 
-        // 綁定 ZIP 上傳區域點擊事件
-        $(document).on('click', '#zipUploadArea', function() {
-            $('#zipFileInput').click();
-        });
-
-        // 綁定 Excel 檔案選擇事件
+        // 檔案選擇事件
         $(document).on('change', '#excelFileInput', function(e) {
-            if (e.target.files.length > 0) {
-                self.setExcelFile(e.target.files[0]);
-            }
+            if (e.target.files.length > 0) self.setExcelFile(e.target.files[0]);
         });
-
-        // 綁定 ZIP 檔案選擇事件
         $(document).on('change', '#zipFileInput', function(e) {
-            if (e.target.files.length > 0) {
-                self.setZipFile(e.target.files[0]);
-            }
+            if (e.target.files.length > 0) self.setZipFile(e.target.files[0]);
+        });
+        $(document).on('change', '#processExcelFileInput', function(e) {
+            if (e.target.files.length > 0) self.setProcessExcelFile(e.target.files[0]);
+        });
+        $(document).on('change', '#processDocZipFileInput', function(e) {
+            if (e.target.files.length > 0) self.setProcessDocZipFile(e.target.files[0]);
         });
 
-        // 綁定移除檔案按鈕
+        // 移除檔案按鈕
         $(document).on('click', '.btn-remove-file', function() {
             const target = $(this).data('target');
-            if (target === 'excel') {
-                self.removeExcelFile();
-            } else if (target === 'zip') {
-                self.removeZipFile();
-            }
+            if      (target === 'excel')          self.removeExcelFile();
+            else if (target === 'zip')            self.removeZipFile();
+            else if (target === 'processExcel')   self.removeProcessExcelFile();
+            else if (target === 'processDocZip')  self.removeProcessDocZipFile();
         });
 
-        // 設定拖曳事件
+        // 欄位說明 Tab 切換
+        $(document).on('click', '.col-doc-tab', function() {
+            const tab = $(this).data('tab');
+            $('.col-doc-tab').removeClass('active');
+            $(this).addClass('active');
+            $('.col-doc-panel').addClass('hidden');
+            $(`#colDoc${tab.charAt(0).toUpperCase() + tab.slice(1)}`).removeClass('hidden');
+        });
+
+        // 拖曳事件
         self.setupDragAndDrop();
 
         console.log("RoadProjectImport 模組初始化完成");
@@ -75,63 +81,54 @@ const RoadProjectImport = {
     setupDragAndDrop: function() {
         const self = this;
 
-        // Excel 上傳區域拖曳
-        $(document).on('dragover', '#excelUploadArea', function(e) {
-            e.preventDefault();
-            $(this).addClass('drag-over');
-        });
+        const areas = [
+            { areaId: '#excelUploadArea',         accept: '.xlsx', onDrop: f => self.setExcelFile(f),         hint: '.xlsx 格式的 Excel 檔案' },
+            { areaId: '#zipUploadArea',            accept: '.zip',  onDrop: f => self.setZipFile(f),           hint: '.zip 格式的壓縮檔' },
+            { areaId: '#processExcelUploadArea',   accept: '.xlsx', onDrop: f => self.setProcessExcelFile(f),  hint: '.xlsx 格式的 Excel 檔案' },
+            { areaId: '#processDocZipUploadArea',  accept: '.zip',  onDrop: f => self.setProcessDocZipFile(f), hint: '.zip 格式的壓縮檔' },
+        ];
 
-        $(document).on('dragleave', '#excelUploadArea', function(e) {
-            e.preventDefault();
-            $(this).removeClass('drag-over');
-        });
-
-        $(document).on('drop', '#excelUploadArea', function(e) {
-            e.preventDefault();
-            $(this).removeClass('drag-over');
-            const files = e.originalEvent.dataTransfer.files;
-            if (files.length > 0 && files[0].name.endsWith('.xlsx')) {
-                self.setExcelFile(files[0]);
-            } else {
-                alert('請上傳 .xlsx 格式的 Excel 檔案');
-            }
-        });
-
-        // ZIP 上傳區域拖曳
-        $(document).on('dragover', '#zipUploadArea', function(e) {
-            e.preventDefault();
-            $(this).addClass('drag-over');
-        });
-
-        $(document).on('dragleave', '#zipUploadArea', function(e) {
-            e.preventDefault();
-            $(this).removeClass('drag-over');
-        });
-
-        $(document).on('drop', '#zipUploadArea', function(e) {
-            e.preventDefault();
-            $(this).removeClass('drag-over');
-            const files = e.originalEvent.dataTransfer.files;
-            if (files.length > 0 && files[0].name.endsWith('.zip')) {
-                self.setZipFile(files[0]);
-            } else {
-                alert('請上傳 .zip 格式的壓縮檔');
-            }
+        areas.forEach(({ areaId, accept, onDrop, hint }) => {
+            $(document).on('dragover', areaId, function(e) {
+                e.preventDefault();
+                $(this).addClass('drag-over');
+            });
+            $(document).on('dragleave', areaId, function(e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+            });
+            $(document).on('drop', areaId, function(e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0 && files[0].name.endsWith(accept)) {
+                    onDrop(files[0]);
+                } else {
+                    alert(`請上傳 ${hint}`);
+                }
+            });
         });
     },
 
     /**
-     * 設定 Excel 檔案
+     * 計算目前已選擇的檔案總大小（bytes）
      */
+    getTotalSize: function({ excel, zip, processExcel, processDocZip } = {}) {
+        return (
+            (excel         !== undefined ? excel         : this.excelFile)?.size         || 0) +
+            ((zip          !== undefined ? zip           : this.zipFile)?.size           || 0) +
+            ((processExcel !== undefined ? processExcel  : this.processExcelFile)?.size  || 0) +
+            ((processDocZip!== undefined ? processDocZip : this.processDocZipFile)?.size || 0
+        );
+    },
+
+    // ── 道路專案 Excel ──
     setExcelFile: function(file) {
+        if (this._checkSize({ excel: file })) return;
         this.excelFile = file;
         $('#excelUploadArea').addClass('hidden');
         $('#excelFileInfo').removeClass('hidden').find('.file-name').text(file.name);
     },
-
-    /**
-     * 移除 Excel 檔案
-     */
     removeExcelFile: function() {
         this.excelFile = null;
         $('#excelFileInput').val('');
@@ -139,18 +136,13 @@ const RoadProjectImport = {
         $('#excelFileInfo').addClass('hidden');
     },
 
-    /**
-     * 設定 ZIP 檔案
-     */
+    // ── 道路專案照片 ZIP ──
     setZipFile: function(file) {
+        if (this._checkSize({ zip: file })) return;
         this.zipFile = file;
         $('#zipUploadArea').addClass('hidden');
         $('#zipFileInfo').removeClass('hidden').find('.file-name').text(file.name);
     },
-
-    /**
-     * 移除 ZIP 檔案
-     */
     removeZipFile: function() {
         this.zipFile = null;
         $('#zipFileInput').val('');
@@ -158,27 +150,78 @@ const RoadProjectImport = {
         $('#zipFileInfo').addClass('hidden');
     },
 
+    // ── 歷程 Excel ──
+    setProcessExcelFile: function(file) {
+        if (this._checkSize({ processExcel: file })) return;
+        this.processExcelFile = file;
+        $('#processExcelUploadArea').addClass('hidden');
+        $('#processExcelFileInfo').removeClass('hidden').find('.file-name').text(file.name);
+    },
+    removeProcessExcelFile: function() {
+        this.processExcelFile = null;
+        $('#processExcelFileInput').val('');
+        $('#processExcelUploadArea').removeClass('hidden');
+        $('#processExcelFileInfo').addClass('hidden');
+    },
+
+    // ── 歷程文件 ZIP ──
+    setProcessDocZipFile: function(file) {
+        if (this._checkSize({ processDocZip: file })) return;
+        this.processDocZipFile = file;
+        $('#processDocZipUploadArea').addClass('hidden');
+        $('#processDocZipFileInfo').removeClass('hidden').find('.file-name').text(file.name);
+    },
+    removeProcessDocZipFile: function() {
+        this.processDocZipFile = null;
+        $('#processDocZipFileInput').val('');
+        $('#processDocZipUploadArea').removeClass('hidden');
+        $('#processDocZipFileInfo').addClass('hidden');
+    },
+
+    /**
+     * 大小檢查輔助（超限時清除對應 input 並回傳 true）
+     */
+    _checkSize: function(override) {
+        const totalSize = this.getTotalSize(override);
+        if (totalSize > 100 * 1024 * 1024) {
+            alert(`檔案總大小超過限制（100 MB），目前合計 ${(totalSize / 1024 / 1024).toFixed(1)} MB`);
+            // 清除超限的那個 input
+            const key = Object.keys(override)[0];
+            const inputMap = {
+                excel:         '#excelFileInput',
+                zip:           '#zipFileInput',
+                processExcel:  '#processExcelFileInput',
+                processDocZip: '#processDocZipFileInput',
+            };
+            $(inputMap[key]).val('');
+            return true;
+        }
+        return false;
+    },
+
     /**
      * 開啟匯入頁面
      */
     openImport: function() {
-        const self = this;
-
         // 重置狀態
-        self.excelFile = null;
-        self.zipFile = null;
-        self.isImporting = false;
+        this.excelFile         = null;
+        this.zipFile           = null;
+        this.processExcelFile  = null;
+        this.processDocZipFile = null;
+        this.isImporting       = false;
 
         // 重置 UI
-        $('#excelFileInput').val('');
-        $('#zipFileInput').val('');
-        $('#excelUploadArea').removeClass('hidden');
-        $('#zipUploadArea').removeClass('hidden');
-        $('#excelFileInfo').addClass('hidden');
-        $('#zipFileInfo').addClass('hidden');
+        ['#excelFileInput', '#zipFileInput', '#processExcelFileInput', '#processDocZipFileInput'].forEach(id => $(id).val(''));
+        ['#excelUploadArea', '#zipUploadArea', '#processExcelUploadArea', '#processDocZipUploadArea'].forEach(id => $(id).removeClass('hidden'));
+        ['#excelFileInfo', '#zipFileInfo', '#processExcelFileInfo', '#processDocZipFileInfo'].forEach(id => $(id).addClass('hidden'));
         $('#importResultSection').addClass('hidden');
 
-        // 使用 BoxManager 開啟右側 Box
+        // 重置 Tab 為道路專案
+        $('.col-doc-tab').removeClass('active');
+        $('.col-doc-tab[data-tab="project"]').addClass('active');
+        $('.col-doc-panel').addClass('hidden');
+        $('#colDocProject').removeClass('hidden');
+
         BoxManager.openRightBoxPage('page-project-import', '道路專案匯入');
     },
 
@@ -188,6 +231,8 @@ const RoadProjectImport = {
     clearUpload: function() {
         this.removeExcelFile();
         this.removeZipFile();
+        this.removeProcessExcelFile();
+        this.removeProcessDocZipFile();
         $('#importResultSection').addClass('hidden');
     },
 
@@ -204,30 +249,40 @@ const RoadProjectImport = {
     submitImport: function() {
         const self = this;
 
-        // 驗證 Excel 檔案
-        if (!self.excelFile) {
-            alert('請選擇 Excel 檔案');
+        if (!self.excelFile && !self.processExcelFile) {
+            alert('請至少選擇道路專案 Excel 或歷程 Excel');
             return;
         }
 
-        // 防止重複提交
-        if (self.isImporting) {
+        if (self.excelFile == null && self.processExcelFile != null) {
+            // 僅匯入歷程（允許）
+        }
+
+        if (self.processDocZipFile && !self.processExcelFile) {
+            alert('上傳歷程文件壓縮檔時，請同時提供歷程 Excel');
             return;
         }
 
+        const totalSize = self.getTotalSize();
+        if (totalSize > 100 * 1024 * 1024) {
+            alert(`檔案總大小超過限制（100 MB），目前合計 ${(totalSize / 1024 / 1024).toFixed(1)} MB`);
+            return;
+        }
+
+        if (self.isImporting) return;
         self.isImporting = true;
+
         const $submitBtn = $('#btn-submit-project-import');
         const originalText = $submitBtn.text();
         $submitBtn.text('匯入中...').addClass('btn-loading').prop('disabled', true);
 
         // 建立 FormData
         const formData = new FormData();
-        formData.append('ExcelFile', self.excelFile);
-        if (self.zipFile) {
-            formData.append('PhotoZipFile', self.zipFile);
-        }
+        if (self.excelFile)         formData.append('ExcelFile',         self.excelFile);
+        if (self.zipFile)           formData.append('PhotoZipFile',      self.zipFile);
+        if (self.processExcelFile)  formData.append('ProcessExcelFile',  self.processExcelFile);
+        if (self.processDocZipFile) formData.append('ProcessDocZipFile', self.processDocZipFile);
 
-        // 呼叫 API
         fetch('/Admin/ImportRoadProjectByExcel', {
             method: 'POST',
             body: formData
@@ -235,8 +290,6 @@ const RoadProjectImport = {
         .then(response => response.json())
         .then(result => {
             self.showResult(result);
-
-            // 如果成功，觸發專案列表刷新
             if (result.success) {
                 $(document).trigger('projectAdded');
             }
@@ -266,25 +319,25 @@ const RoadProjectImport = {
 
         if (result.success) {
             $resultSection.addClass('success');
-            $resultContent.html(`
-                <div class="result-title">匯入成功</div>
-                <div class="result-message">成功匯入 ${result.importedCount} 筆道路專案資料</div>
-            `);
+            let html = '<div class="result-title">匯入成功</div>';
+            if (result.importedCount > 0) {
+                html += `<div class="result-message">成功匯入 ${result.importedCount} 筆道路專案資料</div>`;
+            }
+            if (result.processImportedCount > 0) {
+                html += `<div class="result-message">成功匯入 ${result.processImportedCount} 筆歷程資料</div>`;
+            }
+            $resultContent.html(html);
         } else {
             $resultSection.addClass('error');
             let errorHtml = `
                 <div class="result-title">匯入失敗</div>
                 <div class="result-message">${result.message}</div>
             `;
-
             if (result.errors && result.errors.length > 0) {
                 errorHtml += '<ul class="error-list">';
-                result.errors.forEach(err => {
-                    errorHtml += `<li>${err}</li>`;
-                });
+                result.errors.forEach(err => { errorHtml += `<li>${err}</li>`; });
                 errorHtml += '</ul>';
             }
-
             $resultContent.html(errorHtml);
         }
     }

@@ -995,51 +995,24 @@ namespace RMIS.Repositories
             return dateStr; // 如果解析失敗，返回原始字串
         }
 
-        // photo: base64照片 photoName:照片名稱 roadProjectDic:專案代號(照片目錄)
-        private async Task savePhotoAsync(string photo, string photoName, string roadProjectDic)
+        // photo: 圖檔 photoName:照片名稱 roadProjectDic:專案代號(照片目錄)
+        private async Task savePhotoAsync(IFormFile photo, string photoName, string roadProjectDic)
         {
             Console.WriteLine($"savePhoto {photoName} to {roadProjectDic}");
             try
             {
-                // 提取 Base64 字串（移除開頭的 data:image/png;base64, 部分）
-                var base64Data = Regex.Replace(photo, @"^data:image/\w+;base64,", string.Empty);
-
-                // 將 Base64 字串轉換為 byte[]
-                var imageBytes = Convert.FromBase64String(base64Data);
-                var directoryPath = _filePaths.RoadProjectPhoto;
-                // 儲存路徑（伺服器上的某個目錄）
-                var savePath = Path.Combine(directoryPath, roadProjectDic);
+                var savePath = Path.Combine(_filePaths.RoadProjectPhoto, roadProjectDic);
                 if (!Directory.Exists(savePath))
                 {
                     Directory.CreateDirectory(savePath);
                 }
-
                 var filePath = Path.Combine(savePath, photoName);
-
-                // 將 byte[] 寫入檔案
-                await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await photo.CopyToAsync(stream);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-            }
-        }
-
-        private async Task<string> ConvertToBase64Async(IFormFile photo)
-        {
-            try
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    await photo.CopyToAsync(memoryStream);
-                    var photoBytes = memoryStream.ToArray();
-                    return $"data:image/png;base64,{Convert.ToBase64String(photoBytes)}";
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-                throw;
             }
         }
 
@@ -1509,6 +1482,40 @@ namespace RMIS.Repositories
                     _mapDBContext.Areas.Remove(photoArea);
                 }
 
+                // 刪除歷程資料及相關文件
+                var strProjectId = project.ProjectId;
+
+                var process1List = await _mapDBContext.RoadProjectProcess1
+                    .Where(p => p.ProjectId == strProjectId).ToListAsync();
+                var process2List = await _mapDBContext.RoadProjectProcess2
+                    .Where(p => p.ProjectId == strProjectId).ToListAsync();
+                var process3List = await _mapDBContext.RoadProjectProcess3
+                    .Where(p => p.ProjectId == strProjectId).ToListAsync();
+
+                var allProcessIds = process1List.Select(p => p.ProcessId)
+                    .Concat(process2List.Select(p => p.ProcessId))
+                    .Concat(process3List.Select(p => p.ProcessId))
+                    .ToList();
+
+                if (allProcessIds.Count > 0)
+                {
+                    // 刪除 ProcessFile 記錄
+                    var processFiles = await _mapDBContext.RoadProjectProcessFiles
+                        .Where(f => allProcessIds.Contains(f.ProcessId))
+                        .ToListAsync();
+                    if (processFiles.Any())
+                        _mapDBContext.RoadProjectProcessFiles.RemoveRange(processFiles);
+
+                    // 刪除磁碟上的文件目錄 ({ProcessFile}/{ProjectId}/)
+                    var projectFolder = Path.Combine(_filePaths.ProcessFile, strProjectId);
+                    if (Directory.Exists(projectFolder))
+                        Directory.Delete(projectFolder, recursive: true);
+
+                    _mapDBContext.RoadProjectProcess1.RemoveRange(process1List);
+                    _mapDBContext.RoadProjectProcess2.RemoveRange(process2List);
+                    _mapDBContext.RoadProjectProcess3.RemoveRange(process3List);
+                }
+
                 // 刪除專案
                 _mapDBContext.RoadProjects.Remove(project);
 
@@ -1534,112 +1541,130 @@ namespace RMIS.Repositories
             var result = new ImportRoadProjectResult();
             var errors = new List<string>();
 
-            if (input.ExcelFile == null || input.ExcelFile.Length == 0)
+            if ((input.ExcelFile == null || input.ExcelFile.Length == 0) &&
+                (input.ProcessExcelFile == null || input.ProcessExcelFile.Length == 0))
             {
                 result.Success = false;
-                result.Message = "請上傳 Excel 檔案";
+                result.Message = "請至少上傳道路專案 Excel 或歷程 Excel";
                 return result;
             }
 
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
-                // 1. 解析 Excel
-                var rows = new List<ExcelRoadProjectRow>();
-                using (var stream = new MemoryStream())
+                int importedCount = 0;
+
+                // ── 道路專案 Excel ──
+                if (input.ExcelFile != null && input.ExcelFile.Length > 0)
                 {
-                    await input.ExcelFile.CopyToAsync(stream);
-                    using (var package = new ExcelPackage(stream))
+                    // 1. 解析 Excel
+                    var rows = new List<ExcelRoadProjectRow>();
+                    using (var stream = new MemoryStream())
                     {
-                        var worksheet = package.Workbook.Worksheets[0];
-                        rows = ParseRoadProjectExcel(worksheet, errors);
-                    }
-                }
-
-                if (rows.Count == 0)
-                {
-                    result.Success = false;
-                    result.Message = "Excel 中無有效資料";
-                    result.Errors = errors;
-                    return result;
-                }
-
-                // 1.5 為沒有拓寬範圍座標的資料，透過路名自動查詢座標
-                await GeocodeImportRowsAsync(rows);
-
-                // 2. 檢查重複的 ProjectId
-                var projectIds = rows.Select(r => r.ProjectId).Where(id => !string.IsNullOrEmpty(id)).ToList();
-                var existingIds = await _mapDBContext.RoadProjects
-                    .Where(rp => projectIds.Contains(rp.ProjectId))
-                    .Select(rp => rp.ProjectId)
-                    .ToListAsync();
-
-                if (existingIds.Count > 0)
-                {
-                    result.Success = false;
-                    result.Message = $"以下專案代號已存在: {string.Join(", ", existingIds)}";
-                    return result;
-                }
-
-                // 3. 解壓縮照片 ZIP（如果有）
-                var photoDict = new Dictionary<string, List<string>>(); // projectId -> [photoFileName, ...]
-                if (input.PhotoZipFile != null && input.PhotoZipFile.Length > 0)
-                {
-                    photoDict = await ExtractPhotoZipAsync(input.PhotoZipFile);
-                }
-
-                // 3.1 驗證 Excel 中引用的照片是否都存在於壓縮檔中
-                var photoErrors = new List<string>();
-                foreach (var row in rows)
-                {
-                    var photoCoords = ParsePhotoCoordinatesJson(row.StreetViewPhotoJson);
-                    if (photoCoords.Count == 0) continue;
-
-                    if (!photoDict.ContainsKey(row.ProjectId))
-                    {
-                        photoErrors.Add($"專案 {row.ProjectId}: 壓縮檔中找不到對應的照片目錄「{row.ProjectId}」");
-                        continue;
-                    }
-
-                    var availablePhotos = photoDict[row.ProjectId];
-                    foreach (var photo in photoCoords)
-                    {
-                        if (!availablePhotos.Contains(photo.photoName))
+                        await input.ExcelFile.CopyToAsync(stream);
+                        using (var package = new ExcelPackage(stream))
                         {
-                            photoErrors.Add($"專案 {row.ProjectId}: 壓縮檔中找不到照片「{photo.photoName}」");
+                            var worksheet = package.Workbook.Worksheets[0];
+                            rows = ParseRoadProjectExcel(worksheet, errors);
                         }
                     }
-                }
 
-                if (photoErrors.Count > 0)
-                {
-                    result.Success = false;
-                    result.Message = "照片檔案驗證失敗，匯入已中止";
-                    result.Errors = photoErrors;
-                    return result;
-                }
-
-                // 4. 建立專案資料
-                int importedCount = 0;
-                foreach (var row in rows)
-                {
-                    try
+                    if (rows.Count == 0)
                     {
-                        await CreateRoadProjectFromExcelRow(row, photoDict);
-                        importedCount++;
+                        result.Success = false;
+                        result.Message = "道路專案 Excel 中無有效資料";
+                        result.Errors = errors;
+                        return result;
                     }
-                    catch (Exception ex)
+
+                    // 1.5 為沒有拓寬範圍座標的資料，透過路名自動查詢座標
+                    await GeocodeImportRowsAsync(rows);
+
+                    // 2. 檢查重複的 ProjectId
+                    var projectIds = rows.Select(r => r.ProjectId).Where(id => !string.IsNullOrEmpty(id)).ToList();
+                    var existingIds = await _mapDBContext.RoadProjects
+                        .Where(rp => projectIds.Contains(rp.ProjectId))
+                        .Select(rp => rp.ProjectId)
+                        .ToListAsync();
+
+                    if (existingIds.Count > 0)
                     {
-                        errors.Add($"專案 {row.ProjectId}: {ex.Message}");
+                        result.Success = false;
+                        result.Message = $"以下專案代號已存在: {string.Join(", ", existingIds)}";
+                        return result;
                     }
+
+                    // 3. 解壓縮照片 ZIP（如果有）
+                    var photoDict = new Dictionary<string, List<string>>();
+                    if (input.PhotoZipFile != null && input.PhotoZipFile.Length > 0)
+                    {
+                        photoDict = await ExtractPhotoZipAsync(input.PhotoZipFile);
+                    }
+
+                    // 3.1 驗證照片
+                    var photoErrors = new List<string>();
+                    foreach (var row in rows)
+                    {
+                        var photoCoords = ParsePhotoCoordinatesJson(row.StreetViewPhotoJson);
+                        if (photoCoords.Count == 0) continue;
+
+                        if (!photoDict.ContainsKey(row.ProjectId))
+                        {
+                            photoErrors.Add($"專案 {row.ProjectId}: 壓縮檔中找不到對應的照片目錄「{row.ProjectId}」");
+                            continue;
+                        }
+
+                        var availablePhotos = photoDict[row.ProjectId];
+                        foreach (var photo in photoCoords)
+                        {
+                            if (!availablePhotos.Contains(photo.photoName))
+                                photoErrors.Add($"專案 {row.ProjectId}: 壓縮檔中找不到照片「{photo.photoName}」");
+                        }
+                    }
+
+                    if (photoErrors.Count > 0)
+                    {
+                        result.Success = false;
+                        result.Message = "照片檔案驗證失敗，匯入已中止";
+                        result.Errors = photoErrors;
+                        return result;
+                    }
+
+                    // 4. 建立專案資料
+                    foreach (var row in rows)
+                    {
+                        try
+                        {
+                            await CreateRoadProjectFromExcelRow(row, photoDict);
+                            importedCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            errors.Add($"專案 {row.ProjectId}: {ex.Message}");
+                        }
+                    }
+
+                    await _mapDBContext.SaveChangesAsync();
                 }
 
-                await _mapDBContext.SaveChangesAsync();
+                // ── 歷程 Excel ──
+                int processImportedCount = 0;
+                if (input.ProcessExcelFile != null && input.ProcessExcelFile.Length > 0)
+                {
+                    processImportedCount = await ImportProcessByExcelAsync(
+                        input.ProcessExcelFile, input.ProcessDocZipFile, errors);
+                }
+
                 await transaction.CommitAsync();
 
+                var msgParts = new List<string>();
+                if (importedCount > 0) msgParts.Add($"成功匯入 {importedCount} 筆專案");
+                if (processImportedCount > 0) msgParts.Add($"成功匯入 {processImportedCount} 筆歷程");
+
                 result.Success = true;
-                result.Message = $"成功匯入 {importedCount} 筆專案";
+                result.Message = msgParts.Count > 0 ? string.Join("，", msgParts) : "匯入完成";
                 result.ImportedCount = importedCount;
+                result.ProcessImportedCount = processImportedCount;
                 result.Errors = errors;
                 return result;
             }
@@ -2088,10 +2113,12 @@ namespace RMIS.Repositories
             public string display_name { get; set; } = "";
         }
 
-        private string parseRoadWidthSimple(int? roadWidth, string roadType)
+        private string parseRoadWidthSimple(string? roadWidth, string? roadType)
         {
-            // 直接返回簡單字串格式，不使用嵌套 JSON
-            var width = roadWidth?.ToString() ?? "0";
+            // 去除使用者可能輸入的「公尺」後綴，避免重複
+            var width = string.IsNullOrWhiteSpace(roadWidth)
+                ? "0"
+                : roadWidth.Replace("公尺", "").Trim();
             var type = string.IsNullOrEmpty(roadType) ? "" : $" ({roadType})";
             return $"{width}公尺{type}";
         }
@@ -2142,7 +2169,7 @@ namespace RMIS.Repositories
                 for (var i = 0; i < photoList.Count; i++)
                 {
                     var photoName = photoList[i].PhotoName;
-                    if (!string.IsNullOrEmpty(photoList[i].Photo) && !string.IsNullOrEmpty(photoName))
+                    if (photoList[i].Photo != null && !string.IsNullOrEmpty(photoName))
                     {
                         await savePhotoAsync(photoList[i].Photo, photoName, projectId);
                     }
@@ -2639,9 +2666,7 @@ namespace RMIS.Repositories
                 for (int i = 0; i < photoFile.Count; i++)
                 {
                     var noticeId = photoFile[i].FileName.Split("_")[0];
-                    var base64Photo = await ConvertToBase64Async(photoFile[i]);
-                    await saveNoticePhotoAsync(base64Photo, photoFile[i].FileName, noticeId);
-                    // await savePhotoFileAsync(photoFile[i]);
+                    await saveNoticePhotoAsync(photoFile[i], photoFile[i].FileName, noticeId);
                 }
                 return rowsAffected;
             }
@@ -2769,28 +2794,19 @@ namespace RMIS.Repositories
             return "";
         }
 
-        private async Task saveNoticePhotoAsync(string noticePhoto, string photoName, string constructNoticeDic)
+        private async Task saveNoticePhotoAsync(IFormFile noticePhoto, string photoName, string constructNoticeDic)
         {
             Console.WriteLine("savePhoto");
             try
             {
-                // 提取 Base64 字串（移除開頭的 data:image/png;base64, 部分）
-                var base64Data = Regex.Replace(noticePhoto, @"^data:image/\w+;base64,", string.Empty);
-
-                // 將 Base64 字串轉換為 byte[]
-                var imageBytes = Convert.FromBase64String(base64Data);
-                var directoryPath = _filePaths.ConstructNoticePhoto;
-                // 儲存路徑（伺服器上的某個目錄）
-                var savePath = Path.Combine(directoryPath, constructNoticeDic);
+                var savePath = Path.Combine(_filePaths.ConstructNoticePhoto, constructNoticeDic);
                 if (!Directory.Exists(savePath))
                 {
                     Directory.CreateDirectory(savePath);
                 }
-
                 var filePath = Path.Combine(savePath, photoName);
-
-                // 將 byte[] 寫入檔案
-                await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await noticePhoto.CopyToAsync(stream);
             }
             catch (Exception ex)
             {
@@ -3112,6 +3128,345 @@ namespace RMIS.Repositories
             {
                 return raw;
             }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // 歷程匯入
+        // ══════════════════════════════════════════════════════════
+
+        private static readonly HashSet<string> ValidRecordTypes = new()
+        {
+            "重要里程碑", "會議記錄", "公文核定", "進度說明"
+        };
+
+        /// <summary>
+        /// 解析歷程 Excel，每列建立對應的 Process 記錄，並從 ZIP 抽取對應文件。
+        /// 回傳成功匯入的筆數。
+        /// </summary>
+        private async Task<int> ImportProcessByExcelAsync(
+            IFormFile processExcelFile,
+            IFormFile? processDocZipFile,
+            List<string> errors)
+        {
+            // 1. 解析 Excel
+            var rows = new List<ExcelProcessRow>();
+            using (var stream = new MemoryStream())
+            {
+                await processExcelFile.CopyToAsync(stream);
+                using var package = new ExcelPackage(stream);
+                var ws = package.Workbook.Worksheets[0];
+                rows = ParseProcessExcel(ws, errors);
+            }
+
+            if (rows.Count == 0) return 0;
+
+            // 2. 驗證 ProjectId 是否存在於 DB
+            var projectIds = rows.Select(r => r.ProjectId).Distinct().ToList();
+            var existingProjectIds = await _mapDBContext.RoadProjects
+                .Where(rp => projectIds.Contains(rp.ProjectId))
+                .Select(rp => rp.ProjectId)
+                .ToListAsync();
+
+            var missingIds = projectIds.Except(existingProjectIds).ToList();
+            if (missingIds.Count > 0)
+            {
+                errors.Add($"以下 ProjectId 不存在於道路專案: {string.Join(", ", missingIds)}");
+                return 0;
+            }
+
+            // 3. 解壓縮歷程文件 ZIP 到記憶體
+            // key: "{ProjectId}/{Step}/{OrderIndex}", value: list of (fileName, bytes)
+            var docDict = new Dictionary<string, List<(string fileName, byte[] bytes)>>(StringComparer.OrdinalIgnoreCase);
+            if (processDocZipFile != null && processDocZipFile.Length > 0)
+            {
+                using var memStream = new MemoryStream();
+                await processDocZipFile.CopyToAsync(memStream);
+                memStream.Position = 0;
+                using var archive = ArchiveFactory.Open(memStream);
+                foreach (var entry in archive.Entries)
+                {
+                    if (entry.IsDirectory) continue;
+                    var entryKey = entry.Key?.Replace('\\', '/');
+                    if (string.IsNullOrEmpty(entryKey)) continue;
+
+                    var fileName = Path.GetFileName(entryKey);
+                    if (string.IsNullOrEmpty(fileName) || fileName.StartsWith(".")) continue;
+
+                    // 期望結構: {ProjectId}/{Step}/{OrderIndex}/{FileName}
+                    var parts = entryKey.Split('/');
+                    if (parts.Length < 4) continue;
+
+                    var dictKey = $"{parts[0]}/{parts[1]}/{parts[2]}";
+                    using var entryStream = entry.OpenEntryStream();
+                    using var ms = new MemoryStream();
+                    await entryStream.CopyToAsync(ms);
+                    var bytes = ms.ToArray();
+
+                    if (!docDict.ContainsKey(dictKey))
+                        docDict[dictKey] = new List<(string, byte[])>();
+                    docDict[dictKey].Add((fileName, bytes));
+                }
+            }
+
+            // 3.1 驗證：ZIP 中每個檔案必須在對應 Excel 列的佐證文件說明（| 分隔）中列出
+            if (docDict.Count > 0)
+            {
+                // 建立 docKey → 該列已宣告的檔名集合
+                var rowFileMap = rows.ToDictionary(
+                    r => $"{r.ProjectId}/{r.Step}/{r.OrderIndex}",
+                    r => string.IsNullOrWhiteSpace(r.SupportingDocument)
+                        ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                        : r.SupportingDocument.Split(',')
+                            .Select(f => f.Trim()).Where(f => f.Length > 0)
+                            .ToHashSet(StringComparer.OrdinalIgnoreCase),
+                    StringComparer.OrdinalIgnoreCase);
+
+                var docErrors = new List<string>();
+                foreach (var kvp in docDict)
+                {
+                    if (!rowFileMap.TryGetValue(kvp.Key, out var listedFiles))
+                    {
+                        errors.Add($"文件壓縮檔包含找不到對應歷程列的目錄: {kvp.Key}（格式應為 ProjectId/Step/項次）");
+                        continue;
+                    }
+                    foreach (var (fileName, _) in kvp.Value)
+                    {
+                        if (!listedFiles.Contains(fileName))
+                            docErrors.Add($"歷程 {kvp.Key}: 壓縮檔中的「{fileName}」未列在佐證文件說明中");
+                    }
+                }
+
+                if (errors.Count > 0 || docErrors.Count > 0)
+                {
+                    errors.AddRange(docErrors);
+                    return 0;
+                }
+            }
+
+            // 3.2 驗證：佐證文件說明中列出的每個檔名，壓縮檔中必須存在
+            {
+                var docErrors = new List<string>();
+                foreach (var row in rows)
+                {
+                    if (string.IsNullOrWhiteSpace(row.SupportingDocument)) continue;
+
+                    var docKey = $"{row.ProjectId}/{row.Step}/{row.OrderIndex}";
+                    var requiredFiles = row.SupportingDocument.Split(',')
+                        .Select(f => f.Trim()).Where(f => f.Length > 0).ToList();
+
+                    docDict.TryGetValue(docKey, out var availableFiles);
+                    var availableNames = availableFiles?
+                        .Select(f => f.fileName)
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase)
+                        ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var requiredFile in requiredFiles)
+                    {
+                        if (!availableNames.Contains(requiredFile))
+                            docErrors.Add(
+                                $"歷程 {row.ProjectId}/Step{row.Step}/項次{row.OrderIndex}: " +
+                                $"佐證文件說明中的「{requiredFile}」在壓縮檔中找不到");
+                    }
+                }
+
+                if (docErrors.Count > 0)
+                {
+                    errors.AddRange(docErrors);
+                    return 0;
+                }
+            }
+
+            // 4. 逐列插入 process 記錄並儲存文件
+            int importedCount = 0;
+            foreach (var row in rows)
+            {
+                try
+                {
+                    var processId = await InsertProcessRowAsync(row);
+
+                    // 儲存對應文件
+                    var docKey = $"{row.ProjectId}/{row.Step}/{row.OrderIndex}";
+                    if (docDict.TryGetValue(docKey, out var files))
+                    {
+                        var processFolder = Path.Combine(_filePaths.ProcessFile, row.ProjectId, row.Step.ToString(), row.OrderIndex.ToString());
+                        Directory.CreateDirectory(processFolder);
+
+                        foreach (var (fileName, bytes) in files)
+                        {
+                            var filePath = Path.Combine(processFolder, fileName);
+                            await File.WriteAllBytesAsync(filePath, bytes);
+
+                            _mapDBContext.RoadProjectProcessFiles.Add(new RoadProjectProcessFile
+                            {
+                                Id = 0,
+                                ProcessId = processId,
+                                FileType = Path.GetExtension(fileName).TrimStart('.'),
+                                FileName = fileName,
+                                Base64String = "",
+                                UploadUser = "Excel匯入",
+                                FileSize = bytes.Length.ToString()
+                            });
+                        }
+                    }
+
+                    importedCount++;
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"歷程 {row.ProjectId}/Step{row.Step}/項次{row.OrderIndex}: {ex.Message}");
+                }
+            }
+
+            await _mapDBContext.SaveChangesAsync();
+            return importedCount;
+        }
+
+        /// <summary>
+        /// 解析歷程 Excel 工作表
+        /// </summary>
+        private List<ExcelProcessRow> ParseProcessExcel(ExcelWorksheet ws, List<string> errors)
+        {
+            var rows = new List<ExcelProcessRow>();
+            var rowCount = ws.Dimension?.Rows ?? 0;
+
+            for (int r = 2; r <= rowCount; r++)
+            {
+                var projectId = ws.Cells[r, 1].Text?.Trim();
+                if (string.IsNullOrEmpty(projectId)) continue;
+
+                if (!int.TryParse(ws.Cells[r, 2].Text?.Trim(), out var step) || step < 1 || step > 3)
+                {
+                    errors.Add($"歷程第 {r} 行: Step 必須為 1、2 或 3");
+                    continue;
+                }
+
+                if (!int.TryParse(ws.Cells[r, 3].Text?.Trim(), out var orderIndex) || orderIndex < 1)
+                {
+                    errors.Add($"歷程第 {r} 行: 項次必須為正整數");
+                    continue;
+                }
+
+                var recordType = ws.Cells[r, 5].Text?.Trim() ?? "";
+                if (!string.IsNullOrEmpty(recordType) && !ValidRecordTypes.Contains(recordType))
+                {
+                    errors.Add($"歷程第 {r} 行: 記錄類別「{recordType}」不合法，允許值: {string.Join("、", ValidRecordTypes)}");
+                    continue;
+                }
+
+                rows.Add(new ExcelProcessRow
+                {
+                    ProjectId = projectId,
+                    Step = step,
+                    OrderIndex = orderIndex,
+                    District = ws.Cells[r, 4].Text?.Trim() ?? "",
+                    RecordType = recordType,
+                    RecordTitle = ws.Cells[r, 6].Text?.Trim() ?? "",
+                    ExecutionUnit = ws.Cells[r, 7].Text?.Trim() ?? "",
+                    ConstructionUnit = ws.Cells[r, 8].Text?.Trim() ?? "",
+                    ProjectName = ws.Cells[r, 9].Text?.Trim() ?? "",
+                    PreviousMeetingStatus = ws.Cells[r, 10].Text?.Trim() ?? "",
+                    PreviousMeetingResolution = ws.Cells[r, 11].Text?.Trim() ?? "",
+                    CurrentStatus = ws.Cells[r, 12].Text?.Trim() ?? "",
+                    CurrentMeetingResolution = ws.Cells[r, 13].Text?.Trim() ?? "",
+                    SupportingDocument = ws.Cells[r, 14].Text?.Trim() ?? "",
+                    Category = ws.Cells[r, 15].Text?.Trim() ?? "",
+                    BudgetFiscalYearApprovedAmount = ws.Cells[r, 16].Text?.Trim() ?? "",
+                    ContractType = ws.Cells[r, 17].Text?.Trim() ?? "",
+                    ConstructionPeriod = ws.Cells[r, 18].Text?.Trim() ?? "",
+                    AnnouncementCommencementDate = ws.Cells[r, 19].Text?.Trim() ?? "",
+                    AwardCompletionDate = ws.Cells[r, 20].Text?.Trim() ?? "",
+                });
+            }
+
+            return rows;
+        }
+
+        /// <summary>
+        /// 將單筆歷程插入對應的 process 資料表，回傳生成的 ProcessId。
+        /// </summary>
+        private async Task<Guid> InsertProcessRowAsync(ExcelProcessRow row)
+        {
+            var processId = Guid.NewGuid();
+            var now = DateTime.Now;
+
+            switch (row.Step)
+            {
+                case 1:
+                    _mapDBContext.RoadProjectProcess1.Add(new RoadProjectProcess1
+                    {
+                        Id = 0,
+                        ProcessId = processId,
+                        ProjectId = row.ProjectId,
+                        OrderIndex = row.OrderIndex,
+                        District = row.District,
+                        RecordType = row.RecordType,
+                        RecordTitle = row.RecordTitle,
+                        ExecutionUnit = row.ExecutionUnit,
+                        ConstructionUnit = row.ConstructionUnit,
+                        ProjectName = row.ProjectName,
+                        PreviousMeetingStatus = row.PreviousMeetingStatus,
+                        PreviousMeetingResolution = row.PreviousMeetingResolution,
+                        CurrentStatus = row.CurrentStatus,
+                        CurrentMeetingResolution = row.CurrentMeetingResolution,
+                        SupportingDocument = row.SupportingDocument,
+                        CreatedAt = now
+                    });
+                    break;
+
+                case 2:
+                    _mapDBContext.RoadProjectProcess2.Add(new RoadProjectProcess2
+                    {
+                        Id = 0,
+                        ProcessId = processId,
+                        ProjectId = row.ProjectId,
+                        OrderIndex = row.OrderIndex,
+                        District = row.District,
+                        RecordType = row.RecordType,
+                        RecordTitle = row.RecordTitle,
+                        ExecutionUnit = row.ExecutionUnit,
+                        ConstructionUnit = row.ConstructionUnit,
+                        ProjectName = row.ProjectName,
+                        Category = row.Category,
+                        PreviousMeetingStatus = row.PreviousMeetingStatus,
+                        PreviousMeetingResolution = row.PreviousMeetingResolution,
+                        CurrentStatus = row.CurrentStatus,
+                        CurrentMeetingResolution = row.CurrentMeetingResolution,
+                        SupportingDocument = row.SupportingDocument,
+                        CreatedAt = now
+                    });
+                    break;
+
+                case 3:
+                    _mapDBContext.RoadProjectProcess3.Add(new RoadProjectProcess3
+                    {
+                        Id = 0,
+                        ProcessId = processId,
+                        ProjectId = row.ProjectId,
+                        OrderIndex = row.OrderIndex,
+                        District = row.District,
+                        RecordType = row.RecordType,
+                        RecordTitle = row.RecordTitle,
+                        ExecutionUnit = row.ExecutionUnit,
+                        ProjectName = row.ProjectName,
+                        BudgetFiscalYearApprovedAmount = row.BudgetFiscalYearApprovedAmount,
+                        ContractType = row.ContractType,
+                        ConstructionPeriod = row.ConstructionPeriod,
+                        AnnouncementCommencementDate = row.AnnouncementCommencementDate,
+                        AwardCompletionDate = row.AwardCompletionDate,
+                        PreviousMeetingStatus = row.PreviousMeetingStatus,
+                        PreviousMeetingResolution = row.PreviousMeetingResolution,
+                        CurrentStatus = row.CurrentStatus,
+                        CurrentMeetingResolution = row.CurrentMeetingResolution,
+                        SupportingDocument = row.SupportingDocument,
+                        CreatedAt = now
+                    });
+                    break;
+
+                default:
+                    throw new ArgumentException($"無效的 Step 值: {row.Step}");
+            }
+
+            return processId;
         }
     }
 }

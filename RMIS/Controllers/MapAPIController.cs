@@ -9,6 +9,8 @@ using RMIS.Models.sql;
 using RMIS.Repositories;
 using Microsoft.AspNetCore.Identity;
 using RMIS.Models.Auth;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
 
 
 namespace RMIS.Controllers
@@ -67,7 +69,8 @@ namespace RMIS.Controllers
                     {
                         id = l.Id.ToString(),
                         name = l.Name,
-                        svg = l.GeometryType.Svg
+                        svg = l.GeometryType.Svg,
+                        kind = l.GeometryType.Kind
                     }).ToList()
                 };
                 return results;
@@ -121,6 +124,64 @@ namespace RMIS.Controllers
             {
                 ModelState.AddModelError("", "Error: " + e.Message);
                 return new AreasByLayer();
+            }
+        }
+
+        [HttpPost("GetPointsByViewport")]
+        public async Task<IActionResult> GetPointsByViewport([FromBody] ViewportRequest req)
+        {
+            try
+            {
+                var factory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var bbox = factory.CreatePolygon(new Coordinate[]
+                {
+                    new(req.MinLon, req.MinLat),
+                    new(req.MaxLon, req.MinLat),
+                    new(req.MaxLon, req.MaxLat),
+                    new(req.MinLon, req.MaxLat),
+                    new(req.MinLon, req.MinLat),
+                });
+
+                var layer = await _mapDBContext.Layers
+                    .Include(l => l.GeometryType)
+                    .FirstOrDefaultAsync(l => l.Id == req.LayerId);
+
+                if (layer == null)
+                    return NotFound(new { success = false, message = "找不到圖層" });
+
+                var points = await _mapDBContext.Points
+                    .Where(p => p.Area.LayerId == req.LayerId
+                             && p.GeoLocation != null
+                             && p.GeoLocation.Within(bbox))
+                    .OrderBy(p => p.AreaId)
+                    .ThenBy(p => p.Index)
+                    .Select(p => new
+                    {
+                        p.Index,
+                        p.Latitude,
+                        p.Longitude,
+                        p.Property,
+                        areaId = p.AreaId,
+                    })
+                    .Take(3000)
+                    .ToListAsync();
+
+                var pointCount = points.Count;
+                return Ok(new
+                {
+                    success = true,
+                    layerId = layer.Id,
+                    layerName = layer.Name,
+                    color = layer.GeometryType.Color,
+                    svg = layer.GeometryType.Svg,
+                    type = layer.GeometryType.Kind,
+                    total = pointCount,
+                    points
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Viewport 查詢失敗", error = ex.Message });
             }
         }
 
@@ -519,6 +580,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("GetAccidentPointsByMonth")]
+
         public async Task<IActionResult> GetAccidentPointsByMonth([FromQuery] int year, [FromQuery] int month)
         {
             if (year < 101 || year > 113 || month < 1 || month > 12)
@@ -551,5 +613,14 @@ namespace RMIS.Controllers
                 return StatusCode(500, new { success = false, message = "取得交通事故資料失敗", error = ex.Message });
             }
         }
+    }
+
+    public class ViewportRequest
+    {
+        public Guid LayerId { get; set; }
+        public double MinLat { get; set; }
+        public double MaxLat { get; set; }
+        public double MinLon { get; set; }
+        public double MaxLon { get; set; }
     }
 }

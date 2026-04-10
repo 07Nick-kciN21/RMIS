@@ -596,9 +596,9 @@ namespace RMIS.Controllers
             // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
 
-            if (!currentUserPermission.Update)
+            if (!currentUserPermission.Delete)
             {
-                return Json(new { success = false, message = "無權限修改" });
+                return Json(new { success = false, message = "無權限刪除" });
             }
 
             var deleted = await _accountInterface.DeletePermissionAsync(permissionId);
@@ -700,7 +700,7 @@ namespace RMIS.Controllers
 
             if (!currentUserPermission.Create)
             {
-                return Json(new { success = false, message = "無權限刪除" });
+                return Json(new { success = false, message = "無權限新增" });
             }
             return View();
         }

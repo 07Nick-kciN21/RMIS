@@ -458,26 +458,19 @@ const ProjectBox = {
                     .addTo(self.projectLayer);
                 coords.forEach(c => allCoords.push(c));
 
-                // 綁定專案資訊彈出視窗
-                const prop = rangePoints[0]['prop'];
-                if (prop) {
-                    polygon.bindPopup(`
-                        <div>
-                            <text style="font-size: 25px; font-weight: bolder;">
-                                圖層：道路專案
-                            </text>
-                            <div style="font-size: 20px;">
-                                ${self.createPopupForm(prop)}
-                            </div>
-                        </div>`, {
-                        maxWidth: 350,
-                        maxHeight: 450
-                    });
-                }
+                // 點擊圖形開啟專案詳情
+                polygon.on('click', function() {
+                    RoadProjectView.openViewById(projectId);
+                });
             } else if (rangePoints.length === 2) {
                 const coords = rangePoints.map(p => [p.latitude, p.longitude]);
-                L.polyline(coords, { color: '#3b82f6', weight: 2 }).addTo(self.projectLayer);
+                const polyline = L.polyline(coords, { color: '#3b82f6', weight: 2 }).addTo(self.projectLayer);
                 coords.forEach(c => allCoords.push(c));
+
+                // 點擊圖形開啟專案詳情
+                polyline.on('click', function() {
+                    RoadProjectView.openViewById(projectId);
+                });
             }
 
             // 從 prop 解析路名
@@ -539,16 +532,13 @@ const ProjectBox = {
             photoPoints.forEach(function(point, index) {
                 if (!point.latitude || !point.longitude) return;
 
-                let photoName = '';
                 let photoSrc = '';
                 try {
                     const parsed = JSON.parse(point.url || '{}');
                     const existingUrl = parsed.url || '';
-                    photoName = existingUrl.split('/').pop();
                     photoSrc = `/roadProject/${existingUrl}`;
                 } catch(e) {
                     const existingUrl = point.url || '';
-                    photoName = existingUrl.split('/').pop();
                     photoSrc = `/roadProject/${existingUrl}`;
                 }
 

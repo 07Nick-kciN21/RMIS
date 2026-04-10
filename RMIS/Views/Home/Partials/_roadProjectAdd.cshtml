@@ -109,12 +109,34 @@
                         </div>
                     </div>
                 </div>
-                 @* ===== 2.9 拓寬範圍 ===== *@
+
+                @* ===== 2.9 座標預覽地圖 ===== *@
+                <div class="add-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-map-o"></i> 座標預覽
+                        </h3>                        
+                    </div>
+                    <div class="section-body">
+                        <div id="add-preview-map"></div>
+                        <div class="preview-map-legend">
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-range"></span> 拓寬範圍</span>
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-start"></span> 起點</span>
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-end"></span> 終點</span>
+                            <span class="legend-item"><span class="legend-swatch legend-swatch-photo"></span> 街景照片</span>
+                        </div>
+                    </div>
+                </div>
+
+                 @* ===== 2.10 拓寬範圍 ===== *@
                 <div class="add-section">
                     <div class="section-header">
                         <h3 class="section-title">
                             <i class="fa fa-draw-polygon"></i> 拓寬範圍
                         </h3>
+                        <button type="button" id="btn-toggle-add-range-point" class="btn btn-sm btn-outline-primary section-action-btn">
+                            <i class="fa fa-plus"></i> 點圖新增範圍點
+                        </button>
                         @* <button type="button" id="btn-add-expansion-range" class="btn btn-sm btn-outline-primary section-action-btn">
                             <i class="fa fa-plus"></i> 編輯範圍
                         </button> *@
@@ -140,7 +162,7 @@
                     </div>
                 </div>
 
-                @* ===== 2.10 街景照片 ===== *@
+                @* ===== 2.11 街景照片 ===== *@
                 <div class="add-section">
                     <div class="section-header">
                         <h3 class="section-title">
@@ -150,9 +172,6 @@
                             <button type="button" id="btn-add-street-photo" class="btn btn-sm btn-outline-primary section-action-btn">
                                 <i class="fa fa-plus"></i> 新增一筆
                             </button>
-                            @* <button type="button" id="btn-add-street-photo-map" class="btn btn-sm btn-outline-secondary section-action-btn">
-                                <i class="fa fa-map-marker"></i> 從地圖選取
-                            </button> *@
                             <button type="button" id="btn-toggle-add-photo-point" class="btn btn-sm btn-outline-primary section-action-btn">
                                 <i class="fa fa-crosshairs"></i> 點預覽圖選取
                             </button>
@@ -163,28 +182,7 @@
                             <div class="empty-photo-hint">尚無照片，請點擊「新增一筆」或「從地圖選取」</div>
                         </div>
                     </div>
-                </div>
-
-                @* ===== 2.11 座標預覽地圖 ===== *@
-                <div class="add-section">
-                    <div class="section-header">
-                        <h3 class="section-title">
-                            <i class="fa fa-map-o"></i> 座標預覽
-                        </h3>
-                        <button type="button" id="btn-toggle-add-range-point" class="btn btn-sm btn-outline-primary section-action-btn">
-                            <i class="fa fa-plus"></i> 點圖新增範圍點
-                        </button>
-                    </div>
-                    <div class="section-body">
-                        <div id="add-preview-map"></div>
-                        <div class="preview-map-legend">
-                            <span class="legend-item"><span class="legend-swatch legend-swatch-range"></span> 拓寬範圍</span>
-                            <span class="legend-item"><span class="legend-swatch legend-swatch-start"></span> 起點</span>
-                            <span class="legend-item"><span class="legend-swatch legend-swatch-end"></span> 終點</span>
-                            <span class="legend-item"><span class="legend-swatch legend-swatch-photo"></span> 街景照片</span>
-                        </div>
-                    </div>
-                </div>
+                </div>                
 
                 @* ===== 2.3 路寬資訊 ===== *@
                 <div class="add-section">

@@ -589,12 +589,12 @@ namespace RMIS.Repositories
                     _authDbContext.ChangeTracker.Clear();
                     return (false, "部門不存在");
                 }
-                if(department.IsSystemProtected)
-                {
-                    await transaction.RollbackAsync();
-                    _authDbContext.ChangeTracker.Clear();
-                    return (false, $"無法修改系統保護的部門 {department.Name}");
-                }
+                // if(department.IsSystemProtected)
+                // {
+                //     await transaction.RollbackAsync();
+                //     _authDbContext.ChangeTracker.Clear();
+                //     return (false, $"無法修改系統保護的部門 {department.Name}");
+                // }
                 // 修改使用者資料
                 department.Name = updateDepartment.Name;
                 department.Status = updateDepartment.Status;

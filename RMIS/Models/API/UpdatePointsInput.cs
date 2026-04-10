@@ -9,3 +9,4 @@ namespace RMIS.Models.API
         public List<photo> PhotoPoints { get; set; } = new();
     }
 }
+
