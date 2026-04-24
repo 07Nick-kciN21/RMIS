@@ -1,4 +1,4 @@
-﻿using Azure.Core;
+using Azure.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RMIS.Data;
+using RMIS.Helpers;
 using RMIS.Models.Admin;
 using RMIS.Models.API;
 using RMIS.Models.Auth;
@@ -29,23 +30,30 @@ namespace RMIS.Controllers
         private readonly AccountInterface _accountInterface;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<AdminController> _logger;
+        private readonly IWebHostEnvironment _env;
 
-        public AdminController(AdminInterface adminInterface, 
+        public AdminController(AdminInterface adminInterface,
                                AccountInterface accountInterface,
-                               UserManager<ApplicationUser> userManager, 
-                               ILogger<AdminController> logger)
+                               UserManager<ApplicationUser> userManager,
+                               ILogger<AdminController> logger,
+                               IWebHostEnvironment env)
         {
             _adminInterface = adminInterface;
             _accountInterface = accountInterface;
             _userManager = userManager;
             _logger = logger;
+            _env = env;
+        }
+
+        private void LogOp(string operation, bool isSuccess, string reason = "", Exception exception = null)
+        {
+            _logger.LogOperation(operation, isSuccess, reason, User.Identity?.Name, HttpContext.GetClientIpAddress(), exception);
         }
 
         [HttpGet]
         public async Task<IActionResult> AddCategory()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -65,7 +73,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddCategory(AddCategoryInput input)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -75,22 +82,20 @@ namespace RMIS.Controllers
             var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
             if (userInfo.roleStatus && userInfo.deptStatus)
             {
-                // 檢查輸入的類別資料是否有問題
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
-                // 新增類別資料(含管線資料
                 var rowsAffected = await _adminInterface.AddCategoryAsync(input);
 
                 if (rowsAffected > 0)
                 {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆類別資料到資料庫");
+                    LogOp("新增類別", true, $"已新增 {rowsAffected} 筆類別資料");
                     return Json(new { success = true, message = $"已新增 {rowsAffected} 筆類別資料到資料庫" });
                 }
                 else
                 {
-                    _logger.LogInformation("未對資料庫進行任何變更");
+                    LogOp("新增類別", false, "未對資料庫進行任何變更");
                     return Json(new { success = false, message = "未對資料庫進行任何變更" });
                 }
             }
@@ -104,7 +109,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddPipeline()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -115,7 +119,6 @@ namespace RMIS.Controllers
             if (userInfo.roleStatus && userInfo.deptStatus)
             {
                 var input = await _adminInterface.getPipelineInput(userInfo);
-                _logger.LogInformation("已載入新增管線頁面");
                 return View(input);
             }
             else
@@ -128,30 +131,28 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddPipeline(AddPipelineInput input)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
             {
-                _logger.LogInformation($"{currentUser.DisplayName} 無權限新增");
+                LogOp("新增管線", false, "無權限新增");
                 return Json(new { success = false, message = "無權限新增" });
             }
             var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
 
             if(userInfo.roleStatus && userInfo.deptStatus)
             {
-                // 檢查輸入的管線資料是否有問題
                 var rowsAffected = await _adminInterface.AddPipelineAsync(input);
 
                 if (rowsAffected > 0)
                 {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆管線資料到資料庫");
+                    LogOp("新增管線", true, $"已新增 {rowsAffected} 筆管線資料");
                     return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆管線資料到資料庫" });
                 }
                 else
                 {
-                    _logger.LogInformation("未對資料庫進行任何變更");
-                    return Json(new { success = false, message = "未對資料庫進行任何變更" }); ;
+                    LogOp("新增管線", false, "未對資料庫進行任何變更");
+                    return Json(new { success = false, message = "未對資料庫進行任何變更" });
                 }
             }
             else
@@ -164,7 +165,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddRoad()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -185,7 +185,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddRoad(AddRoadInput input)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -197,22 +196,20 @@ namespace RMIS.Controllers
 
             if (userInfo.roleStatus && userInfo.deptStatus)
             {
-                // 檢查輸入的道路資料是否有問題
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
-                // 新增道路資料(含管線資料
                 var rowsAffected = await _adminInterface.AddRoadAsync(input);
 
                 if (rowsAffected > 0)
                 {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆道路資料到資料庫");
+                    LogOp("新增道路", true, $"已新增 {rowsAffected} 筆道路資料");
                     return Ok(new { success = true, message = $"已從CSV新增 {rowsAffected} 筆道路資料到資料庫" });
                 }
                 else
                 {
-                    _logger.LogInformation("未對資料庫進行任何變更");
+                    LogOp("新增道路", false, "未對資料庫進行任何變更");
                     return Json(new { success = false, message = "未對資料庫進行任何變更" });
                 }
             }
@@ -226,7 +223,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddRoadByCSV()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -246,7 +242,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddRoadByCSV(AddRoadByCSVInput input)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -257,21 +252,20 @@ namespace RMIS.Controllers
 
             if (userInfo.roleStatus && userInfo.deptStatus)
             {
-                // 檢查輸入的道路資料是否有問題
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
-                // 新增道路資料(含管線資料
                 var rowsAffected = await _adminInterface.AddRoadByCSVAsync(input);
+
                 if (rowsAffected > 0)
                 {
-                    _logger.LogInformation($"已從CSV新增 {rowsAffected} 筆道路資料到資料庫");
+                    LogOp("新增道路(CSV)", true, $"已新增 {rowsAffected} 筆道路資料");
                     return Json(new { success = true, message = $"已新增 {rowsAffected} 筆類別資料到資料庫" });
                 }
                 else
                 {
-                    _logger.LogInformation("未對資料庫進行任何變更");
+                    LogOp("新增道路(CSV)", false, "未對資料庫進行任何變更");
                     return Json(new { success = false, message = "未對資料庫進行任何變更" });
                 }
             }
@@ -281,13 +275,10 @@ namespace RMIS.Controllers
             }
         }
 
-        
-
         [HttpGet]
         public async Task<IActionResult> AddMapSource()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -301,7 +292,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddMapSource(AddMapSourceInput input)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -315,12 +305,12 @@ namespace RMIS.Controllers
 
                 if (rowsAffected > 0)
                 {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆地圖來源資料到資料庫");
+                    LogOp("新增地圖來源", true, $"已新增 {rowsAffected} 筆地圖來源資料");
                     return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆地圖來源資料到資料庫" });
                 }
                 else
                 {
-                    _logger.LogInformation("未對資料庫進行任何變更");
+                    LogOp("新增地圖來源", false, "未對資料庫進行任何變更");
                     return Json(new { success = false, message = "未對資料庫進行任何變更"});
                 }
             }
@@ -333,7 +323,6 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult AddCategoryByJson()
         {
-            
             return View();
         }
 
@@ -341,7 +330,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> AddCategoryByJson(AddCategoryByJsonInput input)
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // 檢查權限
             var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "業務圖資");
 
             if (!currentUserPermission.Create)
@@ -373,18 +361,18 @@ namespace RMIS.Controllers
 
                     if (result.categoryCount > 0 || result.pipelineCount > 0)
                     {
-                        _logger.LogInformation($"已從JSON檔案新增 {result.categoryCount} 筆類別及 {result.pipelineCount} 筆管線資料到資料庫");
-                        return  Json(new { success = true, message = $"上傳{result.categoryCount}筆類別, {result.pipelineCount}筆項目" });
+                        LogOp("新增類別(JSON)", true, $"已新增 {result.categoryCount} 筆類別及 {result.pipelineCount} 筆管線資料");
+                        return Json(new { success = true, message = $"上傳{result.categoryCount}筆類別, {result.pipelineCount}筆項目" });
                     }
                     else if (result.categoryCount == -1 && result.pipelineCount == -1)
                     {
-                        _logger.LogError("處理JSON檔案時發生錯誤，所有變更已被捨棄。");
+                        LogOp("新增類別(JSON)", false, "處理JSON檔案時發生錯誤，所有變更已被捨棄");
                         ModelState.AddModelError("categoryWithpipeline", "發生錯誤，所有變更已被捨棄。");
                         return Json(new { success = false, message = ModelState });
                     }
                     else
                     {
-                        _logger.LogInformation("未對資料庫進行任何變更");
+                        LogOp("新增類別(JSON)", false, "未對資料庫進行任何變更");
                         return Json(new { success = false, message = "沒有輸入資料" });
                     }
                 }
@@ -417,7 +405,7 @@ namespace RMIS.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Excel 匯入道路專案失敗");
+                LogOp("匯入道路專案(Excel)", false, ex.Message, ex);
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
@@ -425,14 +413,14 @@ namespace RMIS.Controllers
         [HttpGet]
         public IActionResult DownloadImportTemplate()
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "Sample", "道路專案匯入範本.zip");
+            var path = Path.Combine(_env.ContentRootPath, "Sample", "道路專案匯入範本.zip");
             return PhysicalFile(path, "application/zip", "道路專案匯入範本.zip");
         }
 
         [HttpGet]
         public IActionResult DownloadProcessImportTemplate()
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "Sample", "專案歷程匯入範本.zip");
+            var path = Path.Combine(_env.ContentRootPath, "Sample", "專案歷程匯入範本.zip");
             return PhysicalFile(path, "application/zip", "專案歷程匯入範本.zip");
         }
 
@@ -457,18 +445,18 @@ namespace RMIS.Controllers
 
                 if (rowsAffected > 0)
                 {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
+                    LogOp("新增道路專案", true, $"已新增 {rowsAffected} 筆專案資料");
                     return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆專案資料到資料庫" });
                 }
                 else
                 {
-                    _logger.LogInformation("未對資料庫進行任何變更");
+                    LogOp("新增道路專案", false, "未對資料庫進行任何變更");
                     return BadRequest(new { success = false, message = "未對資料庫進行任何變更" });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "新增道路專案失敗");
+                LogOp("新增道路專案", false, ex.Message, ex);
                 return StatusCode(500, new { success = false, message = ex.Message, innerMessage = ex.InnerException?.Message });
             }
         }
@@ -482,17 +470,18 @@ namespace RMIS.Controllers
 
                 if (result)
                 {
-                    _logger.LogInformation($"已刪除專案: {input.Id}");
+                    LogOp("刪除道路專案", true, $"已刪除專案: {input.ProjectId}");
                     return Ok(new { success = true, message = "專案已成功刪除" });
                 }
                 else
                 {
+                    LogOp("刪除道路專案", false, $"找不到指定的專案: {input.ProjectId}");
                     return BadRequest(new { success = false, message = "找不到指定的專案" });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "刪除道路專案失敗");
+                LogOp("刪除道路專案", false, ex.Message, ex);
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
@@ -505,17 +494,18 @@ namespace RMIS.Controllers
                 var result = await _adminInterface.UpdateProjectDataAsync(input);
                 if (result)
                 {
-                    _logger.LogInformation($"已更新專案: {input.Id}");
+                    LogOp("更新道路專案", true, $"已更新專案: {input.ProjectId}");
                     return Ok(new { success = true, message = "專案已成功更新" });
                 }
                 else
                 {
+                    LogOp("更新道路專案", false, $"找不到指定的專案: {input.ProjectId}");
                     return BadRequest(new { success = false, message = "找不到指定的專案" });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "更新道路專案失敗");
+                LogOp("更新道路專案", false, ex.Message, ex);
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
@@ -541,18 +531,18 @@ namespace RMIS.Controllers
 
                 if (rowsAffected > 0)
                 {
-                    _logger.LogInformation($"已新增 {rowsAffected} 筆專案資料到資料庫");
+                    LogOp("匯入施工通告(Excel)", true, $"已新增 {rowsAffected} 筆施工通告資料");
                     return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆專案資料到資料庫" });
                 }
                 else
                 {
-                    _logger.LogInformation("未對資料庫進行任何變更");
+                    LogOp("匯入施工通告(Excel)", false, "未對資料庫進行任何變更");
                     return BadRequest(new { success = false, message = "未對資料庫進行任何變更" });
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("An error occurred while adding records." + ex.Message);
+                LogOp("匯入施工通告(Excel)", false, ex.Message, ex);
                 return StatusCode(500, new { success = false, message = "An error occurred while adding records." + ex.Message });
             }
         }

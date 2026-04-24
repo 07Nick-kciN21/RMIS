@@ -20,8 +20,9 @@ namespace RMIS.Repositories
         private readonly AuthDbContext _authDbContext;
         private readonly MapDBContext _mapDBContext;
         private readonly FilePathSettings _filePaths;
+        private readonly IWebHostEnvironment _env;
 
-        public MapdataRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths)
+        public MapdataRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths, IWebHostEnvironment env)
         {
             _signInManager = signInManager;
             _userManager = userManager;
@@ -29,7 +30,11 @@ namespace RMIS.Repositories
             _authDbContext = authDbContext;
             _mapDBContext = mapDBContext;
             _filePaths = filePaths.Value;
+            _env = env;
         }
+
+        private string ResolvePath(string path) =>
+            Path.GetFullPath(path, _env.ContentRootPath);
         public async Task<MapdataManager> GetMapdataManagerDataAsync()
         {
             var allCategories = await _mapDBContext.Categories.ToListAsync();
@@ -556,7 +561,7 @@ namespace RMIS.Repositories
                     };
                     roadProjects.Add(project);
                     // 建立資料夾
-                    var directoryPath = Path.Combine(_filePaths.RoadProjectPhoto, projectId);
+                    var directoryPath = Path.Combine(ResolvePath(_filePaths.RoadProjectPhoto), projectId);
                     Console.WriteLine(directoryPath);
                     if (!Directory.Exists(directoryPath))
                     {
@@ -605,7 +610,7 @@ namespace RMIS.Repositories
 
                 // 將 Base64 字串轉換為 byte[]
                 var imageBytes = Convert.FromBase64String(base64Data);
-                var directoryPath = _filePaths.RoadProjectPhoto;
+                var directoryPath = ResolvePath(_filePaths.RoadProjectPhoto);
                 // 儲存路徑（伺服器上的某個目錄）
                 var savePath = Path.Combine(directoryPath, roadProjectDic);
                 if (!Directory.Exists(savePath))

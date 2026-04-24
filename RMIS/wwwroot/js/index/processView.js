@@ -603,6 +603,7 @@ const ProcessView = {
 
         // 關閉 Modal
         self.closeDeleteConfirm();
+        showLoading('刪除中...');
 
         // 保存資料（closeView 會清空 currentRecord）
         const recordId = self.currentRecord.id;
@@ -618,10 +619,7 @@ const ProcessView = {
             console.log('刪除結果:', result);
 
             if (result.success) {
-                // 關閉檢視頁面並刷新列表
                 self.closeView();
-
-                // 觸發刷新事件
                 $(document).trigger('recordDeleted', {
                     recordId: recordId,
                     stage: stage,
@@ -634,7 +632,8 @@ const ProcessView = {
         .catch(error => {
             console.error('刪除失敗:', error);
             alert('刪除失敗，請稍後再試');
-        });
+        })
+        .finally(() => hideLoading());
     },
 
     /**
@@ -696,6 +695,8 @@ const ProcessView = {
     deleteFile: function(fileId) {
         const self = this;
 
+        showLoading('刪除檔案中...');
+
         fetch(`/api/RoadProject/DeleteProcessFile/${fileId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' }
@@ -703,7 +704,6 @@ const ProcessView = {
         .then(response => response.json())
         .then(result => {
             if (result.success) {
-                // 重新載入檔案列表
                 if (self.currentRecord && self.currentRecord.processId) {
                     self.fetchProcessFiles(self.currentRecord.processId)
                         .then(files => {
@@ -718,7 +718,8 @@ const ProcessView = {
         .catch(error => {
             console.error('刪除檔案失敗:', error);
             alert('刪除檔案失敗，請稍後再試');
-        });
+        })
+        .finally(() => hideLoading());
     },
 
     /**

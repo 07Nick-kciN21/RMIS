@@ -115,9 +115,25 @@ header .dropdown-button,
     color: #615649;
 }
 
+@media (max-width: 1440px) {
+    body {
+        padding: 15px;
+    }
+
+    .div0 {
+        gap: 12px;
+        grid-template-columns: 5% 1fr minmax(240px, 16%);
+    }
+
+    .div4 {
+        min-width: 240px;
+    }
+}
+
 @media (max-width: 992px) {
     .div0 {
-        grid-template-columns: 5% auto minmax(270px, 29%);
+        gap: 10px;
+        grid-template-columns: 5% auto minmax(220px, 25%);
     }
 }
 

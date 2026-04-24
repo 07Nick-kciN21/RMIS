@@ -11,15 +11,22 @@ namespace RMIS.Repositories
     {
         private readonly MapDBContext _mapDBContext;
         private readonly FilePathSettings _filePaths;
+        private readonly IWebHostEnvironment _env;
 
-        public RoadProjectRepository(MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths)
+        public RoadProjectRepository(MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths, IWebHostEnvironment env)
         {
             _mapDBContext = mapDBContext;
             _filePaths = filePaths.Value;
+            _env = env;
         }
 
+        private string ResolvePath(string path) =>
+            Path.GetFullPath(path, _env.ContentRootPath);
         public async Task<string> AddProcess1Async(RoadProjectProcess1 process)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -68,10 +75,14 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 return $"伺服器發生非預期錯誤：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<string> AddProcess2Async(RoadProjectProcess2 process)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -120,10 +131,14 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 return $"伺服器發生非預期錯誤：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<string> AddProcess3Async(RoadProjectProcess3 process)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -172,6 +187,7 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 return $"伺服器發生非預期錯誤：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<RoadProjectProcess1?> GetProcess1ByIdAsync(int id)
@@ -277,6 +293,9 @@ namespace RMIS.Repositories
 
         public async Task<string> AddProcessFileAsync(RoadProjectProcessFile file)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             string? savedFilePath = null;
 
@@ -344,6 +363,7 @@ namespace RMIS.Repositories
                 }
                 return $"伺服器發生非預期錯誤：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<List<RoadProjectProcessFile>> GetProcessFilesByProcessIdAsync(Guid processId)
@@ -367,6 +387,9 @@ namespace RMIS.Repositories
 
         public async Task<string> DeleteProcessFileAsync(int fileId)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             string? deletedFilePath = null;
             byte[]? deletedFileContent = null;
@@ -420,10 +443,14 @@ namespace RMIS.Repositories
                 }
                 return $"伺服器發生非預期錯誤：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<string> DeleteProcess1Async(int id)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             var deletedFiles = new List<(string path, byte[] content)>();
 
@@ -454,10 +481,14 @@ namespace RMIS.Repositories
                 await RestoreDeletedFilesAsync(deletedFiles);
                 return $"刪除失敗：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<string> DeleteProcess2Async(int id)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             var deletedFiles = new List<(string path, byte[] content)>();
 
@@ -488,10 +519,14 @@ namespace RMIS.Repositories
                 await RestoreDeletedFilesAsync(deletedFiles);
                 return $"刪除失敗：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<string> DeleteProcess3Async(int id)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             var deletedFiles = new List<(string path, byte[] content)>();
 
@@ -522,6 +557,7 @@ namespace RMIS.Repositories
                 await RestoreDeletedFilesAsync(deletedFiles);
                 return $"刪除失敗：{ex.Message}";
             }
+            }); // end strategy
         }
 
         /// <summary>
@@ -601,13 +637,16 @@ namespace RMIS.Repositories
         {
             var info = await GetProcessInfoAsync(processId);
             if (info.HasValue)
-                return Path.Combine(_filePaths.ProcessFile, info.Value.projectId, info.Value.step.ToString(), info.Value.orderIndex.ToString());
+                return Path.Combine(ResolvePath(_filePaths.ProcessFile), info.Value.projectId, info.Value.step.ToString(), info.Value.orderIndex.ToString());
             // fallback: 使用 ProcessId (舊資料相容)
-            return Path.Combine(_filePaths.ProcessFile, processId.ToString());
+            return Path.Combine(ResolvePath(_filePaths.ProcessFile), processId.ToString());
         }
 
         public async Task<string> UpdateProcess1Async(RoadProjectProcess1 process)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -640,10 +679,14 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 return $"更新失敗：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<string> UpdateProcess2Async(RoadProjectProcess2 process)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -677,10 +720,14 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 return $"更新失敗：{ex.Message}";
             }
+            }); // end strategy
         }
 
         public async Task<string> UpdateProcess3Async(RoadProjectProcess3 process)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -717,6 +764,7 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 return $"更新失敗：{ex.Message}";
             }
+            }); // end strategy
         }
     }
 }

@@ -42,6 +42,7 @@ const RoadProjectEdit = {
 
         // 綁定儲存按鈕
         $(document).on('click', '#btn-submit-project-edit', function() {
+            if (!confirm('確定要更新此專案嗎？')) return;
             self.submitForm();
         });
 
@@ -794,6 +795,8 @@ const RoadProjectEdit = {
             remarks: $('#edit-remarks').val()
         };
 
+        showLoading('更新中...', '#right-box');
+
         // 第一步：更新基本資料
         fetch('/Admin/UpdateRoadProject', {
             method: 'POST',
@@ -824,6 +827,9 @@ const RoadProjectEdit = {
         .catch(function(error) {
             console.error('更新專案失敗:', error);
             alert(`更新失敗：${error.message || '請稍後再試'}`);
+        })
+        .finally(function() {
+            hideLoading('#right-box');
         });
     },
 

@@ -1362,7 +1362,7 @@ namespace RMIS.Repositories
         public async Task<List<LogRecord>> GetLogRecordAsync()
         {
             var logRecords = new List<LogRecord>();
-            var _logDirectory = "C:/Users/KingSu/Documents/Logs";
+            var _logDirectory = "C:/RMIS/Logs";
             try
             {
                 if (!Directory.Exists(_logDirectory))

@@ -34,12 +34,14 @@ namespace RMIS.Repositories
         private readonly MapdataInterface _mapdataInterface;
         private readonly FilePathSettings _filePaths;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IWebHostEnvironment _env;
         public AdminRepository(MapDBContext mapDBContext,
                                ILogger<AdminRepository> loger,
                                AuthDbContext authDbContext,
                                MapdataInterface mapdataInterface,
                                IOptions<FilePathSettings> filePaths,
-                               IHttpClientFactory httpClientFactory)
+                               IHttpClientFactory httpClientFactory,
+                               IWebHostEnvironment env)
         {
             _mapDBContext = mapDBContext;
             _logger = loger;
@@ -47,7 +49,11 @@ namespace RMIS.Repositories
             _mapdataInterface = mapdataInterface;
             _filePaths = filePaths.Value;
             _httpClientFactory = httpClientFactory;
+            _env = env;
         }
+
+        private string ResolvePath(string path) =>
+            Path.GetFullPath(path, _env.ContentRootPath);
 
         public async Task<AddPipelineInput> getPipelineInput(UserAuthInfo userAuthInfo)
         {
@@ -311,6 +317,9 @@ namespace RMIS.Repositories
                 return 0;
             }
 
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -396,6 +405,7 @@ namespace RMIS.Repositories
                 _logger.LogError(ex, "An error occurred while adding roads by CSV.");
                 throw;
             }
+            }); // end strategy
         }
         public async Task<AddCategoryInput> getCategoryInput(UserAuthInfo userAuthInfo)
         {
@@ -434,6 +444,9 @@ namespace RMIS.Repositories
 
         public async Task<(int categoryCount, int pipelineCount)> AddCategoryByJsonAsync(JObject jObject)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -504,6 +517,7 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 return (-1, -1);
             }
+            }); // end strategy
         }
 
         private async Task<bool> ProcessCategoryJsonAsync(
@@ -632,6 +646,9 @@ namespace RMIS.Repositories
         }
         public async Task<int> DeletePipelineAsync(Guid? pipelineId)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -673,9 +690,13 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 throw;
             }
+            }); // end strategy
         }
         public async Task<int> DeleteCategoryAsync(Guid? categoryId)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -702,9 +723,13 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 throw;
             }
+            }); // end strategy
         }
         public async Task<int> DeleteLayerDataAsync(Guid? layerId)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -729,6 +754,7 @@ namespace RMIS.Repositories
                 await transaction.RollbackAsync();
                 throw;
             }
+            }); // end strategy
         }
 
         private async Task DeleteCategoryRecursiveAsync(Guid parentId)
@@ -895,7 +921,6 @@ namespace RMIS.Repositories
 
         private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, string RoadName, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
         {
-            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
                 // 先取出各點的prop過濾出符合日期的點
@@ -940,14 +965,12 @@ namespace RMIS.Repositories
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 _logger.LogError(ex, "An error occurred while getting focus data by datetime.");
                 throw;
             }
         }
         private async Task<List<noticeCase>> GetNoticePointByDatetime(List<ConstructNotice> noticeQuery, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
         {
-            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             var noticePositionList = noticeQuery.Select(n => n.PositionId).ToList();
             var query = await _mapDBContext.Points.Where(p => noticePositionList.Contains(p.AreaId)).ToListAsync();
             //query = query.Where(q =>
@@ -1001,7 +1024,7 @@ namespace RMIS.Repositories
             Console.WriteLine($"savePhoto {photoName} to {roadProjectDic}");
             try
             {
-                var savePath = Path.Combine(_filePaths.RoadProjectPhoto, roadProjectDic);
+                var savePath = Path.Combine(ResolvePath(_filePaths.RoadProjectPhoto), roadProjectDic);
                 if (!Directory.Exists(savePath))
                 {
                     Directory.CreateDirectory(savePath);
@@ -1312,6 +1335,9 @@ namespace RMIS.Repositories
         public async Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput)
         {
             Console.WriteLine("AddRoadProjectAsync");
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -1432,11 +1458,15 @@ namespace RMIS.Repositories
                 _logger.LogError(ex, "新增專案資料失敗.");
                 throw;
             }
+            }); // end strategy
         }
 
         public async Task<bool> DeleteRoadProjectAsync(Guid projectId)
         {
             Console.WriteLine($"DeleteRoadProjectAsync: {projectId}");
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -1507,7 +1537,7 @@ namespace RMIS.Repositories
                         _mapDBContext.RoadProjectProcessFiles.RemoveRange(processFiles);
 
                     // 刪除磁碟上的文件目錄 ({ProcessFile}/{ProjectId}/)
-                    var projectFolder = Path.Combine(_filePaths.ProcessFile, strProjectId);
+                    var projectFolder = Path.Combine(ResolvePath(_filePaths.ProcessFile), strProjectId);
                     if (Directory.Exists(projectFolder))
                         Directory.Delete(projectFolder, recursive: true);
 
@@ -1531,6 +1561,7 @@ namespace RMIS.Repositories
                 _logger.LogError(ex, $"刪除專案失敗: {projectId}");
                 throw;
             }
+            }); // end strategy
         }
 
         /// <summary>
@@ -1549,6 +1580,9 @@ namespace RMIS.Repositories
                 return result;
             }
 
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -1678,6 +1712,7 @@ namespace RMIS.Repositories
                 result.Errors = errors;
                 return result;
             }
+            }); // end strategy
         }
 
         /// <summary>
@@ -1752,7 +1787,7 @@ namespace RMIS.Repositories
         private async Task<Dictionary<string, List<string>>> ExtractPhotoZipAsync(IFormFile zipFile)
         {
             var photoDict = new Dictionary<string, List<string>>();
-            var basePath = _filePaths.RoadProjectPhoto;
+            var basePath = ResolvePath(_filePaths.RoadProjectPhoto);
 
             // 將上傳檔案複製到 MemoryStream（SharpCompress 需要可定位的 Stream）
             using var memoryStream = new MemoryStream();
@@ -2208,6 +2243,9 @@ namespace RMIS.Repositories
 
         public async Task<bool> UpdateProjectPointsAsync(Guid projectId, List<range> rangePoints, List<photo>? photoPoints)
         {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -2262,11 +2300,15 @@ namespace RMIS.Repositories
                 _logger.LogError(ex, "更新專案座標點失敗.");
                 throw;
             }
+            }); // end strategy
         }
 
         public async Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput)
         {
             Console.WriteLine("UpdateProjectDataAsync");
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
@@ -2353,9 +2395,11 @@ namespace RMIS.Repositories
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync();
                 _logger.LogError(ex, "修改專案資料失敗.");
                 throw;
             }
+            }); // end strategy
         }
 
         public async Task<Boolean> UpdateProjectPhotoAsync(UpdateProjectPhotoInput projectPhotoInput)
@@ -2369,7 +2413,7 @@ namespace RMIS.Repositories
                 var photoName = projectPhotoInput.PhotoName; // 文件名，如 "6_02.png"
                 var photo = projectPhotoInput.Photo; // 上傳的圖片文件
 
-                var directoryPath = _filePaths.RoadProjectPhoto;
+                var directoryPath = ResolvePath(_filePaths.RoadProjectPhoto);
 
 
                 // 確保目標目錄存在
@@ -2799,7 +2843,7 @@ namespace RMIS.Repositories
             Console.WriteLine("savePhoto");
             try
             {
-                var savePath = Path.Combine(_filePaths.ConstructNoticePhoto, constructNoticeDic);
+                var savePath = Path.Combine(ResolvePath(_filePaths.ConstructNoticePhoto), constructNoticeDic);
                 if (!Directory.Exists(savePath))
                 {
                     Directory.CreateDirectory(savePath);
@@ -3288,7 +3332,7 @@ namespace RMIS.Repositories
                     var docKey = $"{row.ProjectId}/{row.Step}/{row.OrderIndex}";
                     if (docDict.TryGetValue(docKey, out var files))
                     {
-                        var processFolder = Path.Combine(_filePaths.ProcessFile, row.ProjectId, row.Step.ToString(), row.OrderIndex.ToString());
+                        var processFolder = Path.Combine(ResolvePath(_filePaths.ProcessFile), row.ProjectId, row.Step.ToString(), row.OrderIndex.ToString());
                         Directory.CreateDirectory(processFolder);
 
                         foreach (var (fileName, bytes) in files)

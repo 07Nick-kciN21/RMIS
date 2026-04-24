@@ -407,12 +407,14 @@ const RoadProjectView = {
     deleteProject: function() {
         const self = this;
         const projectId = self.currentProject.id;
-        if (!confirm(`確定要刪除嗎？`)) return;
+        if (!confirm('確定要刪除此專案嗎？此操作無法復原。')) return;
+
+        showLoading('刪除中...', '#right-box');
 
         fetch(`/Admin/DeleteRoadProject`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: projectId })
+            body: JSON.stringify({ id: projectId, projectId: self.currentProject.projectId })
         })
         .then(response => response.json())
         .then(result => {
@@ -420,7 +422,16 @@ const RoadProjectView = {
                 alert('已成功刪除');
                 self.closeView();
                 $(document).trigger('projectDeleted', { projectId: projectId });
+            } else {
+                alert(`刪除失敗：${result.message || '請稍後再試'}`);
             }
+        })
+        .catch(error => {
+            console.error('刪除專案失敗:', error);
+            alert(`刪除失敗：${error.message || '請稍後再試'}`);
+        })
+        .finally(() => {
+            hideLoading('#right-box');
         });
     },
 

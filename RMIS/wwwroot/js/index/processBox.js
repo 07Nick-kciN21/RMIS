@@ -931,8 +931,12 @@ const ProcessBox = {
         console.log('當前階段:', self.currentStage);
         console.log('檔案數量:', filesArray.length);
 
+        // 確認對話框
+        if (!confirm(isEdit ? '確定要更新此紀錄嗎？' : '確定要新增此紀錄嗎？')) return;
+
         // 關閉 Modal
         self.closeAddRecordModal();
+        showLoading(isEdit ? '更新中...' : '新增中...');
 
         // 呼叫 API
         fetch(apiEndpoint, {
@@ -954,7 +958,6 @@ const ProcessBox = {
                             console.log('檔案上傳完成');
                             alert(isEdit ? '紀錄更新成功！' : '紀錄新增成功！');
                             self.fetchHistoryData(self.projectId);
-                            // 觸發刷新 ProcessView 事件
                             if (isEdit) {
                                 $(document).trigger('recordUpdated', { recordId: data.Id, processNum: stageNum });
                             }
@@ -966,15 +969,15 @@ const ProcessBox = {
                             if (isEdit) {
                                 $(document).trigger('recordUpdated', { recordId: data.Id, processNum: stageNum });
                             }
-                        });
+                        })
+                        .finally(() => hideLoading());
                 } else {
-                    // 沒有檔案，顯示提示並重新載入
                     alert(isEdit ? '紀錄更新成功！' : '紀錄新增成功！');
                     self.fetchHistoryData(self.projectId);
-                    // 觸發刷新 ProcessView 事件
                     if (isEdit) {
                         $(document).trigger('recordUpdated', { recordId: data.Id, processNum: stageNum });
                     }
+                    hideLoading();
                 }
 
                 // 重置編輯模式
@@ -982,11 +985,13 @@ const ProcessBox = {
                 self.editingRecord = null;
             } else {
                 alert(`${isEdit ? '編輯' : '新增'}失敗: ${result.message}`);
+                hideLoading();
             }
         })
         .catch(err => {
             console.error(isEdit ? '編輯紀錄失敗:' : '新增紀錄失敗:', err);
             alert(`${isEdit ? '編輯' : '新增'}紀錄失敗，請稍後再試`);
+            hideLoading();
         });
     },
 

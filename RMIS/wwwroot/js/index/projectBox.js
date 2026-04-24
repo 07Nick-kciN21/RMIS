@@ -166,6 +166,7 @@ const ProjectBox = {
 
         // 清空列表並顯示讀取中
         $('#projectTbody').html('<tr><td colspan="6">資料讀取中...</td></tr>');
+        showLoading('查詢中...', '#left-box');
 
         // 使用 Fetch 呼叫 API
         fetch(`/api/MapAPI/GetRoadProject`, {
@@ -180,16 +181,19 @@ const ProjectBox = {
             // 取得回傳陣列並更新總數文字
             self.filterProject = data['roadProjects'] || [];
             $("#projectTotalCount").text(`(總數:${self.filterProject.length})`);
-            
+
             // 重置分頁到第一頁
             self.currentPage = 1;
-            
+
             // 執行表格更新邏輯
             self.updateProjectTable();
         })
         .catch(error => {
             console.error('查詢失敗:', error);
             $('#projectTbody').html('<tr><td colspan="6">查詢發生錯誤，請稍後再試</td></tr>');
+        })
+        .finally(() => {
+            hideLoading('#left-box');
         });
     },
 

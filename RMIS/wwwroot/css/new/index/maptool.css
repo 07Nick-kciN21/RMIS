@@ -168,6 +168,15 @@
     background-color: gray;
 }
 
+@media (max-width: 1440px) {
+    .map-controls span {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        margin: 6px 0;
+    }
+}
+
 .map-controls span.active {
     background-color: gray;
 }

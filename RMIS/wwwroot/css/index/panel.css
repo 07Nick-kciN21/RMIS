@@ -198,6 +198,16 @@
     text-decoration: none;
 }
 
+@media (max-width: 1440px) {
+    #metaDataPanel  { width: 420px; height: 420px; }
+    #searchPropPanel { width: 420px; }
+    #flagPanel      { width: 420px; height: 420px; }
+    #focusPanel     { width: 380px; height: 440px; }
+    #projectPanel   { width: 480px; height: 520px; }
+    #accidentPanel  { width: 380px; height: 380px; }
+    #painterPanel   { width: 340px; }
+}
+
 @media (max-width:899px){
     #searchPanel{
         top:50%;

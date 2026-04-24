@@ -927,6 +927,7 @@ const RoadProjectAdd = {
         });
 
         console.log('提交專案資料:', ...formData.entries());
+        showLoading('新增中...', '#right-box');
 
         // 呼叫 Admin API
         fetch('/Admin/AddRoadProject', {
@@ -944,7 +945,6 @@ const RoadProjectAdd = {
             if (result.success) {
                 alert('專案新增成功！');
                 self.closeAdd();
-                // 觸發重新整理事件
                 $(document).trigger('projectAdded', { projectId: result.projectId });
             } else {
                 alert(`新增失敗：${result.message}`);
@@ -953,6 +953,9 @@ const RoadProjectAdd = {
         .catch(error => {
             console.error('新增專案失敗:', error);
             alert(`新增失敗：${error.message || '請稍後再試'}`);
+        })
+        .finally(() => {
+            hideLoading('#right-box');
         });
     },
 

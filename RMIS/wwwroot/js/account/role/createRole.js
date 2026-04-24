@@ -50,7 +50,7 @@ $(document).ready(function () {
                 alert('提交失敗');
                 console.error(error);
                 window.opener.postMessage(
-                    JSON.stringify({ success: false }), 
+                    JSON.stringify({ success: false }),
                     window.location.origin,
                 );
                 window.close();

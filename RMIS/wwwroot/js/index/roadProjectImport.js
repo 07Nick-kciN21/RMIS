@@ -275,6 +275,7 @@ const RoadProjectImport = {
         const $submitBtn = $('#btn-submit-project-import');
         const originalText = $submitBtn.text();
         $submitBtn.text('匯入中...').addClass('btn-loading').prop('disabled', true);
+        showLoading('匯入中...', '#right-box');
 
         // 建立 FormData
         const formData = new FormData();
@@ -305,6 +306,7 @@ const RoadProjectImport = {
         .finally(() => {
             self.isImporting = false;
             $submitBtn.text(originalText).removeClass('btn-loading').prop('disabled', false);
+            hideLoading('#right-box');
         });
     },
 

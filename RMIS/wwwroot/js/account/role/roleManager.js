@@ -23,14 +23,11 @@ $(document).ready(function () {
     $('#createRole').on('click', function () {
         var windowWidth = 800;
         var windowHeight = 600;
-        // 獲取螢幕的寬高
         var screenWidth = window.screen.width;
         var screenHeight = window.screen.height;
-        // 計算彈出視窗的位置
         var left = 0 - (screenWidth + windowWidth) / 2;
         var top = (screenHeight - windowHeight) / 2;
         wm.open("createRoleWindow", "/Account/Role/Create", windowWidth, windowHeight);
-        // window.open("/Account/Role/Create", 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
     });
     window.addEventListener('message', function(event) {
         if (event.origin !== window.location.origin) return; // 安全性驗證
@@ -56,7 +53,6 @@ function initRoleTable(){
                 var managerData = data.roleManager;
                 allRoles = managerData.roles;
                 initPage("rolePage", updateRoleTable, allRoles);
-                // updateRoleTable(allRoles);
                 updateRoleFilter(allRoles);
             }
         },
@@ -73,11 +69,6 @@ function updateRoleFilter(allRoles){
     allRoles.forEach((role) => {
         $('#roleSelector').append(`<option value="${role.id}"}>${role.name}</option>`);
     });
-    // $('#roleSelector').select2({
-    //     width: '30%',
-    //     placeholder: "請選擇角色",
-    //     allowClear: true
-    // });
 }
 
 function updateRoleTable(roles){
@@ -87,29 +78,21 @@ function updateRoleTable(roles){
         var moreBtn = $(`<a class="more-role read">more</a>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
-            // 獲取螢幕的寬高
             var screenWidth = window.screen.width;
             var screenHeight = window.screen.height;
-            // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
-            // 開啟新視窗，顯示角色的權限
             wm.open("rolePermissionWindow", `/Account/Role/Read/Permission?id=${role.id}`, windowWidth, windowHeight);
-            
-            // newWindow = window.open(`/Account/Role/Read/Permission?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
         var updateBtn = $(`<button class="update-role read">編輯</button>`).on("click", function () {
             var windowWidth = 800;
             var windowHeight = 600;
-            // 獲取螢幕的寬高
             var screenWidth = window.screen.width;
             var screenHeight = window.screen.height;
-            // 計算彈出視窗的位置
             var left = 0 - (screenWidth + windowWidth) / 2;
             var top = (screenHeight - windowHeight) / 2;
             wm.open("updateRoleWindow", `/Account/Role/Update?id=${role.id}`, windowWidth, windowHeight);
-            // window.open(`/Account/Role/Update?id=${role.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
             console.log("more");
         });
         var deleteBtn = $(`<button class="delete-role read">刪除</button>`).on("click", function () {
@@ -149,15 +132,15 @@ function updateRoleTable(roles){
         row.append($(`<td class="permission-cell"></td>`).append(moreBtn));
         // 狀態根據status顯示啟用或停用
         row.append(`<td class="status-cell">
-            ${role.status ? 
+            ${role.status ?
                 '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
             }
             <input class="edit d-none form-check-input status" type="checkbox" role="switch" ${role.status ? 'checked' : ''}>
         </td>`);
         row.append(`<td class="createAt-cell">${convertDate(role.createAt)}</td>`);
-        
+
         // 建立操作按鈕
-        var actionTd = $("<td class='action-cell'></td>");        
+        var actionTd = $("<td class='action-cell'></td>");
         // 將按鈕 append 進 td，再 append 到 tr
         actionTd.append(updateBtn, deleteBtn);
         row.append(actionTd);

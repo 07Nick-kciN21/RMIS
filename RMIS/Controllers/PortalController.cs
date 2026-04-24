@@ -137,7 +137,7 @@ namespace RMIS.Controllers
             var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
-                _logger?.LogOperation("Login-POST", false, "密碼錯誤", model.UserName, clientIp);
+                _logger?.LogOperation("登入", false, "密碼錯誤", model.UserName, clientIp);
                 ModelState.AddModelError(string.Empty, "帳號或密碼錯誤");
                 return View(model);
             }
@@ -145,7 +145,7 @@ namespace RMIS.Controllers
             // 3. 尚未驗證信箱
             if (!user.EmailConfirmed)
             {
-                _logger?.LogOperation("Login-POST", false, "尚未驗證信箱", model.UserName, clientIp);
+                _logger?.LogOperation("登入", false, "尚未驗證信箱", model.UserName, clientIp);
                 ModelState.AddModelError(string.Empty, "此帳號尚未通過信箱驗證");
                 return View(model);
             }
@@ -431,7 +431,8 @@ namespace RMIS.Controllers
                 var currentUser = await _userManager.GetUserAsync(User);
                 _signInManager.SignInAsync(currentUser, isPersistent: true).Wait(); // 重新設定身份驗證
 
-                _logger?.LogOperation("登入延長", true, "Session已延長", currentUser?.UserName ?? "Unknown");
+                var clientIp = HttpContext.GetClientIpAddress();
+                _logger?.LogOperation("登入延長", true, "Session已延長", currentUser?.UserName ?? "Unknown", clientIp);
                 return Ok(new { expiresUtc = newExpireTime });
             }
 

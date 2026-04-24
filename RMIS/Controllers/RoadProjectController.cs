@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RMIS.Data;
+using RMIS.Helpers;
 using RMIS.Models;
 using RMIS.Models.Admin;
 using RMIS.Models.API;
@@ -24,6 +25,14 @@ namespace RMIS.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly MapDBContext _mapDBContext;
         private readonly FilePathSettings _filePaths;
+        private readonly ILogger<RoadProjectController> _logger;
+
+        private static readonly Dictionary<int, string> StageNames = new()
+        {
+            { 1, "前期規劃" },
+            { 2, "用地取得" },
+            { 3, "設計與施工" }
+        };
 
         public RoadProjectController(
             RoadProjectInterface roadProjectInterface,
@@ -31,7 +40,8 @@ namespace RMIS.Controllers
             AccountInterface accountInterface,
             UserManager<ApplicationUser> userManager,
             MapDBContext mapDBContext,
-            IOptions<FilePathSettings> filePaths)
+            IOptions<FilePathSettings> filePaths,
+            ILogger<RoadProjectController> logger)
         {
             _roadProjectInterface = roadProjectInterface;
             _adminInterface = adminInterface;
@@ -39,7 +49,16 @@ namespace RMIS.Controllers
             _userManager = userManager;
             _mapDBContext = mapDBContext;
             _filePaths = filePaths.Value;
+            _logger = logger;
         }
+
+        private void LogOp(string operation, bool isSuccess, string reason = "", Exception exception = null)
+        {
+            _logger.LogOperation(operation, isSuccess, reason, User.Identity?.Name, HttpContext.GetClientIpAddress(), exception);
+        }
+
+        private static string StageReason(string projectId, int stage) =>
+            $"專案 {projectId} 階段{stage}({StageNames[stage]})";
 
         /// <summary>
         /// 根據專案 ID 取得單一道路專案詳細資料
@@ -282,8 +301,10 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 await AddProcessEditLog(process1.ProcessId, "建立");
+                LogOp("新增歷程", true, StageReason(process1.ProjectId, 1));
                 return Ok(new { success = true, processId = process1.ProcessId });
             }
+            LogOp("新增歷程", false, $"{StageReason(process1.ProjectId, 1)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -298,8 +319,10 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 await AddProcessEditLog(process2.ProcessId, "建立");
+                LogOp("新增歷程", true, StageReason(process2.ProjectId, 2));
                 return Ok(new { success = true, processId = process2.ProcessId });
             }
+            LogOp("新增歷程", false, $"{StageReason(process2.ProjectId, 2)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -314,8 +337,10 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 await AddProcessEditLog(process3.ProcessId, "建立");
+                LogOp("新增歷程", true, StageReason(process3.ProjectId, 3));
                 return Ok(new { success = true, processId = process3.ProcessId });
             }
+            LogOp("新增歷程", false, $"{StageReason(process3.ProjectId, 3)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -520,39 +545,45 @@ namespace RMIS.Controllers
         [HttpDelete("DeleteProcess1/{id}")]
         public async Task<IActionResult> DeleteProcess1(int id)
         {
+            var record = await _mapDBContext.RoadProjectProcess1.FindAsync(id);
             var result = await _roadProjectInterface.DeleteProcess1Async(id);
 
             if (result == "success")
             {
+                LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 1));
                 return Ok(new { success = true, message = "紀錄刪除成功" });
             }
-
+            LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 1)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
         [HttpDelete("DeleteProcess2/{id}")]
         public async Task<IActionResult> DeleteProcess2(int id)
         {
+            var record = await _mapDBContext.RoadProjectProcess2.FindAsync(id);
             var result = await _roadProjectInterface.DeleteProcess2Async(id);
 
             if (result == "success")
             {
+                LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 2));
                 return Ok(new { success = true, message = "紀錄刪除成功" });
             }
-
+            LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 2)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
         [HttpDelete("DeleteProcess3/{id}")]
         public async Task<IActionResult> DeleteProcess3(int id)
         {
+            var record = await _mapDBContext.RoadProjectProcess3.FindAsync(id);
             var result = await _roadProjectInterface.DeleteProcess3Async(id);
 
             if (result == "success")
             {
+                LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 3));
                 return Ok(new { success = true, message = "紀錄刪除成功" });
             }
-
+            LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 3)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -566,8 +597,10 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 await AddProcessEditLog(process.ProcessId, "編輯");
+                LogOp("編輯歷程", true, StageReason(process.ProjectId, 1));
                 return Ok(new { success = true, processId = process.ProcessId });
             }
+            LogOp("編輯歷程", false, $"{StageReason(process.ProjectId, 1)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -581,8 +614,10 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 await AddProcessEditLog(process.ProcessId, "編輯");
+                LogOp("編輯歷程", true, StageReason(process.ProjectId, 2));
                 return Ok(new { success = true, processId = process.ProcessId });
             }
+            LogOp("編輯歷程", false, $"{StageReason(process.ProjectId, 2)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -596,8 +631,10 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 await AddProcessEditLog(process.ProcessId, "編輯");
+                LogOp("編輯歷程", true, StageReason(process.ProjectId, 3));
                 return Ok(new { success = true, processId = process.ProcessId });
             }
+            LogOp("編輯歷程", false, $"{StageReason(process.ProjectId, 3)}，{result}");
             return BadRequest(new { success = false, message = result });
         }
 
