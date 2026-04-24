@@ -45,7 +45,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
         )
         .WriteTo.File(
-            path: context.Configuration["FilePaths:Log"] ?? "C:/Users/KingSu/Documents/Logs/log-.log",
+            path: context.Configuration["FilePaths:Log"] ?? "C:/RMIS/Logs/log-.log",
             rollingInterval: RollingInterval.Day,
             shared: true,
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
@@ -55,7 +55,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 //  註冊 AuthDbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbConnectionString")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbConnectionString"),
+        x => x.EnableRetryOnFailure()));
 
 // 設定 Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -102,7 +103,7 @@ builder.Services.AddControllersWithViews()
 // 註冊 MapDBContext
 builder.Services.AddDbContext<MapDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString"),
-        x => x.UseNetTopologySuite()));
+        x => x.UseNetTopologySuite().EnableRetryOnFailure()));
 
 // 註冊 HttpClient
 builder.Services.AddHttpClient();
