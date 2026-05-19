@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +15,9 @@ using RMIS.Models.Auth;
 using RMIS.Models.sql;
 using RMIS.Repositories;
 using static RMIS.Models.Map.RoadProject;
+using A = DocumentFormat.OpenXml.Drawing;
+using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 
 namespace RMIS.Controllers
 {
@@ -67,16 +73,12 @@ namespace RMIS.Controllers
         [HttpGet("GetProject/{projectId}")]
         public async Task<IActionResult> GetProject(string projectId)
         {
-            // 嘗試以 ProjectId 查詢
+            // 嘗試以 ProjectId 查詢，再以 int Id 查詢
             var project = await _mapDBContext.RoadProjects
                 .FirstOrDefaultAsync(p => p.ProjectId == projectId);
 
-            // 如果找不到，嘗試以 Guid Id 查詢
-            if (project == null && Guid.TryParse(projectId, out Guid guidId))
-            {
-                project = await _mapDBContext.RoadProjects
-                    .FirstOrDefaultAsync(p => p.Id == guidId);
-            }
+            if (project == null && int.TryParse(projectId, out int intId))
+                project = await _mapDBContext.RoadProjects.FirstOrDefaultAsync(p => p.Id == intId);
 
             if (project == null)
             {
@@ -85,6 +87,22 @@ namespace RMIS.Controllers
 
             return Ok(project);
         }
+
+        [HttpPost("UpdateProgress")]
+        public async Task<IActionResult> UpdateProgress([FromBody] UpdateProgressInput input)
+        {
+            var project = await _mapDBContext.RoadProjects.FirstOrDefaultAsync(p => p.ProjectId == input.ProjectId);
+            if (project == null && int.TryParse(input.ProjectId, out int g))
+                project = await _mapDBContext.RoadProjects.FirstOrDefaultAsync(p => p.Id == g);
+            if (project == null)
+                return NotFound(new { success = false, message = $"找不到專案 ID: {input.ProjectId}" });
+
+            project.Progress = Math.Clamp(input.Progress, 0, 100);
+            await _mapDBContext.SaveChangesAsync();
+            return Ok(new { success = true, progress = project.Progress });
+        }
+
+        public class UpdateProgressInput { public string ProjectId { get; set; } public int Progress { get; set; } }
 
         /// <summary>
         /// 新增道路專案
@@ -99,13 +117,7 @@ namespace RMIS.Controllers
 
             try
             {
-                // 設定 ID 和建立時間
-                project.Id = Guid.NewGuid();
                 project.CreateTime = DateTime.Now;
-
-                // 設定 Index (取得最大值 + 1)
-                var maxIndex = await _mapDBContext.RoadProjects.MaxAsync(r => (int?)r.Index) ?? 0;
-                project.Index = maxIndex + 1;
 
                 // 如果沒有提供 ProjectId，自動產生
                 if (string.IsNullOrEmpty(project.ProjectId))
@@ -190,41 +202,35 @@ namespace RMIS.Controllers
             var totalBudgetWan = await query.SumAsync(p => (long)p.TotalBudget);
             var totalBudgetYi = Math.Round(totalBudgetWan / 10000.0, 2);
 
+            // 道路總長度（RoadLength 為字串、單位公尺，需載入後解析加總再轉 km）
+            var roadLengths = await query.Select(p => p.RoadLength).ToListAsync();
+            var totalLengthM = roadLengths
+                .Where(l => !string.IsNullOrEmpty(l))
+                .Sum(l => double.TryParse(l, out var v) ? v : 0);
+            var totalLengthKm = Math.Round(totalLengthM / 1000.0, 2);
+
+            // 工程發包費（ConstructionBudget，單位萬元 → 億元）
+            var contractAmountWan = await query.SumAsync(p => (long)p.ConstructionBudget);
+            var contractAmountYi = Math.Round(contractAmountWan / 10000.0, 2);
+            var contractPercent = totalBudgetWan > 0
+                ? Math.Round(contractAmountWan * 100.0 / totalBudgetWan, 1)
+                : 0.0;
+
             return Ok(new
             {
                 totalCount,
                 monthDiff,
-                totalBudget = totalBudgetYi
+                totalBudget = totalBudgetYi,
+                totalLength = totalLengthKm,
+                contractAmount = contractAmountYi,
+                contractPercent
             });
         }
 
         [HttpGet("GetStatusRatio")]
         public async Task<IActionResult> GetStatusRatio(string district = "", string year = "", string budget = "")
         {
-            var query = ApplyDashboardFilter(district, year, budget);
-            var total = await query.CountAsync();
-            if (total == 0)
-                return Ok(new { labels = new string[0], data = new double[0], colors = new string[0] });
-
-            var stepMap = new Dictionary<string, string>
-            {
-                { "1", "前期規劃" }, { "2", "用地取得" }, { "3", "設計與施工" }
-            };
-            var colorMap = new Dictionary<string, string>
-            {
-                { "1", "#3b82f6" }, { "2", "#ef4444" }, { "3", "#22c55e" }
-            };
-
-            var groups = await query
-                .GroupBy(p => p.step)
-                .Select(g => new { step = g.Key, count = g.Count() })
-                .ToListAsync();
-
-            var labels = groups.Select(g => stepMap.ContainsKey(g.step) ? stepMap[g.step] : $"階段 {g.step}").ToArray();
-            var data = groups.Select(g => Math.Round(g.count * 100.0 / total, 1)).ToArray();
-            var colors = groups.Select(g => colorMap.ContainsKey(g.step) ? colorMap[g.step] : "#94a3b8").ToArray();
-
-            return Ok(new { labels, data, colors });
+            return Ok(new { labels = new string[0], data = new double[0], colors = new string[0] });
         }
 
         [HttpGet("GetDistrictCount")]
@@ -272,16 +278,15 @@ namespace RMIS.Controllers
         /// </summary>
         /// <param name="count">取得筆數，預設 5 筆</param>
         [HttpGet("GetLatestProjects")]
-        public async Task<IActionResult> GetLatestProjects(int count = 5)
+        public async Task<IActionResult> GetLatestProjects(int count = 5, string district = "", string year = "", string budget = "")
         {
-            var projects = await _mapDBContext.RoadProjects
+            var projects = await ApplyDashboardFilter(district, year, budget)
                 .OrderByDescending(p => p.CreateTime)
                 .Take(count)
                 .Select(p => new
                 {
                     p.ProjectId,
                     ProjectName = p.StartEndLocation ?? $"{p.StartPoint} - {p.EndPoint}",
-                    p.step,
                     p.CreateTime,
                     p.AdministrativeDistrict
                 })
@@ -383,6 +388,74 @@ namespace RMIS.Controllers
             var result = await _roadProjectInterface.GetProcessRecordsAsync(projectId);
 
             return result;
+        }
+
+        [HttpGet("GetAllProcessRecords/{projectId}")]
+        public async Task<IActionResult> GetAllProcessRecords(string projectId)
+        {
+            var result = await _roadProjectInterface.GetAllProcessRecordsAsync(projectId);
+            return Ok(result);
+        }
+
+        [HttpPost("GetLastProcessRecords")]
+        public async Task<IActionResult> GetLastProcessRecords([FromBody] List<string> projectIds)
+        {
+            if (projectIds == null || projectIds.Count == 0)
+                return BadRequest(new { success = false, message = "未提供專案 ID" });
+
+            var result = await _roadProjectInterface.GetLastProcessRecordsByProjectIdsAsync(projectIds);
+            return Ok(result);
+        }
+
+        [HttpPost("AddAllProcessRecord")]
+        public async Task<IActionResult> AddAllProcessRecord([FromBody] RoadProjectProcess process)
+        {
+            if (process == null) return BadRequest(new { success = false, message = "接收不到資料" });
+
+            process.Id = 0;
+            var (result, processId) = await _roadProjectInterface.AddAllProcessRecordAsync(process);
+
+            if (result == "success")
+            {
+                await AddProcessEditLog(processId, "建立");
+                LogOp("新增總階段歷程", true, $"專案:{process.ProjectId}");
+                return Ok(new { success = true, processId });
+            }
+
+            LogOp("新增總階段歷程", false, $"專案:{process.ProjectId}, {result}");
+            return BadRequest(new { success = false, message = result });
+        }
+
+        [HttpPut("UpdateAllProcessRecord")]
+        public async Task<IActionResult> UpdateAllProcessRecord([FromBody] RoadProjectProcess process)
+        {
+            if (process == null || process.Id <= 0) return BadRequest(new { success = false, message = "接收不到資料" });
+
+            var result = await _roadProjectInterface.UpdateAllProcessRecordAsync(process);
+            if (result == "success")
+            {
+                var existing = await _mapDBContext.RoadProjectProcesses.FindAsync(process.Id);
+                if (existing != null) await AddProcessEditLog(existing.ProcessId, "修改");
+                LogOp("更新總階段歷程", true, $"Id:{process.Id}");
+                return Ok(new { success = true });
+            }
+
+            LogOp("更新總階段歷程", false, $"Id:{process.Id}, {result}");
+            return BadRequest(new { success = false, message = result });
+        }
+
+        [HttpDelete("DeleteAllProcessRecord/{id}")]
+        public async Task<IActionResult> DeleteAllProcessRecord(int id)
+        {
+            var result = await _roadProjectInterface.DeleteAllProcessRecordAsync(id);
+            if (result == "success")
+            {
+                LogOp("刪除總階段歷程", true, $"Id:{id}");
+                return Ok(new { success = true, message = "刪除成功" });
+            }
+
+            LogOp("刪除總階段歷程", false, $"Id:{id}, {result}");
+            return BadRequest(new { success = false, message = result });
         }
 
         [HttpPost("UploadProcessFile")]
@@ -551,7 +624,7 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 1));
-                return Ok(new { success = true, message = "紀錄刪除成功" });
+                return Ok(new { success = true, message = "記錄刪除成功" });
             }
             LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 1)}，{result}");
             return BadRequest(new { success = false, message = result });
@@ -566,7 +639,7 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 2));
-                return Ok(new { success = true, message = "紀錄刪除成功" });
+                return Ok(new { success = true, message = "記錄刪除成功" });
             }
             LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 2)}，{result}");
             return BadRequest(new { success = false, message = result });
@@ -581,7 +654,7 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 3));
-                return Ok(new { success = true, message = "紀錄刪除成功" });
+                return Ok(new { success = true, message = "記錄刪除成功" });
             }
             LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 3)}，{result}");
             return BadRequest(new { success = false, message = result });
@@ -724,14 +797,14 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("getPoints/{projectId}")]
-        public async Task<IActionResult> GetPoints(Guid projectId)
+        public async Task<IActionResult> GetPoints(int projectId)
         {
             var result = await _adminInterface.GetPointsByProjectIdAsync(projectId);
             return Ok(result);
         }
 
         [HttpPost("confirmCoordinate/{projectId}")]
-        public async Task<IActionResult> ConfirmCoordinate(Guid projectId)
+        public async Task<IActionResult> ConfirmCoordinate(int projectId)
         {
             try
             {
@@ -791,5 +864,292 @@ namespace RMIS.Controllers
                 return StatusCode(500, new { success = false, message = "照片未更新" });
             }
         }
+
+        [HttpPost("ExportSupplementWord")]
+        public IActionResult ExportSupplementWord([FromBody] SupplementWordInput input)
+        {
+            try
+            {
+                var ms = new MemoryStream();
+                BuildSupplementWord(ms, input);
+                var fileName = $"局長補充資料_{input.ProjectName}_{DateTime.Now:yyyyMMdd}.docx";
+                return File(ms.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        private static void BuildSupplementWord(MemoryStream ms, SupplementWordInput input)
+        {
+            using var doc = WordprocessingDocument.Create(ms, WordprocessingDocumentType.Document);
+            var mainPart = doc.AddMainDocumentPart();
+            mainPart.Document = new Document();
+            var body = mainPart.Document.AppendChild(new Body());
+
+            // 粗體標楷體 16pt（標題欄位用）
+            static RunProperties BoldKaitiRp() => new(
+                new RunFonts { Ascii = "標楷體", EastAsia = "標楷體", ComplexScript = "標楷體" },
+                new Bold(),
+                new BoldComplexScript(),
+                new FontSize { Val = "32" },
+                new FontSizeComplexScript { Val = "32" });
+
+            // 一般標楷體 16pt（內容用）
+            static RunProperties KaitiRp() => new(
+                new RunFonts { Ascii = "標楷體", EastAsia = "標楷體", ComplexScript = "標楷體" },
+                new FontSize { Val = "32" },
+                new FontSizeComplexScript { Val = "32" });
+
+            // 垂直 KV 表格的 Key 欄（左欄，寬 2547）
+            static TableCell DataKeyCell(string text) => new(
+                new TableCellProperties(
+                    new TableCellWidth { Width = "2547", Type = TableWidthUnitValues.Dxa }),
+                new Paragraph(
+                    new ParagraphProperties(
+                        new SpacingBetweenLines { Line = "520", LineRule = LineSpacingRuleValues.Exact, After = "0" },
+                        new Justification { Val = JustificationValues.Both }),
+                    new Run(KaitiRp(), new Text(text) { Space = SpaceProcessingModeValues.Preserve })));
+
+            // 垂直 KV 表格的 Value 欄（右欄，寬 6513）
+            static TableCell DataValCell(string text) => new(
+                new TableCellProperties(
+                    new TableCellWidth { Width = "6513", Type = TableWidthUnitValues.Dxa }),
+                new Paragraph(
+                    new ParagraphProperties(
+                        new SpacingBetweenLines { Line = "520", LineRule = LineSpacingRuleValues.Exact, After = "0" },
+                        new Justification { Val = JustificationValues.Both }),
+                    new Run(KaitiRp(), new Text(text) { Space = SpaceProcessingModeValues.Preserve })));
+
+            // 合併路寬
+            string roadWidth;
+            if (!string.IsNullOrEmpty(input.CurrentRoadWidth) && !string.IsNullOrEmpty(input.PlannedRoadWidth))
+                roadWidth = $"現況{input.CurrentRoadWidth}/計畫{input.PlannedRoadWidth}";
+            else
+                roadWidth = !string.IsNullOrEmpty(input.CurrentRoadWidth) ? input.CurrentRoadWidth
+                          : input.PlannedRoadWidth ?? "";
+
+            // 1. 題目段落（粗體紅色「題目」+ 一般文字內容）
+            body.Append(new Paragraph(
+                new ParagraphProperties(
+                    new PageBreakBefore(),
+                    new SpacingBetweenLines { Line = "480", LineRule = LineSpacingRuleValues.Exact, Before = "0", After = "0" }),
+                new Run(
+                    new RunProperties(
+                        new RunFonts { Ascii = "標楷體", EastAsia = "標楷體", ComplexScript = "標楷體" },
+                        new Bold(), new BoldComplexScript(),
+                        new Color { Val = "FF0000" },
+                        new FontSize { Val = "40" }, new FontSizeComplexScript { Val = "40" }),
+                    new Text("題目")),
+                new Run(BoldKaitiRp(), new Text("：")),
+                new Run(KaitiRp(), new Text(input.ProjectName ?? ""))));
+
+            // 2. 報告機關(科室) 段落
+            body.Append(new Paragraph(
+                new ParagraphProperties(
+                    new SpacingBetweenLines { Line = "480", LineRule = LineSpacingRuleValues.Exact, Before = "0", After = "0" }),
+                new Run(BoldKaitiRp(), new Text("報告機關(科室)：")),
+                new Run(KaitiRp(), new Text(input.ExecutionUnit ?? ""))));
+
+            // 3. 關心議員 段落
+            body.Append(new Paragraph(
+                new ParagraphProperties(
+                    new SpacingBetweenLines { Line = "480", LineRule = LineSpacingRuleValues.Exact }),
+                new Run(BoldKaitiRp(), new Text("關心議員：")),
+                new Run(KaitiRp(), new Text(input.Proposer ?? ""))));
+
+            // 4. 執行現況 標題段落（含浮動橫線，與原始文件一致）
+            {
+                // 浮動直線用 OpenXmlPartRootElement 外的通用解析方式：
+                // DocumentFormat.OpenXml.OpenXmlElement 支援 new Run { InnerXml = "..." }
+                // 但 Run.InnerXml 只能設定 run 內部元素，所以用 Paragraph.InnerXml 注入整段
+                const string parasXml =
+                    "<w:pPr xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">" +
+                    "<w:spacing w:line=\"480\" w:lineRule=\"exact\"/><w:jc w:val=\"both\"/></w:pPr>" +
+                    "<w:r xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">" +
+                    "<w:rPr><w:rFonts w:ascii=\"標楷體\" w:eastAsia=\"標楷體\" w:hAnsi=\"標楷體\"/>" +
+                    "<w:b/><w:bCs/><w:sz w:val=\"32\"/><w:szCs w:val=\"32\"/></w:rPr>" +
+                    "<w:drawing xmlns:wp=\"http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing\" " +
+                    "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" " +
+                    "xmlns:wps=\"http://schemas.microsoft.com/office/word/2010/wordprocessingShape\">" +
+                    "<wp:anchor distT=\"0\" distB=\"0\" distL=\"114300\" distR=\"114300\" simplePos=\"0\" " +
+                    "relativeHeight=\"251659264\" behindDoc=\"0\" locked=\"0\" layoutInCell=\"1\" allowOverlap=\"1\">" +
+                    "<wp:simplePos x=\"0\" y=\"0\"/>" +
+                    "<wp:positionH relativeFrom=\"column\"><wp:posOffset>13970</wp:posOffset></wp:positionH>" +
+                    "<wp:positionV relativeFrom=\"paragraph\"><wp:posOffset>33020</wp:posOffset></wp:positionV>" +
+                    "<wp:extent cx=\"5819775\" cy=\"635\"/>" +
+                    "<wp:effectExtent l=\"0\" t=\"0\" r=\"28575\" b=\"37465\"/>" +
+                    "<wp:wrapNone/><wp:docPr id=\"1\" name=\"AutoShape 4\"/>" +
+                    "<wp:cNvGraphicFramePr><a:graphicFrameLocks/></wp:cNvGraphicFramePr>" +
+                    "<a:graphic><a:graphicData uri=\"http://schemas.microsoft.com/office/word/2010/wordprocessingShape\">" +
+                    "<wps:wsp><wps:cNvCnPr><a:cxnSpLocks noChangeShapeType=\"1\"/></wps:cNvCnPr>" +
+                    "<wps:spPr bwMode=\"auto\">" +
+                    "<a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"5819775\" cy=\"635\"/></a:xfrm>" +
+                    "<a:prstGeom prst=\"straightConnector1\"><a:avLst/></a:prstGeom><a:noFill/>" +
+                    "<a:ln w=\"9525\"><a:solidFill><a:srgbClr val=\"000000\"/></a:solidFill>" +
+                    "<a:round/><a:headEnd/><a:tailEnd/></a:ln>" +
+                    "</wps:spPr><wps:bodyPr/></wps:wsp></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r>" +
+                    "<w:r xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">" +
+                    "<w:rPr><w:rFonts w:ascii=\"標楷體\" w:eastAsia=\"標楷體\" w:hAnsi=\"標楷體\"/>" +
+                    "<w:b/><w:bCs/><w:sz w:val=\"32\"/><w:szCs w:val=\"32\"/></w:rPr>" +
+                    "<w:t>執行現況：</w:t></w:r>";
+
+                var statusPara = new Paragraph();
+                statusPara.InnerXml = parasXml;
+                body.Append(statusPara);
+            }
+
+            // 5. 基本資料垂直 KV 表格：長度、路寬、工程費、用地費、總經費（兩欄垂直排列）
+            var dataTable = new Table(new TableProperties(
+                new TableStyle { Val = "a9" },
+                new TableWidth { Width = "0", Type = TableWidthUnitValues.Auto },
+                new TableLook { Val = "04A0", FirstRow = true },
+                TableBorders()));
+
+            dataTable.AppendChild(new TableGrid(
+                new GridColumn { Width = "2547" },
+                new GridColumn { Width = "6513" }));
+
+            foreach (var (k, v) in new[]
+            {
+                ("長度", input.RoadLength ?? ""),
+                ("路寬", roadWidth),
+                ("工程費", input.ConstructionBudget ?? ""),
+                ("用地費", input.LandAcquisitionBudget ?? ""),
+                ("總經費", input.TotalBudget ?? "")
+            })
+            {
+                var row = new TableRow();
+                row.Append(DataKeyCell(k));
+                row.Append(DataValCell(v));
+                dataTable.Append(row);
+            }
+            body.Append(dataTable);
+
+            // 兩表格之間空一行
+            body.Append(new Paragraph(
+                new ParagraphProperties(
+                    new SpacingBetweenLines { Line = "480", LineRule = LineSpacingRuleValues.Exact })));
+
+            // 6. 用地取得資訊表格（公聽會 → 徵收核定）
+            var landTable = new Table(new TableProperties(
+                new TableWidth { Width = "0", Type = TableWidthUnitValues.Auto },
+                TableBorders()));
+
+            landTable.AppendChild(new TableGrid(
+                new GridColumn { Width = "2547" },
+                new GridColumn { Width = "6513" }));
+
+            foreach (var (k, v) in new[]
+            {
+                ("公聽會",           input.PublicHearing ?? ""),
+                ("徵收市價地評會審查", input.MarketPriceReview ?? ""),
+                ("協議價購會",        input.NegotiatedPurchaseMeeting ?? ""),
+                ("徵收計畫書地政局預審", input.ExpropriationPlanPreReview ?? ""),
+                ("徵收計劃書報部",    input.ExpropriationPlanSubmission ?? ""),
+                ("徵收核定",         input.ExpropriationApproval ?? "")
+            })
+            {
+                var row = new TableRow();
+                row.Append(DataKeyCell(k));
+                row.Append(DataValCell(v));
+                landTable.Append(row);
+            }
+            body.Append(landTable);
+
+            // 7. CurrentStatus 內容段落（表格之後，保留換行）
+            {
+                var statusPara = new Paragraph(
+                    new ParagraphProperties(
+                        new SpacingBetweenLines { Line = "520", LineRule = LineSpacingRuleValues.Exact }));
+                var lines = (input.CurrentStatus ?? "").Split('\n');
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    var run = new Run(KaitiRp(), new Text(lines[i]) { Space = SpaceProcessingModeValues.Preserve });
+                    statusPara.Append(run);
+                    if (i < lines.Length - 1)
+                        statusPara.Append(new Run(new Break()));
+                }
+                body.Append(statusPara);
+            }
+
+            // 3. 開瓶計畫附圖
+            if (!string.IsNullOrEmpty(input.ImageBase64))
+            {
+                try
+                {
+                    var base64Str = input.ImageBase64;
+                    var comma = base64Str.IndexOf(',');
+                    if (comma >= 0) base64Str = base64Str[(comma + 1)..];
+                    var imgBytes = Convert.FromBase64String(base64Str);
+
+                    var imgType = input.ImageBase64.Contains("image/png") ? ImagePartType.Png : ImagePartType.Jpeg;
+                    var imgPart = mainPart.AddImagePart(imgType);
+                    using (var imgMs = new MemoryStream(imgBytes))
+                        imgPart.FeedData(imgMs);
+
+                    var imgId = mainPart.GetIdOfPart(imgPart);
+                    const long cx = 5040000L; // 14 cm
+                    const long cy = 3360000L; // 9.33 cm (3:2)
+
+                    var graphicData = new A.GraphicData(
+                        new PIC.Picture(
+                            new PIC.NonVisualPictureProperties(
+                                new PIC.NonVisualDrawingProperties { Id = 0U, Name = "image1" },
+                                new PIC.NonVisualPictureDrawingProperties()),
+                            new PIC.BlipFill(
+                                new A.Blip { Embed = imgId },
+                                new A.Stretch(new A.FillRectangle())),
+                            new PIC.ShapeProperties(
+                                new A.Transform2D(
+                                    new A.Offset { X = 0L, Y = 0L },
+                                    new A.Extents { Cx = cx, Cy = cy }),
+                                new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle })))
+                    { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" };
+
+                    var inline = new DW.Inline(
+                        new DW.Extent { Cx = cx, Cy = cy },
+                        new DW.EffectExtent { LeftEdge = 0L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
+                        new DW.DocProperties { Id = 1U, Name = "Picture 1" },
+                        new DW.NonVisualGraphicFrameDrawingProperties(
+                            new A.GraphicFrameLocks { NoChangeAspect = true }),
+                        new A.Graphic(graphicData));
+                    inline.DistanceFromTop = 0U;
+                    inline.DistanceFromBottom = 0U;
+                    inline.DistanceFromLeft = 0U;
+                    inline.DistanceFromRight = 0U;
+
+                    var drawing = new Drawing(inline);
+
+                    body.Append(new Paragraph(
+                        new ParagraphProperties(
+                            new Justification { Val = JustificationValues.Center },
+                            new SpacingBetweenLines { Before = "200" }),
+                        new Run(drawing)));
+                }
+                catch
+                {
+                    body.Append(new Paragraph(new Run(new Text("（圖片無法嵌入，請手動插入）"))));
+                }
+            }
+
+            // Page layout: A4, narrow margins
+            body.Append(new SectionProperties(
+                new PageSize { Width = 11906U, Height = 16838U },
+                new PageMargin { Top = 720, Bottom = 720, Left = 1080, Right = 1080 }));
+
+            mainPart.Document.Save();
+        }
+
+        private static TableBorders TableBorders() => new(
+            new TopBorder { Val = BorderValues.Single, Size = 4, Space = 0, Color = "auto" },
+            new BottomBorder { Val = BorderValues.Single, Size = 4, Space = 0, Color = "auto" },
+            new LeftBorder { Val = BorderValues.Single, Size = 4, Space = 0, Color = "auto" },
+            new RightBorder { Val = BorderValues.Single, Size = 4, Space = 0, Color = "auto" },
+            new InsideHorizontalBorder { Val = BorderValues.Single, Size = 4, Space = 0, Color = "auto" },
+            new InsideVerticalBorder { Val = BorderValues.Single, Size = 4, Space = 0, Color = "auto" });
     }
 }

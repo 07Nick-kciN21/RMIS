@@ -1,5 +1,5 @@
 /* ==========================================================================
-   processView.css - 單筆歷程紀錄檢視頁面專用樣式
+   processView.css - 單筆歷程記錄檢視頁面專用樣式
    依賴：box.css (基礎容器)
    ========================================================================== */
 
@@ -219,7 +219,7 @@
     color: #1e293b;
 }
 
-/* 紀錄類型標籤 */
+/* 記錄類型標籤 */
 .record-type-badge {
     display: inline-flex;
     align-items: center;
@@ -302,7 +302,6 @@
     padding: 16px;
     background: #f8fafc;
     border-radius: 8px;
-    border-left: 3px solid #3b82f6;
     white-space: pre-wrap;
 }
 

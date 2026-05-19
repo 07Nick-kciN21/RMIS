@@ -448,7 +448,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("GetPointsByProjectId")]
-        public async Task<IActionResult> GetPointsByProjectId(Guid projectId)
+        public async Task<IActionResult> GetPointsByProjectId(int projectId)
         {
             try
             {

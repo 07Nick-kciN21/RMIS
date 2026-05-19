@@ -1,0 +1,36 @@
+/*
+ * Account Layout — Z-Index 層級統一管理
+ * ────────────────────────────────────────────────────────────────────
+ *  值        │ 變數                    │ 元素 / 用途
+ * ───────────┼─────────────────────────┼──────────────────────────────
+ *  1 – 999   │ —                       │ 一般頁面內容
+ *  1000      │ --z-overlay             │ 下拉選單、tooltip
+ *  1051      │ （_layout.css nav）     │ navbar（element selector，不在此覆寫）
+ *  1052      │ --z-modal-backdrop      │ .modal-backdrop → 高於 navbar，使導覽列也變暗
+ *  1055      │ （Bootstrap 預設）      │ .modal 容器，無需覆寫
+ *  99998     │ --z-session-backdrop    │ .modal-session-backdrop（延長登入遮罩）
+ *  99999     │ --z-session-modal       │ .modal-session（延長登入對話框）
+ * ────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+    --z-overlay:          1000;
+    --z-modal-backdrop:   1052;   /* 必須高於 navbar（1051） */
+    --z-session-backdrop: 99998;
+    --z-session-modal:    99999;
+}
+
+/* 覆寫 Bootstrap 預設 backdrop（1040），使其蓋過 navbar */
+.modal-backdrop {
+    z-index: var(--z-modal-backdrop) !important;
+}
+
+/* 延長登入 modal：需高於一切其他 modal */
+.modal-session {
+    z-index: var(--z-session-modal) !important;
+}
+
+/* 延長登入 backdrop：由 JS 在 show.bs.modal 時動態套用 */
+.modal-session-backdrop {
+    z-index: var(--z-session-backdrop) !important;
+}

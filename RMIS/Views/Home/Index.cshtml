@@ -84,31 +84,16 @@
                         <div class="container-fluid ">
                             <div id="navbar-menu" class="navbar-collapse d-sm-inline-flex justify-content-between" style="float: right;">
                                 <div id="userMenuBtn" class="user-logo-box" data-target="userMenuContent">
-                                    <div id="username" class="username-text">
-                                        <div class="user-icon"></div>
-                                        <h5>@ViewBag.Username<span class="caret"></span></h5>
-                                    </div>
-                                    <div id="userMenuContent" class="dropdown-content">
-                                        <ul class="menu-background">
-                                            <li>
-                                                <a id="profileBtn" class="nav-link menu-title">
-                                                    <h5 id="userProfile">帳號資料</h5>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="nav-link menu-title" href="/Portal/Logout">
-                                                    <h5>登出</h5>
-                                                </a>
-                                            </li>
-                                            @if (Model.ContainsKey("使用者管理") && Model["使用者管理"].Read && Model["使用者管理"].Status)
-                                            {
-                                                <li>
-                                                    <a class="nav-link menu-title" href="/Account/User/List">
-                                                        <h5>權限管理</h5>
-                                                    </a>
-                                                </li>
-                                            }
-                                        </ul>
+                                    <div class="user-icon"></div>
+                                    <span class="username-text">@ViewBag.Username</span>
+                                    <span class="user-caret"></span>
+                                    <div id="userMenuContent" class="user-dropdown">
+                                        <a id="profileBtn" class="user-dropdown-item">帳號資料</a>
+                                        <a class="user-dropdown-item" href="/Portal/Logout">登出</a>
+                                        @if (Model.ContainsKey("使用者管理") && Model["使用者管理"].Read && Model["使用者管理"].Status)
+                                        {
+                                            <a class="user-dropdown-item" href="/Account/User/List">權限管理</a>
+                                        }
                                     </div>
                                 </div>
                                 @if (((Model.ContainsKey("業務圖資") && Model["業務圖資"].Create && Model["業務圖資"].Status) ||
@@ -296,7 +281,6 @@
             </div>
             <div class="box-content">
                 <partial name="~/Views/Home/Partials/_processBox.cshtml" />
-                <partial name="~/Views/Home/Partials/_processView.cshtml" />
                 <partial name="~/Views/Home/Partials/_roadProjectView.cshtml" />
                 <partial name="~/Views/Home/Partials/_roadProjectAdd.cshtml" />
                 <partial name="~/Views/Home/Partials/_roadProjectEdit.cshtml" />

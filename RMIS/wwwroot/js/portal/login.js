@@ -214,6 +214,7 @@ $(document).ready(function () {
         if ($(e.target).is('#customModal')) {
             $('#customModal').fadeOut();
             $('.disable-overlay').remove();
+            
             $('body').removeClass('dimmed');
         }
     });
@@ -342,6 +343,16 @@ function extractJson(ctx) {
     return result || '{"error":"no data"}';
 }
 
+function showCertError(message) {
+    let $msg = $('#certLoginError');
+    if (!$msg.length) {
+        $msg = $('<div id="certLoginError" class="text-danger text-center small mt-2"></div>');
+        $('#certificateLoginBtn').after($msg);
+    }
+    $msg.text(message);
+    setTimeout(() => $msg.text(''), 5000);
+}
+
 // 恢復按鈕與連結的輔助函式
 function restoreButtons(buttons, links) {
     buttons.forEach(btn => btn.disabled = false);
@@ -365,21 +376,15 @@ function certificateLogin($btn) {
     .then(response => {
         console.log('登入回應:', response);
         if (response.success) {
-            // 延遲一下再跳轉，讓使用者看到成功訊息
-            setTimeout(() => {
-                window.location.href = response.redirectUrl;
-            }, 1000);
+            window.location.href = response.redirectUrl;
         } else {
-            // 登入失敗
+            showCertError(response.message || '憑證登入失敗');
             $btn.prop('disabled', false);
         }
     })
     .catch(error => {
         console.error('憑證登入錯誤:', error);
-        
-        // 根據錯誤類型顯示不同訊息
         let errorMessage = '憑證登入失敗';
-        
         if (error.message && error.message.includes('元件未安裝')) {
             errorMessage = 'HiCOS 元件未安裝或服務未啟動，請先安裝卡片管理工具';
         } else if (error.message && error.message.includes('未偵測到讀卡機')) {
@@ -387,10 +392,11 @@ function certificateLogin($btn) {
         } else if (error.message && error.message.includes('網站未加入信任清單')) {
             errorMessage = '請將本網站加入 HiCOS 信任清單';
         } else if (error.detail) {
-            errorMessage = error.error + '：' + error.detail;
+            errorMessage = error.detail;
         } else if (error.message) {
             errorMessage = error.message;
         }
+        showCertError(errorMessage);
         $btn.prop('disabled', false);
     });
 }

@@ -1,11 +1,12 @@
 import BoxManager from './box.js';
+import { showLoading, hideLoading } from '../loading.js';
 
 /**
- * 單筆歷程紀錄檢視模組
- * 功能：顯示單筆歷程紀錄的完整詳細資訊、編輯、刪除
+ * 單筆歷程記錄檢視模組
+ * 功能：顯示單筆歷程記錄的完整詳細資訊、編輯、刪除
  */
 const ProcessView = {
-    // 當前檢視的紀錄資料
+    // 當前檢視的記錄資料
     currentRecord: null,
 
     // 當前專案資料
@@ -17,10 +18,10 @@ const ProcessView = {
     // 當前 Process 編號 (1, 2, 3)
     currentProcessNum: null,
 
-    // 紀錄類型對照表（用於樣式判斷）
+    // 記錄類型對照表（用於樣式判斷）
     recordTypes: {
         '重要里程碑': 'type-milestone',
-        '會議紀錄': 'type-meeting',
+        '會議記錄': 'type-meeting',
         '公文核定': 'type-official',
         '進度說明': 'type-progress'
     },
@@ -59,32 +60,32 @@ const ProcessView = {
     init: function() {
         const self = this;
 
-        // 綁定返回按鈕事件
-        $(document).on('click', '#btn-back-to-process, #btn-back-to-list', function() {
+        // 綁定返回按鈕事件（使用容器委派，避免 Leaflet disableClickPropagation 阻斷）
+        $('#page-process-view').on('click', '#btn-back-to-process, #btn-back-to-list', function() {
             self.closeView();
         });
 
         // 綁定編輯按鈕事件
-        $(document).on('click', '#btn-edit-record', function() {
+        $('#page-process-view').on('click', '#btn-edit-record', function() {
             self.openEditForm();
         });
 
         // 綁定刪除按鈕事件
-        $(document).on('click', '#btn-delete-record', function() {
+        $('#page-process-view').on('click', '#btn-delete-record', function() {
             self.openDeleteConfirm();
         });
 
-        // 綁定刪除確認 Modal 事件
-        $(document).on('click', '#btn-close-delete-modal, #btn-cancel-delete', function() {
+        // 綁定刪除確認 Modal 事件（#delete-confirm-modal 在 #right-box 內）
+        $('#right-box').on('click', '#btn-close-delete-modal, #btn-cancel-delete', function() {
             self.closeDeleteConfirm();
         });
 
-        $(document).on('click', '#btn-confirm-delete', function() {
+        $('#right-box').on('click', '#btn-confirm-delete', function() {
             self.confirmDelete();
         });
 
         // 綁定附件下載事件
-        $(document).on('click', '#page-process-view .btn-download-file', function(e) {
+        $('#page-process-view').on('click', '.btn-download-file', function(e) {
             e.stopPropagation();
             const $item = $(this).closest('.file-list-item');
             const fileId = $item.data('file-id');
@@ -93,7 +94,7 @@ const ProcessView = {
         });
 
         // 綁定附件刪除事件
-        $(document).on('click', '#page-process-view .btn-delete-file', function(e) {
+        $('#page-process-view').on('click', '.btn-delete-file', function(e) {
             e.stopPropagation();
             const $item = $(this).closest('.file-list-item');
             const fileId = $item.data('file-id');
@@ -101,9 +102,9 @@ const ProcessView = {
             self.confirmDeleteFile(fileId, fileName);
         });
 
-        // 監聽紀錄更新事件，刷新 ProcessView
+        // 監聽記錄更新事件，刷新 ProcessView
         $(document).on('recordUpdated', function(e, data) {
-            console.log('紀錄已更新，刷新 ProcessView:', data);
+            console.log('記錄已更新，刷新 ProcessView:', data);
             if (self.currentRecord && self.currentRecord.id === data.recordId) {
                 self.fetchRecordData(data.recordId, data.processNum);
             }
@@ -114,7 +115,7 @@ const ProcessView = {
 
     /**
      * 開啟檢視頁面（從 API 取得完整資料）
-     * @param {Object} record - 紀錄基本資料（需包含 id）
+     * @param {Object} record - 記錄基本資料（需包含 id）
      * @param {Object} project - 專案資料
      * @param {string} stage - 階段 ID (stage1/stage2/stage3 或 Process1/Process2/Process3)
      */
@@ -122,11 +123,11 @@ const ProcessView = {
         const self = this;
         console.log('開啟檢視頁面:', record, project, stage);
         if (!record || !record.id) {
-            console.error('無效的紀錄資料，缺少 ID');
+            console.error('無效的記錄資料，缺少 ID');
             return;
         }
 
-        console.log('開啟紀錄檢視:', record);
+        console.log('開啟記錄檢視:', record);
         console.log('專案:', project);
         console.log('階段:', stage);
 
@@ -138,7 +139,7 @@ const ProcessView = {
         const processNum = self.getProcessNumber(stage);
 
         // 開啟頁面並顯示載入中
-        BoxManager.openRightBoxPage('page-process-view', '紀錄詳情');
+        BoxManager.openRightBoxPage('page-process-view', '記錄詳情');
         self.showLoading();
 
         // 從 API 取得完整資料
@@ -167,8 +168,8 @@ const ProcessView = {
     },
 
     /**
-     * 從 API 載入紀錄資料
-     * @param {number} recordId - 紀錄 ID
+     * 從 API 載入記錄資料
+     * @param {number} recordId - 記錄 ID
      * @param {string} processNum - Process 編號 (1, 2, 3)
      */
     fetchRecordData: function(recordId, processNum) {
@@ -188,7 +189,7 @@ const ProcessView = {
             return response.json();
         })
         .then(data => {
-            console.log('API 回傳紀錄資料:', data);
+            console.log('API 回傳記錄資料:', data);
 
             // 儲存完整資料
             self.currentRecord = data;
@@ -220,7 +221,7 @@ const ProcessView = {
             self.renderView(data, self.currentProject, self.currentStage);
         })
         .catch(error => {
-            console.error('載入紀錄失敗:', error);
+            console.error('載入記錄失敗:', error);
             self.showError('載入失敗，請稍後再試');
         });
     },
@@ -280,7 +281,7 @@ const ProcessView = {
 
     /**
      * 從 API 載入並開啟檢視頁面（透過 ID 直接開啟）
-     * @param {number} recordId - 紀錄 ID
+     * @param {number} recordId - 記錄 ID
      * @param {string} processType - Process 類型 (Process1/Process2/Process3 或 1/2/3)
      * @param {Object} project - 專案資料
      */
@@ -295,7 +296,7 @@ const ProcessView = {
         const processNum = self.getProcessNumber(processType);
 
         // 顯示載入中
-        BoxManager.openRightBoxPage('page-process-view', '紀錄詳情');
+        BoxManager.openRightBoxPage('page-process-view', '記錄詳情');
         self.showLoading();
 
         // 從 API 取得資料
@@ -320,7 +321,6 @@ const ProcessView = {
             $('.view-content-area .view-loading').show();
         }
     },
-
     /**
      * 顯示錯誤狀態
      * @param {string} message - 錯誤訊息
@@ -348,7 +348,7 @@ const ProcessView = {
 
     /**
      * 渲染檢視頁面內容
-     * @param {Object} record - 紀錄資料
+     * @param {Object} record - 記錄資料
      * @param {Object} project - 專案資料
      * @param {string} stage - 階段
      */
@@ -387,12 +387,12 @@ const ProcessView = {
 
     /**
      * 渲染基本資訊區塊
-     * @param {Object} record - 紀錄資料
+     * @param {Object} record - 記錄資料
      */
     renderBasicInfo: function(record) {
         const self = this;
 
-        // 紀錄類型
+        // 記錄類型
         const recordType = record.recordType || record.type || '進度說明';
         const typeClass = self.recordTypes[recordType] || 'type-progress';
         $('#view-record-type')
@@ -508,7 +508,7 @@ const ProcessView = {
 
     /**
      * 渲染修改歷程
-     * @param {Object} record - 紀錄資料
+     * @param {Object} record - 記錄資料
      */
     renderHistory: function(record) {
         const self = this;
@@ -526,7 +526,7 @@ const ProcessView = {
                         <i class="fa fa-plus-circle"></i>
                     </div>
                     <div class="history-content">
-                        <span class="history-action">建立紀錄</span>
+                        <span class="history-action">建立記錄</span>
                         <span class="history-time">${createdTime}</span>
                     </div>
                 </div>
@@ -542,7 +542,7 @@ const ProcessView = {
                         <i class="fa ${icon}"></i>
                     </div>
                     <div class="history-content">
-                        <span class="history-action">${self.escapeHtml(log.operationType + '紀錄')}</span>
+                        <span class="history-action">${self.escapeHtml(log.operationType + '記錄')}</span>
                         <span class="history-time">${self.formatDateTime(log.recordTime)}</span>
                     </div>
                 </div>
@@ -572,7 +572,7 @@ const ProcessView = {
     openDeleteConfirm: function() {
         const self = this;
 
-        const title = self.currentRecord?.recordTitle || self.currentRecord?.title || '此紀錄';
+        const title = self.currentRecord?.recordTitle || self.currentRecord?.title || '此記錄';
         $('#delete-record-title').text(title);
         $('#delete-confirm-modal').removeClass('hidden');
     },
@@ -591,7 +591,7 @@ const ProcessView = {
         const self = this;
 
         if (!self.currentRecord || !self.currentRecord.id) {
-            alert('無法刪除：找不到紀錄 ID');
+            alert('無法刪除：找不到記錄 ID');
             return;
         }
 
@@ -599,7 +599,7 @@ const ProcessView = {
         const processNum = self.currentProcessNum || self.getProcessNumber(self.currentStage);
         const apiEndpoint = `/api/RoadProject/DeleteProcess${processNum}/${self.currentRecord.id}`;
 
-        console.log('刪除紀錄:', apiEndpoint);
+        console.log('刪除記錄:', apiEndpoint);
 
         // 關閉 Modal
         self.closeDeleteConfirm();

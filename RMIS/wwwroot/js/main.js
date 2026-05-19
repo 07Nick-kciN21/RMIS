@@ -18,7 +18,6 @@ import { initAccidentPanel } from './index/accidentPanel.js';
 import BoxManager from './index/box.js';
 import ProjectBox from './index/projectBox.js';
 import ProcessBox from './index/processBox.js';
-import ProcessView from './index/processView.js';
 import RoadProjectView from './index/roadProjectView.js';
 import RoadProjectAdd from './index/roadProjectAdd.js';
 import RoadProjectEdit from './index/roadProjectEdit.js';
@@ -55,7 +54,6 @@ $(document).ready(function () {
 
     ProjectBox.init();
     ProcessBox.init();
-    ProcessView.init();
     RoadProjectView.init();
     RoadProjectAdd.init();
     RoadProjectEdit.init();

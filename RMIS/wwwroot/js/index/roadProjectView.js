@@ -2,6 +2,7 @@ import BoxManager from './box.js';
 import ProcessBox from './processBox.js';
 import { Map } from './map_test.js';
 import RoadProjectEdit from './roadProjectEdit.js';
+import { showLoading, hideLoading } from '../loading.js';
 
 /**
  * 道路專案檢視模組
@@ -14,13 +15,6 @@ const RoadProjectView = {
     // 地圖相關 
     $indexMap: null,
     projectLayer: null,
-
-    // 階段對照表 
-    stageNames: {
-        '1': '爭取預算與前期規畫階段',
-        '2': '意願調查及用地取得階段',
-        '3': '設計與施工階段'
-    },
 
     /**
      * 初始化檢視模組 
@@ -63,9 +57,11 @@ const RoadProjectView = {
 
         // 綁定編輯按鈕事件
         $(document).on('click', '#btn-edit-project', function() {
-            if (self.currentProject) {
-                RoadProjectEdit.openEdit(self.currentProject);
-            }
+            if (!self.currentProject) return;
+            const isPending = self.currentProject.coordinateChecked === null ||
+                              self.currentProject.coordinateChecked === undefined;
+            if (isPending) return;
+            RoadProjectEdit.openEdit(self.currentProject);
         });
 
         console.log('RoadProjectView 模組初始化完成');
@@ -112,15 +108,18 @@ const RoadProjectView = {
         $('.view-loading, .view-error').remove();
         $('.view-section').show();
 
-        // 座標未確認警示
-        if (project.coordinateChecked === false) {
-            $('#pv-coord-warning').removeClass('hidden');
-        } else {
-            $('#pv-coord-warning').addClass('hidden');
-        }
+        // 座標狀態警示與編輯限制
+        const isPending = project.coordinateChecked === null || project.coordinateChecked === undefined;
+        const isUnchecked = project.coordinateChecked === false;
+
+        $('#pv-coord-pending').toggleClass('hidden', !isPending);
+        $('#pv-coord-warning').toggleClass('hidden', !isUnchecked);
+        $('#btn-edit-project').prop('disabled', isPending)
+                              .toggleClass('disabled', isPending)
+                              .attr('title', isPending ? '尚未取得座標，無法編輯' : '');
 
         // 更新標題與路徑導航 [cite: 1, 2, 3]
-        const title = project.startEndLocation || project.projectName || '道路專案';
+        const title = project.projectName || project.startEndLocation || '道路專案';
         $('#pv-title').text(title);
         $('#pv-district').text(project.administrativeDistrict || '-');
 
@@ -131,8 +130,7 @@ const RoadProjectView = {
         $('#pv-create-date').text(self.formatDate(project.createTime));
         $('#pv-location').text(project.startEndLocation || '-');
 
-        // 更新階段與道路資訊 [cite: 1, 15, 16, 17]
-        $('#pv-stage-badge').text(self.stageNames[project.step] || `階段 ${project.step}`);
+        // 更新道路資訊
         $('#pv-road-length').text(project.roadLength ? `${project.roadLength} 公尺` : '-');
         $('#pv-current-width').text(self.formatRoadWidth(project.currentRoadWidth));
         $('#pv-planned-width').text(self.formatRoadWidth(project.plannedRoadWidth));
@@ -443,7 +441,6 @@ const RoadProjectView = {
         const projectData = {
             id: self.currentProject.projectId || self.currentProject.id,
             name: self.currentProject.startEndLocation || self.currentProject.projectName,
-            step: self.currentProject.step,
             createDate: self.formatDate(self.currentProject.createTime),
             budget: self.formatBudget(self.currentProject.totalBudget),
             pm: self.currentProject.proposer,

@@ -48,15 +48,6 @@
                 <label class="box-label">計畫路寬</label>
                 <input type="text" id="projectPlannedRoadWidth" class="form-control">
             </div>
-            <div class="form-group box-form-group">
-                <label class="box-label">階段</label>
-                <select id="projectStep" class="form-select">
-                    <option value="">請選擇</option>
-                    <option value="1">爭取預算與前期規畫階段</option>
-                    <option value="2">意願調查及用地取得階段</option>
-                    <option value="3">設計與施工階段</option>
-                </select>
-            </div>
             <div class="box-budget-section">
                 <div class="form-group box-form-group">
                     <label class="box-label">工程經費</label>
@@ -128,6 +119,7 @@
                 </button>
             }
             @if(Model["專案查詢"].Export){
+                <a id="exportProcessExcel" class="box-export-link" style="margin-left:8px;">匯出歷程</a>
                 <a id="exportProjectExcel" class="box-export-link">匯出Excel</a>
             }
             <div id="projectExport" data-update="@Model["專案查詢"].Update"></div>
@@ -137,6 +129,7 @@
             <table id="projectTable" class="box-data-table">
                 <thead id="projectThead">
                     <tr id="projectHdr" role="row">
+                        <th style="width:36px"><input type="checkbox" id="selectAllProjects" title="全選"></th>
                         <th style="width:70px">定位</th>
                         @if (Model["專案查詢"].Update) { <th style="width:80px">歷程</th> }
                         <th>申請人</th>

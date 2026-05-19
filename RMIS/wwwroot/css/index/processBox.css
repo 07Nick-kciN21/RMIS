@@ -110,6 +110,7 @@
 .process-progress-ring {
     width: 80px;
     height: 80px;
+    position: relative;
 }
 
 .circular-chart {
@@ -139,6 +140,58 @@
     font-size: 0.5rem;
     font-weight: 700;
     text-anchor: middle;
+    cursor: pointer;
+}
+
+.percentage:hover {
+    fill: #3b82f6;
+}
+
+/* 進度編輯 input 覆蓋層 */
+.progress-edit-wrap {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 4px;
+}
+
+.progress-edit-input {
+    width: 28px;
+    border: none;
+    background: transparent;
+    text-align: right;
+    font-size: calc(0.5rem * 80 / 36);
+    font-weight: 700;
+    color: #1e293b;
+    padding: 0;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.progress-edit-pct {
+    font-size: calc(0.5rem * 80 / 36);
+    font-weight: 700;
+    color: #1e293b;
+    pointer-events: none;
+}
+
+.progress-edit-input::-webkit-inner-spin-button,
+.progress-edit-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.progress-edit-pct {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #1e293b;
+    pointer-events: none;
 }
 
 /* ==========================================================================
@@ -146,27 +199,21 @@
    ========================================================================== */
 
 .process-stage-tabs {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     background: #ffffff;
     border-bottom: 2px solid #e2e8f0;
     margin: 0 20px;
-    overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-}
-
-.process-stage-tabs::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
 }
 
 .stage-tab {
-    flex: 1;
-    min-width: 180px;
-    padding: 14px 20px;
+    min-width: 0;
+    padding: 14px 8px;
     background: transparent;
     border: none;
     border-bottom: 3px solid transparent;
     margin-bottom: -2px;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: #64748b;
     cursor: pointer;
@@ -174,8 +221,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
+    overflow: hidden;
     white-space: nowrap;
+    text-align: center;
 }
 
 .stage-tab:hover {
@@ -338,7 +387,7 @@
     gap: 6px;
 }
 
-/* 紀錄類型標籤 */
+/* 記錄類型標籤 */
 .record-type {
     display: inline-flex;
     align-items: center;
@@ -369,7 +418,7 @@
     color: #d97706;
 }
 
-/* 紀錄標題 */
+/* 記錄標題 */
 .record-title {
     font-size: 1.05rem;
     font-weight: 700;
@@ -396,7 +445,7 @@
     color: #94a3b8;
 }
 
-/* 紀錄描述 */
+/* 記錄描述 */
 .record-desc {
     font-size: 0.95rem;
     color: #475569;
@@ -610,9 +659,9 @@
     }
     
     .stage-tab {
-        min-width: 150px;
-        padding: 12px 16px;
-        font-size: 0.85rem;
+        padding: 10px 4px;
+        font-size: 0.75rem;
+        gap: 3px;
     }
     
     .card-header {
@@ -764,3 +813,247 @@
 .timeline-item:nth-child(3) { animation-delay: 0.15s; }
 .timeline-item:nth-child(4) { animation-delay: 0.2s; }
 .timeline-item:nth-child(5) { animation-delay: 0.25s; }
+
+/* ==========================================================================
+   12. 總階段表格
+   ========================================================================== */
+
+.all-stage-table-wrap {
+    overflow-x: auto;
+    padding: 0 4px;
+}
+
+.all-stage-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.all-stage-table thead tr {
+    background: #f1f5f9;
+}
+
+.all-stage-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.all-stage-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+    color: #334155;
+}
+
+.all-stage-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.all-stage-step {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.all-stage-step.step-1 { background: #dbeafe; color: #1d4ed8; }
+.all-stage-step.step-2 { background: #fef3c7; color: #b45309; }
+.all-stage-step.step-3 { background: #dcfce7; color: #15803d; }
+
+.all-stage-title {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.all-stage-type {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.all-stage-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.all-stage-tag {
+    font-size: 11px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #475569;
+}
+
+.all-stage-status {
+    max-width: 200px;
+    white-space: pre-line;
+    word-break: break-word;
+    color: #475569;
+    font-size: 12px;
+}
+
+/* ==========================================================================
+   詳情頁（#page-process-detail）檔案按鈕
+   ========================================================================== */
+
+#page-process-detail .file-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+#page-process-detail .file-list-item .file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    flex: 1;
+}
+
+#page-process-detail .file-list-item .file-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    color: #64748b;
+}
+
+#page-process-detail .file-list-item .file-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#page-process-detail .file-list-item .file-size {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#page-process-detail .file-list-item .file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+#page-process-detail .file-list-item .btn-download-file,
+#page-process-detail .file-list-item .btn-delete-detail-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#page-process-detail .file-list-item .btn-download-file img,
+#page-process-detail .file-list-item .btn-delete-detail-file img {
+    width: 18px;
+    height: 18px;
+}
+
+#page-process-detail .file-list-item .btn-download-file:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+#page-process-detail .file-list-item .btn-download-file:hover img {
+    filter: brightness(0) invert(1);
+}
+
+#page-process-detail .file-list-item .btn-delete-detail-file:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+}
+
+/* ==========================================================================
+   時間線卡片 — 佐證文件列
+   ========================================================================== */
+
+.card-file-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.card-file-row:last-child {
+    border-bottom: none;
+}
+
+.card-file-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+    color: #64748b;
+}
+
+.card-file-name {
+    flex: 1;
+    font-size: 12px;
+    color: #334155;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.card-file-size {
+    font-size: 11px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.btn-card-download-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #3b82f6;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.btn-card-download-file img {
+    width: 15px;
+    height: 15px;
+}
+
+.btn-card-download-file:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.btn-card-download-file:hover img {
+    filter: brightness(0) invert(1);
+}

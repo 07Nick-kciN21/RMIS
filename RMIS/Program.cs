@@ -32,7 +32,11 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true; // GDPR 相關，確保 Cookie 總是可用
 });
-builder.Services.AddControllersWithViews();
+var mvcBuilder = builder.Services.AddControllersWithViews();
+if (builder.Environment.IsDevelopment())
+{
+    mvcBuilder.AddRazorRuntimeCompilation();
+}
 
 
 // 設定log
@@ -55,8 +59,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
 
 //  註冊 AuthDbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbConnectionString"),
-        x => x.EnableRetryOnFailure()));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDbConnectionString")));
 
 // 設定 Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -160,18 +163,12 @@ var staticFilePaths = new Dictionary<string, string>
 foreach (var path in staticFilePaths)
 {
     var absolutePath = Path.GetFullPath(path.Value, app.Environment.ContentRootPath);
-    if (Directory.Exists(absolutePath)) // ✅ 檢查目錄是否存在
+    Directory.CreateDirectory(absolutePath); // 確保目錄存在（不存在時建立）
+    app.UseStaticFiles(new StaticFileOptions
     {
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(absolutePath),
-            RequestPath = path.Key
-        });
-    }
-    else
-    {
-        Console.WriteLine($"靜態檔案目錄不存在: {absolutePath}");
-    }
+        FileProvider = new PhysicalFileProvider(absolutePath),
+        RequestPath = path.Key
+    });
 }
 
 //app.Use(async (context, next) =>

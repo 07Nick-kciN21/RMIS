@@ -519,21 +519,21 @@ namespace RMIS.Controllers
         {
             var clientIp = HttpContext.GetClientIpAddress();
             var serialNumber = citizenCardLogin.serialNumber;
+            if (string.IsNullOrWhiteSpace(serialNumber))
+                return Json(new { success = false, message = "憑證序號無效" });
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.CitizenCardNo == serialNumber);
             // 1. 帳號不存在
             if (user == null)
             {
                 _logger?.LogOperation("Login-POST", false, "帳號不存在", serialNumber, clientIp);
-                ModelState.AddModelError(string.Empty, "帳號或密碼錯誤");
-                return View();
+                return Json(new { success = false, message = "查無綁定此憑證的帳號" });
             }
 
             // 3. 尚未驗證信箱
             if (!user.EmailConfirmed)
             {
                 _logger?.LogOperation("Login-POST", false, "尚未驗證信箱", user.UserName, clientIp);
-                ModelState.AddModelError(string.Empty, "此帳號尚未通過信箱驗證");
-                return View();
+                return Json(new { success = false, message = "此帳號尚未通過信箱驗證" });
             }
 
             // 4. 帳號狀態為停用
@@ -541,8 +541,7 @@ namespace RMIS.Controllers
             if (!statusCheck)
             {
                 _logger?.LogOperation("登入", false, "帳號未啟用", user.UserName, clientIp);
-                ModelState.AddModelError(string.Empty, "此帳號尚未啟用，請聯繫管理員");
-                return View();
+                return Json(new { success = false, message = "此帳號尚未啟用，請聯繫管理員" });
             }
             await _signInManager.SignInAsync(user, isPersistent: false);
             // 5. 成功登入，設定 Cookie

@@ -536,7 +536,6 @@ namespace RMIS.Repositories
                     var projectId = GetStr("專案代號");                    
                     var project = new RoadProject
                     {
-                        Id = Guid.NewGuid(),
                         ProjectId = projectId,
                         Proposer = GetStr("提案人"),
                         AdministrativeDistrict = GetStr("行政區"),

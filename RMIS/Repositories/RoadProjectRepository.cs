@@ -48,16 +48,8 @@ namespace RMIS.Repositories
                         .MaxAsync() ?? 0;
                     process.OrderIndex = maxOrder + 1;
                 }
-
+                
                 _mapDBContext.RoadProjectProcess1.Add(process);
-
-                // 更新 RoadProject 的 step 為 1 (前期規劃)
-                var roadProject = await _mapDBContext.RoadProjects
-                    .FirstOrDefaultAsync(rp => rp.ProjectId == process.ProjectId);
-                if (roadProject != null)
-                {
-                    roadProject.step = "1";
-                }
 
                 await _mapDBContext.SaveChangesAsync();
 
@@ -107,14 +99,6 @@ namespace RMIS.Repositories
 
                 _mapDBContext.RoadProjectProcess2.Add(process);
 
-                // 更新 RoadProject 的 step 為 2 (用地取得)
-                var roadProject = await _mapDBContext.RoadProjects
-                    .FirstOrDefaultAsync(rp => rp.ProjectId == process.ProjectId);
-                if (roadProject != null)
-                {
-                    roadProject.step = "2";
-                }
-
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -163,14 +147,6 @@ namespace RMIS.Repositories
 
                 _mapDBContext.RoadProjectProcess3.Add(process);
 
-                // 更新 RoadProject 的 step 為 3 (設計與施工)
-                var roadProject = await _mapDBContext.RoadProjects
-                    .FirstOrDefaultAsync(rp => rp.ProjectId == process.ProjectId);
-                if (roadProject != null)
-                {
-                    roadProject.step = "3";
-                }
-
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -210,7 +186,7 @@ namespace RMIS.Repositories
 
         public async Task<ProjectProcessesList> GetProcessRecordsAsync(string projectId)
         {
-            // 取得所有 Process 紀錄
+            // 取得所有 Process 記錄
             var process1List = await _mapDBContext.RoadProjectProcess1
                 .Where(p => p.ProjectId == projectId)
                 .OrderByDescending(p => p.CreatedAt)
@@ -289,6 +265,75 @@ namespace RMIS.Repositories
             };
 
             return result;
+        }
+
+        public async Task<List<RoadProjectProcess>> GetAllProcessRecordsAsync(string projectId)
+        {
+            return await _mapDBContext.RoadProjectProcesses
+                .Where(p => p.ProjectId == projectId)
+                .OrderBy(p => p.OrderIndex)
+                .ToListAsync();
+        }
+
+        public async Task<List<RoadProjectProcess>> GetLastProcessRecordsByProjectIdsAsync(List<string> projectIds)
+        {
+            var records = await _mapDBContext.RoadProjectProcesses
+                .Where(p => projectIds.Contains(p.ProjectId) && p.RecordType != "局長補充格式")
+                .GroupBy(p => p.ProjectId)
+                .Select(g => g.OrderByDescending(p => p.OrderIndex).First())
+                .ToListAsync();
+
+            var proposerMap = await _mapDBContext.RoadProjects
+                .Where(p => projectIds.Contains(p.ProjectId))
+                .Select(p => new { p.ProjectId, p.Proposer })
+                .ToDictionaryAsync(p => p.ProjectId, p => p.Proposer);
+
+            foreach (var r in records)
+                r.Proposer = proposerMap.GetValueOrDefault(r.ProjectId);
+
+            return records;
+        }
+
+        public async Task<(string result, Guid processId)> AddAllProcessRecordAsync(RoadProjectProcess process)
+        {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+                try
+                {
+                    if (process == null)
+                        return ("錯誤：資料為空。", Guid.Empty);
+
+                    process.Id = 0;
+                    process.CreatedAt = DateTime.Now;
+                    process.ProcessId = Guid.NewGuid();
+
+                    if (process.OrderIndex <= 0)
+                    {
+                        var maxOrder = await _mapDBContext.RoadProjectProcesses
+                            .Where(p => p.ProjectId == process.ProjectId)
+                            .Select(p => (int?)p.OrderIndex)
+                            .MaxAsync() ?? 0;
+                        process.OrderIndex = maxOrder + 1;
+                    }
+
+                    _mapDBContext.RoadProjectProcesses.Add(process);
+                    await _mapDBContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return ("success", process.ProcessId);
+                }
+                catch (DbUpdateException dbEx)
+                {
+                    await transaction.RollbackAsync();
+                    return ($"資料庫儲存失敗：{dbEx.InnerException?.Message ?? dbEx.Message}", Guid.Empty);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return ($"伺服器發生非預期錯誤：{ex.Message}", Guid.Empty);
+                }
+            });
         }
 
         public async Task<string> AddProcessFileAsync(RoadProjectProcessFile file)
@@ -446,6 +491,78 @@ namespace RMIS.Repositories
             }); // end strategy
         }
 
+        public async Task<string> UpdateAllProcessRecordAsync(RoadProjectProcess process)
+        {
+            try
+            {
+                var existing = await _mapDBContext.RoadProjectProcesses.FindAsync(process.Id);
+                if (existing == null) return "錯誤：找不到該記錄。";
+
+                existing.District = process.District;
+                existing.RecordType = process.RecordType;
+                existing.RecordTitle = process.RecordTitle;
+                existing.ProjectName = process.ProjectName;
+                existing.ExecutionUnit = process.ExecutionUnit;
+                existing.ConstructionUnit = process.ConstructionUnit;
+                existing.Category = process.Category;
+                existing.PublicHearing = process.PublicHearing;
+                existing.MarketPriceReview = process.MarketPriceReview;
+                existing.NegotiatedPurchaseMeeting = process.NegotiatedPurchaseMeeting;
+                existing.ExpropriationPlanPreReview = process.ExpropriationPlanPreReview;
+                existing.ExpropriationPlanSubmission = process.ExpropriationPlanSubmission;
+                existing.ExpropriationApproval = process.ExpropriationApproval;
+                existing.BudgetFiscalYearApprovedAmount = process.BudgetFiscalYearApprovedAmount;
+                existing.ContractType = process.ContractType;
+                existing.ConstructionPeriod = process.ConstructionPeriod;
+                existing.AnnouncementCommencementDate = process.AnnouncementCommencementDate;
+                existing.AwardCompletionDate = process.AwardCompletionDate;
+                existing.DesignDispatch = process.DesignDispatch;
+                existing.BasicDesignApproval = process.BasicDesignApproval;
+                existing.DetailedDesignApproval = process.DetailedDesignApproval;
+                existing.ConstructionExecution = process.ConstructionExecution;
+                existing.PreviousMeetingStatus = process.PreviousMeetingStatus;
+                existing.PreviousMeetingResolution = process.PreviousMeetingResolution;
+                existing.CurrentStatus = process.CurrentStatus;
+                existing.CurrentMeetingResolution = process.CurrentMeetingResolution;
+                existing.LandAcquisitionBudget = process.LandAcquisitionBudget;
+                existing.ConstructionBudget = process.ConstructionBudget;
+
+                await _mapDBContext.SaveChangesAsync();
+                return "success";
+            }
+            catch (Exception ex)
+            {
+                return $"更新失敗：{ex.Message}";
+            }
+        }
+
+        public async Task<string> DeleteAllProcessRecordAsync(int id)
+        {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+                var deletedFiles = new List<(string path, byte[] content)>();
+                try
+                {
+                    var process = await _mapDBContext.RoadProjectProcesses.FindAsync(id);
+                    if (process == null) return "錯誤：找不到該記錄。";
+
+                    deletedFiles = await DeleteProcessFilesWithBackupAsync(process.ProcessId);
+                    _mapDBContext.RoadProjectProcesses.Remove(process);
+                    await _mapDBContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return "success";
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    await RestoreDeletedFilesAsync(deletedFiles);
+                    return $"刪除失敗：{ex.Message}";
+                }
+            });
+        }
+
         public async Task<string> DeleteProcess1Async(int id)
         {
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
@@ -461,13 +578,13 @@ namespace RMIS.Repositories
 
                 if (process == null)
                 {
-                    return "錯誤：找不到該紀錄。";
+                    return "錯誤：找不到該記錄。";
                 }
 
                 // 刪除相關的檔案（記錄以便回滾）
                 deletedFiles = await DeleteProcessFilesWithBackupAsync(process.ProcessId);
 
-                // 刪除紀錄
+                // 刪除記錄
                 _mapDBContext.RoadProjectProcess1.Remove(process);
                 await _mapDBContext.SaveChangesAsync();
 
@@ -499,13 +616,13 @@ namespace RMIS.Repositories
 
                 if (process == null)
                 {
-                    return "錯誤：找不到該紀錄。";
+                    return "錯誤：找不到該記錄。";
                 }
 
                 // 刪除相關的檔案（記錄以便回滾）
                 deletedFiles = await DeleteProcessFilesWithBackupAsync(process.ProcessId);
 
-                // 刪除紀錄
+                // 刪除記錄
                 _mapDBContext.RoadProjectProcess2.Remove(process);
                 await _mapDBContext.SaveChangesAsync();
 
@@ -537,13 +654,13 @@ namespace RMIS.Repositories
 
                 if (process == null)
                 {
-                    return "錯誤：找不到該紀錄。";
+                    return "錯誤：找不到該記錄。";
                 }
 
                 // 刪除相關的檔案（記錄以便回滾）
                 deletedFiles = await DeleteProcessFilesWithBackupAsync(process.ProcessId);
 
-                // 刪除紀錄
+                // 刪除記錄
                 _mapDBContext.RoadProjectProcess3.Remove(process);
                 await _mapDBContext.SaveChangesAsync();
 
@@ -655,7 +772,7 @@ namespace RMIS.Repositories
 
                 if (existing == null)
                 {
-                    return "錯誤：找不到該紀錄。";
+                    return "錯誤：找不到該記錄。";
                 }
 
                 // 更新欄位
@@ -695,7 +812,7 @@ namespace RMIS.Repositories
 
                 if (existing == null)
                 {
-                    return "錯誤：找不到該紀錄。";
+                    return "錯誤：找不到該記錄。";
                 }
 
                 // 更新欄位
@@ -736,7 +853,7 @@ namespace RMIS.Repositories
 
                 if (existing == null)
                 {
-                    return "錯誤：找不到該紀錄。";
+                    return "錯誤：找不到該記錄。";
                 }
 
                 // 更新欄位

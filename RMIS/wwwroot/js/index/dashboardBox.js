@@ -6,47 +6,7 @@ const DashboardBox = (function () {
     // 圖表實例
     let chartBudgetAllocation = null;
     let chartDistrictCount = null;
-    let chartStatusRatio = null;
-    let chartSCurve = null;
 
-    // 模擬資料 (之後可替換為 API)
-    const mockData = {
-        kpi: {
-            totalCount: 42,
-            totalTrend: '+3',
-            totalLength: 8.5,
-            totalBudget: 12.8,
-            budgetProgress: 70,
-            contractAmount: 8.4,
-            contractPercent: 65
-        },
-        latestProjects: [
-            { id: 'PJ-113-001', name: '中壢區龍岡路三段拓寬工程', status: '設計與施工', createDate: '2023-01-15' },
-            { id: 'PJ-113-004', name: '平鎮區金陵路四段瓶頸打通', status: '用地取得', createDate: '2023-05-20' },
-            { id: 'PJ-113-008', name: '楊梅區校前路人行道改善', status: '前期規劃', createDate: '2023-09-10' },
-            { id: 'PJ-113-012', name: '桃園區大興西路路平專案', status: '設計與施工', createDate: '2023-10-05' },
-            { id: 'PJ-113-015', name: '八德區介壽路排水改善工程', status: '前期規劃', createDate: '2023-11-12' }
-        ],
-        budgetAllocation: {
-            labels: ['工程費', '用地費', '規設費'],
-            data: [65, 25, 10],
-            colors: ['#2563eb', '#f59e0b', '#64748b']
-        },
-        districtCount: {
-            labels: ['中壢區', '桃園區', '平鎮區', '楊梅區', '八德區', '大溪區'],
-            data: [12, 15, 8, 5, 9, 3]
-        },
-        statusRatio: {
-            labels: ['施工中', '規劃中', '用地取得'],
-            data: [40, 30, 30],
-            colors: ['#22c55e', '#3b82f6', '#ef4444']
-        },
-        sCurve: {
-            labels: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
-            target: [5, 10, 18, 28, 40, 52, 64, 75, 84, 91, 96, 100],
-            actual: [3, 8, 15, 25, 38, 50, 58, null, null, null, null, null]
-        }
-    };
 
     /**
      * 取得目前篩選參數
@@ -83,6 +43,7 @@ const DashboardBox = (function () {
      */
     function reloadDashboard() {
         loadKPIData();
+        loadLatestProjects();
         initCharts();
     }
 
@@ -102,11 +63,17 @@ const DashboardBox = (function () {
                     .removeClass('positive negative')
                     .addClass(kpi.monthDiff >= 0 ? 'positive' : 'negative');
                 $('#kpi-total-budget').text(kpi.totalBudget);
+                $('#kpi-total-length').text(kpi.totalLength);
+                $('#kpi-contract-amount').text(kpi.contractAmount);
+                $('#kpi-contract-percent').text(`佔總經費 ${kpi.contractPercent}%`);
             },
             error: function() {
                 $('#kpi-total-count').text('--');
                 $('#kpi-total-trend').text('載入失敗');
                 $('#kpi-total-budget').text('--');
+                $('#kpi-total-length').text('--');
+                $('#kpi-contract-amount').text('--');
+                $('#kpi-contract-percent').text('佔總經費 --%');
             }
         });
     }
@@ -121,7 +88,7 @@ const DashboardBox = (function () {
         $.ajax({
             url: '/api/RoadProject/GetLatestProjects',
             method: 'GET',
-            data: { count: 5 },
+            data: { count: 5, ...getFilterParams() },
             success: function(projects) {
                 $list.empty();
 
@@ -131,8 +98,6 @@ const DashboardBox = (function () {
                 }
 
                 projects.forEach(project => {
-                    const stepText = getStepText(project.step);
-                    const stepClass = getStepClass(project.step);
                     const createDate = formatDate(project.createTime);
                     const projectName = project.projectName || project.projectId;
 
@@ -142,7 +107,6 @@ const DashboardBox = (function () {
                                 <div class="project-name" title="${projectName}">${projectName}</div>
                                 <div class="project-date">${createDate}</div>
                             </div>
-                            <span class="project-status ${stepClass}">${stepText}</span>
                         </div>
                     `);
                     $list.append($item);
@@ -153,30 +117,6 @@ const DashboardBox = (function () {
                 $list.html('<div class="latest-project-item"><div class="project-info"><div class="project-name" style="color:#ef4444;">載入失敗</div></div></div>');
             }
         });
-    }
-
-    /**
-     * 取得階段文字
-     */
-    function getStepText(step) {
-        const stepMap = {
-            '1': '前期規劃',
-            '2': '用地取得',
-            '3': '設計與施工'
-        };
-        return stepMap[String(step)] || `階段 ${step}`;
-    }
-
-    /**
-     * 取得階段對應的 CSS class
-     */
-    function getStepClass(step) {
-        const classMap = {
-            '1': 'planning',
-            '2': 'land',
-            '3': 'design'
-        };
-        return classMap[String(step)] || 'planning';
     }
 
     /**
@@ -197,8 +137,6 @@ const DashboardBox = (function () {
     function initCharts() {
         initBudgetAllocationChart();
         initDistrictCountChart();
-        initStatusRatioChart();
-        initSCurveChart();
     }
 
     /**
@@ -268,7 +206,12 @@ const DashboardBox = (function () {
             url: '/api/RoadProject/GetDistrictCount',
             data: getFilterParams(),
             method: 'GET',
+            xhrFields: { withCredentials: true },
             success: function(data) {
+                if (!data.labels || data.labels.length === 0) {
+                    $(ctx).closest('.chart-canvas-container').html('<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:13px;">目前無資料</div>');
+                    return;
+                }
                 if (chartDistrictCount) { chartDistrictCount.destroy(); chartDistrictCount = null; }
                 chartDistrictCount = new Chart(ctx, {
                     type: 'bar',
@@ -286,7 +229,14 @@ const DashboardBox = (function () {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.raw} 件`;
+                                    }
+                                }
+                            }
                         },
                         scales: {
                             y: {
@@ -312,142 +262,9 @@ const DashboardBox = (function () {
                     }
                 });
             },
-            error: function() {
-                console.error('載入行政區案件數量失敗');
-            }
-        });
-    }
-
-    /**
-     * 案件狀態佔比甜甜圈圖
-     */
-    function initStatusRatioChart() {
-        const ctx = document.getElementById('chart-status-ratio');
-        if (!ctx) return;
-
-        $.ajax({
-            url: '/api/RoadProject/GetStatusRatio',
-            data: getFilterParams(),
-            method: 'GET',
-            success: function(data) {
-                if (chartStatusRatio) { chartStatusRatio.destroy(); chartStatusRatio = null; }
-                chartStatusRatio = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: data.labels,
-                        datasets: [{
-                            data: data.data,
-                            backgroundColor: data.colors,
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '55%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 15,
-                                    usePointStyle: true,
-                                    pointStyle: 'rectRounded',
-                                    font: { size: 11 }
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${context.raw}%`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            },
-            error: function() {
-                console.error('載入案件狀態佔比失敗');
-            }
-        });
-    }
-
-    /**
-     * S曲線圖 (折線圖)
-     */
-    function initSCurveChart() {
-        const ctx = document.getElementById('chart-s-curve');
-        if (!ctx) return;
-
-        const data = mockData.sCurve;
-
-        if (chartSCurve) { chartSCurve.destroy(); chartSCurve = null; }
-        chartSCurve = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [
-                    {
-                        label: '預定進度',
-                        data: data.target,
-                        borderColor: '#cbd5e1',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: 0
-                    },
-                    {
-                        label: '實際進度',
-                        data: data.actual,
-                        borderColor: '#2563eb',
-                        borderWidth: 3,
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#2563eb',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                if (context.raw === null) return '';
-                                return `${context.dataset.label}: ${context.raw}%`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        min: 0,
-                        max: 100,
-                        grid: {
-                            color: '#e2e8f0',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            callback: value => value + '%',
-                            font: { size: 10 },
-                            color: '#94a3b8'
-                        }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: {
-                            font: { size: 10 },
-                            color: '#64748b'
-                        }
-                    }
-                }
+            error: function(xhr) {
+                console.error('載入行政區案件數量失敗:', xhr.status);
+                $(ctx).closest('.chart-canvas-container').html('<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ef4444;font-size:13px;">載入失敗</div>');
             }
         });
     }
@@ -458,7 +275,6 @@ const DashboardBox = (function () {
     function bindEvents() {
         // 套用篩選
         $('#btn-apply-filter').on('click', function() {
-            console.log('套用篩選:', getFilterParams());
             reloadDashboard();
         });
 
@@ -488,14 +304,6 @@ const DashboardBox = (function () {
         if (chartDistrictCount) {
             chartDistrictCount.destroy();
             chartDistrictCount = null;
-        }
-        if (chartStatusRatio) {
-            chartStatusRatio.destroy();
-            chartStatusRatio = null;
-        }
-        if (chartSCurve) {
-            chartSCurve.destroy();
-            chartSCurve = null;
         }
     }
 

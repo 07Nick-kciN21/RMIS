@@ -1,5 +1,6 @@
 import BoxManager from './box.js';
 import RoadProjectView from './roadProjectView.js';
+import { showLoading, hideLoading } from '../loading.js';
 
 /**
  * 道路專案編輯模組
@@ -216,7 +217,6 @@ const RoadProjectEdit = {
         $('#edit-project-id').val(project.projectId || '');
         $('#edit-proposer').val(project.proposer || '');
         $('#edit-district').val(project.administrativeDistrict || '');
-        $('#edit-step').val(project.step || '');
 
         $('#edit-start-point').val(project.startPoint || '');
         $('#edit-end-point').val(project.endPoint || '');
@@ -428,6 +428,7 @@ const RoadProjectEdit = {
             this.addingPhotoPoint = false;
             $('#btn-edit-toggle-add-photo-point').removeClass('active');
             $('#btn-edit-toggle-add-range-point').addClass('active');
+            this.scrollToPreviewMap();
         } else {
             $('#btn-edit-toggle-add-range-point').removeClass('active');
         }
@@ -443,10 +444,23 @@ const RoadProjectEdit = {
             this.addingRangePoint = false;
             $('#btn-edit-toggle-add-range-point').removeClass('active');
             $('#btn-edit-toggle-add-photo-point').addClass('active');
+            this.scrollToPreviewMap();
         } else {
             $('#btn-edit-toggle-add-photo-point').removeClass('active');
         }
         $('#edit-preview-map').toggleClass('adding-point', this.addingRangePoint || this.addingPhotoPoint);
+    },
+
+    scrollToSection: function(selector) {
+        const $container = $('.edit-content-area');
+        const $target = $(selector).closest('.edit-section');
+        if (!$container.length || !$target.length) return;
+        const offset = $target.offset().top - $container.offset().top + $container.scrollTop();
+        $container.animate({ scrollTop: offset }, 300);
+    },
+
+    scrollToPreviewMap: function() {
+        this.scrollToSection('#edit-preview-map');
     },
 
     // ──── 座標預覽地圖 ────
@@ -480,6 +494,7 @@ const RoadProjectEdit = {
                 self.middleRangePoints.push({ lat: e.latlng.lat, lng: e.latlng.lng });
                 self.syncRangeTable();
                 self.toggleAddRangePoint();
+                self.scrollToSection('#edit-expansion-range-table');
             } else if (self.addingPhotoPoint) {
                 self.photoList.push({
                     Id: self.photoList.length,
@@ -491,6 +506,7 @@ const RoadProjectEdit = {
                 });
                 self.renderPhotoList();
                 self.toggleAddPhotoPoint();
+                self.scrollToSection('#edit-street-photo-list');
             }
         });
     },
@@ -771,7 +787,6 @@ const RoadProjectEdit = {
         const payload = {
             id: self.currentProject.id,
             projectId: $('#edit-project-id').val(),
-            step: $('#edit-step').val(),
             proposer: $('#edit-proposer').val(),
             administrativeDistrict: $('#edit-district').val(),
             startPoint: $('#edit-start-point').val(),

@@ -2,7 +2,6 @@
 {
     public class RoadProjectProp
     {
-        public string Step { get; set; }
         public string Proposer { get; set; }
         public string AdministrativeDistrict { get; set; }
         public string StartEndLocation { get; set; }

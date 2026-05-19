@@ -110,9 +110,31 @@ body {
     font-weight: bold;
 }
 
-header .dropdown-button,
-.username-text h5 {
+header .dropdown-button {
     color: #615649;
+}
+
+#col2 {
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+}
+
+#col2 #head-nav,
+#col2 #head-nav > .container-fluid {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.usermodal-header {
+    background-color: var(--lightgray);
+    color: #2f1a0c;
+}
+
+.usermodal-btn {
+    background-color: var(--brown);
+    color: #fff;
 }
 
 @media (max-width: 1440px) {

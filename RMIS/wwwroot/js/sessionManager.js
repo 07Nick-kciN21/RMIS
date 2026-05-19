@@ -134,13 +134,24 @@ const sessionManager = (() => {
 
         setWarningShown(true);
 
+        // 自建全頁遮罩，確保蓋過所有元素（不依賴 Bootstrap backdrop 的 z-index）
+        if (!document.getElementById('sessionBackdrop')) {
+            const backdrop = document.createElement('div');
+            backdrop.id = 'sessionBackdrop';
+            backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000;';
+            document.body.appendChild(backdrop);
+        }
+
         if (!modalInstance) {
-            // 設定為不可關閉的模態框
+            // 關閉 Bootstrap 自帶 backdrop，改用我們的自建遮罩
             modalInstance = new bootstrap.Modal(modalEl, {
-                backdrop: 'static',
+                backdrop: false,
                 keyboard: false
             });
         }
+
+        // 確保 modal dialog 浮在自建遮罩之上
+        modalEl.style.zIndex = '2001';
 
         modalInstance.show();
 
@@ -301,8 +312,10 @@ const sessionManager = (() => {
     }
 
     function hideModalAndCleanup() {
+        const backdrop = document.getElementById('sessionBackdrop');
+        if (backdrop) backdrop.remove();
+
         if (modalInstance) {
-            // 清理倒數計時
             if (modalInstance._countdownInterval) {
                 clearInterval(modalInstance._countdownInterval);
                 modalInstance._countdownInterval = null;

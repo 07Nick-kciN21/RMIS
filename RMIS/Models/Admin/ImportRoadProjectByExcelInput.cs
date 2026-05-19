@@ -36,7 +36,6 @@ namespace RMIS.Models.Admin
         public string ProjectId { get; set; } = "";
         public string Proposer { get; set; } = "";
         public string AdministrativeDistrict { get; set; } = "";
-        public string Step { get; set; } = "1";
         public string StartPoint { get; set; } = "";
         public string EndPoint { get; set; } = "";
         public string StartEndLocation { get; set; } = "";
@@ -67,6 +66,11 @@ namespace RMIS.Models.Admin
         /// 街景照片座標 JSON: [{"lat":24.123,"lng":121.456,"photoName":"xxx.jpg"},...]
         /// </summary>
         public string StreetViewPhotoJson { get; set; } = "";
+
+        /// <summary>
+        /// 施工進度（0-100）
+        /// </summary>
+        public int Progress { get; set; } = 0;
 
         /// <summary>
         /// 座標是否由 OpenStreetMap API 自動取得（非 Excel 原始資料）

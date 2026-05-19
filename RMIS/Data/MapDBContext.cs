@@ -24,6 +24,7 @@ namespace RMIS.Data
         public DbSet<RoadProjectProcess1> RoadProjectProcess1 { get; set; }
         public DbSet<RoadProjectProcess2> RoadProjectProcess2 { get; set; }
         public DbSet<RoadProjectProcess3> RoadProjectProcess3 { get; set; }
+        public DbSet<RoadProjectProcess> RoadProjectProcesses { get; set; }
         public DbSet<RoadProjectProcessFile> RoadProjectProcessFiles { get; set; }
         public DbSet<ProcessEditLog> ProcessEditLogs { get; set; }
 
@@ -51,9 +52,6 @@ namespace RMIS.Data
                 .Property(r => r.CreateTime)
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            modelBuilder.Entity<RoadProject>()
-                .Property(r => r.CoordinateChecked)
-                .HasDefaultValue(true);
 
             // 交通事故 101~113（民國年）各自對應獨立資料表
             for (int year = 101; year <= 113; year++)

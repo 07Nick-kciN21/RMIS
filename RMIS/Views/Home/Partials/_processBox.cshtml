@@ -1,9 +1,10 @@
 @* ==========================================================================
    _processBox.cshtml - 專案歷程詳情頁面 (Full-Box 版本)
-   功能：顯示專案基本資訊、階段分頁切換、時間軸歷程紀錄、佐證文件
+   功能：顯示專案基本資訊、階段分頁切換、時間軸歷程記錄、佐證文件
    ========================================================================== *@
 
 <link rel="stylesheet" href="~/css/index/processBox.css" />
+<link rel="stylesheet" href="~/css/index/processView.css" />
 
 <div id="page-process" class="box-page hidden">
     <div class="process-box-container">
@@ -29,11 +30,6 @@
                             <span class="tag-label">承辦人</span>
                             <span class="tag-value" id="process-pm">陳技正</span>
                         </span>
-                        <span class="process-tag process-tag-status">
-                            <span class="tag-label">狀態</span>
-                            <i class="fa fa-check-circle text-success"></i>
-                            <span class="tag-value" id="process-status">設計與施工階段</span>
-                        </span>
                     </div>
                 </div>
                 @* 進度圓環 (可選) *@
@@ -44,6 +40,10 @@
                             <path class="circle" id="process-progress-path" stroke-dasharray="65, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             <text x="18" y="20.35" class="percentage" id="process-progress-text">65%</text>
                         </svg>
+                        <div class="progress-edit-wrap" id="progress-edit-wrap" style="display:none;">
+                            <input type="number" id="progress-edit-input" class="progress-edit-input" min="0" max="100" />
+                            <span class="progress-edit-pct">%</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -51,17 +51,9 @@
 
         @* ===== 2. 階段分頁 Tabs ===== *@
         <div class="process-stage-tabs">
-            <button type="button" class="stage-tab active" data-stage="stage1">
-                <i class="fa fa-file-text-o"></i>
-                爭取預算與前期規畫階段
-            </button>
-            <button type="button" class="stage-tab" data-stage="stage2">
-                <i class="fa fa-users"></i>
-                意願調查及用地取得階段
-            </button>
-            <button type="button" class="stage-tab" data-stage="stage3">
-                <i class="fa fa-cogs"></i>
-                設計與施工階段
+            <button type="button" class="stage-tab active" data-stage="stage-all">
+                <i class="fa fa-list-alt"></i>
+                歷程
             </button>
         </div>
 
@@ -71,11 +63,16 @@
             <div class="process-stage-header">
                 <h3 class="stage-title">
                     <span class="stage-indicator"></span>
-                    <span id="current-stage-name">爭取預算與前期規畫階段</span>
+                    <span id="current-stage-name">歷程記錄</span>
                 </h3>
-                <button type="button" class="btn btn-success btn-add-record">
-                    <i class="fa fa-plus"></i> 新增紀錄
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-outline-secondary" id="btn-export-process">
+                        匯出補充格式
+                    </button>
+                    <button type="button" class="btn btn-success btn-add-record">
+                        <i class="fa fa-plus"></i> 新增記錄
+                    </button>
+                </div>
             </div>
 
             @* 時間軸容器 *@
@@ -83,9 +80,9 @@
                 @* === 時間軸垂直線 === *@
                 <div class="timeline-line"></div>
 
-                @* === 歷程紀錄卡片 (由 JS 動態產生，以下為範本結構) === *@
+                @* === 歷程記錄卡片 (由 JS 動態產生，以下為範本結構) === *@
                 
-                @* 範例紀錄 1 *@
+                @* 範例記錄 1 *@
                 <div class="timeline-item" data-record-id="101">
                     <div class="timeline-dot"></div>
                     <div class="timeline-card">
@@ -122,13 +119,13 @@
                     </div>
                 </div>
 
-                @* 範例紀錄 2 *@
+                @* 範例記錄 2 *@
                 <div class="timeline-item" data-record-id="102">
                     <div class="timeline-dot"></div>
                     <div class="timeline-card">
                         <div class="card-header">
                             <div class="card-title-group">
-                                <span class="record-type type-meeting">會議紀錄</span>
+                                <span class="record-type type-meeting">會議記錄</span>
                                 <h4 class="record-title">預算爭取簡報會議</h4>
                             </div>
                             <div class="record-date">
@@ -156,7 +153,7 @@
                                 <div class="attachment-item">
                                     <div class="attachment-info">
                                         <i class="fa fa-file-pdf-o file-icon"></i>
-                                        <span class="file-name">會議紀錄_20230220.pdf</span>
+                                        <span class="file-name">會議記錄_20230220.pdf</span>
                                         <span class="file-size">(1.2 MB)</span>
                                     </div>
                                     <button type="button" class="btn-download" title="下載">
@@ -168,7 +165,7 @@
                     </div>
                 </div>
 
-                @* 範例紀錄 3 *@
+                @* 範例記錄 3 *@
                 <div class="timeline-item" data-record-id="103">
                     <div class="timeline-dot"></div>
                     <div class="timeline-card">
@@ -208,7 +205,7 @@
 
             @* 結尾提示 *@
             <div class="timeline-end-hint">
-                <span>本階段尚無更多紀錄</span>
+                <span>本階段尚無更多記錄</span>
             </div>
         </div>
 
@@ -222,72 +219,39 @@
     </div>
 </div>
 
-@* ===== JavaScript 控制邏輯 ===== *@
-<script>
-(function() {
-    'use strict';
+@* ===== 歷程記錄詳情頁面 ===== *@
+<div id="page-process-detail" class="box-page hidden">
+    <div class="process-view-container">
 
-    // DOM 元素快取
-    const stageTabs = document.querySelectorAll('.stage-tab');
-    const currentStageName = document.getElementById('current-stage-name');
-    const timeline = document.getElementById('process-timeline');
+        <div class="view-header">
+            <div class="view-header-left">
+                <div class="view-header-info">
+                    <span class="view-breadcrumb">
+                        <span class="breadcrumb-project" id="detail-project-name"></span>
+                        <i class="fa fa-angle-right"></i>
+                        <span class="breadcrumb-stage">歷程記錄</span>
+                    </span>
+                    <h2 class="view-title" id="detail-record-title">記錄詳情</h2>
+                </div>
+            </div>
+            <div class="view-header-right">
+                <button type="button" class="btn btn-outline-primary" id="btn-detail-edit">
+                    <i class="fa fa-pencil"></i> 編輯
+                </button>
+                <button type="button" class="btn btn-outline-danger" id="btn-detail-delete">
+                    <i class="fa fa-trash-o"></i> 刪除
+                </button>
+            </div>
+        </div>
 
-    // 階段名稱對照
-    const stageNames = {
-        'stage1': '爭取預算與前期規畫階段',
-        'stage2': '意願調查及用地取得階段',
-        'stage3': '設計與施工階段'
-    };
+        <div class="view-content-area" id="detail-content-area"></div>
 
-    // 階段切換事件
-    stageTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // 移除所有 active
-            stageTabs.forEach(t => t.classList.remove('active'));
-            // 設定當前 active
-            this.classList.add('active');
-            // 更新階段標題
-            const stageId = this.getAttribute('data-stage');
-            currentStageName.textContent = stageNames[stageId] || '';
-            // TODO: 呼叫 API 載入該階段的歷程資料
-            loadStageRecords(stageId);
-        });
-    });
+        <div class="view-footer">
+            <button type="button" class="btn btn-outline-secondary" id="btn-back-to-process-list">
+                <i class="fa fa-arrow-left"></i> 返回列表
+            </button>
+        </div>
 
-    // 載入階段紀錄 (placeholder)
-    function loadStageRecords(stageId) {
-        console.log('載入階段:', stageId);
-        // 實際應用中，這裡會呼叫後端 API 取得資料並渲染時間軸
-    }
+    </div>
+</div>
 
-    // 關閉按鈕事件
-    document.querySelectorAll('.btn-close-box').forEach(btn => {
-        btn.addEventListener('click', function() {
-            // 隱藏 full-box 或切換頁面
-            const fullBox = document.getElementById('full-box');
-            if (fullBox) {
-                fullBox.classList.add('hidden');
-            }
-            // 或觸發自定義事件
-            document.dispatchEvent(new CustomEvent('closeProcessBox'));
-        });
-    });
-
-    // 新增紀錄按鈕事件
-    document.querySelector('.btn-add-record')?.addEventListener('click', function() {
-        console.log('開啟新增紀錄表單');
-        // TODO: 開啟新增紀錄的 Modal 或表單
-    });
-
-    // 下載按鈕事件委派
-    timeline?.addEventListener('click', function(e) {
-        const downloadBtn = e.target.closest('.btn-download');
-        if (downloadBtn) {
-            const fileName = downloadBtn.closest('.attachment-item')?.querySelector('.file-name')?.textContent;
-            console.log('下載檔案:', fileName);
-            // TODO: 實際下載邏輯
-        }
-    });
-
-})();
-</script>

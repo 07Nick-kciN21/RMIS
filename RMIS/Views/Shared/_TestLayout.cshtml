@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/_layout.css" />
+    <link rel="stylesheet" href="~/css/new/index/z-layers.css" />
     <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
     <link rel="stylesheet" href="~/lib//leaflet-geoman/leaflet-geoman.css" />
     
@@ -47,13 +48,7 @@
             flex-direction: column;
         }
 
-        /* 確保延長登入對話框在最上層 */
-        #extendSessionModal {
-            z-index: 99999 !important;
-        }
-        #extendSessionModal ~ .modal-backdrop {
-            z-index: 99998 !important;
-        }
+        /* z-index 層級統一由 z-layers.css 管理 */
     </style>
 </head>
 <body>
@@ -73,7 +68,7 @@
         
     </div>
     @await RenderSectionAsync("Scripts", required: false)
-    <div class="modal fade" id="extendSessionModal" tabindex="-1" aria-labelledby="extendSessionModalLabel" aria-hidden="true">
+    <div class="modal fade modal-session" id="extendSessionModal" tabindex="-1" aria-labelledby="extendSessionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
             <div class="modal-header">
@@ -90,4 +85,15 @@
         </div>
     </div>
 </body>
+<script>
+    $(document).ready(function () {
+        $('#extendSessionModal').on('show.bs.modal', function () {
+            setTimeout(function () {
+                $('.modal-backdrop').last().addClass('modal-session-backdrop');
+            }, 0);
+        }).on('hidden.bs.modal', function () {
+            $('.modal-session-backdrop').removeClass('modal-session-backdrop');
+        });
+    });
+</script>
 </html>

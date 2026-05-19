@@ -1779,127 +1779,214 @@ namespace RMIS.Migrations
 
             modelBuilder.Entity("RMIS.Models.sql.RoadProject", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AdministrativeDistrict")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CaseType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CompensationBudget")
+                    b.Property<int?>("CompensationBudget")
                         .HasColumnType("int");
 
-                    b.Property<int>("ConstructionBudget")
+                    b.Property<int?>("ConstructionBudget")
                         .HasColumnType("int");
 
-                    b.Property<bool>("CoordinateChecked")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                    b.Property<bool?>("CoordinateChecked")
+                        .HasColumnType("bit");
 
-                    b.Property<DateTime>("CreateTime")
+                    b.Property<DateTime?>("CreateTime")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("CurrentRoadWidth")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EndPoint")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Index")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int?>("LandAcquisitionBudget")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Index"));
-
-                    b.Property<int>("LandAcquisitionBudget")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("PlannedExpansionId")
+                    b.Property<Guid?>("PlannedExpansionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PlannedRoadWidth")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PrivateLand")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Progress")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProjectId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProjectName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Proposer")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PublicLand")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PublicPrivateLand")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RCCount")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReviewResult")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReviewYear")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoadLength")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StartEndLocation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StartPoint")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("StreetViewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TinHouseCount")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TotalBudget")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RoadProjects");
+                });
+
+            modelBuilder.Entity("RMIS.Models.sql.RoadProjectProcess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AnnouncementCommencementDate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AwardCompletionDate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BasicDesignApproval")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BudgetFiscalYearApprovedAmount")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ConstructionBudget")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConstructionExecution")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConstructionPeriod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConstructionUnit")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ContractType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentMeetingResolution")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CurrentStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DesignDispatch")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DetailedDesignApproval")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("District")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExecutionUnit")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExpropriationApproval")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExpropriationPlanPreReview")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ExpropriationPlanSubmission")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LandAcquisitionBudget")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MarketPriceReview")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NegotiatedPurchaseMeeting")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PreviousMeetingResolution")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreviousMeetingStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ProcessId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ProjectId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProjectName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Proposer")
-                        .IsRequired()
+                    b.Property<string>("PublicHearing")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PublicLand")
-                        .IsRequired()
+                    b.Property<string>("RecordTitle")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PublicPrivateLand")
-                        .IsRequired()
+                    b.Property<string>("RecordType")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RCCount")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReviewResult")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReviewYear")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RoadLength")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StartEndLocation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StartPoint")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("StreetViewId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TinHouseCount")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TotalBudget")
-                        .HasColumnType("int");
-
-                    b.Property<string>("step")
-                        .IsRequired()
+                    b.Property<string>("SupportingDocument")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("RoadProjects");
+                    b.ToTable("road_project_process");
                 });
 
             modelBuilder.Entity("RMIS.Models.sql.RoadProjectProcess1", b =>

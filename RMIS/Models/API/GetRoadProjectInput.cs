@@ -20,9 +20,6 @@ namespace RMIS.Models.API
         // 計畫路寬
         public int? PlannedRoadWidth { get; set; }
 
-        // 階段
-        public string? Step { get; set; }
-
         // 經費資訊
         public BudgetInfo? Budgets { get; set; }
     }

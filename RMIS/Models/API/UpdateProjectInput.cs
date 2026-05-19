@@ -3,11 +3,9 @@
     public class UpdateProjectInput
     {
         // 專案Id
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         // 專案編號
         public string ProjectId { get; set; }
-        // 階段
-        public string Step { get; set; }
         // 提案人
         public string Proposer { get; set; }
         // 行政區
@@ -50,5 +48,7 @@
         public string ReviewResult { get; set; }
         // 備註
         public string Remarks { get; set; }
+        // 街景的 AreaId（null 表示不更新，保留原值）
+        public Guid? StreetViewId { get; set; }
     }
 }

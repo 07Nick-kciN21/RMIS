@@ -1,0 +1,42 @@
+/*
+ * Index Layout — Z-Index 層級統一管理
+ * ────────────────────────────────────────────────────────────────────────
+ *  值         │ 變數                    │ 元素 / 用途
+ * ────────────┼─────────────────────────┼──────────────────────────────────
+ *  400–800    │ —                       │ Leaflet 地圖圖層（框架管理）
+ *  1000       │ --z-overlay             │ 下拉選單、maptool、offcanvas 基層
+ *  1040       │ Bootstrap 預設          │ .modal-backdrop 原始值
+ *  1050       │ —                       │ box panel（box.css）
+ *  1051       │ —                       │ panel.css / _layout.css nav
+ *  1052       │ --z-modal-backdrop      │ .modal-backdrop 覆寫 → 蓋過 nav/panel
+ *  1055       │ （Bootstrap 預設）      │ .modal 容器
+ *  2000       │ —                       │ processAddModal.css
+ *  3000–3001  │ —                       │ accidentPanel.css
+ *  9999       │ --z-loading             │ loading overlay
+ *  99998      │ --z-session-backdrop    │ .modal-session-backdrop（延長登入遮罩）
+ *  99999      │ --z-session-modal       │ .modal-session（延長登入對話框）
+ * ────────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+    --z-overlay:          1000;
+    --z-modal-backdrop:   1052;   /* 必須高於 nav/panel（1051） */
+    --z-loading:          9999;
+    --z-session-backdrop: 99998;
+    --z-session-modal:    99999;
+}
+
+/* 覆寫 Bootstrap 預設 backdrop（1040），使其蓋過 nav/panel */
+.modal-backdrop {
+    z-index: var(--z-modal-backdrop) !important;
+}
+
+/* 延長登入 modal：需高於一切其他 modal */
+.modal-session {
+    z-index: var(--z-session-modal) !important;
+}
+
+/* 延長登入 backdrop：由 JS 在 show.bs.modal 時動態套用 */
+.modal-session-backdrop {
+    z-index: var(--z-session-backdrop) !important;
+}

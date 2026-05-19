@@ -135,3 +135,10 @@
 .hidden {
     display: none !important;
 }
+
+/* Bootstrap modal-backdrop 預設 z-index: 1040，低於 box（1050），
+   導致 modal 出現時 left-box / right-box 不會被遮暗。
+   覆寫至 1052 使 backdrop 蓋過 box，但仍低於 .modal（1055）。 */
+.modal-backdrop {
+    z-index: 1052;
+}

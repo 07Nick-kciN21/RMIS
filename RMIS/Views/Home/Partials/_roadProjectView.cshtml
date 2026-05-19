@@ -30,7 +30,11 @@
             </div>
         </div>
 
-        @* ===== 1.5 座標未確認警示 ===== *@
+        @* ===== 1.5 座標狀態警示 ===== *@
+        <div id="pv-coord-pending" class="coord-warning-banner hidden" style="background-color:#fff0f0; color:#b91c1c; border-color:#fca5a5;">
+            <i class="fa fa-clock-o"></i>
+            <span>尚未取得座標，無法進行編輯</span>
+        </div>
         <div id="pv-coord-warning" class="coord-warning-banner hidden">
             <i class="fa fa-exclamation-triangle"></i>
             <span>座標由系統自動取得，請至編輯頁面確認座標位置</span>
@@ -45,7 +49,6 @@
                     <h3 class="section-title">
                         <i class="fa fa-info-circle"></i> 基本資訊
                     </h3>
-                    <span class="stage-badge" id="pv-stage-badge">階段</span>
                 </div>
                 <div class="section-body">
                     <div class="info-grid">

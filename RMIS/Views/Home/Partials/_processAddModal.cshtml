@@ -1,37 +1,30 @@
-@* ==========================================================================
-   _processAddModal.cshtml - 歷程紀錄新增表單 Modal
-   包含三個階段的不同表單
-   ========================================================================== *@
-
 <link rel="stylesheet" href="~/css/index/processAddModal.css" />
 
-@* ===== 新增紀錄 Modal ===== *@
-<div id="process-add-modal" class="process-modal hidden">
+@* ===== 總階段新增記錄 Modal ===== *@
+<div id="all-process-add-modal" class="process-modal hidden">
     <div class="process-modal-backdrop"></div>
     <div class="process-modal-container">
-        
-        @* Modal Header *@
+
         <div class="process-modal-header">
             <h3 class="modal-title">
-                <i class="fa fa-plus-circle"></i>
-                <span id="modal-stage-title">新增歷程紀錄</span>
+                <span>新增歷程記錄</span>
             </h3>
-            <button type="button" class="btn-modal-close" id="btn-close-add-modal">
-                <i class="fa fa-times"></i>
+            <button type="button" class="btn-modal-close" id="btn-close-all-process-modal">
+                &times;
             </button>
         </div>
 
-        @* Modal Body - 表單區域 *@
         <div class="process-modal-body">
-            @* ===== 階段1表單: 爭取預算與前期規畫階段 ===== *@
-            <form id="form-stage1" class="process-form hidden" data-stage="stage1">
+            <form id="form-stage-all" class="process-form" data-stage="stage-all">
+
+                @* 階段選擇 *@
                 <div class="form-section">
-                    <h4 class="section-title">基本資訊</h4>
-                    
+                    <h4 class="section-title">階段與基本資訊</h4>
+
                     <div class="form-row">
                         <div class="form-group col-6">
-                            <label for="s1-district">行政區 <span class="required">*</span></label>
-                            <select id="s1-district" name="district" class="form-control" required>
+                            <label for="sa-district">行政區</label>
+                            <select id="sa-district" name="district" class="form-control">
                                 <option value="">請選擇</option>
                                 <option value="桃園區">桃園區</option>
                                 <option value="中壢區">中壢區</option>
@@ -49,11 +42,11 @@
                             </select>
                         </div>
                         <div class="form-group col-6">
-                            <label for="s1-record-type">記錄類別 <span class="required">*</span></label>
-                            <select id="s1-record-type" name="record_type" class="form-control" required>
+                            <label for="sa-record-type">記錄類別 <span class="required">*</span></label>
+                            <select id="sa-record-type" name="record_type" class="form-control" required>
                                 <option value="">請選擇</option>
                                 <option value="重要里程碑">重要里程碑</option>
-                                <option value="會議紀錄">會議紀錄</option>
+                                <option value="會議記錄">會議記錄</option>
                                 <option value="公文核定">公文核定</option>
                                 <option value="進度說明">進度說明</option>
                             </select>
@@ -62,125 +55,39 @@
 
                     <div class="form-row">
                         <div class="form-group col-12">
-                            <label for="s1-record-title">記錄標題 <span class="required">*</span></label>
-                            <input type="text" id="s1-record-title" name="record_title" class="form-control" 
+                            <label for="sa-record-title">記錄標題 <span class="required">*</span></label>
+                            <input type="text" id="sa-record-title" name="record_title" class="form-control"
                                    placeholder="請輸入記錄標題" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-12">
-                            <label for="s1-project-name">工程名稱 <span class="required">*</span></label>
-                            <input type="text" id="s1-project-name" name="project_name" class="form-control"
+                            <label for="sa-project-name">工程名稱</label>
+                            <input type="text" id="sa-project-name" name="project_name" class="form-control"
                                    placeholder="請輸入工程名稱" readonly>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-6">
-                            <label for="s1-execution-unit">執行單位</label>
-                            <input type="text" id="s1-execution-unit" name="execution_unit" class="form-control"
+                            <label for="sa-execution-unit">執行單位</label>
+                            <input type="text" id="sa-execution-unit" name="execution_unit" class="form-control"
                                    placeholder="請輸入執行單位">
                         </div>
                         <div class="form-group col-6">
-                            <label for="s1-construction-unit">工程單位</label>
-                            <input type="text" id="s1-construction-unit" name="construction_unit" class="form-control"
+                            <label for="sa-construction-unit">工程單位</label>
+                            <input type="text" id="sa-construction-unit" name="construction_unit" class="form-control"
                                    placeholder="請輸入工程單位">
                         </div>
-                    </div>                    
-                </div>
-
-                <div class="form-section">
-                    <h4 class="section-title">會議資訊</h4>
-                    
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s1-previous-status">前次會議辦理情形</label>
-                            <textarea id="s1-previous-status" name="previous_meeting_status" class="form-control" 
-                                      rows="3" placeholder="請輸入前次會議辦理情形"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s1-previous-resolution">前次會議裁示</label>
-                            <textarea id="s1-previous-resolution" name="previous_meeting_resolution" class="form-control" 
-                                      rows="3" placeholder="請輸入前次會議裁示"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s1-current-status">最新辦理情形 <span class="required">*</span></label>
-                            <textarea id="s1-current-status" name="current_status" class="form-control" 
-                                      rows="4" placeholder="請輸入最新辦理情形" required></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s1-current-resolution">本次會議裁示</label>
-                            <textarea id="s1-current-resolution" name="current_meeting_resolution" class="form-control" 
-                                      rows="3" placeholder="請輸入本次會議裁示"></textarea>
-                        </div>
                     </div>
                 </div>
 
+                @* 用地取得資訊 *@
                 <div class="form-section">
-                    <h4 class="section-title">附件上傳</h4>
+                    <h4 class="section-title">用地取得資訊</h4>
                     <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s1-files">佐證文件</label>
-                            <div class="file-upload-area" id="s1-file-upload">
-                                <input type="file" id="s1-files" name="files" multiple class="file-input">
-                                <div class="file-upload-hint">
-                                    <i class="fa fa-cloud-upload"></i>
-                                    <p>點擊或拖曳檔案至此處上傳</p>
-                                    <span>支援 PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、JPG、PNG、ZIP</span>
-                                </div>
-                            </div>
-                            <div class="file-list" id="s1-file-list"></div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-
-            @* ===== 階段2表單: 意願調查及用地取得階段 ===== *@
-            <form id="form-stage2" class="process-form hidden" data-stage="stage2">
-                <div class="form-section">
-                    <h4 class="section-title">基本資訊</h4>
-                    
-                    <div class="form-row">
-                        <div class="form-group col-4">
-                            <label for="s2-district">行政區 <span class="required">*</span></label>
-                            <select id="s2-district" name="district" class="form-control" required>
-                                <option value="">請選擇</option>
-                                <option value="桃園區">桃園區</option>
-                                <option value="中壢區">中壢區</option>
-                                <option value="大溪區">大溪區</option>
-                                <option value="楊梅區">楊梅區</option>
-                                <option value="蘆竹區">蘆竹區</option>
-                                <option value="大園區">大園區</option>
-                                <option value="龜山區">龜山區</option>
-                                <option value="八德區">八德區</option>
-                                <option value="龍潭區">龍潭區</option>
-                                <option value="平鎮區">平鎮區</option>
-                                <option value="新屋區">新屋區</option>
-                                <option value="觀音區">觀音區</option>
-                                <option value="復興區">復興區</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-4">
-                            <label for="s2-record-type">記錄類別 <span class="required">*</span></label>
-                            <select id="s2-record-type" name="record_type" class="form-control" required>
-                                <option value="">請選擇</option>
-                                <option value="重要里程碑">重要里程碑</option>
-                                <option value="會議紀錄">會議紀錄</option>
-                                <option value="公文核定">公文核定</option>
-                                <option value="進度說明">進度說明</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-4">
-                            <label for="s2-category">類別</label>
-                            <select id="s2-category" name="category" class="form-control">
+                        <div class="form-group col-6">
+                            <label for="sa-category">類別</label>
+                            <select id="sa-category" name="category" class="form-control">
                                 <option value="">請選擇</option>
                                 <option value="意願調查">意願調查</option>
                                 <option value="協議價購">協議價購</option>
@@ -189,268 +96,228 @@
                                 <option value="其他">其他</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s2-record-title">記錄標題 <span class="required">*</span></label>
-                            <input type="text" id="s2-record-title" name="record_title" class="form-control" 
-                                   placeholder="請輸入記錄標題" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s2-project-name">工程名稱 <span class="required">*</span></label>
-                            <input type="text" id="s2-project-name" name="project_name" class="form-control"
-                                   placeholder="請輸入工程名稱" readonly>
-                        </div>
-                    </div>
-                    <div class="form-row">
                         <div class="form-group col-6">
-                            <label for="s2-execution-unit">執行單位</label>
-                            <input type="text" id="s2-execution-unit" name="execution_unit" class="form-control"
-                                   placeholder="請輸入執行單位">
-                        </div>
-                        <div class="form-group col-6">
-                            <label for="s2-construction-unit">工程單位</label>
-                            <input type="text" id="s2-construction-unit" name="construction_unit" class="form-control"
-                                   placeholder="請輸入工程單位">
-                        </div>
-                    </div>                    
-                </div>
-
-                <div class="form-section">
-                    <h4 class="section-title">會議資訊</h4>
-                    
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s2-previous-status">前次會議辦理情形</label>
-                            <textarea id="s2-previous-status" name="previous_meeting_status" class="form-control" 
-                                      rows="3" placeholder="請輸入前次會議辦理情形"></textarea>
+                            <label for="sa-land-budget">用地經費</label>
+                            <input type="text" id="sa-land-budget" class="form-control" readonly placeholder="由專案資訊自動帶入">
                         </div>
                     </div>
-
                     <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s2-previous-resolution">前次會議裁示</label>
-                            <textarea id="s2-previous-resolution" name="previous_meeting_resolution" class="form-control" 
-                                      rows="3" placeholder="請輸入前次會議裁示"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s2-current-status">最新辦理情形 <span class="required">*</span></label>
-                            <textarea id="s2-current-status" name="current_status" class="form-control" 
-                                      rows="4" placeholder="請輸入最新辦理情形" required></textarea>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s2-current-resolution">本次會議裁示</label>
-                            <textarea id="s2-current-resolution" name="current_meeting_resolution" class="form-control" 
-                                      rows="3" placeholder="請輸入本次會議裁示"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h4 class="section-title">附件上傳</h4>
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s2-files">佐證文件</label>
-                            <div class="file-upload-area" id="s2-file-upload">
-                                <input type="file" id="s2-files" name="files" multiple class="file-input">
-                                <div class="file-upload-hint">
-                                    <i class="fa fa-cloud-upload"></i>
-                                    <p>點擊或拖曳檔案至此處上傳</p>
-                                    <span>支援 PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、JPG、PNG、ZIP</span>
-                                </div>
+                        <div class="form-group col-6" style="border-right:1px solid #e2e8f0; padding-right:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">公聽會</label>
+                                <button type="button" id="btn-add-public-hearing" class="btn btn-sm btn-outline-primary">
+                                    新增一筆
+                                </button>
                             </div>
-                            <div class="file-list" id="s2-file-list"></div>
+                            <div id="public-hearing-list"></div>
                         </div>
-                    </div>
-                </div>
-            </form>
-
-            @* ===== 階段3表單: 設計與施工階段 ===== *@
-            <form id="form-stage3" class="process-form hidden" data-stage="stage3">
-                <div class="form-section">
-                    <h4 class="section-title">基本資訊</h4>
-                    
-                    <div class="form-row">
-                        <div class="form-group col-6">
-                            <label for="s3-district">行政區 <span class="required">*</span></label>
-                            <select id="s3-district" name="district" class="form-control" required>
-                                <option value="">請選擇</option>
-                                <option value="桃園區">桃園區</option>
-                                <option value="中壢區">中壢區</option>
-                                <option value="大溪區">大溪區</option>
-                                <option value="楊梅區">楊梅區</option>
-                                <option value="蘆竹區">蘆竹區</option>
-                                <option value="大園區">大園區</option>
-                                <option value="龜山區">龜山區</option>
-                                <option value="八德區">八德區</option>
-                                <option value="龍潭區">龍潭區</option>
-                                <option value="平鎮區">平鎮區</option>
-                                <option value="新屋區">新屋區</option>
-                                <option value="觀音區">觀音區</option>
-                                <option value="復興區">復興區</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-6">
-                            <label for="s3-record-type">記錄類別 <span class="required">*</span></label>
-                            <select id="s3-record-type" name="record_type" class="form-control" required="">
-                                <option value="">請選擇</option>
-                                <option value="重要里程碑">重要里程碑</option>
-                                <option value="會議紀錄">會議紀錄</option>
-                                <option value="公文核定">公文核定</option>
-                                <option value="進度說明">進度說明</option>
-                            </select>
+                        <div class="form-group col-6" style="padding-left:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">徵收市價地評會審查</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="market-price-review-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="market-price-review-list"></div>
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s3-record-title">記錄標題 <span class="required">*</span></label>
-                            <input type="text" id="s3-record-title" name="record_title" class="form-control" 
-                                   placeholder="請輸入記錄標題" required>
+                        <div class="form-group col-6" style="border-right:1px solid #e2e8f0; padding-right:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">協議價購會</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="negotiated-purchase-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="negotiated-purchase-list"></div>
+                        </div>
+                        <div class="form-group col-6" style="padding-left:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">徵收計畫書地政局預審</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="pre-review-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="pre-review-list"></div>
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s3-project-name">工程名稱 <span class="required">*</span></label>
-                            <input type="text" id="s3-project-name" name="project_name" class="form-control"
-                                   placeholder="請輸入工程名稱" readonly>
+                        <div class="form-group col-6" style="border-right:1px solid #e2e8f0; padding-right:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">徵收計畫書報部</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="submission-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="submission-list"></div>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group col-6">
-                            <label for="s3-execution-unit">執行單位</label>
-                            <input type="text" id="s3-execution-unit" name="execution_unit" class="form-control"
-                                   placeholder="請輸入執行單位">
+                        <div class="form-group col-6" style="padding-left:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">徵收核定</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="approval-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="approval-list"></div>
                         </div>
                     </div>
                 </div>
 
+                @* 工程資訊 *@
                 <div class="form-section">
                     <h4 class="section-title">工程資訊</h4>
-
-                    <div class="form-row">
-                        <div class="form-group col-12">
-                            <label for="s3-budget">預算(年度)來源核定經費</label>
-                            <input type="text" id="s3-budget" name="budget_fiscal_year_approved_amount" class="form-control"
-                                placeholder="例：113年度市預算 / 5,000萬元">
-                        </div>
-                    </div>
-
                     <div class="form-row">
                         <div class="form-group col-6">
-                            <label for="s3-contract-type">開口合約/專業發包</label>
-                            <select id="s3-contract-type" name="contract_type" class="form-control">
+                            <label for="sa-construction-budget-ref">工程經費</label>
+                            <input type="text" id="sa-construction-budget-ref" class="form-control" readonly placeholder="由專案資訊自動帶入">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-12">
+                            <label for="sa-budget">預算(年度)來源核定經費</label>
+                            <input type="text" id="sa-budget" name="budget_fiscal_year_approved_amount" class="form-control"
+                                   placeholder="例：113年度市預算 / 5,000萬元">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="sa-contract-type">開口合約/專業發包</label>
+                            <select id="sa-contract-type" name="contract_type" class="form-control">
                                 <option value="">請選擇</option>
                                 <option value="開口合約">開口合約</option>
                                 <option value="專業發包">專業發包</option>
                             </select>
                         </div>
                         <div class="form-group col-6">
-                            <label for="s3-period">工期</label>
-                            <input type="text" id="s3-period" name="construction_period" class="form-control"
-                                placeholder="例：180日曆天">
+                            <label for="sa-period">工期</label>
+                            <input type="text" id="sa-period" name="construction_period" class="form-control"
+                                   placeholder="例：180日曆天">
                         </div>
                     </div>
-
-                    @* ===== 上網公告預計/實際開工 ===== *@
                     <div class="form-row">
                         <div class="form-group col-6">
                             <label>上網公告預計/實際開工</label>
                             <div class="input-group">
-                                <select id="s3-announcement-type" name="announcement_commencement_type" class="form-control" style="max-width: 80px;">
+                                <select id="sa-announcement-type" name="announcement_commencement_type" class="form-control" style="max-width:80px;">
                                     <option value="實際">實際</option>
                                     <option value="預計">預計</option>
                                 </select>
-                                <input type="date" id="s3-announcement-date" name="announcement_commencement_date_value" class="form-control">
+                                <input type="date" id="sa-announcement-date" name="announcement_commencement_date_value" class="form-control">
                             </div>
                         </div>
-
-                        @* ===== 決標日期預計/實際完工 ===== *@
                         <div class="form-group col-6">
                             <label>決標日期預計/實際完工</label>
                             <div class="input-group">
-                                <select id="s3-award-type" name="award_completion_type" class="form-control" style="max-width: 80px;">
+                                <select id="sa-award-type" name="award_completion_type" class="form-control" style="max-width:80px;">
                                     <option value="實際">實際</option>
                                     <option value="預計">預計</option>
                                 </select>
-                                <input type="date" id="s3-award-date" name="award_completion_date_value" class="form-control">
+                                <input type="date" id="sa-award-date" name="award_completion_date_value" class="form-control">
                             </div>
                         </div>
                     </div>
+                    <div class="form-row">
+                        <div class="form-group col-6" style="border-right:1px solid #e2e8f0; padding-right:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">設計派工</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="design-dispatch-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="design-dispatch-list"></div>
+                        </div>
+                        <div class="form-group col-6" style="padding-left:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">基設核定</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="basic-design-approval-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="basic-design-approval-list"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6" style="border-right:1px solid #e2e8f0; padding-right:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">細設核定</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="detailed-design-approval-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="detailed-design-approval-list"></div>
+                        </div>
+                        <div class="form-group col-6" style="padding-left:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                <label class="mb-0">工程施做</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-add-date-note" data-list="construction-execution-list">
+                                    新增一筆
+                                </button>
+                            </div>
+                            <div id="construction-execution-list"></div>
+                        </div>
+                    </div>
+                </div>
 
-
+                @* 會議資訊 *@
                 <div class="form-section">
                     <h4 class="section-title">會議資訊</h4>
-                    
                     <div class="form-row">
                         <div class="form-group col-12">
-                            <label for="s3-previous-status">前次會議辦理情形</label>
-                            <textarea id="s3-previous-status" name="previous_meeting_status" class="form-control" 
+                            <label for="sa-previous-status">前次會議辦理情形</label>
+                            <textarea id="sa-previous-status" name="previous_meeting_status" class="form-control"
                                       rows="3" placeholder="請輸入前次會議辦理情形"></textarea>
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div class="form-group col-12">
-                            <label for="s3-previous-resolution">前次會議裁示</label>
-                            <textarea id="s3-previous-resolution" name="previous_meeting_resolution" class="form-control" 
+                            <label for="sa-previous-resolution">前次會議裁示</label>
+                            <textarea id="sa-previous-resolution" name="previous_meeting_resolution" class="form-control"
                                       rows="3" placeholder="請輸入前次會議裁示"></textarea>
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div class="form-group col-12">
-                            <label for="s3-current-status">最新辦理情形 <span class="required">*</span></label>
-                            <textarea id="s3-current-status" name="current_status" class="form-control" 
+                            <label for="sa-current-status">最新辦理情形 <span class="required">*</span></label>
+                            <textarea id="sa-current-status" name="current_status" class="form-control"
                                       rows="4" placeholder="請輸入最新辦理情形" required></textarea>
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div class="form-group col-12">
-                            <label for="s3-current-resolution">本次會議裁示</label>
-                            <textarea id="s3-current-resolution" name="current_meeting_resolution" class="form-control" 
+                            <label for="sa-current-resolution">本次會議裁示</label>
+                            <textarea id="sa-current-resolution" name="current_meeting_resolution" class="form-control"
                                       rows="3" placeholder="請輸入本次會議裁示"></textarea>
                         </div>
                     </div>
                 </div>
 
+                @* 附件上傳 *@
                 <div class="form-section">
                     <h4 class="section-title">附件上傳</h4>
                     <div class="form-row">
                         <div class="form-group col-12">
-                            <label for="s3-files">佐證文件</label>
-                            <div class="file-upload-area" id="s3-file-upload">
-                                <input type="file" id="s3-files" name="files" multiple class="file-input">
+                            <label for="sa-files">佐證文件</label>
+                            <div class="file-upload-area" id="sa-file-upload">
+                                <input type="file" id="sa-files" name="files" multiple class="file-input">
                                 <div class="file-upload-hint">
-                                    <i class="fa fa-cloud-upload"></i>
                                     <p>點擊或拖曳檔案至此處上傳</p>
                                     <span>支援 PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、JPG、PNG、ZIP</span>
                                 </div>
                             </div>
-                            <div class="file-list" id="s3-file-list"></div>
+                            <div class="file-list" id="sa-file-list"></div>
                         </div>
                     </div>
                 </div>
-            </form>
 
+            </form>
         </div>
 
-        @* Modal Footer *@
         <div class="process-modal-footer">
-            <button type="button" class="btn btn-outline-secondary" id="btn-cancel-add">
-                <i class="fa fa-times"></i> 取消
+            <button type="button" class="btn btn-outline-secondary" id="btn-cancel-all-process">
+                取消
             </button>
-            <button type="button" class="btn btn-primary" id="btn-submit-add">
-                <i class="fa fa-check"></i> 儲存
+            <button type="button" class="btn btn-primary" id="btn-submit-all-process">
+                儲存
             </button>
         </div>
 

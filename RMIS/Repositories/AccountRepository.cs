@@ -222,12 +222,11 @@ namespace RMIS.Repositories
 
                 // 取得新角色
                 var role = await _roleManager.FindByIdAsync(updateUser.RoleId);
-                Console.WriteLine(role);
                 if (role == null)
                 {
                     await transaction.RollbackAsync();
                     _authDbContext.ChangeTracker.Clear();
-                    return (false, $"找不到為 {role.Name} 的角色");
+                    return (false, $"找不到角色 (RoleId: {updateUser.RoleId})");
                 }
 
                 // 移除舊角色（如果有的話）
@@ -270,8 +269,7 @@ namespace RMIS.Repositories
                 user.DepartmentId = updateUser.DepartmentId; // 確保 User 類別有 `DepartmentId`
                 user.Status = updateUser.Status; // 確保 User 類別有 `Status` 欄位
                 user.PhoneNumber = updateUser.Phone;
-                user.Email = updateUser.Email;
-                user.NormalizedEmail = updateUser.Email?.ToUpper();
+                // Email 由獨立的 UpdateEmail 流程處理，此處不覆寫
                 var result = await _userManager.UpdateAsync(user);
                 if (result.Succeeded)
                 {
@@ -326,10 +324,11 @@ namespace RMIS.Repositories
                     UserName = user.Account,
                     PhoneNumber = user.Phone,
                     Email = user.Email,
-                    EmailConfirmed = false, // ✅ 預設 Email 已確認
+                    EmailConfirmed = false,
                     DepartmentId = user.DepartmentId,
                     Status = user.Status,
                     Order = maxOrder + 1,
+                    CitizenCardNo = string.Empty,
                 };
 
                 var result = await _userManager.CreateAsync(createUser, user.Password);
@@ -337,6 +336,12 @@ namespace RMIS.Repositories
                 if (result.Succeeded)
                 {
                     var role = await _roleManager.FindByIdAsync(user.RoleId);
+                    if (role == null)
+                    {
+                        await transaction.RollbackAsync();
+                        _authDbContext.ChangeTracker.Clear();
+                        return (false, $"找不到角色 (RoleId: {user.RoleId})");
+                    }
                     var addResult = await _userManager.AddToRoleAsync(createUser, role.Name);
                     if (!addResult.Succeeded)
                     {
@@ -506,18 +511,15 @@ namespace RMIS.Repositories
 
         public async Task<UserManager> GetUserManagerDataAsync()
         {
-            // 1. 先抓取 User 與關聯資料，避免在 Select 內部呼叫非同步方法
             var userList = await _authDbContext.Users
-                .Include(u => u.Department)
-                .Include(u => u.UserRoles)
                 .OrderBy(u => u.Department != null ? u.Department.Order : 0)
-                .ThenBy(u => _authDbContext.Roles
-                    .Where(r => u.UserRoles.Select(ur => ur.RoleId).Contains(r.Id))
-                    .Select(r => (int?)r.Order)
+                .ThenBy(u => _authDbContext.UserRoles
+                    .Where(ur => ur.UserId == u.Id)
+                    .Join(_authDbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => (int?)r.Order)
                     .FirstOrDefault() ?? 0)
                 .ThenBy(u => u.Order)
                 .Select(u => new UserData
-                {
+                { 
                     Id = u.Id,
                     DepartmentId = u.DepartmentId,
                     Department = u.Department != null ? u.Department.Name : "",
@@ -525,12 +527,13 @@ namespace RMIS.Repositories
                     DisplayName = u.DisplayName,
                     Email = u.Email,
                     Phone = u.PhoneNumber,
-                    // 取得 RoleId (安全處理)
-                    RoleId = u.UserRoles.Select(ur => ur.RoleId).FirstOrDefault(),
-                    // 直接從資料庫抓 RoleName，不要用 _userManager.GetRolesAsync(u).Result
-                    Role = _authDbContext.Roles
-                        .Where(r => u.UserRoles.Select(ur => ur.RoleId).Contains(r.Id))
-                        .Select(r => r.Name)
+                    RoleId = _authDbContext.UserRoles
+                        .Where(ur => ur.UserId == u.Id)
+                        .Select(ur => ur.RoleId)
+                        .FirstOrDefault(),
+                    Role = _authDbContext.UserRoles
+                        .Where(ur => ur.UserId == u.Id)
+                        .Join(_authDbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
                         .FirstOrDefault() ?? "No Role",
                     CitizenCardNo = u.CitizenCardNo,
                     Order = u.Order,
@@ -903,7 +906,7 @@ namespace RMIS.Repositories
                 RoleId = _authDbContext.UserRoles
                             .Where(ur => ur.UserId == user.Id)
                             .Select(ur => ur.RoleId)
-                            .First(),
+                            .FirstOrDefault(),
                 Roles = new List<SelectListItem>
                 {
                     new SelectListItem { Value = "", Text = "請選擇角色", Disabled = true, Selected = true }
@@ -1034,7 +1037,13 @@ namespace RMIS.Repositories
                 {
                     await transaction.RollbackAsync();
                     _authDbContext.ChangeTracker.Clear();
-                    return (false, $"身分建立失敗{result.Errors.Select(e => e.Description)}");
+                    return (false, $"身分建立失敗：{string.Join("、", result.Errors.Select(e => e.Description))}");
+                }
+                if (createRole.Permissions == null || createRole.Permissions.Count == 0)
+                {
+                    await transaction.RollbackAsync();
+                    _authDbContext.ChangeTracker.Clear();
+                    return (false, "身分建立失敗：未收到任何功能權限資料");
                 }
                 var rolePermissions = new List<RolePermission>();
                 foreach (var permission in createRole.Permissions)
@@ -1211,6 +1220,8 @@ namespace RMIS.Repositories
             try
             {
                 var serialNumber = updateCitizenCardNo.NewCitizenCardNo;
+                if (string.IsNullOrWhiteSpace(serialNumber))
+                    return (false, "憑證序號無效");
                 // 2. 檢查該序號是否已被其他帳號綁定 (唯一性檢查)
                 var isUsed = await _userManager.Users.AnyAsync(u => u.CitizenCardNo == serialNumber && u.Id != updateCitizenCardNo.UserId);
                 if (isUsed)

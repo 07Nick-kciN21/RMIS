@@ -1,4 +1,5 @@
 import BoxManager from './box.js';
+import { showLoading, hideLoading } from '../loading.js';
 
 /**
  * 道路專案新增模組
@@ -492,6 +493,7 @@ const RoadProjectAdd = {
             this.addingPhotoPoint = false;
             $('#btn-toggle-add-photo-point').removeClass('active');
             $('#btn-toggle-add-range-point').addClass('active');
+            this.scrollToPreviewMap();
         } else {
             $('#btn-toggle-add-range-point').removeClass('active');
         }
@@ -507,10 +509,26 @@ const RoadProjectAdd = {
             this.addingRangePoint = false;
             $('#btn-toggle-add-range-point').removeClass('active');
             $('#btn-toggle-add-photo-point').addClass('active');
+            this.scrollToPreviewMap();
         } else {
             $('#btn-toggle-add-photo-point').removeClass('active');
         }
         $('#add-preview-map').toggleClass('adding-point', this.addingRangePoint || this.addingPhotoPoint);
+    },
+
+    /**
+     * 捲動至指定元素所在的 .add-section
+     */
+    scrollToSection: function(selector) {
+        const $container = $('.add-content-area');
+        const $target = $(selector).closest('.add-section');
+        if (!$container.length || !$target.length) return;
+        const offset = $target.offset().top - $container.offset().top + $container.scrollTop();
+        $container.animate({ scrollTop: offset }, 300);
+    },
+
+    scrollToPreviewMap: function() {
+        this.scrollToSection('#add-preview-map');
     },
 
     /**
@@ -535,13 +553,14 @@ const RoadProjectAdd = {
         this.previewRangeLayer = L.layerGroup().addTo(this.previewMap);
         this.previewPhotoLayer = L.layerGroup().addTo(this.previewMap);
 
-        // 點圖新增模式：點擊地圖時插入範圍點或街景照片並關閉模式
+        // 點圖新增模式：點擊地圖時插入範圍點或街景照片並關閉模式，完成後捲回來源區塊
         const self = this;
         this.previewMap.on('click', function(e) {
             if (self.addingRangePoint) {
                 self.middleRangePoints.push({ lat: e.latlng.lat, lng: e.latlng.lng });
                 self.syncRangeTable();
                 self.toggleAddRangePoint();
+                self.scrollToSection('#add-expansion-range-table');
             } else if (self.addingPhotoPoint) {
                 self.photoList.push({
                     Id: self.photoList.length,
@@ -552,6 +571,7 @@ const RoadProjectAdd = {
                 });
                 self.renderPhotoList();
                 self.toggleAddPhotoPoint();
+                self.scrollToSection('#street-photo-list');
             }
         });
     },
@@ -881,7 +901,6 @@ const RoadProjectAdd = {
 
         formData.append('Proposer', $('#add-proposer').val());
         formData.append('AdminDistrict', $('#add-district').val());
-        formData.append('Step', $('#add-step').val() || '1');
         formData.append('StartPoint', $('#add-start-point').val());
         formData.append('EndPoint', $('#add-end-point').val());
         formData.append('RoadLength', $('#add-road-length').val() || '0');

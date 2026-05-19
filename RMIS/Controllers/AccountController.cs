@@ -172,6 +172,40 @@ namespace RMIS.Controllers
             return View(userProfile);
         }
 
+        [HttpGet("[controller]/User/Get/ProfileData")]
+        public async Task<IActionResult> GetUserProfileData()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Json(new { success = false, message = "使用者未登入" });
+            var profile = await _accountInterface.GetUserProfileDataAsync(currentUser.Id);
+            return Json(new
+            {
+                success = true,
+                id = profile.Id,
+                displayName = profile.DisplayName,
+                userName = profile.UserName,
+                phone = profile.Phone,
+                role = profile.Role,
+                department = profile.Department,
+                citizenCardNo = profile.CitizenCardNo
+            });
+        }
+
+        [HttpPost("[controller]/User/UpdateProfile")]
+        public async Task<IActionResult> UpdateProfile(string displayName, string phone)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Json(new { success = false, message = "使用者未登入" });
+            currentUser.DisplayName = displayName?.Trim() ?? currentUser.DisplayName;
+            currentUser.PhoneNumber = phone?.Trim() ?? currentUser.PhoneNumber;
+            var result = await _userManager.UpdateAsync(currentUser);
+            return Json(result.Succeeded
+                ? new { success = true, message = "資料更新成功" }
+                : new { success = false, message = "資料更新失敗" });
+        }
+
         [HttpPost("[controller]/User/Get/ManagerData")]
         public async Task<IActionResult> GetUserManagerData()
         {
@@ -398,6 +432,44 @@ namespace RMIS.Controllers
                 return Json(new { Success = false, Message = created.Message }); ;
             }
         }
+        [HttpGet("[controller]/Role/Get/CreateData")]
+        public async Task<IActionResult> GetRoleCreateData()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var perm = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+            if (!perm.Create)
+                return Json(new { success = false, message = "無權限新增" });
+
+            var permissions = _authDbContext.Permissions
+                .OrderBy(p => p.Order)
+                .Select(p => new { id = p.Id, name = p.Name, read = false, create = false, update = false, delete = false, export = false })
+                .ToList();
+            return Json(new { success = true, permissions });
+        }
+
+        [HttpGet("[controller]/Role/Get/UpdateData")]
+        public async Task<IActionResult> GetRoleUpdateData(string id)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var perm = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+            if (!perm.Update)
+                return Json(new { success = false, message = "無權限修改" });
+
+            var role = await _accountInterface.UpdateRoleViewAsync(id);
+            return Json(new
+            {
+                success = true,
+                roleId = role.RoleId,
+                roleName = role.RoleName,
+                status = role.Status,
+                permissions = role.Permissions.Select(p => new
+                {
+                    id = p.PermissionId, name = p.PermissionName,
+                    read = p.Read, create = p.Create, update = p.Update, delete = p.Delete, export = p.Export
+                })
+            });
+        }
+
         [HttpPost("[controller]/Role/Get/ManagerData")]
         public async Task<IActionResult> GetRoleManagerData()
         {

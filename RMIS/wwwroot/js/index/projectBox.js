@@ -4,6 +4,7 @@ import RoadProjectView from './roadProjectView.js';
 import RoadProjectAdd from './roadProjectAdd.js';
 import RoadProjectImport from './roadProjectImport.js';
 import { Map } from './map_test.js';
+import { showLoading, hideLoading } from '../loading.js';
 
 
 /**
@@ -28,11 +29,6 @@ const ProjectBox = {
         "復興區"   // value: 12
     ],
 
-    step:[
-        "爭取預算與前期規畫階段",
-        "意願調查及用地取得階段",
-        "設計與施工階段"
-    ],
     // 儲存全域查詢結果
     filterProject: [],
     
@@ -67,6 +63,16 @@ const ProjectBox = {
         // 綁定匯出 Excel 按鈕
         $('#exportProjectExcel').on('click', function() {
             self.exportData();
+        });
+
+        // 綁定匯出歷程按鈕
+        $('#exportProcessExcel').on('click', function() {
+            self.exportProcessData();
+        });
+
+        // 全選 checkbox
+        $(document).on('change', '#selectAllProjects', function() {
+            $('.project-row-check').prop('checked', this.checked);
         });
 
         // 綁定分頁大小改變事件
@@ -141,7 +147,6 @@ const ProjectBox = {
             roadLength: self.convertInputValue($('#projectRoadLength').val()), // 道路長度
             currentRoadWidth: self.convertInputValue($('#projectCurrentRoadWidth').val()), // 現況路寬
             plannedRoadWidth: self.convertInputValue($('#projectPlannedRoadWidth').val()), // 計畫路寬
-            step: self.convertSelectValue($('#projectStep').val()), // 階段
             budgets: { // 經費資料（巢狀結構）
                 constructionBudget: { // 工程經費
                     option: self.convertSelectValue($('#constructionBudgetOption').val()),
@@ -228,10 +233,13 @@ const ProjectBox = {
             }
 
             const isUnchecked = item.coordinateChecked === false;
-            const colCount = hasUpdatePermission ? 6 : 5;
-
+            const isPending  = item.coordinateChecked === null || item.coordinateChecked === undefined;
+            const colCount = hasUpdatePermission ? 7 : 6;
             let row = `
                 <tr data-project-index="${startIndex + currentPageData.indexOf(item)}" class="${isUnchecked ? 'coord-unchecked-row' : ''}">
+                    <td style="text-align:center;">
+                        <input type="checkbox" class="project-row-check" value="${item.projectId}">
+                    </td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary btn-locate" data-id="${item.id}">
                             定位
@@ -244,12 +252,20 @@ const ProjectBox = {
                     <td>${totalBudgetDisplay}</td>
                 </tr>`;
 
-            if (isUnchecked) {
+            if (isPending) {
+                row += `
+                <tr class="coord-warning-row" data-project-id="${item.id}">
+                    <td colspan="${colCount}">
+                        <div class="inline-coord-warning" style="background-color:#fff0f0; color:#b91c1c;">
+                            <span>尚未取得座標，無法進行編輯</span>
+                        </div>
+                    </td>
+                </tr>`;
+            } else if (isUnchecked) {
                 row += `
                 <tr class="coord-warning-row" data-project-id="${item.id}">
                     <td colspan="${colCount}">
                         <div class="inline-coord-warning">
-                            <i class="fa fa-exclamation-triangle"></i>
                             <span>座標由系統自動取得，尚未確認</span>
                         </div>
                     </td>
@@ -343,7 +359,6 @@ const ProjectBox = {
         return {
             id: apiData.projectId || '-',
             name: apiData.startEndLocation || apiData.name || '未命名專案',
-            step: apiData.step || '執行中',
             createDate: this.parseDate(apiData.createTime) || '-',
             budget: apiData.totalBudget ? (apiData.totalBudget / 10000) + ' 萬' : '-',
             pm: apiData.proposer || apiData.pm || '-',
@@ -368,35 +383,70 @@ const ProjectBox = {
         const $pagination = $('#protectPages');
         $pagination.empty();
 
-        if (totalPages <= 1) {
-            return;
-        }
+        if (totalPages <= 1) return;
 
-        for (let i = 1; i <= totalPages; i++) {
-            const pageButton = $('<a></a>')
-                .text(i)
-                .toggleClass('select', i === self.currentPage)
-                .css({
-                    'cursor': 'pointer',
-                    'padding': '5px 10px',
-                    'margin': '0 2px',
-                    'border': '1px solid #ddd',
-                    'display': 'inline-block'
-                })
+        const cur = self.currentPage;
+
+        // 收集要顯示的頁碼：前3、後3、當前±1
+        const pageSet = new Set();
+        for (let i = 1; i <= Math.min(3, totalPages); i++) pageSet.add(i);
+        for (let i = Math.max(1, totalPages - 2); i <= totalPages; i++) pageSet.add(i);
+        for (let i = Math.max(1, cur - 1); i <= Math.min(totalPages, cur + 1); i++) pageSet.add(i);
+
+        const pages = [...pageSet].sort((a, b) => a - b);
+
+        const appendBtn = (page) => {
+            const $btn = $('<a></a>')
+                .text(page)
+                .toggleClass('select', page === cur)
+                .css({ cursor: 'pointer', padding: '5px 10px', margin: '0 2px', border: '1px solid #ddd', display: 'inline-block' })
                 .on('click', function() {
-                    self.currentPage = i;
+                    self.currentPage = page;
                     self.updateProjectTable();
                 });
-            
-            if (i === self.currentPage) {
-                pageButton.css({
-                    'background-color': '#007bff',
-                    'color': 'white',
-                    'border-color': '#007bff'
-                });
+            if (page === cur) {
+                $btn.css({ 'background-color': '#007bff', color: 'white', 'border-color': '#007bff' });
             }
-            
-            $pagination.append(pageButton);
+            $pagination.append($btn);
+        };
+
+        const appendEllipsis = (hintPage) => {
+            const $ellipsis = $('<span>').text('...').css({
+                padding: '5px 6px', margin: '0 2px', display: 'inline-block',
+                color: '#007bff', cursor: 'pointer', border: '1px solid transparent',
+                minWidth: '32px', textAlign: 'center'
+            });
+            $ellipsis.on('click', function() {
+                const $input = $('<input>')
+                    .attr({ type: 'number', min: 1, max: totalPages, placeholder: hintPage })
+                    .css({ width: '52px', padding: '3px 5px', margin: '0 2px', border: '1px solid #007bff',
+                           borderRadius: '3px', textAlign: 'center', fontSize: 'inherit' });
+                $ellipsis.replaceWith($input);
+                $input.focus();
+                const commit = () => {
+                    const v = parseInt($input.val());
+                    if (v >= 1 && v <= totalPages) {
+                        self.currentPage = v;
+                        self.updateProjectTable();
+                    } else {
+                        self.updatePagination(totalPages);
+                    }
+                };
+                $input.on('keydown', function(e) {
+                    if (e.key === 'Enter') commit();
+                    if (e.key === 'Escape') self.updatePagination(totalPages);
+                }).on('blur', commit);
+            });
+            $pagination.append($ellipsis);
+        };
+
+        for (let i = 0; i < pages.length; i++) {
+            if (i > 0 && pages[i] - pages[i - 1] > 1) {
+                // hintPage 提示跳到兩段中間
+                const hint = Math.round((pages[i - 1] + pages[i]) / 2);
+                appendEllipsis(hint);
+            }
+            appendBtn(pages[i]);
         }
     },
 
@@ -648,8 +698,9 @@ const ProjectBox = {
         }
 
         // 根據 panel 的格式整理資料
-        const data = self.filterProject.map(project => {
+        const data = self.filterProject.map((project, idx) => {
             return {
+                '項次': idx + 1,
                 '申請人': project['proposer'],
                 '行政區': project['administrativeDistrict'],
                 '起訖位置': project['startEndLocation'],
@@ -671,10 +722,288 @@ const ProjectBox = {
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-        
+
         // 產生檔名：專案列表_yyyyMMdd.xlsx
         const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
         XLSX.writeFile(wb, `專案列表_${today}.xlsx`);
+    },
+
+    exportProcessData: function() {
+        const self = this;
+
+        const selectedIds = $('.project-row-check:checked').map(function() {
+            return $(this).val();
+        }).get();
+
+        if (selectedIds.length === 0) {
+            alert('請先勾選要匯出的專案');
+            return;
+        }
+
+        const fmtDN = json => {
+            if (!json) return '';
+            try {
+                const arr = JSON.parse(json);
+                if (!Array.isArray(arr)) return json;
+                return arr.map(i => i.note ? `${i.date}(${i.note})` : i.date).join('、');
+            } catch { return json; }
+        };
+        const fmtBudget = v => {
+            if (!v) return '';
+            const wan = Math.round(v / 10000);
+            if (wan >= 10000) {
+                const yi = Math.floor(wan / 10000);
+                const remaining = wan % 10000;
+                return remaining > 0 ? `${yi}億${remaining.toLocaleString()}萬元` : `${yi}億元`;
+            }
+            return `${wan.toLocaleString()}萬元`;
+        };
+
+        const columnGroups = [
+            {
+                label: '基本資訊',
+                columns: [
+                    { label: '行政區',   getValue: r => r.district || '' },
+                    { label: '工程名稱', getValue: r => r.projectName || '' },
+                    { label: '關心議員', getValue: r => r.proposer || '' },
+                    { label: '記錄類別', getValue: r => r.recordType || '' },
+                    { label: '記錄標題', getValue: r => r.recordTitle || '' },
+                    { label: '執行單位', getValue: r => r.executionUnit || '' },
+                    { label: '工程單位', getValue: r => r.constructionUnit || '' },
+                    { label: '記錄時間', getValue: r => r.createdAt ? r.createdAt.split('T')[0] : '' }
+                ]
+            },
+            {
+                label: '用地取得資訊',
+                columns: [
+                    { label: '用地取得類別',       getValue: r => r.category || '' },
+                    { label: '用地經費',            getValue: r => fmtBudget(r.landAcquisitionBudget) },
+                    { label: '公聽會',              getValue: r => fmtDN(r.publicHearing) },
+                    { label: '徵收市價地評會審查',  getValue: r => fmtDN(r.marketPriceReview) },
+                    { label: '協議價購會',          getValue: r => fmtDN(r.negotiatedPurchaseMeeting) },
+                    { label: '徵收計畫書地政局預審', getValue: r => fmtDN(r.expropriationPlanPreReview) },
+                    { label: '徵收計畫書報部',      getValue: r => fmtDN(r.expropriationPlanSubmission) },
+                    { label: '徵收核定',            getValue: r => fmtDN(r.expropriationApproval) }
+                ]
+            },
+            {
+                label: '工程資訊',
+                columns: [
+                    { label: '工程經費',              getValue: r => fmtBudget(r.constructionBudget) },
+                    { label: '預算(年度)來源核定經費', getValue: r => r.budgetFiscalYearApprovedAmount || '' },
+                    { label: '開口合約/專業發包',      getValue: r => r.contractType || '' },
+                    { label: '工期',                  getValue: r => r.constructionPeriod || '' },
+                    { label: '上網公告預計/實際開工',  getValue: r => r.announcementCommencementDate || '' },
+                    { label: '決標日期預計/實際完工',  getValue: r => r.awardCompletionDate || '' },
+                    { label: '設計派工',              getValue: r => fmtDN(r.designDispatch) },
+                    { label: '基設核定',              getValue: r => fmtDN(r.basicDesignApproval) },
+                    { label: '細設核定',              getValue: r => fmtDN(r.detailedDesignApproval) },
+                    { label: '工程施做',              getValue: r => fmtDN(r.constructionExecution) }
+                ]
+            },
+            {
+                label: '會議資訊',
+                columns: [
+                    { label: '前次會議辦理情形', getValue: r => r.previousMeetingStatus || '' },
+                    { label: '前次會議裁示',     getValue: r => r.previousMeetingResolution || '' },
+                    { label: '最新辦理情形',     getValue: r => r.currentStatus || '' },
+                    { label: '本次會議裁示',     getValue: r => r.currentMeetingResolution || '' }
+                ]
+            }
+        ];
+
+        self._showColumnSelectModal(columnGroups, async (selectedCols, presetName) => {
+            if (!selectedCols.length) return;
+
+            showLoading('匯出中...');
+            let records;
+            try {
+                const res = await fetch('/api/RoadProject/GetLastProcessRecords', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(selectedIds)
+                });
+                records = await res.json();
+            } catch (e) {
+                alert('取得歷程資料失敗');
+                return;
+            } finally {
+                hideLoading();
+            }
+
+            if (!records || records.length === 0) {
+                alert('所選專案尚無歷程記錄');
+                return;
+            }
+
+            const data = records.map((r, idx) => {
+                const row = { '項次': idx + 1 };
+                selectedCols.forEach(col => { row[col.label] = col.getValue(r); });
+                return row;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '最新歷程');
+            const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            XLSX.writeFile(wb, `${presetName || '快速套用'}_${today}.xlsx`);
+        });
+    },
+
+    _showColumnSelectModal: function(columnGroups, onConfirm) {
+        $('#export-col-modal').remove();
+
+        // 預設範本：欄位 label 集合
+        const presets = [
+            {
+                name: '局務會議',
+                labels: new Set(['工程名稱', '用地經費', '公聽會', '徵收市價地評會審查',
+                    '協議價購會', '徵收計畫書地政局預審', '徵收計畫書報部', '徵收核定', '最新辦理情形'])
+            },
+            {
+                name: '工程管制會議',
+                labels: new Set(['行政區', '工程名稱', '執行單位', '預算(年度)來源核定經費',
+                    '開口合約/專業發包', '工期', '上網公告預計/實際開工', '決標日期預計/實際完工',
+                    '基設核定', '細設核定', '工程施做',
+                    '前次會議辦理情形', '前次會議裁示', '最新辦理情形', '本次會議裁示'])
+            },
+            {
+                name: '工程施作',
+                labels: new Set(['工程名稱', '關心議員', '工程經費', '設計派工', '基設核定',
+                    '細設核定', '工程施做', '最新辦理情形'])
+            }
+        ];
+
+        const presetsHtml = presets.map((p, pi) => `
+            <button class="ecm-preset-btn" data-preset="${pi}"
+                style="padding:4px 12px; border:1px solid #94a3b8; border-radius:20px;
+                       background:#f8fafc; font-size:12px; cursor:pointer; color:#334155;
+                       transition:background .15s, color .15s;">
+                ${p.name}
+            </button>`).join('');
+
+        const groupsHtml = columnGroups.map((g, gi) => {
+            const colsHtml = g.columns.map((c, ci) => `
+                <label class="ecm-col-item">
+                    <input type="checkbox" class="ecm-col-check" data-group="${gi}" data-col="${ci}" checked>
+                    <span>${c.label}</span>
+                </label>`).join('');
+            return `
+                <div class="ecm-group">
+                    <div class="ecm-group-header">
+                        <input type="checkbox" class="ecm-group-check" data-group="${gi}" checked>
+                        <strong>${g.label}</strong>
+                    </div>
+                    <div class="ecm-col-list">${colsHtml}</div>
+                </div>`;
+        }).join('');
+
+        const modal = $(`
+            <div id="export-col-modal" style="
+                position:fixed; inset:0; z-index:9999;
+                display:flex; align-items:center; justify-content:center;
+                background:rgba(0,0,0,0.4);">
+                <div style="
+                    background:#fff; border-radius:10px; width:500px; max-height:82vh;
+                    display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+                    <div style="padding:16px 20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="font-size:15px;">選擇匯出欄位</strong>
+                        <label style="font-size:13px; color:#64748b; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" id="ecm-select-all" checked> 全選
+                        </label>
+                    </div>
+                    <div style="padding:10px 20px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:12px; color:#94a3b8; white-space:nowrap;">快速套用</span>
+                        ${presetsHtml}
+                    </div>
+                    <div style="padding:16px 20px; overflow-y:auto; flex:1;">
+                        <style>
+                            .ecm-group { margin-bottom:14px; }
+                            .ecm-group-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; color:#334155; }
+                            .ecm-col-list { display:flex; flex-wrap:wrap; gap:6px 16px; padding-left:24px; }
+                            .ecm-col-item { display:flex; align-items:center; gap:5px; font-size:13px; color:#475569; cursor:pointer; white-space:nowrap; }
+                            .ecm-col-item input { cursor:pointer; }
+                            .ecm-group-check { cursor:pointer; }
+                            .ecm-preset-btn:hover { background:#eff6ff !important; color:#2563eb !important; border-color:#93c5fd !important; }
+                            .ecm-preset-btn.active { background:#2563eb !important; color:#fff !important; border-color:#2563eb !important; }
+                        </style>
+                        ${groupsHtml}
+                    </div>
+                    <div style="padding:14px 20px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:8px;">
+                        <button id="ecm-cancel" style="padding:7px 18px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; cursor:pointer; font-size:14px;">取消</button>
+                        <button id="ecm-confirm" style="padding:7px 18px; border:none; border-radius:6px; background:#2563eb; color:#fff; cursor:pointer; font-size:14px;">確認匯出</button>
+                    </div>
+                </div>
+            </div>`);
+
+        $('body').append(modal);
+
+        function syncGroupCheck(gi) {
+            const checks = modal.find(`.ecm-col-check[data-group="${gi}"]`);
+            modal.find(`.ecm-group-check[data-group="${gi}"]`).prop('checked',
+                checks.toArray().every(el => el.checked));
+        }
+
+        function syncSelectAll() {
+            modal.find('#ecm-select-all').prop('checked',
+                modal.find('.ecm-col-check').toArray().every(el => el.checked));
+        }
+
+        // 全選
+        modal.on('change', '#ecm-select-all', function() {
+            modal.find('.ecm-group-check, .ecm-col-check').prop('checked', this.checked);
+        });
+
+        // 群組全選
+        modal.on('change', '.ecm-group-check', function() {
+            const gi = $(this).data('group');
+            modal.find(`.ecm-col-check[data-group="${gi}"]`).prop('checked', this.checked);
+            syncSelectAll();
+        });
+
+        // 單欄變更
+        modal.on('change', '.ecm-col-check', function() {
+            syncGroupCheck($(this).data('group'));
+            syncSelectAll();
+        });
+
+        // 快速套用預設
+        modal.on('click', '.ecm-preset-btn', function() {
+            const pi = $(this).data('preset');
+            const labelSet = presets[pi].labels;
+            modal.find('.ecm-col-check').each(function() {
+                const gi = $(this).data('group');
+                const ci = $(this).data('col');
+                const label = columnGroups[gi].columns[ci].label;
+                $(this).prop('checked', labelSet.has(label));
+            });
+            columnGroups.forEach((_, gi) => syncGroupCheck(gi));
+            syncSelectAll();
+            modal.find('.ecm-preset-btn').removeClass('active');
+            $(this).addClass('active');
+        });
+
+        modal.on('click', '#ecm-cancel', () => modal.remove());
+
+        modal.on('click', '#ecm-confirm', () => {
+            const selected = [];
+            modal.find('.ecm-col-check:checked').each(function() {
+                const gi = $(this).data('group');
+                const ci = $(this).data('col');
+                selected.push(columnGroups[gi].columns[ci]);
+            });
+            const activePreset = modal.find('.ecm-preset-btn.active');
+            const presetName = activePreset.length
+                ? presets[activePreset.data('preset')].name
+                : null;
+            modal.remove();
+            onConfirm(selected, presetName);
+        });
+
+        // 點擊背景關閉
+        modal.on('click', function(e) {
+            if (e.target === this) modal.remove();
+        });
     }
 };
 

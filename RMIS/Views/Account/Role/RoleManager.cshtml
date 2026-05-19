@@ -1,9 +1,10 @@
-﻿@{
+@{
     ViewData["Title"] = "功能群組管理";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
 <link rel="stylesheet" href="~/css/Account/roleManager.css" />
+<link rel="stylesheet" href="~/css/account/rolePermission.css" />
 <script type="module" src="~/js/account/role/roleManager.js"></script>
 
 <h2>功能群組列表</h2>
@@ -24,11 +25,9 @@
             </tr>
         </thead>
     </table>
-    <!-- tbody 放在獨立容器中滾動 -->
     <div class="tbody-scroll">
         <table class="table table-bordered text-center permissionTable mb-0">
             <tbody id="roleTable">
-                <!-- 資料動態插入 -->
             </tbody>
         </table>
     </div>
@@ -36,4 +35,75 @@
 <div id="rolePage" class="d-flex justify-content-center mt-2">
 </div>
 
+<!-- 新增功能群組 Modal -->
+<div class="modal fade" id="createRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增功能群組</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="rp-form">
+                    <div class="rp-form-field">
+                        <label>群組名稱</label>
+                        <input type="text" id="create-RoleName" class="form-control" placeholder="請輸入名稱" />
+                    </div>
+                    <div class="rp-form-field">
+                        <label>狀態</label>
+                        <div class="rp-radio-group">
+                            <label><input type="radio" name="create-Status" value="true" checked /> 啟用</label>
+                            <label><input type="radio" name="create-Status" value="false" /> 禁止</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="rp-content" style="max-height: 400px; overflow-y: auto;">
+                    <div id="create-accordion">
+                        <p class="text-center text-secondary py-4">載入中…</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="btn-create-submit" class="btn btn-primary">建立</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- 編輯功能群組 Modal -->
+<div class="modal fade" id="updateRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">修改功能群組</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="rp-form">
+                    <input type="hidden" id="update-RoleId" />
+                    <div class="rp-form-field">
+                        <label>群組名稱</label>
+                        <input type="text" id="update-RoleName" class="form-control" />
+                    </div>
+                    <div class="rp-form-field">
+                        <label>狀態</label>
+                        <div class="rp-radio-group">
+                            <label><input type="radio" name="update-Status" value="true" /> 啟用</label>
+                            <label><input type="radio" name="update-Status" value="false" /> 禁止</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="rp-content" style="max-height: 400px; overflow-y: auto;">
+                    <div id="update-accordion">
+                        <p class="text-center text-secondary py-4">載入中…</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="btn-update-submit" class="btn btn-primary">儲存</button>
+            </div>
+        </div>
+    </div>
+</div>

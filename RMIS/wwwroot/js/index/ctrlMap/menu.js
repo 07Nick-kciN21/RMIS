@@ -3,6 +3,7 @@ import { addLayer2Map } from './layers.js';
 import { add2List, remove2List} from './list.js';
 
 export let layerList = {};
+const _pendingPipelines = new Set();
 
 export function initMenu() {
     $.ajax({
@@ -132,9 +133,12 @@ export function bindMenuEvents() {
     $('.menu-layer').on('click', function (e) {
         e.stopPropagation();
         var id = $(this).attr('id');
+        if (_pendingPipelines.has(id)) return;
+
         var name = $(this).children('span').text();
         var $switch = $(this).children('.switch');
         console.log(`click menu-layer ${id}`);
+        _pendingPipelines.add(id);
         // 如果為switch-on，則移除圖層；否則新增圖層
         if ($switch.hasClass('switch-on')) {
             removePipeline(id).then(result => {
@@ -142,6 +146,8 @@ export function bindMenuEvents() {
                 console.log("Remove from Menu");
                 remove2List(id);
                 $switch.removeClass('switch-on').addClass('switch-off');
+            }).finally(() => {
+                _pendingPipelines.delete(id);
             });
         } else {
             // result: layerIdList
@@ -151,6 +157,8 @@ export function bindMenuEvents() {
                 add2List(id, name, layers, metaData);
                 addLayer2Map(id, layers);
                 $switch.removeClass('switch-off').addClass('switch-on');
+            }).finally(() => {
+                _pendingPipelines.delete(id);
             });
         }
     });

@@ -55,8 +55,7 @@ body {
     font-weight: bold;
 }
 
-header .dropdown-button,
-.username-text h5 {
+header .dropdown-button {
     color: #615649;
 }
 

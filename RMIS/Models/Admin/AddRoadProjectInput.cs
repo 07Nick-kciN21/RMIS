@@ -56,9 +56,6 @@ namespace RMIS.Models.Admin
         // 備註
         public string? Remark { get; set; }
 
-        // 階段
-        public string? Step { get; set; }
-
         // 審議年度
         public string? ReviewYear { get; set; }
 

@@ -43,7 +43,6 @@ export function initProjectPanel() {
             roadLength: convertInputValue($('#projectRoadLength').val()), // 道路長度
             currentRoadWidth: convertInputValue($('#projectCurrentRoadWidth').val()), // 現況路寬
             plannedRoadWidth: convertInputValue($('#projectPlannedRoadWidth').val()), // 計畫路寬
-            step: convertSelectValue($('#projectStep').val()), // 階段
             budgets: { // 經費資料
             constructionBudget: { // 工程經費
                 option: convertSelectValue($('#constructionBudgetOption').val()),

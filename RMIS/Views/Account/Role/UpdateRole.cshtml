@@ -1,98 +1,73 @@
-﻿@model RMIS.Models.Account.Roles.UpdateRoleView;
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+@model RMIS.Models.Account.Roles.UpdateRoleView
+@using System.Linq
+
 @{
     Layout = null;
+
+    var permJson = System.Text.Json.JsonSerializer.Serialize(
+        (Model.Permissions ?? new List<RMIS.Models.Account.Roles.UpdatePermission>())
+        .Select(p => new {
+            id     = p.PermissionId,
+            name   = p.PermissionName,
+            read   = p.Read,
+            create = p.Create,
+            update = p.Update,
+            delete = p.Delete,
+            export = p.Export
+        })
+    );
 }
 <!DOCTYPE html>
-    <html lang="en">
-    <style>
-        label {
-            cursor: pointer;
-            user-select: none;
-        }
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/account/rolePermission.css" />
+</head>
+<body>
+<div class="rp-page">
 
-        input[type="checkbox"] {
-            transform: scale(1.3); /* 放大 checkbox */
-            cursor: pointer;
-            margin-right: 5px;
-        }
-    </style>
-    <head>
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-        <script src="~/js/account/role/updateRole.js"></script>
-    </head>
-    <body>
-        <div class="modal-header">
-            <h5 class="modal-title" id="registerModalLabel">修改功能群組資料</h5>
+    <div class="rp-header">
+        <div class="rp-title">
+            <span class="rp-role-name">修改功能群組</span>
+            <span class="rp-label">編輯</span>
         </div>
-        <div class="modal-content">
-            <div class="modal-body">
-                <form>
-                    <div>
-                        <input type="hidden" class="form-control" asp-for="RoleId" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="RoleName">功能群組名稱</label>
-                        <input type="text" class="form-control" asp-for="RoleName">
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="radio" asp-for="Status" value="true" asp-for="Status" /> 啟用
-                        </label>
-                        <label>
-                            <input type="radio" asp-for="Status" value="false" asp-for="Status" /> 禁止
-                        </label>
-                    </div>
-                    <table class="table table-bordered permissionTable">
-                        <thead class="table-primary">
-                            <tr>
-                                <th style="width: 400px">功能名稱</th>
-                                <th style="width: 70px">查看</th>
-                                <th style="width: 70px">新增</th>
-                                <th style="width: 70px">修改</th>
-                                <th style="width: 70px">刪除</th>
-                                <th style="width: 70px">匯出</th>
-                                <th style="width: 70px">全部</th>
-                            </tr>
-                        </thead>
-                        <tbody id="permissionBody">
-                            @for (int i = 0; i < Model.Permissions.Count; i++)
-                            {
-                                <tr>
-                                    <td class="permissionName">
-                                        @Model.Permissions[i].PermissionName
-                                        <input type="hidden" asp-for="Permissions[@i].PermissionId" />
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Read" value="true">
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Create" value="true">
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Update" value="true">
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Delete" value="true">
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="perm-checkbox" data-index="@i" asp-for="Permissions[@i].Export" value="true">
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="check-all-row" data-index="@i">
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                    <button id="submit" class="btn btn-primary">儲存</button>
-                    <button id="cancel" class="btn btn-secondary">取消</button>
-                </form>
+    </div>
+
+    <div class="rp-form">
+        <input type="hidden" id="RoleId" value="@Model.RoleId" />
+        <div class="rp-form-field">
+            <label>群組名稱</label>
+            <input type="text" id="RoleName" class="form-control" value="@Model.RoleName" />
+        </div>
+        <div class="rp-form-field">
+            <label>狀態</label>
+            <div class="rp-radio-group">
+                <label>
+                    <input type="radio" name="Status" value="true"  @(Model.Status ? "checked" : "") /> 啟用
+                </label>
+                <label>
+                    <input type="radio" name="Status" value="false" @(!Model.Status ? "checked" : "") /> 禁止
+                </label>
             </div>
         </div>
-    </body>
+    </div>
+
+    <div class="rp-content">
+        <div id="view-accordion"></div>
+    </div>
+
+    <div class="rp-footer">
+        <button id="btn-submit" class="btn btn-primary btn-sm">儲存</button>
+        <button id="btn-cancel" class="btn btn-secondary btn-sm">取消</button>
+    </div>
+
+</div>
+
+<script>
+    const permissionsData = @Html.Raw(permJson);
+</script>
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/js/account/role/updateRole.js"></script>
+</body>
 </html>

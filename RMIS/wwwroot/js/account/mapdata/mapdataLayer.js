@@ -1,4 +1,5 @@
 import { WindowManager } from '../../windowCtl.js';
+import { showLoading, hideLoading } from '../../loading.js';
 
 const wm = new WindowManager();
 $(document).ready(function () {
@@ -211,10 +212,3 @@ function initMapdataLayerTable(layerId, dist, areaId) {
     });
 }
 
-function showLoading() {
-    $(".loadingSpinner").show();
-}
-
-function hideLoading() {
-    $(".loadingSpinner").hide();
-}
