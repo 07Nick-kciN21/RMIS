@@ -270,8 +270,9 @@ namespace RMIS.Controllers
             {
                 var mapSources = await _mapDBContext.MapSources.ToListAsync();
 
-                var wmsSources = mapSources.Where(ms => ms.TileType == "WMS").ToList();
+                var wmsSources  = mapSources.Where(ms => ms.TileType == "WMS").ToList();
                 var wmtsSources = mapSources.Where(ms => ms.TileType == "WMTS").ToList();
+                var xyzSources  = mapSources.Where(ms => ms.TileType == "XYZ").ToList();
 
                 var result = new MapSourceOrderbyTileType
                 {
@@ -294,6 +295,15 @@ namespace RMIS.Controllers
                         SourceId = ms.SourceId,
                         Attribution = ms.Attribution,
                         ImageFormat = ms.ImageFormat
+                    }).ToList(),
+                    XYZ = xyzSources.Select(ms => new MapSource
+                    {
+                        Id = ms.Id,
+                        Name = ms.Name,
+                        Type = ms.Type,
+                        Url = ms.Url,
+                        Attribution = ms.Attribution,
+                        Subdomains = ms.Subdomains
                     }).ToList()
                 };
 

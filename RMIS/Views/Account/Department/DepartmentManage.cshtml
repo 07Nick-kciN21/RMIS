@@ -1,10 +1,12 @@
-﻿@{
+@{
     ViewData["Title"] = "使用者管理";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
-<link rel="stylesheet" href="~/css/Account/departmentManager.css" />
-<script type="module" src="~/js/account/department/departmentManager.js"></script>
+<link rel="stylesheet" href="~/css/Account/departmentManager.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/lib/select2/select2.min.css" />
+<script src="~/lib/select2/select2.min.js"></script>
+<script type="module" src="~/js/account/department/departmentManager.js" asp-append-version="true"></script>
 
 <h2>部門列表</h2>
 <div style="display: flex;">
@@ -33,4 +35,91 @@
     </div>
 </div>
 <div id="departmentPage" class="d-flex justify-content-center mt-2">
+</div>
+
+<!-- 新增部門 Modal -->
+<div class="modal fade" id="createDepartmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="min-height:600px;">
+            <div class="modal-header">
+                <h5 class="modal-title">新增部門資料</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">部門名稱</label>
+                    <div class="col-sm-9">
+                        <input type="text" id="create-Name" class="form-control" placeholder="請輸入名稱" />
+                    </div>
+                </div>
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">狀態</label>
+                    <div class="col-sm-9 d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input type="radio" class="form-check-input" name="create-Status" value="true" id="create-statusEnabled" checked>
+                            <label class="form-check-label" for="create-statusEnabled">啟用</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" name="create-Status" value="false" id="create-statusDisabled">
+                            <label class="form-check-label" for="create-statusDisabled">禁止</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">業務圖資</label>
+                    <div class="col-sm-9">
+                        <select id="create-pipelineAccess" class="form-control" multiple></select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="btn-create-submit" class="btn btn-primary">新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 編輯部門 Modal -->
+<div class="modal fade" id="updateDepartmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="min-height:600px;">
+            <div class="modal-header">
+                <h5 class="modal-title">修改部門資料</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="update-Id" />
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">部門名稱</label>
+                    <div class="col-sm-9">
+                        <input type="text" id="update-Name" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">狀態</label>
+                    <div class="col-sm-9 d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input type="radio" class="form-check-input" name="update-Status" value="true" id="update-statusEnabled">
+                            <label class="form-check-label" for="update-statusEnabled">啟用</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" name="update-Status" value="false" id="update-statusDisabled">
+                            <label class="form-check-label" for="update-statusDisabled">禁止</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">業務圖資</label>
+                    <div class="col-sm-9">
+                        <select id="update-pipelineAccess" class="form-control" multiple></select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="btn-update-submit" class="btn btn-primary">儲存</button>
+            </div>
+        </div>
+    </div>
 </div>

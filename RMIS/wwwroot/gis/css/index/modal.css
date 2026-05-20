@@ -42,25 +42,25 @@
     margin: auto;
 }
 
-.modal-body form > div {
+.Admin-Modal-content .modal-body form > div {
     display: block;
     margin: 10px 30px;
 }
 
-.modal-body form > div > label{
+.Admin-Modal-content .modal-body form > div > label{
     height: 35px;
     width: 40%;
     text-align: left;
 }
 
-.modal-body form > div > select{
+.Admin-Modal-content .modal-body form > div > select{
     height: 100%;
     width: 60%;
     margin: auto;
 }
 
-.modal-body form > div > input,
-.modal-body form > div > textarea {
+.Admin-Modal-content .modal-body form > div > input,
+.Admin-Modal-content .modal-body form > div > textarea {
     height: 35px;
     width: 60%;
     margin: auto;

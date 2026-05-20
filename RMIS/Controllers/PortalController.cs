@@ -259,7 +259,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ForgotPassword(string account, string forgetCaptcha)
+        public async Task<IActionResult> ForgotPassword(string account, string email, string forgetCaptcha)
         {
             // 1. 驗證 Captcha
             var code = HttpContext.Session.GetString("CaptchaCode_forget");
@@ -269,13 +269,12 @@ namespace RMIS.Controllers
                 return Json(new { success = false, message = "驗證碼錯誤" });
             }
 
-            // 2. 用 UserName 找使用者
+            // 2. 用 UserName 找使用者，並比對信箱（不透露帳號是否存在）
             var user = await _userManager.FindByNameAsync(account);
-            if (user == null || !string.Equals(user.UserName, account, StringComparison.Ordinal))
+            if (user == null || !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
             {
-                _logger?.LogOperation("ForgotPassword", false, "帳號不存在", account);
-                // 安全考量：不要提示帳號不存在，避免被人暴力探測
-                return Json(new { success = true, message = "帳號不存在" });
+                _logger?.LogOperation("ForgotPassword", false, "帳號不存在或信箱不符", account);
+                return Json(new { success = true, message = "若帳號與信箱正確，重設連結已寄送，請於 5 分鐘內完成操作" });
             }
 
             // 3. 產生 Token

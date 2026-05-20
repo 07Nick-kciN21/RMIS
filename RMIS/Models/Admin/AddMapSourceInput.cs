@@ -9,5 +9,6 @@
         public string TileType { get; set; } // WTS 或 WMTS
         public string? ImageFormat { get; set; } // 圖片格式，例如 "image/png", "image/jpeg"，WMTS時可為 null
         public string Attribution { get; set; } // 地圖來源的歸屬信息
+        public string? Subdomains { get; set; } // XYZ 圖層的子域名，逗號分隔
     }
 }

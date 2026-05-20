@@ -1,61 +1,90 @@
 import { initPage } from "../Pagination.js";
-import { WindowManager } from "../../windowCtl.js";
 
-const wm = new WindowManager();
 let allPermissions = [];
 
 $(document).ready(function () {
     initPermissionTable();
-    
+
     $("#createPermission").on("click", function () {
-        var windowWidth = 800;
-        var windowHeight = 600;
-        var screenWidth = window.screen.width;
-        var screenHeight = window.screen.height;
-        var left = 0 - (screenWidth + windowWidth) / 2;
-        var top = (screenHeight - windowHeight) / 2;
-        wm.open("createPermissionWindow", "/Account/Permission/Create", windowWidth, windowHeight);
-        // window.open('/Account/Permission/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+        $('#create-Name').val('');
+        $('input[name="create-Status"][value="true"]').prop('checked', true);
+        $('#createPermissionModal').modal('show');
     });
 
     $("#permissionSelector").on("change", function () {
         var selectedPermissionId = $(this).val();
-        if(selectedPermissionId == 0){
+        if (selectedPermissionId == 0) {
             initPermissionTable();
-        }
-        else{
+        } else {
             var filteredPermissions = allPermissions.filter((permission) => {
                 return permission.id == selectedPermissionId;
             });
             updatePermissionTable(filteredPermissions);
         }
     });
-    window.addEventListener('message', function(event) {
-        if (event.origin !== window.location.origin) return; // 安全性驗證
-        const message = JSON.parse(event.data);
-        if(message.success){
-            console.log(message);
-            initPermissionTable();
-        }
-        console.log(message.success);
+
+    $("#btn-create-submit").on("click", function () {
+        var name = $('#create-Name').val().trim();
+        if (!name) { alert('請輸入功能模組名稱'); return; }
+        var formData = new FormData();
+        formData.append('Name', name);
+        formData.append('Status', $('input[name="create-Status"]:checked').val() || 'true');
+        $.ajax({
+            url: '/Account/Permission/Create',
+            type: 'POST',
+            processData: false,
+            contentType: false,
+            data: formData,
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                alert(data.message);
+                if (data.success) {
+                    $('#createPermissionModal').modal('hide');
+                    initPermissionTable();
+                }
+            },
+            error: function () { alert('提交失敗'); }
+        });
+    });
+
+    $("#btn-update-submit").on("click", function () {
+        var name = $('#update-Name').val().trim();
+        if (!name) { alert('請輸入功能模組名稱'); return; }
+        var formData = new FormData();
+        formData.append('Id', $('#update-Id').val());
+        formData.append('Name', name);
+        formData.append('Status', $('input[name="update-Status"]:checked').val() || 'true');
+        $.ajax({
+            url: '/Account/Permission/Update',
+            type: 'POST',
+            processData: false,
+            contentType: false,
+            data: formData,
+            xhrFields: { withCredentials: true },
+            success: function (data) {
+                alert(data.message);
+                if (data.success) {
+                    $('#updatePermissionModal').modal('hide');
+                    initPermissionTable();
+                }
+            },
+            error: function () { alert('提交失敗'); }
+        });
     });
 });
 
-function initPermissionTable(){
+function initPermissionTable() {
     var tbody = $("#permissionTable");
     tbody.empty();
     $.ajax({
         url: '/Account/Permission/Get/ManagerData',
         type: 'POST',
-        xhrFields: {
-            withCredentials: true
-        },
+        xhrFields: { withCredentials: true },
         success: function (data) {
             if (data.success) {
                 var permissionData = data.permissionManager;
                 allPermissions = permissionData.permissions;
                 initPage("permissionPage", updatePermissionTable, allPermissions);
-                // updatePermissionTable(allPermissions);
                 updatePermissionFilter(allPermissions);
             }
         },
@@ -65,36 +94,29 @@ function initPermissionTable(){
     });
 }
 
-function updatePermissionTable(permissions){
+function updatePermissionTable(permissions) {
     var tbody = $("#permissionTable");
     tbody.empty();
     permissions.forEach((permission) => {
         var row = $("<tr></tr>").attr("data-permission-id", permission.id);
+
         var updateBtn = $(`<button class="update-permission read">編輯</button>`).on("click", function () {
-            var windowWidth = 800;
-            var windowHeight = 600;
-            var screenWidth = window.screen.width;
-            var screenHeight = window.screen.height;
-            var left = 0 - (screenWidth + windowWidth) / 2;
-            var top = (screenHeight - windowHeight) / 2;
-            wm.open("updatePermissionWindow", `/Account/Permission/Update?id=${permission.id}`, windowWidth, windowHeight);
-            // window.open(`/Account/Permission/Update?id=${permission.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            $('#update-Id').val(permission.id);
+            $('#update-Name').val(permission.name);
+            $(`input[name="update-Status"][value="${permission.status}"]`).prop('checked', true);
+            $('#updatePermissionModal').modal('show');
         });
+
         var deleteBtn = $(`<button class="delete-permission read">刪除</button>`).on("click", function () {
             if (confirm("確定要刪除權限？")) {
                 $.ajax({
                     url: `/Account/Permission/Delete?permissionId=${permission.id}`,
                     type: "POST",
-                    xhrFields: {
-                        withCredentials: true
-                    },
+                    xhrFields: { withCredentials: true },
                     success: function (data) {
+                        alert(data.message);
                         if (data.success) {
-                            alert(data.message);
-                            location.reload();
-                        }
-                        else{
-                            alert(data.message);
+                            initPermissionTable();
                         }
                     },
                     error: function (xhr) {
@@ -103,12 +125,12 @@ function updatePermissionTable(permissions){
                 });
             }
         });
+
         row.append(`<td class="name-cell">
                         <span class="read">${permission.name}</span>
                     </td>`);
-        // 狀態根據status顯示啟用或停用
         row.append(`<td class="status-cell">
-            ${permission.status ? 
+            ${permission.status ?
                 '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
             }
             <input class="edit d-none form-check-input status" type="checkbox" role="switch" ${permission.status ? 'checked' : ''}>
@@ -122,19 +144,15 @@ function updatePermissionTable(permissions){
     });
 }
 
-function convertDate(createAt){
-    var createAt = createAt.split("T");
-    var createAtDate = createAt[0];
-    var createAtTime = createAt[1].split(".")[0];
-    return `${createAtDate} ${createAtTime}`;
+function convertDate(createAt) {
+    var parts = createAt.split("T");
+    return `${parts[0]} ${parts[1].split(".")[0]}`;
 }
 
-function updatePermissionFilter(allPermissions){
+function updatePermissionFilter(allPermissions) {
     $("#permissionSelector").empty();
     $("#permissionSelector").append(`<option value="0" selected>全部</option>`);
     allPermissions.forEach((permission) => {
-        var option = $(`<option value="${permission.id}">${permission.name}</option>`);
-        $("#permissionSelector").append(option);
+        $("#permissionSelector").append(`<option value="${permission.id}">${permission.name}</option>`);
     });
 }
-

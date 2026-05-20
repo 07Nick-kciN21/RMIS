@@ -91,6 +91,7 @@ namespace RMIS.Models.Account.Users
     public class UpdateUserPassword
     {
         public string UserId { get; set; }
+        public string? OriginPassword { get; set; }
         public string NewPassword { get; set; }
     }
 

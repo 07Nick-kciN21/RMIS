@@ -223,48 +223,17 @@ const Map = {
         map.getPane('basePane').style.zIndex = 2;
         map.getPane('overlayPane').style.zIndex = 4;
         map.getPane('photoPane').style.zIndex = 3;
-        //google街景
-        var GoogleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
-        });
-        //google衛星
-        var GoogleSatellite = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
-        });
-        //google地形
-        var GoogleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
-        });
 
-        //google混和
-        var GoogleHybrid = L.tileLayer('http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}&hl=zh_TW', {
-            maxZoom: 22,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            pane: 'basePane'
-        });
-
-        //openstreet
-        var OpenStreet = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 22,
-            attribution: '&copy; OpenStreetMap contributors',
+        // 預設顯示臺灣通用電子地圖，不加入 baseMaps，等 DB 資料回來後由 AJAX 統一管理
+        var defaultLayer = L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
+            maxZoom: 20,
+            attribution: '&copy; 內政部國土測繪中心',
             pane: 'basePane'
         }).addTo(this.indexMap);
-        const baseMaps = {
-            "Open Street地圖": OpenStreet,
-            "Google 街景地圖": GoogleStreets,
-            "Google 衛星地圖": GoogleSatellite,
-            "Google 地形圖"  : GoogleTerrain,
-            "Google 混和地圖": GoogleHybrid,
-        };
+        const baseMaps = {};
         const overlayMaps = {};
 
-        let currentTileLayer = baseMaps["Open Street地圖"];
+        let currentTileLayer = defaultLayer;
 
         $.ajax({
             url: '/api/MapAPI/GetMapSources',
@@ -289,6 +258,17 @@ const Map = {
                         opacity: source.type === 'basePane' ? 1 : 0.5,
                         pane: source.type
                     });
+                    (source.type === 'basePane' ? baseMaps : overlayMaps)[source.name] = layer;
+                });
+
+                mapSources.xyz.forEach(source => {
+                    const options = {
+                        attribution: source.attribution,
+                        pane: source.type,
+                        maxZoom: 22
+                    };
+                    if (source.subdomains) options.subdomains = source.subdomains.split(',');
+                    const layer = L.tileLayer(source.url, options);
                     (source.type === 'basePane' ? baseMaps : overlayMaps)[source.name] = layer;
                 });
 

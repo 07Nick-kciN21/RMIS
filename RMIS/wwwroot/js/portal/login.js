@@ -52,7 +52,7 @@ $(document).ready(function () {
           const pattern = $input.attr('pattern');
   
           // 密碼確認邏輯會另外處理
-          if ($input.attr('id') === 'registerConfirmPassword' || $input.attr('id') === 'registerCaptcha') return;
+          if ($input.attr('id') === 'registerConfirmPassword') return;
   
           if (!value) {
             $input.addClass('is-invalid');

@@ -1,152 +1,221 @@
 import { initPage } from "../Pagination.js";
-import { WindowManager } from "../../windowCtl.js";
 
-const wm = new WindowManager();
 let allDepartments = [];
+let initialUpdateValues = [];
 
 $(document).ready(function () {
     initDepartmentTable();
-    
-    $("#createDepartment").on("click", function () {
-        var windowWidth = 800;
-        var windowHeight = 600;
-        var screenWidth = window.screen.width;
-        var screenHeight = window.screen.height;
-        var left = 0 - (screenWidth + windowWidth) / 2;
-        var top = (screenHeight - windowHeight) / 2;
-        wm.open("createDepartmentWindow", "/Account/Department/Create", windowWidth, windowHeight);
-        // window.open('/Account/Department/Create', 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
-    });
+
+    $("#createDepartment").on("click", openCreateModal);
 
     $("#departmentSelector").on("change", function () {
-        var selectedDepartmentId = $(this).val();
-        if(selectedDepartmentId == 0){
-            updateDepartmentTable(allDepartments);
+        var selectedId = $(this).val();
+        if (selectedId == 0) {
             initPage("departmentPage", updateDepartmentTable, allDepartments);
-        }
-        else{
-            var filteredDepartments = allDepartments.filter((department) => {
-                return department.id == selectedDepartmentId;
-            });
-            updateDepartmentTable(filteredDepartments);
-            initPage("departmentPage", updateDepartmentTable, filteredDepartments);
+        } else {
+            var filtered = allDepartments.filter(d => d.id == selectedId);
+            initPage("departmentPage", updateDepartmentTable, filtered);
         }
     });
 
-    window.addEventListener('message', function(event) {
-        if (event.origin !== window.location.origin) return; // 安全性驗證
-        const message = JSON.parse(event.data);
-        if(message.success){
-            console.log("message.success");
-            // 重整頁面
-            initDepartmentTable();
-        }
-        console.log(message.success);
-    });
+    $("#btn-create-submit").on("click", submitCreate);
+    $("#btn-update-submit").on("click", submitUpdate);
 });
 
-function initDepartmentTable(){
+function openCreateModal() {
+    $('#create-Name').val('');
+    $('input[name="create-Status"][value="true"]').prop('checked', true);
+    destroySelect2('#create-pipelineAccess');
+    $('#createDepartmentModal').modal('show');
+    loadPipelineAccess(-1, '#create-pipelineAccess', '#createDepartmentModal', null);
+}
+
+function openUpdateModal(department) {
+    $('#update-Id').val(department.id);
+    $('#update-Name').val(department.name);
+    $(`input[name="update-Status"][value="${department.status}"]`).prop('checked', true);
+    destroySelect2('#update-pipelineAccess');
+    initialUpdateValues = [];
+    $('#updateDepartmentModal').modal('show');
+    loadPipelineAccess(department.id, '#update-pipelineAccess', '#updateDepartmentModal', function (vals) {
+        initialUpdateValues = vals;
+    });
+}
+
+function destroySelect2(sel) {
+    var $el = $(sel);
+    if ($el.hasClass('select2-hidden-accessible')) {
+        $el.select2('destroy');
+    }
+    $el.empty();
+}
+
+function loadPipelineAccess(id, selectSel, modalSel, onInit) {
+    $.ajax({
+        url: `/Account/Department/Get/PipelineAccess?id=${id}`,
+        type: 'POST',
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        xhrFields: { withCredentials: true },
+        success: function (result) {
+            if (!result.success) return;
+            var data = JSON.parse(result.data);
+            var $select = $(selectSel);
+            populateSelectFromTree(data, $select);
+            $select.select2({
+                placeholder: '請選擇管線',
+                width: '100%',
+                closeOnSelect: false,
+                dropdownParent: $(modalSel),
+                templateResult: function (item) {
+                    if (!item.id) return item.text;
+                    var level = $(item.element).data('level') || 0;
+                    var indent = '&emsp;'.repeat(level * 2);
+                    var label = $(item.element).prop('disabled')
+                        ? `<strong>${item.text}</strong>`
+                        : item.text;
+                    return $('<span>').html(indent + label);
+                },
+                templateSelection: function (item) { return item.text; }
+            });
+            if (onInit) onInit($select.val() || []);
+        },
+        error: function () { console.error('載入業務圖資失敗'); }
+    });
+}
+
+function submitCreate() {
+    var name = $('#create-Name').val().trim();
+    if (!name) { alert('請輸入部門名稱'); return; }
+    var formData = new FormData();
+    formData.append('Name', name);
+    formData.append('Status', $('input[name="create-Status"]:checked').val() || 'true');
+    ($('#create-pipelineAccess').val() || []).forEach(id => formData.append('Added', id));
+    $.ajax({
+        url: '/Account/Department/Create',
+        type: 'POST',
+        processData: false,
+        contentType: false,
+        data: formData,
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            alert(data.message);
+            if (data.success) {
+                $('#createDepartmentModal').modal('hide');
+                initDepartmentTable();
+            }
+        },
+        error: function () { alert('提交失敗'); }
+    });
+}
+
+function submitUpdate() {
+    var name = $('#update-Name').val().trim();
+    if (!name) { alert('請輸入部門名稱'); return; }
+    var current = $('#update-pipelineAccess').val() || [];
+    var added   = current.filter(id => !initialUpdateValues.includes(id));
+    var removed = initialUpdateValues.filter(id => !current.includes(id));
+    var formData = new FormData();
+    formData.append('Id',   $('#update-Id').val());
+    formData.append('Name', name);
+    formData.append('Status', $('input[name="update-Status"]:checked').val() || 'true');
+    added.forEach(id   => formData.append('Added',   id));
+    removed.forEach(id => formData.append('Removed', id));
+    $.ajax({
+        url: '/Account/Department/Update',
+        type: 'POST',
+        processData: false,
+        contentType: false,
+        data: formData,
+        xhrFields: { withCredentials: true },
+        success: function (data) {
+            alert(data.message);
+            if (data.success) {
+                $('#updateDepartmentModal').modal('hide');
+                initDepartmentTable();
+            }
+        },
+        error: function () { alert('提交失敗'); }
+    });
+}
+
+function initDepartmentTable() {
     $.ajax({
         url: "/Account/Department/Get/ManagerData",
         type: "POST",
         processData: false,
         contentType: false,
-        xhrFields: {
-            withCredentials: true // 確保攜帶 Cookie
-        },
+        xhrFields: { withCredentials: true },
         success: function (data) {
             if (data.success) {
-                console.log(data);
-                var managerData = data.departmentManager;
-                allDepartments = managerData.departments;
+                allDepartments = data.departmentManager.departments;
                 initPage("departmentPage", updateDepartmentTable, allDepartments);
                 initDepartmentFilter(allDepartments);
-                // updateDepartmentTable(allDepartments);
             }
         },
-        error: function (xhr) {
-            console.log("取得資料失敗:", xhr.status);
-        }
+        error: function (xhr) { console.log("取得資料失敗:", xhr.status); }
     });
 }
 
-function initDepartmentFilter(allDepartments){
-    var departmentFilter = $("#departmentSelector");
-    departmentFilter.empty();
-    departmentFilter.append(`<option value="0" selected>全部</option>`);
-    allDepartments.forEach((department) => {
-        departmentFilter.append(`<option value="${department.id}">${department.name}</option>`);
-    });
+function initDepartmentFilter(departments) {
+    var $filter = $("#departmentSelector").empty();
+    $filter.append(`<option value="0" selected>全部</option>`);
+    departments.forEach(d => $filter.append(`<option value="${d.id}">${d.name}</option>`));
 }
 
-
-function updateDepartmentTable(departments){
-    var table = $("#departmentTable");
-    table.empty();
-
-    departments.forEach((department) => {
+function updateDepartmentTable(departments) {
+    var $table = $("#departmentTable").empty();
+    departments.forEach(department => {
         var row = $("<tr></tr>").attr("data-department-id", department.id);
+
         var updateBtn = $(`<button class="update-department read">編輯</button>`).on("click", function () {
-            var windowWidth = 800;
-            var windowHeight = 600;
-            // 獲取螢幕的寬高
-            var screenWidth = window.screen.width;
-            var screenHeight = window.screen.height;
-            // 計算彈出視窗的位置
-            var left = 0 - (screenWidth + windowWidth) / 2;
-            var top = (screenHeight - windowHeight) / 2;
-            wm.open("updateDepartmentWindow", `/Account/Department/Update?id=${department.id}`, windowWidth, windowHeight);
-            // window.open(`/Account/Department/Update?id=${department.id}`, 'newWindow', `width=${windowWidth},height=${windowHeight}, top=${top}, left=${left}`);
+            openUpdateModal(department);
         });
+
         var deleteBtn = $(`<button class="delete-department read">刪除</button>`).on("click", function () {
-            console.log(`/Account/Department/Delete?departmentId=${department.id}`);
             if (confirm("確定要刪除部門？")) {
                 $.ajax({
                     url: `/Account/Department/Delete?departmentId=${department.id}`,
                     type: "POST",
-                    xhrFields: {
-                        withCredentials: true // 確保攜帶 Cookie
-                    },
+                    xhrFields: { withCredentials: true },
                     success: function (data) {
-                        if (data.success) {
-                            alert(data.message);
-                            location.reload();
-                        }
-                        else{
-                            alert(data.message);
-                        }
+                        alert(data.message);
+                        if (data.success) initDepartmentTable();
                     },
-                    error: function (xhr) {
-                        console.log("API 錯誤:", xhr.status);
-                    }
+                    error: function (xhr) { console.log("API 錯誤:", xhr.status); }
                 });
             }
         });
-        row.append($(`<td class="name-cell">
-                        <span class="read">${department.name}</span>
-                      </td>`));
-        // 狀態根據status顯示啟用或停用
+
+        row.append(`<td class="name-cell"><span class="read">${department.name}</span></td>`);
         row.append(`<td class="status-cell">
-                    ${department.status ? 
-                        '<span class="read enable">啟用</span>' : '<span class="read stop">停用</span>'
-                    }
-                </td>`);
-
+            ${department.status
+                ? '<span class="read enable">啟用</span>'
+                : '<span class="read stop">停用</span>'}
+        </td>`);
         row.append(`<td class="createAt-cell">${convertDate(department.createAt)}</td>`);
-        // 建立按鈕
-        var actionTd = $("<td class='action-cell'></td>");
-
-        // 將按鈕 append 進 td，再 append 到 tr
-        actionTd.append(updateBtn, deleteBtn);
-        row.append(actionTd);
-
-        table.append(row);
+        row.append($("<td class='action-cell'></td>").append(updateBtn, deleteBtn));
+        $table.append(row);
     });
 }
 
-function convertDate(createAt){
-    var createAt = createAt.split("T");
-    var createAtDate = createAt[0];
-    var createAtTime = createAt[1].split(".")[0];
-    return `${createAtDate} ${createAtTime}`;
+function convertDate(createAt) {
+    var parts = createAt.split("T");
+    return `${parts[0]} ${parts[1].split(".")[0]}`;
+}
+
+function populateSelectFromTree(data, $select, level = 0) {
+    data.forEach(item => {
+        var option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.text;
+        option.setAttribute('data-level', level);
+        if (item.tag === 'node') option.disabled = true;
+        if (item.selected) option.selected = true;
+        $select.append(option);
+        if (Array.isArray(item.children) && item.children.length > 0) {
+            populateSelectFromTree(item.children, $select, level + 1);
+        }
+    });
 }

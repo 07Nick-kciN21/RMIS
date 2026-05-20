@@ -271,9 +271,20 @@ namespace RMIS.Controllers
         [HttpPost("[controller]/User/UpdatePassword")]
         public async Task<IActionResult> UpdateUserPassword([FromForm] UpdateUserPassword updateUserPassword, string NewPasswordCaptcha)
         {
-            var code = HttpContext.Session.GetString("CaptchaCode_adminUpdate_newPassword");
+            var code = HttpContext.Session.GetString("CaptchaCode_adminUpdate_newPassword")
+                    ?? HttpContext.Session.GetString("CaptchaCode_userProfile_newPassword");
             if (string.IsNullOrEmpty(code) || !string.Equals(code, NewPasswordCaptcha, StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "驗證碼錯誤" });
+
+            // 自行修改密碼時須驗證原密碼；管理員替他人修改時略過
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null && currentUser.Id == updateUserPassword.UserId)
+            {
+                if (string.IsNullOrEmpty(updateUserPassword.OriginPassword))
+                    return Json(new { success = false, message = "請輸入原密碼" });
+                if (!await _userManager.CheckPasswordAsync(currentUser, updateUserPassword.OriginPassword))
+                    return Json(new { success = false, message = "原密碼錯誤" });
+            }
 
             var updated = await _accountInterface.UpdateUserPasswordAsync(updateUserPassword);
             return Json(new { success = updated.Success, message = updated.Message });
@@ -282,7 +293,20 @@ namespace RMIS.Controllers
         [HttpPost("[controller]/User/UpdateEmail")]
         public async Task<IActionResult> UpdateUserEmail([FromForm] UpdateUserEmail updateUserEmail, string newEmailCaptcha)
         {
-            var code = HttpContext.Session.GetString("CaptchaCode_newEmail");
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+                return Json(new { success = false, message = "未登入" });
+
+            // 修改他人信箱須有 Update 權限；修改自己的信箱則直接放行
+            if (currentUser.Id != updateUserEmail.UserId)
+            {
+                var perm = await _accountInterface.GetUserPermission(currentUser.Id, "使用者管理");
+                if (!perm.Update)
+                    return Json(new { success = false, message = "無權限修改" });
+            }
+
+            var code = HttpContext.Session.GetString("CaptchaCode_newEmail")
+                    ?? HttpContext.Session.GetString("CaptchaCode_userProfile_newEmail");
             if (string.IsNullOrEmpty(code) || !string.Equals(code, newEmailCaptcha, StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "驗證碼錯誤" });
             var user = await _userManager.FindByIdAsync(updateUserEmail.UserId);
@@ -341,11 +365,11 @@ namespace RMIS.Controllers
 
             if (updated.Success)
             {
-                return Json(new { success = updated.Success, message = updated.Message });
+                return Json(new { success = true, message = updated.Message, citizenCardNo = updateCitizenCardNo.NewCitizenCardNo });
             }
             else
             {
-                return Json(new { success = updated.Success, message = updated.Message });
+                return Json(new { success = false, message = updated.Message });
             }
         }
 

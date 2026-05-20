@@ -312,8 +312,7 @@ function injectProfileModal() {
 
           <div class="form-group row mb-2">
             <label class="col-sm-2 col-form-label">自然人憑證</label>
-            <div class="col-sm-10 d-flex align-items-center gap-2">
-              <span id="profile-CitizenCardNo" class="form-control-plaintext"></span>
+            <div class="col-sm-10">
               <button type="button" class="btn btn-outline-primary btn-sm"
                       data-bs-toggle="collapse" data-bs-target="#profile-cardCollapse">
                 綁定憑證
@@ -323,6 +322,12 @@ function injectProfileModal() {
           <div class="collapse mb-3" id="profile-cardCollapse">
             <div class="card card-body">
               <div id="profile-resetCardSection">
+                <div class="form-group row mb-2">
+                  <label class="col-sm-3 col-form-label">目前卡號</label>
+                  <div class="col-sm-9">
+                    <span id="profile-CitizenCardNo" class="form-control-plaintext"></span>
+                  </div>
+                </div>
                 <div class="form-group row mb-2">
                   <label class="col-sm-3 col-form-label">驗證碼</label>
                   <div class="col-sm-9">

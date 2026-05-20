@@ -14,7 +14,7 @@ $(document).ready(function () {
       refreshCaptcha($(this)); // 確保傳入的是 jQuery 物件
     });
 
-    refreshCaptcha($(".captchaImage"));
+    $(".captchaImage").each(function () { refreshCaptcha($(this)); });
 
 
     $('#updateUserForm').on('submit', function (e) {

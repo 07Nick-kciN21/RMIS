@@ -1,15 +1,16 @@
-﻿@{
+@{
     ViewData["Title"] = "功能模組管理";
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
-<link rel="stylesheet" href="~/css/Account/permissionManager.css" />
-<script type="module" src="~/js/account/permission/permissionManage.js"></script>
+<link rel="stylesheet" href="~/css/Account/permissionManager.css" asp-append-version="true" />
+<script type="module" src="~/js/account/permission/permissionManage.js" asp-append-version="true"></script>
 
 <h2>功能模組列表</h2>
 <div style="display: flex;">
     <select id="permissionSelector" class="selector form-select">
     </select>
+    <button id="createPermission">新增功能模組</button>
 </div>
 <div class="table-container">
     <table class="table table-bordered text-center permissionTable">
@@ -32,4 +33,79 @@
     </div>
 </div>
 <div id="permissionPage" class="d-flex justify-content-center mt-2">
+</div>
+
+<!-- 新增功能模組 Modal -->
+<div class="modal fade" id="createPermissionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="min-height:600px;">
+            <div class="modal-header">
+                <h5 class="modal-title">新增功能模組</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">功能模組名稱</label>
+                    <div class="col-sm-9">
+                        <input type="text" id="create-Name" class="form-control" placeholder="請輸入名稱" />
+                    </div>
+                </div>
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">狀態</label>
+                    <div class="col-sm-9 d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input type="radio" class="form-check-input" name="create-Status" value="true" id="create-statusEnabled" checked>
+                            <label class="form-check-label" for="create-statusEnabled">啟用</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" name="create-Status" value="false" id="create-statusDisabled">
+                            <label class="form-check-label" for="create-statusDisabled">禁止</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="btn-create-submit" class="btn btn-primary">新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 編輯功能模組 Modal -->
+<div class="modal fade" id="updatePermissionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="min-height:600px;">
+            <div class="modal-header">
+                <h5 class="modal-title">修改功能模組</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="update-Id" />
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">功能模組名稱</label>
+                    <div class="col-sm-9">
+                        <input type="text" id="update-Name" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label">狀態</label>
+                    <div class="col-sm-9 d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input type="radio" class="form-check-input" name="update-Status" value="true" id="update-statusEnabled">
+                            <label class="form-check-label" for="update-statusEnabled">啟用</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" class="form-check-input" name="update-Status" value="false" id="update-statusDisabled">
+                            <label class="form-check-label" for="update-statusDisabled">禁止</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="btn-update-submit" class="btn btn-primary">儲存</button>
+            </div>
+        </div>
+    </div>
 </div>

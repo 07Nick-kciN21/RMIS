@@ -5,5 +5,6 @@ namespace RMIS.Models.API
     {
         public List<MapSource> WMS { get; set; }
         public List<MapSource> WMTS { get; set; }
+        public List<MapSource> XYZ { get; set; }
     }
 }
