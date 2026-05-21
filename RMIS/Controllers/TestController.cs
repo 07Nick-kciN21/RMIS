@@ -501,6 +501,16 @@ namespace RMIS.Controllers
             return (lat * 180.0 / Math.PI, lon * 180.0 / Math.PI);
         }
 
+        [HttpGet("CadasMapQuery")]
+        public async Task<IActionResult> CadasMapQuery(string typeCode = "B", string code = "0008")
+        {
+            var url = $"https://api.nlsc.gov.tw/dmaps/CadasMapQuery/{typeCode}/{code}";
+            using var client = new HttpClient();
+            var response = await client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            return Content(content, response.Content.Headers.ContentType?.ToString() ?? "application/json");
+        }
+
         [HttpPost("Update/Category")]
         public async Task<IActionResult> UpdateCategoryAsync(Guid CateId, Guid newId)
         {
