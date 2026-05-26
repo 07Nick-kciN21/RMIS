@@ -251,11 +251,12 @@ const Map = {
                     });
                     (source.type === 'basePane' ? baseMaps : overlayMaps)[source.name] = layer;
                 });
-
+                console.log(mapSources);
                 mapSources.wmts.forEach(source => {
-                    const tileUrl = source.sourceId === 'DMAP'
-                        ? `/api/MapAPI/tile/DMAP/{z}/{y}/{x}`
+                    const tileUrl = source.sourceId === 'DMAPS'
+                        ? `/api/MapAPI/tile/${source.sourceId}/{z}/{y}/{x}`
                         : `${source.url}${source.sourceId}/default/EPSG:3857/{z}/{y}/{x}.png`;
+                    console.log(tileUrl);
                     const layer = L.tileLayer(tileUrl, {
                         attribution: source.attribution,
                         opacity: source.type === 'basePane' ? 1 : 0.5,
