@@ -253,7 +253,10 @@ const Map = {
                 });
 
                 mapSources.wmts.forEach(source => {
-                    const layer = L.tileLayer(`${source.url}${source.sourceId}/default/EPSG:3857/{z}/{y}/{x}.png`, {
+                    const tileUrl = source.sourceId === 'DMAP'
+                        ? `/api/MapAPI/tile/DMAP/{z}/{y}/{x}`
+                        : `${source.url}${source.sourceId}/default/EPSG:3857/{z}/{y}/{x}.png`;
+                    const layer = L.tileLayer(tileUrl, {
                         attribution: source.attribution,
                         opacity: source.type === 'basePane' ? 1 : 0.5,
                         pane: source.type

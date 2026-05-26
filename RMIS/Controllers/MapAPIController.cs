@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using RMIS.Models.Auth;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
+using System.Net.Http;
 
 
 namespace RMIS.Controllers
@@ -623,7 +624,24 @@ namespace RMIS.Controllers
                 return StatusCode(500, new { success = false, message = "取得交通事故資料失敗", error = ex.Message });
             }
         }
+
+        [HttpGet("tile/{layerId}/{z}/{y}/{x}")]
+        public async Task<IActionResult> GetTile(string layerId, int z, int y, int x)
+        {
+            var url = $"https://landmaps.nlsc.gov.tw/S_Maps/wmts/{layerId}/default/EPSG:3857/{z}/{y}/{x}";
+
+            using var client = new HttpClient();
+            var response = await client.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode);
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "image/png";
+            return File(bytes, contentType);
+        }
     }
+
 
     public class ViewportRequest
     {
