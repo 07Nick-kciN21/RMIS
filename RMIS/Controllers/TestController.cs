@@ -8,6 +8,7 @@ using RMIS.Models.Account.Users;
 using RMIS.Models.Admin;
 using RMIS.Models.sql;
 using RMIS.Repositories;
+using System;
 using System.Text.Json;
 
 namespace RMIS.Controllers
@@ -527,5 +528,14 @@ namespace RMIS.Controllers
             }
         }
 
+        [HttpGet("MapServer")]
+        public async Task<IActionResult> MapServer(int No, string Token)
+        {
+            var url = $"https://oram-integ.tycg.gov.tw/gis/rest/services/Another/TYURS_16/MapServer/{No}?token={Token}";
+            using var client = new HttpClient();
+            var response = await client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            return Content(content, response.Content.Headers.ContentType?.ToString() ?? "application/json");
+        }
     }
 }
