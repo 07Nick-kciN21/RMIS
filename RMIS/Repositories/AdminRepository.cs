@@ -2043,33 +2043,39 @@ namespace RMIS.Repositories
                 client.DefaultRequestHeaders.Add("User-Agent", "RMIS/1.0");
 
                 var query = Uri.EscapeDataString($"台灣桃園市{district}{roadName}");
-                var url = $"https://nominatim.openstreetmap.org/search?q={query}&format=json";
+                var url = $"https://api.nlsc.gov.tw/idc/TextQueryAddress/{query}/1";
 
                 var response = await client.GetAsync(url);
                 if (!response.IsSuccessStatusCode) return null;
 
-                var json = await response.Content.ReadAsStringAsync();
-                var results = System.Text.Json.JsonSerializer.Deserialize<List<NominatimResult>>(json);
+                var xmlText = await response.Content.ReadAsStringAsync();
+                var doc = new System.Xml.XmlDocument();
+                doc.LoadXml(xmlText);
 
-                if (results == null || results.Count == 0) return null;
+                var nodes = doc.SelectNodes("//addressItem");
+                if (nodes == null || nodes.Count == 0) return null;
 
-                // 過濾：display_name 必須包含「臺灣」且包含行政區
-                var filtered = results.FirstOrDefault(r =>
-                    r.display_name != null &&
-                    r.display_name.Contains("臺灣") &&
-                    (string.IsNullOrEmpty(district) || r.display_name.Contains(district)));
+                foreach (System.Xml.XmlNode node in nodes)
+                {
+                    var content = node.SelectSingleNode("content")?.InnerText ?? "";
+                    var location = node.SelectSingleNode("location")?.InnerText ?? "";
 
-                if (filtered == null) return null;
+                    if (!string.IsNullOrEmpty(district) && !content.Contains(district)) continue;
+                    if (string.IsNullOrWhiteSpace(location)) continue;
 
-                if (double.TryParse(filtered.lat, NumberStyles.Float, CultureInfo.InvariantCulture, out var lat) &&
-                    double.TryParse(filtered.lon, NumberStyles.Float, CultureInfo.InvariantCulture, out var lng))
+                    var parts = location.Split(',');
+                    if (parts.Length != 2) continue;
+
+                    if (double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var lng) &&
+                        double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var lat))
                 {
                     return (lat, lng);
                 }
             }
+            }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Nominatim 搜尋失敗: {District} {RoadName}", district, roadName);
+                _logger.LogWarning(ex, "地址搜尋失敗: {District} {RoadName}", district, roadName);
             }
 
             return null;

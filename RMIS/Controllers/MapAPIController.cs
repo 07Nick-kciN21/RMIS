@@ -640,6 +640,40 @@ namespace RMIS.Controllers
             var contentType = response.Content.Headers.ContentType?.ToString() ?? "image/png";
             return File(bytes, contentType);
         }
+
+        [HttpGet("SearchAddress")]
+        public async Task<IActionResult> SearchAddress([FromQuery] string q, [FromQuery] string? district)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return BadRequest(new { message = "q is required" });
+
+            var combined = string.IsNullOrWhiteSpace(district) ? q : $"{district}{q}";
+            var encoded = Uri.EscapeDataString($"台灣桃園市{combined}");
+            var url = $"https://api.nlsc.gov.tw/idc/TextQueryAddress/{encoded}/20";
+
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Add("User-Agent", "RMIS/1.0");
+
+            var response = await client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode);
+
+            var xmlText = await response.Content.ReadAsStringAsync();
+            var doc = new System.Xml.XmlDocument();
+            doc.LoadXml(xmlText);
+
+            var results = doc.SelectNodes("//addressItem")
+                ?.Cast<System.Xml.XmlNode>()
+                .Select(n => new
+                {
+                    content = n.SelectSingleNode("content")?.InnerText ?? "",
+                    location = n.SelectSingleNode("location")?.InnerText ?? ""
+                })
+                .Where(item => string.IsNullOrEmpty(district) || item.content.Contains(district))
+                .ToList();
+
+            return Ok(results);
+        }
     }
 
 

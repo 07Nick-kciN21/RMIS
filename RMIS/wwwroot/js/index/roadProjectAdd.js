@@ -291,7 +291,8 @@ const RoadProjectAdd = {
         const district = $('#add-district').val();
         const q = district ? `${district}${query}` : query;
         console.log('Nominatim 搜尋:', q);
-        fetch(`https://nominatim.openstreetmap.org/search?q=台灣桃園市${encodeURIComponent(q)}&format=json`)
+        const params = new URLSearchParams({ q, ...(district && { district }) });
+        fetch(`/api/MapAPI/SearchAddress?${params}`)
             .then(response => response.json())
             .then(results => {
                 self.searchResults[type] = results;
@@ -304,19 +305,16 @@ const RoadProjectAdd = {
                 }
 
                 results.forEach((item, idx) => {
-                    if(!item.display_name.includes('臺灣') || !item.display_name.includes(district)) {
-                        return; // 過濾非臺灣結果
-                    }                        
                     $dropdown.append(
                         `<div class="autocomplete-item" data-type="${type}" data-index="${idx}">
-                            ${item.display_name}
+                            ${item.content}
                         </div>`
                     );
                 });
                 $dropdown.removeClass('hidden');
             })
             .catch(err => {
-                console.error('Nominatim 搜尋失敗:', err);
+                console.error('地址搜尋失敗:', err);
             });
     },
 
@@ -327,9 +325,10 @@ const RoadProjectAdd = {
         const item = this.searchResults[type][index];
         if (!item) return;
 
-        // 用第一段（路名）填入輸入欄位，完整 display_name 僅用於下拉顯示
-        const shortName = item.display_name.split(',')[0].trim();
-        const coord = { lat: parseFloat(item.lat), lng: parseFloat(item.lon) };
+        // content 範例：桃園市中壢區中壢里７鄰中豐路３９８號
+        const shortName = item.content;
+        const [lng, lat] = item.location.split(',').map(Number);
+        const coord = { lat, lng };
 
         if (type === 'start') {
             $('#add-start-point').val(shortName);
