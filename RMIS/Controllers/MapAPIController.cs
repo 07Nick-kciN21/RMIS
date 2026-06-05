@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using RMIS.Data;
 using System.Linq;
 using RMIS.Models.API;
@@ -11,6 +12,9 @@ using Microsoft.AspNetCore.Identity;
 using RMIS.Models.Auth;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Features;
+using NetTopologySuite.IO.VectorTiles;
+using NetTopologySuite.IO.VectorTiles.Mapbox;
 using System.Net.Http;
 
 
@@ -24,13 +28,17 @@ namespace RMIS.Controllers
         private readonly AccountInterface _accountInterface;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly MapDBContext _mapDBContext;
+        private readonly IMemoryCache _tileCache;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public MapAPIController(AdminInterface adminInterface, MapDBContext mapDBContext, AccountInterface accountInterface, UserManager<ApplicationUser> userManager)
+        public MapAPIController(AdminInterface adminInterface, MapDBContext mapDBContext, AccountInterface accountInterface, UserManager<ApplicationUser> userManager, IMemoryCache cache, IHttpClientFactory httpClientFactory)
         {
             _adminInterface = adminInterface;
             _mapDBContext = mapDBContext;
             _accountInterface = accountInterface;
+            _tileCache = cache;
             _userManager = userManager;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpGet("GetLayers")]
