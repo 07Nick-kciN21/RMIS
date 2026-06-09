@@ -1696,29 +1696,29 @@ namespace RMIS.Repositories
                         ProjectId = projectId,
                         Proposer = worksheet.Cells[row, 2].Text?.Trim() ?? "",
                         AdministrativeDistrict = worksheet.Cells[row, 3].Text?.Trim() ?? "",
-                        StartPoint = worksheet.Cells[row, 5].Text?.Trim() ?? "",
-                        EndPoint = worksheet.Cells[row, 6].Text?.Trim() ?? "",
-                        StartEndLocation = worksheet.Cells[row, 7].Text?.Trim() ?? "",
-                        RoadLength = worksheet.Cells[row, 8].Text?.Trim() ?? "",
-                        CurrentRoadWidth = worksheet.Cells[row, 9].Text?.Trim() ?? "",
-                        PlannedRoadWidth = worksheet.Cells[row, 10].Text?.Trim() ?? "",
-                        PublicLand = worksheet.Cells[row, 11].Text?.Trim() ?? "",
-                        PrivateLand = worksheet.Cells[row, 12].Text?.Trim() ?? "",
-                        PublicPrivateLand = worksheet.Cells[row, 13].Text?.Trim() ?? "",
-                        ConstructionBudget = ParseInt(worksheet.Cells[row, 14].Text),
-                        LandAcquisitionBudget = ParseInt(worksheet.Cells[row, 15].Text),
-                        CompensationBudget = ParseInt(worksheet.Cells[row, 16].Text),
-                        TotalBudget = ParseInt(worksheet.Cells[row, 17].Text),
-                        Remarks = worksheet.Cells[row, 18].Text?.Trim() ?? "",
-                        ReviewYear = worksheet.Cells[row, 19].Text?.Trim() ?? "",
-                        CaseType = worksheet.Cells[row, 20].Text?.Trim() ?? "",
-                        ProjectName = worksheet.Cells[row, 21].Text?.Trim() ?? "",
-                        RCCount = worksheet.Cells[row, 22].Text?.Trim() ?? "",
-                        TinHouseCount = worksheet.Cells[row, 23].Text?.Trim() ?? "",
-                        ReviewResult = worksheet.Cells[row, 24].Text?.Trim() ?? "",
-                        ExpansionRangeJson = worksheet.Cells[row, 25].Text?.Trim() ?? "",
-                        StreetViewPhotoJson = worksheet.Cells[row, 26].Text?.Trim() ?? "",
-                        Progress = ParseInt(worksheet.Cells[row, 27].Text)
+                        StartPoint = worksheet.Cells[row, 4].Text?.Trim() ?? "",
+                        EndPoint = worksheet.Cells[row, 5].Text?.Trim() ?? "",
+                        StartEndLocation = worksheet.Cells[row, 6].Text?.Trim() ?? "",
+                        RoadLength = worksheet.Cells[row, 7].Text?.Trim() ?? "",
+                        CurrentRoadWidth = worksheet.Cells[row, 8].Text?.Trim() ?? "",
+                        PlannedRoadWidth = worksheet.Cells[row, 9].Text?.Trim() ?? "",
+                        PublicLand = worksheet.Cells[row, 10].Text?.Trim() ?? "",
+                        PrivateLand = worksheet.Cells[row, 11].Text?.Trim() ?? "",
+                        PublicPrivateLand = worksheet.Cells[row, 12].Text?.Trim() ?? "",
+                        ConstructionBudget = ParseInt(worksheet.Cells[row, 13].Text),
+                        LandAcquisitionBudget = ParseInt(worksheet.Cells[row, 14].Text),
+                        CompensationBudget = ParseInt(worksheet.Cells[row, 15].Text),
+                        TotalBudget = ParseInt(worksheet.Cells[row, 16].Text),
+                        Remarks = worksheet.Cells[row, 17].Text?.Trim() ?? "",
+                        ReviewYear = worksheet.Cells[row, 18].Text?.Trim() ?? "",
+                        CaseType = worksheet.Cells[row, 19].Text?.Trim() ?? "",
+                        ProjectName = worksheet.Cells[row, 20].Text?.Trim() ?? "",
+                        RCCount = worksheet.Cells[row, 21].Text?.Trim() ?? "",
+                        TinHouseCount = worksheet.Cells[row, 22].Text?.Trim() ?? "",
+                        ReviewResult = worksheet.Cells[row, 23].Text?.Trim() ?? "",
+                        ExpansionRangeJson = worksheet.Cells[row, 24].Text?.Trim() ?? "",
+                        StreetViewPhotoJson = worksheet.Cells[row, 25].Text?.Trim() ?? "",
+                        Progress = ParseInt(worksheet.Cells[row, 26].Text)
                     };
 
                     // 自動組合起訖位置
@@ -1804,7 +1804,10 @@ namespace RMIS.Repositories
         /// </summary>
         private async Task CreateRoadProjectFromExcelRow(ExcelRoadProjectRow row, Dictionary<string, List<string>> photoDict)
         {
-            var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == row.AdministrativeDistrict)?.Id;
+            var distName = row.AdministrativeDistrict;
+            var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == distName)?.Id
+                           ?? _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == distName + "區")?.Id
+                           ?? _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == distName.TrimEnd('區'))?.Id;
             if (adminDistId == null)
                 throw new InvalidOperationException($"找不到行政區「{row.AdministrativeDistrict}」，請確認行政區名稱");
 
@@ -1853,10 +1856,10 @@ namespace RMIS.Repositories
                 { "公有土地", row.PublicLand },
                 { "私有土地", row.PrivateLand },
                 { "公私土地", row.PublicPrivateLand },
-                { "工程經費", (row.ConstructionBudget * 10000).ToString() },
-                { "用地經費", (row.LandAcquisitionBudget * 10000).ToString() },
-                { "補償經費", (row.CompensationBudget * 10000).ToString() },
-                { "合計經費", (row.TotalBudget * 10000).ToString() },
+                { "工程經費", row.ConstructionBudget.ToString() },
+                { "用地經費", row.LandAcquisitionBudget.ToString() },
+                { "補償經費", row.CompensationBudget.ToString() },
+                { "合計經費", row.TotalBudget.ToString() },
                 { "審議年度", row.ReviewYear },
                 { "案件類型", row.CaseType },
                 { "工程名稱", row.ProjectName },
