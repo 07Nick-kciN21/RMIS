@@ -211,7 +211,7 @@ const RoadProjectEdit = {
     },
 
     /**
-     * 將 project 各欄位填入表單（經費 ÷ 10000 轉為萬單位）
+     * 將 project 各欄位填入表單
      */
     fillForm: function(project) {
         $('#edit-project-id').val(project.projectId || '');
@@ -231,10 +231,13 @@ const RoadProjectEdit = {
         $('#edit-private-land').val(project.privateLand || '0');
         $('#edit-mixed-land').val(project.publicPrivateLand || '0');
 
-        $('#edit-construction-budget').val(Math.round((project.constructionBudget || 0) / 10000));
-        $('#edit-land-budget').val(Math.round((project.landAcquisitionBudget || 0) / 10000));
-        $('#edit-compensation-budget').val(Math.round((project.compensationBudget || 0) / 10000));
-        $('#edit-total-budget').val(Math.round((project.totalBudget || 0) / 10000));
+        $('#edit-construction-budget').val(project.constructionBudget || 0);
+        $('#edit-land-budget').val(project.landAcquisitionBudget || 0);
+        $('#edit-compensation-budget').val(project.compensationBudget || 0);
+        $('#edit-total-budget').val(project.totalBudget || 0);
+
+        const projectName = project.projectName || project.startEndLocation || '';
+        $('.edit-title').text(projectName ? `編輯道路專案-${projectName}` : '編輯道路專案');
 
         $('#edit-rc-count').val(project.rcCount || project.RCCount || '');
         $('#edit-tin-house-count').val(project.tinHouseCount || project.TinHouseCount || '');
@@ -246,7 +249,7 @@ const RoadProjectEdit = {
     },
 
     /**
-     * 計算合計經費（萬單位）
+     * 計算合計經費
      */
     calculateTotalBudget: function() {
         const construction = Number($('#edit-construction-budget').val()) || 0;
