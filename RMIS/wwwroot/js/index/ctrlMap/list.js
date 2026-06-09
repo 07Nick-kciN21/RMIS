@@ -72,17 +72,18 @@ export function add2List(id, name, datas, metaData) {
         };
         openPanel(metaData);
     });
-    // 使用透明度不要关闭
-    $('.layerOpacity').on('click', function (e) {
-        e.stopPropagation(); // 阻止冒泡，防止关闭菜单
+    const $opacityInput = $(`#layerBar_${id} .layerOpacity`);
+
+    $opacityInput.on('click', function (e) {
+        e.stopPropagation();
     });
 
-    // 输入透明度
-    $('.layerOpacity').on('blur', function () {        
-        const opacity = $(this).val();
-        console.log("layerOpacity", opacity);
-        // 从 layersId 中找到图层，修改透明度
-        opacityLayer(opacity, layersId);
+    $opacityInput.on('blur change', function () {
+        let val = parseInt($(this).val(), 10);
+        if (isNaN(val)) val = 100;
+        val = Math.min(100, Math.max(0, val));
+        $(this).val(val);
+        opacityLayer(val, layersId);
     });
 
     $(`#eye_${id}`).on('click', function () {
@@ -131,20 +132,19 @@ export function remove2List(id) {
 
 // 不顯示圖層
 function closeLayer(id, layersId) {
-    layersId.forEach(function (id) {
-        if(layers[id]){
-            layers[id].eachLayer(function (layer) {
-                layer._isVisible = false;
-                if (layer instanceof L.Marker) {
-                    layer.setOpacity(0); // 設置不可見
-                } else if (layer instanceof L.Polygon) {
-                    layer.setStyle({
-                        opacity: 0,       // 邊框透明度
-                        fillOpacity: 0    // 填充透明度同步
-                    });
-                } else if (layer instanceof L.Polyline) {
-                    layer.setStyle({ opacity: 0 }); // 設置不可見
-                }
+    layersId.forEach(function (layerId) {
+        const layer = layers[layerId];
+        if (!layer) return;
+        layer._isVisible = false;
+        if (typeof layer.setOpacity === 'function' && !layer.eachLayer) {
+            // VectorGrid
+            layer.setOpacity(0);
+        } else if (typeof layer.eachLayer === 'function') {
+            layer.eachLayer(function (sub) {
+                sub._isVisible = false;
+                if (sub instanceof L.Marker) sub.setOpacity(0);
+                else if (sub instanceof L.Polygon) sub.setStyle({ opacity: 0, fillOpacity: 0 });
+                else if (sub instanceof L.Polyline) sub.setStyle({ opacity: 0 });
             });
         }
     });
@@ -153,23 +153,22 @@ function closeLayer(id, layersId) {
 
 // 顯示圖層
 function displayLayer(id, layersId) {
-    layersId.forEach(function (id) {
-        if(layers[id]){
-            layers[id].eachLayer(function (layer) {
-                var mapContent = Map.getIndexMap();
-                var opacity = mapContent.getZoom()>15 ?  (layer._originalOpacity || 1) : 0;
-
-                layer._isVisible = true;
-                if (layer instanceof L.Marker) {
-                    layer.setOpacity(opacity); // 恢復透明度
-                } else if (layer instanceof L.Polygon) {
-                    layer.setStyle({
-                        opacity: opacity, // 邊框透明度
-                        fillOpacity: opacity // 填充透明度同步
-                    });
-                } else if (layer instanceof L.Polyline) {
-                    layer.setStyle({ opacity: opacity }); // 恢復透明度
-                }
+    const zoom = Map.getIndexMap().getZoom();
+    layersId.forEach(function (layerId) {
+        const layer = layers[layerId];
+        if (!layer) return;
+        layer._isVisible = true;
+        const opacity = zoom > 15 ? (layer._originalOpacity || 1) : 0;
+        if (typeof layer.setOpacity === 'function' && !layer.eachLayer) {
+            // VectorGrid
+            layer.setOpacity(opacity);
+        } else if (typeof layer.eachLayer === 'function') {
+            layer.eachLayer(function (sub) {
+                const subOpacity = zoom > 15 ? (sub._originalOpacity || 1) : 0;
+                sub._isVisible = true;
+                if (sub instanceof L.Marker) sub.setOpacity(subOpacity);
+                else if (sub instanceof L.Polygon) sub.setStyle({ opacity: subOpacity, fillOpacity: subOpacity });
+                else if (sub instanceof L.Polyline) sub.setStyle({ opacity: subOpacity });
             });
         }
     });

@@ -112,7 +112,7 @@ namespace RMIS.Repositories
             return input;
         }
 
-        private IEnumerable<SelectListItem> BuildCategorySelectList(List<Category> allCategories, Guid? ParentId, int deptId, int level = 0)
+        private IEnumerable<SelectListItem> BuildCategorySelectList(List<Category> allCategories, int? ParentId, int deptId, int level = 0)
         {
             // 初始化一個列表來存放結果
             var result = new List<SelectListItem>();
@@ -135,39 +135,34 @@ namespace RMIS.Repositories
 
         public async Task<int> AddPipelineAsync(AddPipelineInput pipelineInput)
         {
-            var pipelineId = Guid.NewGuid();
-            searchParentCategory(Guid.Parse(pipelineInput.CategoryId), pipelineInput.selectedDepartmentIds);
+            searchParentCategory(int.Parse(pipelineInput.CategoryId), pipelineInput.selectedDepartmentIds);
             var pipeItem = new Pipeline
             {
-                Id = pipelineId,
                 Name = pipelineInput.Name,
                 ManagementUnit = pipelineInput.ManagementUnit,
-                CategoryId = Guid.Parse(pipelineInput.CategoryId),
+                CategoryId = int.Parse(pipelineInput.CategoryId),
                 DepartmentIds = pipelineInput.selectedDepartmentIds,
             };
 
-            // 將新管線添加到資料庫
             await _mapDBContext.Pipelines.AddAsync(pipeItem);
+            await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
 
-            var selectedTypeId = new List<GeometryType>();
             foreach (var selectTypeId in pipelineInput.selectedGeometryTypes)
             {
-                var selectedTypeGuId = Guid.Parse(selectTypeId);
-                var selectedType = await _mapDBContext.GeometryTypes.FirstOrDefaultAsync(gt => gt.Id == selectedTypeGuId);
+                var selectedTypeIntId = int.Parse(selectTypeId);
+                var selectedType = await _mapDBContext.GeometryTypes.FirstOrDefaultAsync(gt => gt.Id == selectedTypeIntId);
                 var layerItem = new Layer
                 {
-                    Id = Guid.NewGuid(),
                     Name = selectedType?.Name ?? string.Empty,
-                    GeometryTypeId = selectedTypeGuId,
-                    PipelineId = pipelineId
+                    GeometryTypeId = selectedTypeIntId,
+                    PipelineId = pipeItem.Id
                 };
                 await _mapDBContext.Layers.AddAsync(layerItem);
             }
-            // 檢查 SaveChanges 返回值
             int rowsAffected = await _mapDBContext.SaveChangesAsync();
             return rowsAffected;
         }
-        private void searchParentCategory(Guid? id, List<int> deptIds)
+        private void searchParentCategory(int? id, List<int> deptIds)
         {
             if (id == null) return;
 
@@ -218,32 +213,29 @@ namespace RMIS.Repositories
 
         public async Task<int> AddRoadAsync(AddRoadInput roadInput)
         {
-            Guid Input_id = Guid.NewGuid();
+            var areatem = new Area
+            {
+                Name = roadInput.Name,
+                ConstructionUnit = roadInput.ConstructionUnit,
+                AdminDistId = int.Parse(roadInput.AdminDistId),
+                LayerId = int.Parse(roadInput.LayerId),
+            };
+
+            await _mapDBContext.Areas.AddAsync(areatem);
+            await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
 
             foreach (var point in roadInput.Points)
             {
                 var new_point = new Point
                 {
-                    Id = Guid.NewGuid(),
                     Index = point.Index,
                     Latitude = point.Latitude,
                     Longitude = point.Longitude,
                     Property = point.Property,
-                    AreaId = Input_id
+                    AreaId = areatem.Id
                 };
                 await _mapDBContext.Points.AddAsync(new_point);
             }
-            var areatem = new Area
-            {
-                Id = Input_id,
-                Name = roadInput.Name,
-                ConstructionUnit = roadInput.ConstructionUnit,
-                AdminDistId = Guid.Parse(roadInput.AdminDistId),
-                LayerId = Guid.Parse(roadInput.LayerId),
-            };
-
-            await _mapDBContext.Areas.AddAsync(areatem);
-            // 檢查 SaveChanges 返回值
             int rowsAffected = await _mapDBContext.SaveChangesAsync();
             return rowsAffected;
         }
@@ -276,7 +268,7 @@ namespace RMIS.Repositories
 
             return model;
         }
-        private void buildPipelinePath(List<SelectListItem> pipelineSelectList, List<Category> allCategory, List<Pipeline> allPipeline, Guid? parentId, string path)
+        private void buildPipelinePath(List<SelectListItem> pipelineSelectList, List<Category> allCategory, List<Pipeline> allPipeline, int? parentId, string path)
         {
             var currentCategories = allCategory.Where(ac => ac.ParentId == parentId).OrderBy(ac => ac.OrderId).ToList();
             foreach (var category in currentCategories)
@@ -326,12 +318,11 @@ namespace RMIS.Repositories
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
-                var roadId2AreaId = new Dictionary<string, Guid>();
+                var roadId2Area = new Dictionary<string, Area>();
                 var areas = new List<Area>();
                 var points = new List<Point>();
 
                 var adminDistMap = _mapDBContext.AdminDist.ToDictionary(ad => new { ad.City, ad.Town }, ad => ad.Id);
-                // 讀取 road_with_pile_Csv
                 using (var pileReader = new StreamReader(roadByCSVInput.road_with_pile_Csv.OpenReadStream()))
                 using (var csv = new CsvReader(pileReader, CultureInfo.InvariantCulture))
                 {
@@ -344,50 +335,47 @@ namespace RMIS.Repositories
                     {
                         if (!adminDistMap.TryGetValue(new { City = data.road_city, Town = data.road_dist }, out var adminDistId))
                         {
-                            // 如果 AdminDist 找不到，跳過或引發異常
                             var errorMessage = $"AdminDist not found for city: {data.road_city}, dist: {data.road_dist}";
                             _logger.LogError(errorMessage);
                             throw new Exception(errorMessage);
                         }
-                        var areaId = Guid.NewGuid();
                         var area = new Area
                         {
-                            Id = areaId,
                             Name = $"{data.road_name} - 方向 {data.pile_dir}",
                             ConstructionUnit = roadByCSVInput.ConstructionUnit,
                             AdminDistId = adminDistId,
-                            LayerId = Guid.Parse(roadByCSVInput.LayerId),
+                            LayerId = int.Parse(roadByCSVInput.LayerId),
                         };
                         areas.Add(area);
-                        roadId2AreaId[$"{data.road_id}_{data.pile_dir}"] = areaId;
+                        roadId2Area[$"{data.road_id}_{data.pile_dir}"] = area;
                     }
+
+                    await _mapDBContext.AddRangeAsync(areas);
+                    await _mapDBContext.SaveChangesAsync(); // 取得所有 Area 的 IDENTITY Id
 
                     foreach (var data in roadpileDatas)
                     {
-                        if (!roadId2AreaId.ContainsKey($"{data.road_id}_{data.pile_dir}"))
+                        if (!roadId2Area.ContainsKey($"{data.road_id}_{data.pile_dir}"))
                         {
-                            var errorMessage = $"Road ID {data.road_id} not found in roadId2AreaId map.";
+                            var errorMessage = $"Road ID {data.road_id} not found in roadId2Area map.";
                             _logger.LogError(errorMessage);
                             throw new Exception(errorMessage);
                         }
 
                         var point = new Point
                         {
-                            Id = Guid.NewGuid(),
                             Index = data.pile_distance,
                             Latitude = data.pile_lat,
                             Longitude = data.pile_lon,
-                            AreaId = roadId2AreaId[$"{data.road_id}_{data.pile_dir}"],
+                            AreaId = roadId2Area[$"{data.road_id}_{data.pile_dir}"].Id,
                             Property = !string.IsNullOrWhiteSpace(data.pile_prop) ? data.pile_prop : null
                         };
                         points.Add(point);
                     }
                 }
-                await _mapDBContext.AddRangeAsync(areas);
-                var areaCount = await _mapDBContext.SaveChangesAsync();
                 await _mapDBContext.AddRangeAsync(points);
                 var pointCount = await _mapDBContext.SaveChangesAsync();
-                if (areaCount != 0 && pointCount != 0)
+                if (pointCount != 0)
                 {
                     await transaction.CommitAsync();
                     _logger.LogInformation("Transaction committed successfully. Points added: {PointCount}", pointCount);
@@ -425,12 +413,12 @@ namespace RMIS.Repositories
 
         public async Task<int> AddCategoryAsync(AddCategoryInput categoryInput)
         {
+            var parentIdInt = categoryInput.ParentId == null ? (int?)null : int.Parse(categoryInput.ParentId);
             var category = new Category
             {
-                Id = Guid.NewGuid(),
                 Name = categoryInput.Name,
-                ParentId = categoryInput.ParentId == null ? null : Guid.Parse(categoryInput.ParentId),
-                OrderId = _mapDBContext.Categories.Count(c => c.ParentId.ToString() == categoryInput.ParentId) + 1
+                ParentId = parentIdInt,
+                OrderId = _mapDBContext.Categories.Count(c => c.ParentId == parentIdInt) + 1
             };
             await _mapDBContext.Categories.AddAsync(category);
             int rowsAffected = await _mapDBContext.SaveChangesAsync();
@@ -462,10 +450,8 @@ namespace RMIS.Repositories
 
                 foreach (var category in jObject.Properties())
                 {
-                    var id = Guid.NewGuid();
                     var newCategory = new Category
                     {
-                        Id = id,
                         Name = category.Name,
                         ParentId = null,
                         OrderId = count
@@ -474,7 +460,7 @@ namespace RMIS.Repositories
                     categories.Add(newCategory);
 
                     // 处理子类别和管道
-                    var success = await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                    var success = await ProcessCategoryJsonAsync(category.Value, newCategory, categories, pipelines, layers, geometryTypes);
                     if (!success)
                     {
                         await transaction.RollbackAsync();
@@ -525,7 +511,7 @@ namespace RMIS.Repositories
 
         private async Task<bool> ProcessCategoryJsonAsync(
             JToken categorys,
-            Guid parentId,
+            Category? parentCategory,
             List<Category> categories,
             List<Pipeline> pipelines,
             List<Layer> layers,
@@ -540,21 +526,19 @@ namespace RMIS.Repositories
                     foreach (var category in jObject.Properties())
                     {
                         // 新增子類別
-                        var id = Guid.NewGuid();
                         var newCategory = new Category
                         {
-                            Id = id,
                             Name = category.Name,
-                            ParentId = parentId,
+                            Parent = parentCategory,
                             OrderId = count
                         };
                         count++;
                         categories.Add(newCategory);
 
-                        _logger.LogInformation("Added Category: {Name}, ParentId: {ParentId}", category.Name, parentId);
+                        _logger.LogInformation("Added Category: {Name}, Parent: {Parent}", category.Name, parentCategory?.Name);
 
                         // 遞歸處理子類別
-                        var success = await ProcessCategoryJsonAsync(category.Value, id, categories, pipelines, layers, geometryTypes);
+                        var success = await ProcessCategoryJsonAsync(category.Value, newCategory, categories, pipelines, layers, geometryTypes);
                         if (!success)
                         {
                             return false;
@@ -573,20 +557,18 @@ namespace RMIS.Repositories
                             mergedDepartments.Add(id);
                         }
                         // 新增Pipeline
-                        var pipelineId = Guid.NewGuid();
                         var newPipeline = new Pipeline
                         {
-                            Id = pipelineId,
                             Name = item["名稱"].ToString(),
                             ManagementUnit = item["管理單位"].ToString(),
                             DepartmentIds = departmentIds,
                             IsGeneralPipeline = true,
-                            CategoryId = parentId,
+                            Category = parentCategory,
                             dataInfo = item["詮釋資料"]?.ToString()
                         };
                         pipelines.Add(newPipeline);
 
-                        _logger.LogInformation("Added Pipeline: {Name}, ParentId: {ParentId}", newPipeline.Name, parentId);
+                        _logger.LogInformation("Added Pipeline: {Name}, Parent: {Parent}", newPipeline.Name, parentCategory?.Name);
                         foreach (var prop in item["屬性"].ToObject<JObject>())
                         {
                             var propName = prop.Key;
@@ -594,45 +576,42 @@ namespace RMIS.Repositories
                             var existingGeometryType = geometryTypes.FirstOrDefault(g => g.Name == propValue)
                                 ?? _mapDBContext.GeometryTypes.FirstOrDefault(gt => gt.Name == propValue);
 
-                            Guid geometryTypeId;
+                            GeometryType resolvedGt;
 
                             // 如果GeometryType不存在
                             if (existingGeometryType == null)
                             {
                                 // 新增GeometryType
-                                geometryTypeId = Guid.NewGuid();
-                                var newGeometryType = new GeometryType
+                                resolvedGt = new GeometryType
                                 {
-                                    Id = geometryTypeId,
                                     Name = propValue,
                                     Svg = "",
                                     OrderId = geometryTypes.Count + 1,
                                     Kind = "point"
                                 };
-                                geometryTypes.Add(newGeometryType);
+                                geometryTypes.Add(resolvedGt);
 
-                                _logger.LogInformation("Added GeometryType: {Name}", newGeometryType.Name);
+                                _logger.LogInformation("Added GeometryType: {Name}", resolvedGt.Name);
                             }
                             else
                             {
-                                geometryTypeId = existingGeometryType.Id;
+                                resolvedGt = existingGeometryType;
                             }
 
-                            // 新增Layer
+                            // 新增Layer（透過 navigation property 讓 EF 自動處理 FK）
                             var newLayer = new Layer
                             {
-                                Id = Guid.NewGuid(),
                                 Name = propName,
-                                GeometryTypeId = geometryTypeId,
-                                PipelineId = pipelineId
+                                GeometryType = resolvedGt,
+                                Pipeline = newPipeline
                             };
                             layers.Add(newLayer);
 
-                            _logger.LogInformation("Added Layer: {Name}, PipelineId: {PipelineId}", newLayer.Name, pipelineId);
+                            _logger.LogInformation("Added Layer: {Name}, Pipeline: {PipelineName}", newLayer.Name, newPipeline.Name);
                         }
                     }
                     // 將彙整的部門設回上層 Category
-                    var targetCategory = categories.FirstOrDefault(c => c.Id == parentId);
+                    var targetCategory = parentCategory;
                     if (targetCategory != null)
                     {
                         targetCategory.DepartmentIds = mergedDepartments.ToList();
@@ -643,11 +622,11 @@ namespace RMIS.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error in ProcessCategoryJsonAsync. ParentId: {ParentId}", parentId);
+                _logger.LogError(ex, "Unexpected error in ProcessCategoryJsonAsync. Parent: {Parent}", parentCategory?.Name);
                 return false;
             }
         }
-        public async Task<int> DeletePipelineAsync(Guid? pipelineId)
+        public async Task<int> DeletePipelineAsync(int pipelineId)
         {
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
@@ -657,11 +636,8 @@ namespace RMIS.Repositories
             {
                 int rowsAffected = 0;
 
-                // 删除 Pipeline
-                if (pipelineId.HasValue)
                 {
-                    // 删除 Pipeline 下的 Layers
-                    var layersToDelete = _mapDBContext.Layers.Where(l => l.PipelineId == pipelineId.Value);
+                    var layersToDelete = _mapDBContext.Layers.Where(l => l.PipelineId == pipelineId);
                     foreach (var layer in layersToDelete)
                     {
                         // 刪除 Layer 下的 Areas
@@ -675,8 +651,7 @@ namespace RMIS.Repositories
                         _mapDBContext.Areas.RemoveRange(areasToDelete);
                     }
                     _mapDBContext.Layers.RemoveRange(layersToDelete);
-                    // 删除 Pipeline
-                    var pipelineToDelete = await _mapDBContext.Pipelines.FindAsync(pipelineId.Value);
+                    var pipelineToDelete = await _mapDBContext.Pipelines.FindAsync(pipelineId);
                     if (pipelineToDelete != null)
                     {
                         _mapDBContext.Pipelines.Remove(pipelineToDelete);
@@ -695,7 +670,7 @@ namespace RMIS.Repositories
             }
             }); // end strategy
         }
-        public async Task<int> DeleteCategoryAsync(Guid? categoryId)
+        public async Task<int> DeleteCategoryAsync(int? categoryId)
         {
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
@@ -728,7 +703,7 @@ namespace RMIS.Repositories
             }
             }); // end strategy
         }
-        public async Task<int> DeleteLayerDataAsync(Guid? layerId)
+        public async Task<int> DeleteLayerDataAsync(int layerId)
         {
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
@@ -737,9 +712,8 @@ namespace RMIS.Repositories
             try
             {
                 int rowsAffected = 0;
-                if(layerId.HasValue){
-                    // 取得Layer的Areas
-                    var areasToDelete = await getAreasToDeleteAsync(layerId.Value);
+                {
+                    var areasToDelete = await getAreasToDeleteAsync(layerId);
                     foreach (var area in areasToDelete)
                     {
                         // 取得Area的Points
@@ -760,7 +734,7 @@ namespace RMIS.Repositories
             }); // end strategy
         }
 
-        private async Task DeleteCategoryRecursiveAsync(Guid parentId)
+        private async Task DeleteCategoryRecursiveAsync(int parentId)
         {
             var pipelines = new List<Pipeline>();
             var layers = new List<Layer>();
@@ -803,31 +777,31 @@ namespace RMIS.Repositories
             _mapDBContext.Categories.RemoveRange(childCategories);
         }
 
-        private async Task<List<Point>> getPointsToDeleteAsync(Guid areaId)
+        private async Task<List<Point>> getPointsToDeleteAsync(int areaId)
         {
             var pointsToDelete = await _mapDBContext.Points.Where(p => p.AreaId == areaId).ToListAsync();
             return pointsToDelete;
         }
 
-        private async Task<List<Area>> getAreasToDeleteAsync(Guid layerId)
+        private async Task<List<Area>> getAreasToDeleteAsync(int layerId)
         {
             var areasToDelete = await _mapDBContext.Areas.Where(p => p.LayerId == layerId).ToListAsync();
             return areasToDelete;
         }
 
-        private async Task<List<Layer>> getLayersToDeleteAsync(Guid pipelineId)
+        private async Task<List<Layer>> getLayersToDeleteAsync(int pipelineId)
         {
             var layersToDelete = await _mapDBContext.Layers.Where(l => l.PipelineId == pipelineId).ToListAsync();
             return layersToDelete;
         }
 
-        private async Task<List<Pipeline>> getPipelinesToDeleteAsync(Guid categoryId)
+        private async Task<List<Pipeline>> getPipelinesToDeleteAsync(int categoryId)
         {
             var pipelinesToDelete = await _mapDBContext.Pipelines.Where(p => p.CategoryId == categoryId).ToListAsync();
             return pipelinesToDelete;
         }
 
-        private async Task<List<Category>> getCategoriesToDeleteAsync(Guid parentId)
+        private async Task<List<Category>> getCategoriesToDeleteAsync(int parentId)
         {
             var categoriesToDelete = await _mapDBContext.Categories.Where(c => c.ParentId == parentId).ToListAsync();
             return categoriesToDelete;
@@ -863,8 +837,8 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)") || p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
-                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[1]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(int.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(int.Parse(focusedPipelines[1]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
                 var result = new FocusedData
                 {
                     FocusedRoad = focusedRoadPoints,
@@ -878,7 +852,7 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(借用範團)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRangePoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
+                var focusedRangePoints = await GetFocusRoadPointByDatetime(int.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(範圍)");
                 var result = new FocusedData
                 {
                     FocusedRoad = null,
@@ -892,7 +866,7 @@ namespace RMIS.Repositories
                     .Where(p => p.Name.Contains("臨時道路借用申請(路線)"))
                     .Select(p => p.Id.ToString())
                     .ToListAsync();
-                var focusedRoadPoints = await GetFocusRoadPointByDatetime(Guid.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
+                var focusedRoadPoints = await GetFocusRoadPointByDatetime(int.Parse(focusedPipelines[0]), RoadName, input.FocusStartDate, input.FocusEndDate, "臨時道路借用申請(路線)");
                 var result = new FocusedData
                 {
                     FocusedRoad = focusedRoadPoints,
@@ -922,7 +896,7 @@ namespace RMIS.Repositories
             return null;
         }
 
-        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(Guid FocusRoadPipelineId, string RoadName, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
+        private async Task<List<focusedCase>> GetFocusRoadPointByDatetime(int FocusRoadPipelineId, string RoadName, DateTime FocusStartDate, DateTime FocusEndDate, string caseType)
         {
             try
             {
@@ -1043,7 +1017,7 @@ namespace RMIS.Repositories
         }
 
         // rangePoints: ["24.949975, 121.225981", "24.949483, 121.226059", "24.949483, 121.226059", "24.950167, 121.226609"]
-        private async Task<List<Point>> addRangePointsAsync(Guid areaId, List<string> rangePoints, RoadProjectExcelFormat projectExcel)
+        private async Task<List<Point>> addRangePointsAsync(int areaId, List<string> rangePoints, RoadProjectExcelFormat projectExcel)
         {
             var points = new List<Point>();
             for (int i = 0; i < rangePoints.Count; i++)
@@ -1051,7 +1025,6 @@ namespace RMIS.Repositories
                 var point = rangePoints[i].Split(",");
                 var newPoint = new Point
                 {
-                    Id = Guid.NewGuid(),
                     Index = i,
                     Latitude = double.Parse(point[0]),
                     Longitude = double.Parse(point[1]),
@@ -1125,7 +1098,7 @@ namespace RMIS.Repositories
         }
         
         // photoPoints: {"01.png":"24.950000, 121.225928","02.png":"24.950170, 121.226626"}
-        private async Task<List<Point>> addPhotoPointsAsync(string ProjectId, Guid areaId, Dictionary<string, string> photoPoints)
+        private async Task<List<Point>> addPhotoPointsAsync(string ProjectId, int areaId, Dictionary<string, string> photoPoints)
         {
             var points = new List<Point>();
             var i = 0;
@@ -1134,7 +1107,6 @@ namespace RMIS.Repositories
                 var coordinate = photoPoint.Value.Split(",");
                 var point = new Point
                 {
-                    Id = Guid.NewGuid(),
                     Index = i,
                     Latitude = double.Parse(coordinate[0]),
                     Longitude = double.Parse(coordinate[1]),
@@ -1338,6 +1310,8 @@ namespace RMIS.Repositories
             try
             {
                 var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == roadProjectInput.AdminDistrict)?.Id;
+                if (adminDistId == null)
+                    throw new InvalidOperationException($"找不到行政區「{roadProjectInput.AdminDistrict}」，請確認行政區名稱");
                 var startEndLocation = roadProjectInput.StartPoint + "至" + roadProjectInput.EndPoint;
 
                 // 產生 ProjectId (使用時間戳確保唯一性)
@@ -1372,7 +1346,12 @@ namespace RMIS.Repositories
                     CreateTime = now
                 };
 
-                var expansionId = Guid.NewGuid();
+                var expansionLayerId = await _mapDBContext.Layers.Where(l => l.Name == "預拓範圍").Select(l => l.Id).FirstOrDefaultAsync();
+                var photoLayerId    = await _mapDBContext.Layers.Where(l => l.Name == "街景照片").Select(l => l.Id).FirstOrDefaultAsync();
+                if (expansionLayerId == 0)
+                    throw new InvalidOperationException("找不到圖層「預拓範圍」，請確認圖層資料是否存在");
+                if (photoLayerId == 0)
+                    throw new InvalidOperationException("找不到圖層「街景照片」，請確認圖層資料是否存在");
                 // roadProject 轉換成json (使用中文鍵名以配合前端顯示，所有值為字串)
                 var projectPropObj = new Dictionary<string, string>
                 {
@@ -1398,34 +1377,29 @@ namespace RMIS.Repositories
                     { "備註", roadProjectInput.Remark ?? "" }
                 };
                 var projectProp = JsonConvert.SerializeObject(projectPropObj);
-                //新增expansionArea area
                 var expansionArea = new Area
                 {
-                    Id = expansionId,
                     Name = $"{startEndLocation} - 預拓範圍",
                     ConstructionUnit = "工務局",
-                    AdminDistId = adminDistId ?? Guid.Empty,
-                    LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
+                    AdminDistId = adminDistId ?? 0,
+                    LayerId = expansionLayerId
                 };
-                //新增photo area
-                var rangeList = roadProjectInput.ExpansionRange ?? new List<range>();
-                var expansionPoints = await addExpansion(expansionId, rangeList, projectProp);
-                var photoId = Guid.NewGuid();
                 var photoArea = new Area
                 {
-                    Id = photoId,
                     Name = $"{startEndLocation} - 街景照片",
                     ConstructionUnit = "工務局",
-                    AdminDistId = adminDistId ?? Guid.Empty,
-                    LayerId = Guid.Parse("C155F3E2-42B6-4004-97C2-05E1C0EFC0E0") // 街景照片圖層
+                    AdminDistId = adminDistId ?? 0,
+                    LayerId = photoLayerId
                 };
-
-                var photoList = roadProjectInput.StreetViewPhoto ?? new List<photo>();
-                var photoPoints = await addPhoto(photoId, photoList, projectId);
 
                 await _mapDBContext.Areas.AddAsync(expansionArea);
                 await _mapDBContext.Areas.AddAsync(photoArea);
-                await _mapDBContext.SaveChangesAsync();
+                await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
+
+                var rangeList = roadProjectInput.ExpansionRange ?? new List<range>();
+                var expansionPoints = await addExpansion(expansionArea.Id, rangeList, projectProp);
+                var photoList = roadProjectInput.StreetViewPhoto ?? new List<photo>();
+                var photoPoints = await addPhoto(photoArea.Id, photoList, projectId);
 
                 if (expansionPoints != null && expansionPoints.Count > 0)
                 {
@@ -1437,8 +1411,8 @@ namespace RMIS.Repositories
                 }
                 await _mapDBContext.SaveChangesAsync();
 
-                roadProject.PlannedExpansionId = expansionId;
-                roadProject.StreetViewId = photoId;
+                roadProject.PlannedExpansionId = expansionArea.Id;
+                roadProject.StreetViewId = photoArea.Id;
                 await _mapDBContext.RoadProjects.AddAsync(roadProject);
                 var rowsAffected = await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -1564,11 +1538,10 @@ namespace RMIS.Repositories
             var result = new ImportRoadProjectResult();
             var errors = new List<string>();
 
-            if ((input.ExcelFile == null || input.ExcelFile.Length == 0) &&
-                (input.ProcessExcelFile == null || input.ProcessExcelFile.Length == 0))
+            if (input.ExcelFile == null || input.ExcelFile.Length == 0)
             {
                 result.Success = false;
-                result.Message = "請至少上傳道路專案 Excel 或歷程 Excel";
+                result.Message = "請上傳道路專案 Excel";
                 return result;
             }
 
@@ -1671,14 +1644,6 @@ namespace RMIS.Repositories
                     await _mapDBContext.SaveChangesAsync();
                 }
 
-                // ── 歷程 Excel ──
-                int processImportedCount = 0;
-                if (input.ProcessExcelFile != null && input.ProcessExcelFile.Length > 0)
-                {
-                    processImportedCount = await ImportProcessByExcelAsync(
-                        input.ProcessExcelFile, input.ProcessDocZipFile, errors);
-                }
-
                 await transaction.CommitAsync();
 
                 // commit 後，針對沒有座標的專案在背景查詢 Nominatim
@@ -1691,14 +1656,9 @@ namespace RMIS.Repositories
                 if (rowsToGeocode.Count > 0)
                     _ = Task.Run(() => GeocodeAndUpdateDbAsync(rowsToGeocode));
 
-                var msgParts = new List<string>();
-                if (importedCount > 0) msgParts.Add($"成功匯入 {importedCount} 筆專案");
-                if (processImportedCount > 0) msgParts.Add($"成功匯入 {processImportedCount} 筆歷程");
-
                 result.Success = true;
-                result.Message = msgParts.Count > 0 ? string.Join("，", msgParts) : "匯入完成";
+                result.Message = importedCount > 0 ? $"成功匯入 {importedCount} 筆專案" : "匯入完成";
                 result.ImportedCount = importedCount;
-                result.ProcessImportedCount = processImportedCount;
                 result.Errors = errors;
                 return result;
             }
@@ -1845,6 +1805,8 @@ namespace RMIS.Repositories
         private async Task CreateRoadProjectFromExcelRow(ExcelRoadProjectRow row, Dictionary<string, List<string>> photoDict)
         {
             var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == row.AdministrativeDistrict)?.Id;
+            if (adminDistId == null)
+                throw new InvalidOperationException($"找不到行政區「{row.AdministrativeDistrict}」，請確認行政區名稱");
 
             // 建立 RoadProject
             var roadProject = new RoadProject
@@ -1906,16 +1868,21 @@ namespace RMIS.Repositories
             var projectProp = JsonConvert.SerializeObject(projectPropObj);
 
             // 建立拓寬範圍 Area（永遠建立，供背景地理編碼使用）
-            var expansionId = Guid.NewGuid();
+            var exLayerId  = await _mapDBContext.Layers.Where(l => l.Name == "預拓範圍").Select(l => l.Id).FirstOrDefaultAsync();
+            var svLayerId2 = await _mapDBContext.Layers.Where(l => l.Name == "街景照片").Select(l => l.Id).FirstOrDefaultAsync();
+            if (exLayerId == 0)
+                throw new InvalidOperationException("找不到圖層「預拓範圍」，請確認圖層資料是否存在");
+            if (svLayerId2 == 0)
+                throw new InvalidOperationException("找不到圖層「街景照片」，請確認圖層資料是否存在");
             var expansionArea = new Area
             {
-                Id = expansionId,
                 Name = $"{row.StartEndLocation} - 預拓範圍",
                 ConstructionUnit = "工務局",
-                AdminDistId = adminDistId ?? Guid.Empty,
-                LayerId = Guid.Parse("DB7B29A6-DF4D-4CA4-9EB7-465F9809CA0A")
+                AdminDistId = adminDistId ?? 0,
+                LayerId = exLayerId
             };
             await _mapDBContext.Areas.AddAsync(expansionArea);
+            await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
 
             // 解析並建立拓寬範圍座標點
             var rangePoints = ParseCoordinatesJson(row.ExpansionRangeJson);
@@ -1923,46 +1890,44 @@ namespace RMIS.Repositories
             {
                 await _mapDBContext.Points.AddAsync(new Point
                 {
-                    Id = Guid.NewGuid(),
                     Index = i,
                     Latitude = rangePoints[i].lat,
                     Longitude = rangePoints[i].lng,
-                    AreaId = expansionId,
+                    AreaId = expansionArea.Id,
                     Property = i == 0 ? projectProp : null
                 });
             }
 
             // 建立街景照片 Area（僅在有照片座標時建立）
             var photoCoords = ParsePhotoCoordinatesJson(row.StreetViewPhotoJson);
-            Guid? photoAreaId = null;
+            int? photoAreaId = null;
             if (photoCoords.Count > 0)
             {
-                var newPhotoAreaId = Guid.NewGuid();
-                await _mapDBContext.Areas.AddAsync(new Area
+                var newPhotoArea = new Area
                 {
-                    Id = newPhotoAreaId,
                     Name = $"{row.StartEndLocation} - 街景照片",
                     ConstructionUnit = "工務局",
-                    AdminDistId = adminDistId ?? Guid.Empty,
-                    LayerId = Guid.Parse("C155F3E2-42B6-4004-97C2-05E1C0EFC0E0")
-                });
+                    AdminDistId = adminDistId ?? 0,
+                    LayerId = svLayerId2
+                };
+                await _mapDBContext.Areas.AddAsync(newPhotoArea);
+                await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
+                photoAreaId = newPhotoArea.Id;
                 for (int i = 0; i < photoCoords.Count; i++)
                 {
                     await _mapDBContext.Points.AddAsync(new Point
                     {
-                        Id = Guid.NewGuid(),
                         Index = i,
                         Latitude = photoCoords[i].lat,
                         Longitude = photoCoords[i].lng,
-                        AreaId = newPhotoAreaId,
+                        AreaId = newPhotoArea.Id,
                         Property = $"{{\"url\": \"{row.ProjectId}/{photoCoords[i].photoName}\"}}"
                     });
                 }
-                photoAreaId = newPhotoAreaId;
             }
 
             // 設定關聯 ID
-            roadProject.PlannedExpansionId = expansionId;
+            roadProject.PlannedExpansionId = expansionArea.Id;
             roadProject.StreetViewId = photoAreaId;
 
             await _mapDBContext.RoadProjects.AddAsync(roadProject);
@@ -2068,10 +2033,10 @@ namespace RMIS.Repositories
 
                     if (double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var lng) &&
                         double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var lat))
-                {
-                    return (lat, lng);
+                    {
+                        return (lat, lng);
+                    }
                 }
-            }
             }
             catch (Exception ex)
             {
@@ -2160,7 +2125,6 @@ namespace RMIS.Repositories
                     {
                         await db.Points.AddAsync(new Point
                         {
-                            Id = Guid.NewGuid(),
                             Index = i,
                             Latitude = coords[i].lat,
                             Longitude = coords[i].lng,
@@ -2196,13 +2160,6 @@ namespace RMIS.Repositories
         /// <summary>
         /// Nominatim API 回傳結果模型
         /// </summary>
-        private class NominatimResult
-        {
-            public string lat { get; set; } = "";
-            public string lon { get; set; } = "";
-            public string display_name { get; set; } = "";
-        }
-
         private string parseRoadWidthSimple(string? roadWidth, string? roadType)
         {
             // 去除使用者可能輸入的「公尺」後綴，避免重複
@@ -2212,7 +2169,7 @@ namespace RMIS.Repositories
             var type = string.IsNullOrEmpty(roadType) ? "" : $" ({roadType})";
             return $"{width}公尺{type}";
         }
-        private async Task<List<Point>> addExpansion(Guid areaId, List<range> rangeList, string projectProp)
+        private async Task<List<Point>> addExpansion(int areaId, List<range> rangeList, string projectProp)
         {
             Console.WriteLine("addExpansion");
             try
@@ -2227,7 +2184,6 @@ namespace RMIS.Repositories
                 {
                     var newPoint = new Point
                     {
-                        Id = Guid.NewGuid(),
                         Index = i,
                         Latitude = rangeList[i].Latitude,
                         Longitude = rangeList[i].Longitude,
@@ -2245,7 +2201,7 @@ namespace RMIS.Repositories
             }
         }
 
-        private async Task<List<Point>> addPhoto(Guid areaId, List<photo> photoList, string projectId)
+        private async Task<List<Point>> addPhoto(int areaId, List<photo> photoList, string projectId)
         {
             Console.WriteLine("addPhoto");
             try
@@ -2263,12 +2219,10 @@ namespace RMIS.Repositories
                     {
                         await savePhotoAsync(photoList[i].Photo, photoName, projectId);
                     }
-                    // 使用 JSON 格式存儲 (前端 createPhotoPopup 期望 {"url": "..."} 格式)
                     var photoUrl = $"{projectId}/{photoList[i].PhotoName ?? ""}";
                     var photoProperty = JsonConvert.SerializeObject(new { url = photoUrl });
                     var newPoint = new Point
                     {
-                        Id = Guid.NewGuid(),
                         Index = i,
                         Latitude = photoList[i].Latitude,
                         Longitude = photoList[i].Longitude,
@@ -2332,7 +2286,7 @@ namespace RMIS.Repositories
                 // 新增範圍點
                 if (rangePoints != null && rangePoints.Count > 0)
                 {
-                    var newRangePoints = await addExpansion(roadProject.PlannedExpansionId ?? Guid.Empty, rangePoints, existingProp);
+                    var newRangePoints = await addExpansion(roadProject.PlannedExpansionId ?? 0, rangePoints, existingProp);
                     if (newRangePoints.Count > 0)
                         await _mapDBContext.AddRangeAsync(newRangePoints);
                 }
@@ -2340,10 +2294,21 @@ namespace RMIS.Repositories
                 // 新增照片點
                 if (photoPoints != null && photoPoints.Count > 0)
                 {
-                    // StreetViewId 未設置時自動產生，並寫回 RoadProject，否則點存入後查不到
-                    if (!roadProject.StreetViewId.HasValue || roadProject.StreetViewId == Guid.Empty)
+                    // StreetViewId 未設置時建立新 Area，寫回 RoadProject
+                    if (!roadProject.StreetViewId.HasValue || roadProject.StreetViewId == 0)
                     {
-                        roadProject.StreetViewId = Guid.NewGuid();
+                        var svLId = await _mapDBContext.Layers.Where(l => l.Name == "街景照片").Select(l => l.Id).FirstOrDefaultAsync();
+                        var adminDId = await _mapDBContext.AdminDist.Where(d => d.Town == roadProject.AdministrativeDistrict).Select(d => d.Id).FirstOrDefaultAsync();
+                        var svArea = new Area
+                        {
+                            Name = $"{roadProject.ProjectId} - 街景照片",
+                            ConstructionUnit = "工務局",
+                            AdminDistId = adminDId,
+                            LayerId = svLId
+                        };
+                        await _mapDBContext.Areas.AddAsync(svArea);
+                        await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
+                        roadProject.StreetViewId = svArea.Id;
                         await _mapDBContext.SaveChangesAsync();
                     }
                     var newPhotoPoints = await addPhoto(roadProject.StreetViewId.Value, photoPoints, roadProject.ProjectId);
@@ -2676,7 +2641,7 @@ namespace RMIS.Repositories
                                (isEndParsed && endDate >= inputStartDate && endDate <= inputEndDate);
                     }).Select(pp => (dynamic)pp).ToList();
                 }
-                var filterPointIds = new HashSet<Guid>(filterPoints.Select(fp => (Guid)fp.id));
+                var filterPointIds = new HashSet<int>(filterPoints.Select(fp => (int)fp.id));
                 // 組合結果
                 var result = new AreasByLayer
                 {
@@ -2738,24 +2703,25 @@ namespace RMIS.Repositories
                             // 新增通報座標和施工範圍的area
                             var constructionLocation = constructNotices[i].ConstructionLocation;
                             var projectNumber = constructNotices[i].ProjectNumber;
-                            var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == constructNotices[i].AdministrativeDistrict)?.Id;
-                            var noticeId = Guid.NewGuid();
+                            var noticeAdminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == constructNotices[i].AdministrativeDistrict)?.Id;
+                            var noticeLayerId = await _mapDBContext.Layers.Where(l => l.Name == "施工通報").Select(l => l.Id).FirstOrDefaultAsync();
                             var noticeArea = new Area
                             {
-                                Id = noticeId,
                                 Name = $"{constructionLocation} - {projectNumber}",
                                 ConstructionUnit = "工務局",
-                                AdminDistId = adminDistId ?? Guid.Empty,
-                                LayerId = Guid.Parse("B8D36E95-7C82-4ADA-BA91-C91B6162C723")
+                                AdminDistId = noticeAdminDistId ?? 0,
+                                LayerId = noticeLayerId
                             };
+                            noticeAreas.Add(noticeArea);
+                            await _mapDBContext.Areas.AddAsync(noticeArea);
+                            await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
                             var point = constructNotices[i].NoticePosition.Split(",");
                             var noticePoint = new Point
                             {
-                                Id = Guid.NewGuid(),
                                 Index = 0,
                                 Latitude = double.Parse(point[0]),
                                 Longitude = double.Parse(point[1]),
-                                AreaId = noticeId,
+                                AreaId = noticeArea.Id,
                                 Property = parseNoticePropAsync(constructNotices[i])
                             };
                             constructNotices[i].PositionId = noticeArea.Id;
@@ -3239,343 +3205,5 @@ namespace RMIS.Repositories
             }
         }
 
-        // ══════════════════════════════════════════════════════════
-        // 歷程匯入
-        // ══════════════════════════════════════════════════════════
-
-        private static readonly HashSet<string> ValidRecordTypes = new()
-        {
-            "重要里程碑", "會議記錄", "公文核定", "進度說明"
-        };
-
-        /// <summary>
-        /// 解析歷程 Excel，每列建立對應的 Process 記錄，並從 ZIP 抽取對應文件。
-        /// 回傳成功匯入的筆數。
-        /// </summary>
-        private async Task<int> ImportProcessByExcelAsync(
-            IFormFile processExcelFile,
-            IFormFile? processDocZipFile,
-            List<string> errors)
-        {
-            // 1. 解析 Excel
-            var rows = new List<ExcelProcessRow>();
-            using (var stream = new MemoryStream())
-            {
-                await processExcelFile.CopyToAsync(stream);
-                using var package = new ExcelPackage(stream);
-                var ws = package.Workbook.Worksheets[0];
-                rows = ParseProcessExcel(ws, errors);
-            }
-
-            if (rows.Count == 0) return 0;
-
-            // 2. 驗證 ProjectId 是否存在於 DB
-            var projectIds = rows.Select(r => r.ProjectId).Distinct().ToList();
-            var existingProjectIds = await _mapDBContext.RoadProjects
-                .Where(rp => projectIds.Contains(rp.ProjectId))
-                .Select(rp => rp.ProjectId)
-                .ToListAsync();
-
-            var missingIds = projectIds.Except(existingProjectIds).ToList();
-            if (missingIds.Count > 0)
-            {
-                errors.Add($"以下 ProjectId 不存在於道路專案: {string.Join(", ", missingIds)}");
-                return 0;
-            }
-
-            // 3. 解壓縮歷程文件 ZIP 到記憶體
-            // key: "{ProjectId}/{Step}/{OrderIndex}", value: list of (fileName, bytes)
-            var docDict = new Dictionary<string, List<(string fileName, byte[] bytes)>>(StringComparer.OrdinalIgnoreCase);
-            if (processDocZipFile != null && processDocZipFile.Length > 0)
-            {
-                using var memStream = new MemoryStream();
-                await processDocZipFile.CopyToAsync(memStream);
-                memStream.Position = 0;
-                using var archive = ArchiveFactory.Open(memStream);
-                foreach (var entry in archive.Entries)
-                {
-                    if (entry.IsDirectory) continue;
-                    var entryKey = entry.Key?.Replace('\\', '/');
-                    if (string.IsNullOrEmpty(entryKey)) continue;
-
-                    var fileName = Path.GetFileName(entryKey);
-                    if (string.IsNullOrEmpty(fileName) || fileName.StartsWith(".")) continue;
-
-                    // 期望結構: {ProjectId}/{Step}/{OrderIndex}/{FileName}
-                    var parts = entryKey.Split('/');
-                    if (parts.Length < 4) continue;
-
-                    var dictKey = $"{parts[0]}/{parts[1]}/{parts[2]}";
-                    using var entryStream = entry.OpenEntryStream();
-                    using var ms = new MemoryStream();
-                    await entryStream.CopyToAsync(ms);
-                    var bytes = ms.ToArray();
-
-                    if (!docDict.ContainsKey(dictKey))
-                        docDict[dictKey] = new List<(string, byte[])>();
-                    docDict[dictKey].Add((fileName, bytes));
-                }
-            }
-
-            // 3.1 驗證：ZIP 中每個檔案必須在對應 Excel 列的佐證文件說明（| 分隔）中列出
-            if (docDict.Count > 0)
-            {
-                // 建立 docKey → 該列已宣告的檔名集合
-                var rowFileMap = rows.ToDictionary(
-                    r => $"{r.ProjectId}/{r.Step}/{r.OrderIndex}",
-                    r => string.IsNullOrWhiteSpace(r.SupportingDocument)
-                        ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                        : r.SupportingDocument.Split(',')
-                            .Select(f => f.Trim()).Where(f => f.Length > 0)
-                            .ToHashSet(StringComparer.OrdinalIgnoreCase),
-                    StringComparer.OrdinalIgnoreCase);
-
-                var docErrors = new List<string>();
-                foreach (var kvp in docDict)
-                {
-                    if (!rowFileMap.TryGetValue(kvp.Key, out var listedFiles))
-                    {
-                        errors.Add($"文件壓縮檔包含找不到對應歷程列的目錄: {kvp.Key}（格式應為 ProjectId/Step/項次）");
-                        continue;
-                    }
-                    foreach (var (fileName, _) in kvp.Value)
-                    {
-                        if (!listedFiles.Contains(fileName))
-                            docErrors.Add($"歷程 {kvp.Key}: 壓縮檔中的「{fileName}」未列在佐證文件說明中");
-                    }
-                }
-
-                if (errors.Count > 0 || docErrors.Count > 0)
-                {
-                    errors.AddRange(docErrors);
-                    return 0;
-                }
-            }
-
-            // 3.2 驗證：佐證文件說明中列出的每個檔名，壓縮檔中必須存在
-            {
-                var docErrors = new List<string>();
-                foreach (var row in rows)
-                {
-                    if (string.IsNullOrWhiteSpace(row.SupportingDocument)) continue;
-
-                    var docKey = $"{row.ProjectId}/{row.Step}/{row.OrderIndex}";
-                    var requiredFiles = row.SupportingDocument.Split(',')
-                        .Select(f => f.Trim()).Where(f => f.Length > 0).ToList();
-
-                    docDict.TryGetValue(docKey, out var availableFiles);
-                    var availableNames = availableFiles?
-                        .Select(f => f.fileName)
-                        .ToHashSet(StringComparer.OrdinalIgnoreCase)
-                        ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                    foreach (var requiredFile in requiredFiles)
-                    {
-                        if (!availableNames.Contains(requiredFile))
-                            docErrors.Add(
-                                $"歷程 {row.ProjectId}/Step{row.Step}/項次{row.OrderIndex}: " +
-                                $"佐證文件說明中的「{requiredFile}」在壓縮檔中找不到");
-                    }
-                }
-
-                if (docErrors.Count > 0)
-                {
-                    errors.AddRange(docErrors);
-                    return 0;
-                }
-            }
-
-            // 4. 逐列插入 process 記錄並儲存文件
-            int importedCount = 0;
-            foreach (var row in rows)
-            {
-                try
-                {
-                    var processId = await InsertProcessRowAsync(row);
-
-                    // 儲存對應文件
-                    var docKey = $"{row.ProjectId}/{row.Step}/{row.OrderIndex}";
-                    if (docDict.TryGetValue(docKey, out var files))
-                    {
-                        var processFolder = Path.Combine(ResolvePath(_filePaths.ProcessFile), row.ProjectId, row.Step.ToString(), row.OrderIndex.ToString());
-                        Directory.CreateDirectory(processFolder);
-
-                        foreach (var (fileName, bytes) in files)
-                        {
-                            var filePath = Path.Combine(processFolder, fileName);
-                            await File.WriteAllBytesAsync(filePath, bytes);
-
-                            _mapDBContext.RoadProjectProcessFiles.Add(new RoadProjectProcessFile
-                            {
-                                Id = 0,
-                                ProcessId = processId,
-                                FileType = Path.GetExtension(fileName).TrimStart('.'),
-                                FileName = fileName,
-                                Base64String = "",
-                                UploadUser = "Excel匯入",
-                                FileSize = bytes.Length.ToString()
-                            });
-                        }
-                    }
-
-                    importedCount++;
-                }
-                catch (Exception ex)
-                {
-                    errors.Add($"歷程 {row.ProjectId}/Step{row.Step}/項次{row.OrderIndex}: {ex.Message}");
-                }
-            }
-
-            await _mapDBContext.SaveChangesAsync();
-            return importedCount;
-        }
-
-        /// <summary>
-        /// 解析歷程 Excel 工作表
-        /// </summary>
-        private List<ExcelProcessRow> ParseProcessExcel(ExcelWorksheet ws, List<string> errors)
-        {
-            var rows = new List<ExcelProcessRow>();
-            var rowCount = ws.Dimension?.Rows ?? 0;
-
-            for (int r = 2; r <= rowCount; r++)
-            {
-                var projectId = ws.Cells[r, 1].Text?.Trim();
-                if (string.IsNullOrEmpty(projectId)) continue;
-
-                if (!int.TryParse(ws.Cells[r, 2].Text?.Trim(), out var step) || step < 1 || step > 3)
-                {
-                    errors.Add($"歷程第 {r} 行: Step 必須為 1、2 或 3");
-                    continue;
-                }
-
-                if (!int.TryParse(ws.Cells[r, 3].Text?.Trim(), out var orderIndex) || orderIndex < 1)
-                {
-                    errors.Add($"歷程第 {r} 行: 項次必須為正整數");
-                    continue;
-                }
-
-                var recordType = ws.Cells[r, 5].Text?.Trim() ?? "";
-                if (!string.IsNullOrEmpty(recordType) && !ValidRecordTypes.Contains(recordType))
-                {
-                    errors.Add($"歷程第 {r} 行: 記錄類別「{recordType}」不合法，允許值: {string.Join("、", ValidRecordTypes)}");
-                    continue;
-                }
-
-                rows.Add(new ExcelProcessRow
-                {
-                    ProjectId = projectId,
-                    Step = step,
-                    OrderIndex = orderIndex,
-                    District = ws.Cells[r, 4].Text?.Trim() ?? "",
-                    RecordType = recordType,
-                    RecordTitle = ws.Cells[r, 6].Text?.Trim() ?? "",
-                    ExecutionUnit = ws.Cells[r, 7].Text?.Trim() ?? "",
-                    ConstructionUnit = ws.Cells[r, 8].Text?.Trim() ?? "",
-                    ProjectName = ws.Cells[r, 9].Text?.Trim() ?? "",
-                    PreviousMeetingStatus = ws.Cells[r, 10].Text?.Trim() ?? "",
-                    PreviousMeetingResolution = ws.Cells[r, 11].Text?.Trim() ?? "",
-                    CurrentStatus = ws.Cells[r, 12].Text?.Trim() ?? "",
-                    CurrentMeetingResolution = ws.Cells[r, 13].Text?.Trim() ?? "",
-                    SupportingDocument = ws.Cells[r, 14].Text?.Trim() ?? "",
-                    Category = ws.Cells[r, 15].Text?.Trim() ?? "",
-                    BudgetFiscalYearApprovedAmount = ws.Cells[r, 16].Text?.Trim() ?? "",
-                    ContractType = ws.Cells[r, 17].Text?.Trim() ?? "",
-                    ConstructionPeriod = ws.Cells[r, 18].Text?.Trim() ?? "",
-                    AnnouncementCommencementDate = ws.Cells[r, 19].Text?.Trim() ?? "",
-                    AwardCompletionDate = ws.Cells[r, 20].Text?.Trim() ?? "",
-                });
-            }
-
-            return rows;
-        }
-
-        /// <summary>
-        /// 將單筆歷程插入對應的 process 資料表，回傳生成的 ProcessId。
-        /// </summary>
-        private async Task<Guid> InsertProcessRowAsync(ExcelProcessRow row)
-        {
-            var processId = Guid.NewGuid();
-            var now = DateTime.Now;
-
-            switch (row.Step)
-            {
-                case 1:
-                    _mapDBContext.RoadProjectProcess1.Add(new RoadProjectProcess1
-                    {
-                        Id = 0,
-                        ProcessId = processId,
-                        ProjectId = row.ProjectId,
-                        OrderIndex = row.OrderIndex,
-                        District = row.District,
-                        RecordType = row.RecordType,
-                        RecordTitle = row.RecordTitle,
-                        ExecutionUnit = row.ExecutionUnit,
-                        ConstructionUnit = row.ConstructionUnit,
-                        ProjectName = row.ProjectName,
-                        PreviousMeetingStatus = row.PreviousMeetingStatus,
-                        PreviousMeetingResolution = row.PreviousMeetingResolution,
-                        CurrentStatus = row.CurrentStatus,
-                        CurrentMeetingResolution = row.CurrentMeetingResolution,
-                        SupportingDocument = row.SupportingDocument,
-                        CreatedAt = now
-                    });
-                    break;
-
-                case 2:
-                    _mapDBContext.RoadProjectProcess2.Add(new RoadProjectProcess2
-                    {
-                        Id = 0,
-                        ProcessId = processId,
-                        ProjectId = row.ProjectId,
-                        OrderIndex = row.OrderIndex,
-                        District = row.District,
-                        RecordType = row.RecordType,
-                        RecordTitle = row.RecordTitle,
-                        ExecutionUnit = row.ExecutionUnit,
-                        ConstructionUnit = row.ConstructionUnit,
-                        ProjectName = row.ProjectName,
-                        Category = row.Category,
-                        PreviousMeetingStatus = row.PreviousMeetingStatus,
-                        PreviousMeetingResolution = row.PreviousMeetingResolution,
-                        CurrentStatus = row.CurrentStatus,
-                        CurrentMeetingResolution = row.CurrentMeetingResolution,
-                        SupportingDocument = row.SupportingDocument,
-                        CreatedAt = now
-                    });
-                    break;
-
-                case 3:
-                    _mapDBContext.RoadProjectProcess3.Add(new RoadProjectProcess3
-                    {
-                        Id = 0,
-                        ProcessId = processId,
-                        ProjectId = row.ProjectId,
-                        OrderIndex = row.OrderIndex,
-                        District = row.District,
-                        RecordType = row.RecordType,
-                        RecordTitle = row.RecordTitle,
-                        ExecutionUnit = row.ExecutionUnit,
-                        ProjectName = row.ProjectName,
-                        BudgetFiscalYearApprovedAmount = row.BudgetFiscalYearApprovedAmount,
-                        ContractType = row.ContractType,
-                        ConstructionPeriod = row.ConstructionPeriod,
-                        AnnouncementCommencementDate = row.AnnouncementCommencementDate,
-                        AwardCompletionDate = row.AwardCompletionDate,
-                        PreviousMeetingStatus = row.PreviousMeetingStatus,
-                        PreviousMeetingResolution = row.PreviousMeetingResolution,
-                        CurrentStatus = row.CurrentStatus,
-                        CurrentMeetingResolution = row.CurrentMeetingResolution,
-                        SupportingDocument = row.SupportingDocument,
-                        CreatedAt = now
-                    });
-                    break;
-
-                default:
-                    throw new ArgumentException($"無效的 Step 值: {row.Step}");
-            }
-
-            return processId;
-        }
     }
 }

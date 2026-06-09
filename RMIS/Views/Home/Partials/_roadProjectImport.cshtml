@@ -41,49 +41,9 @@
                 </div>
             </div>
 
-            @* ══ 歷程資料 ══ *@
-            <div class="import-group-label">歷程資料</div>
-
-            <div class="import-section">
-                <h4 class="section-title">歷程 Excel <span class="optional-badge">選填</span></h4>
-                <input type="file" id="processExcelFileInput" accept=".xlsx" style="display:none;" />
-                <div class="file-upload-area" id="processExcelUploadArea">
-                    <div class="upload-icon"><i class="fa fa-file-excel-o"></i></div>
-                    <p class="upload-text">拖曳歷程 Excel 至此處或點擊選擇</p>
-                    <p class="upload-hint">支援 .xlsx 格式，ProjectId 須對應已存在的道路專案</p>
-                </div>
-                <div id="processExcelFileInfo" class="file-info hidden">
-                    <span class="file-name"></span>
-                    <button type="button" class="btn-remove-file" data-target="processExcel">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="import-section">
-                <h4 class="section-title">歷程文件壓縮檔 <span class="optional-badge">選填</span></h4>
-                <input type="file" id="processDocZipFileInput" accept=".zip,.rar,.7zip" style="display:none;" />
-                <div class="file-upload-area" id="processDocZipUploadArea">
-                    <div class="upload-icon"><i class="fa fa-file-archive-o"></i></div>
-                    <p class="upload-text">拖曳文件壓縮檔至此處或點擊選擇</p>
-                    <p class="upload-hint">目錄結構: {ProjectId}/{Step}/{項次}/document.pdf...</p>
-                </div>
-                <div id="processDocZipFileInfo" class="file-info hidden">
-                    <span class="file-name"></span>
-                    <button type="button" class="btn-remove-file" data-target="processDocZip">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
             @* ══ 欄位說明 ══ *@
             <div class="import-section">
                 <h4 class="section-title">Excel 欄位說明</h4>
-                <div class="col-doc-tabs">
-                    <button type="button" class="col-doc-tab active" data-tab="project">道路專案</button>
-                    <button type="button" class="col-doc-tab" data-tab="process">歷程</button>
-                </div>
-
                 <div class="col-doc-panel" id="colDocProject">
                     <div class="column-doc-wrapper">
                         <table class="column-doc-table">
@@ -122,47 +82,13 @@
                     </div>
                 </div>
 
-                <div class="col-doc-panel hidden" id="colDocProcess">
-                    <div class="column-doc-wrapper">
-                        <table class="column-doc-table">
-                            <thead>
-                                <tr><th>欄位</th><th>名稱</th><th>必填</th><th>適用階段</th><th>說明</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>A</td><td>ProjectId</td><td>是</td><td>全部</td><td>須對應已存在的道路專案編號</td></tr>
-                                <tr><td>B</td><td>Step</td><td>是</td><td>全部</td><td>1=前期規劃、2=用地取得、3=設計施工</td></tr>
-                                <tr><td>C</td><td>項次</td><td>是</td><td>全部</td><td>同一專案同一階段的歷程順序 (1, 2, 3...)</td></tr>
-                                <tr><td>D</td><td>行政區</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>E</td><td>記錄類別</td><td>否</td><td>全部</td><td>重要里程碑 / 會議記錄 / 公文核定 / 進度說明</td></tr>
-                                <tr><td>F</td><td>記錄標題</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>G</td><td>執行單位</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>H</td><td>工程單位</td><td>否</td><td>1、2</td><td>Step 3 留空</td></tr>
-                                <tr><td>I</td><td>工程名稱</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>J</td><td>前次辦理情形</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>K</td><td>前次裁示</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>L</td><td>最新辦理情形</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>M</td><td>本次裁示</td><td>否</td><td>全部</td><td></td></tr>
-                                <tr><td>N</td><td>佐證文件說明</td><td>否</td><td>全部</td><td>檔名列表，多個檔案以 , 分隔，例: 會議記錄.pdf,簡報.pptx</td></tr>
-                                <tr><td>O</td><td>類別</td><td>否</td><td>2</td><td>Step 2 特有，其他留空</td></tr>
-                                <tr><td>P</td><td>預算核定經費</td><td>否</td><td>3</td><td>Step 3 特有</td></tr>
-                                <tr><td>Q</td><td>開口合約/專業發包</td><td>否</td><td>3</td><td>Step 3 特有</td></tr>
-                                <tr><td>R</td><td>工期</td><td>否</td><td>3</td><td>Step 3 特有</td></tr>
-                                <tr><td>S</td><td>上網公告預計/實際開工</td><td>否</td><td>3</td><td>Step 3 特有</td></tr>
-                                <tr><td>T</td><td>決標/預計完工</td><td>否</td><td>3</td><td>Step 3 特有</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
 
             <div class="import-section">
                 <h4 class="section-title">範本下載</h4>
                 <p class="template-hint">範本包含 Excel 檔案及目錄結構說明</p>
-                <a id="btnDownloadTemplate" href="/Admin/DownloadImportTemplate" class="btn btn-outline-secondary" style="margin-right:8px;">
+                <a id="btnDownloadTemplate" href="/Admin/DownloadImportTemplate" class="btn btn-outline-secondary">
                     <i class="fa fa-download"></i> 道路專案範本 (ZIP)
-                </a>
-                <a id="btnDownloadProcessTemplate" href="/Admin/DownloadProcessImportTemplate" class="btn btn-outline-secondary">
-                    <i class="fa fa-download"></i> 歷程範本 (ZIP)
                 </a>
             </div>
         </div>

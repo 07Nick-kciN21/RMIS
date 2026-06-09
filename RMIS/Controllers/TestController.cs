@@ -26,7 +26,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("get/Pipeline/DepartmentIds")]
-        public async Task<IActionResult> GetDepartmentId(Guid PipelineId)
+        public async Task<IActionResult> GetDepartmentId(int PipelineId)
         {
             try
             {
@@ -49,16 +49,16 @@ namespace RMIS.Controllers
 
         public class CategoryList
         {
-            public Guid Id { get; set; } // 唯一識別碼
+            public int Id { get; set; } // 唯一識別碼
             public string Name { get; set; } // 分類名稱
             public int OrderId { get; set; }
-            public Guid? ParentId { get; set; }
+            public int? ParentId { get; set; }
             // 允許存取的部門 (可多個)
             public List<int> DepartmentIds { get; set; } = new();
         }
 
         [HttpGet("update/Category/DepartmentIds")]
-        public IActionResult UpdateDepartmentId(Guid id, int deptId)
+        public IActionResult UpdateDepartmentId(int id, int deptId)
         {
             try
             {
@@ -82,7 +82,7 @@ namespace RMIS.Controllers
             }
         }
 
-        private bool searchCategories(Guid? parentId, int deptIds)
+        private bool searchCategories(int? parentId, int deptIds)
         {
             var Pipelines = _mapDBContext.Pipelines.Where(p => p.CategoryId == parentId).ToList();
             foreach(var pipeline in Pipelines)
@@ -109,7 +109,7 @@ namespace RMIS.Controllers
             var jsTreeData = BuildJsTreeData(allCategories, null, departmentId);
             return Ok(new { menuData = jsTreeData });
         }
-        private List<object> BuildJsTreeData(List<Category> allCategories, Guid? parentId, int deptId)
+        private List<object> BuildJsTreeData(List<Category> allCategories, int? parentId, int deptId)
         {
             var result = new List<object>();
             // 選擇當前層級的分類
@@ -156,7 +156,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("Get/CatData")]
-        public async Task<IActionResult> searchTree(Guid id)
+        public async Task<IActionResult> searchTree(int id)
         {
             var Categories = await _mapDBContext.Categories.ToListAsync();
             var result = BuildJsTreeData(Categories, id, 0);
@@ -164,7 +164,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("Update/Pipeline/DepartmentId")]
-        public async Task<IActionResult> searchTree(Guid pipeId, int deptId)
+        public async Task<IActionResult> searchTree(int pipeId, int deptId)
         {
             var pipeline = _mapDBContext.Pipelines.Find(pipeId);
             pipeline.DepartmentIds.Add(deptId);
@@ -172,7 +172,7 @@ namespace RMIS.Controllers
             _mapDBContext.SaveChanges();
             return Ok("更新完成");
         }
-        private void searchParentCategory(Guid? id, int deptId)
+        private void searchParentCategory(int? id, int deptId)
         {
             var parentCat = _mapDBContext.Categories.First(c => c.Id == id);
             if (!parentCat.DepartmentIds.Contains(deptId))
@@ -213,7 +213,7 @@ namespace RMIS.Controllers
             return Ok(new{ model});
         }
 
-        private string buildCategoryPath(List<Category> allCategory, Guid? parentId)
+        private string buildCategoryPath(List<Category> allCategory, int? parentId)
         {
             var category = allCategory.FirstOrDefault(ac => ac.Id == parentId);
             if (category == null) return string.Empty;
@@ -225,7 +225,7 @@ namespace RMIS.Controllers
             return buildCategoryPath(allCategory, category.ParentId) + "/" + category.Name;
         }
 
-        private void buildPipelinePath(List<SelectListItem> pipelineSelectList, List<Category> allCategory, List<Pipeline> allPipeline, Guid? parentId, string pathName)
+        private void buildPipelinePath(List<SelectListItem> pipelineSelectList, List<Category> allCategory, List<Pipeline> allPipeline, int? parentId, string pathName)
         {
             var currentCategories = allCategory.Where(ac => ac.ParentId == parentId).OrderBy(ac => ac.OrderId).ToList();
             foreach(var category in currentCategories)
@@ -298,7 +298,7 @@ namespace RMIS.Controllers
             using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
             try
             {
-                var adminDistId = Guid.Parse("B0D453B9-CDE8-4733-A305-02E24EC9A52E");
+                var adminDistId = await _mapDBContext.AdminDist.Select(a => a.Id).FirstOrDefaultAsync();
 
                 // 1. 讀取 GeoJSON
                 var jsonContent = await System.IO.File.ReadAllTextAsync(filePath);
@@ -319,19 +319,20 @@ namespace RMIS.Controllers
                 // 4. 找或建 GeometryType
                 var geometryType = await _mapDBContext.GeometryTypes
                     .FirstOrDefaultAsync(gt => gt.Kind == geometryKind);
-                Guid geometryTypeId;
+                int geometryTypeId;
                 if (geometryType == null)
                 {
-                    geometryTypeId = Guid.NewGuid();
-                    await _mapDBContext.GeometryTypes.AddAsync(new GeometryType
+                    var newGt = new GeometryType
                     {
-                        Id = geometryTypeId,
                         Name = pipelineName,
                         Kind = geometryKind,
                         Svg = "",
                         Color = "#3388ff",
                         OrderId = 99
-                    });
+                    };
+                    await _mapDBContext.GeometryTypes.AddAsync(newGt);
+                    await _mapDBContext.SaveChangesAsync();
+                    geometryTypeId = newGt.Id;
                 }
                 else
                 {
@@ -341,29 +342,31 @@ namespace RMIS.Controllers
                 // 5. 找或建 Pipeline + Layer
                 var pipeline = await _mapDBContext.Pipelines
                     .FirstOrDefaultAsync(p => p.CategoryId == category.Id && p.Name == pipelineName);
-                Guid layerId;
+                int layerId;
 
                 if (pipeline == null)
                 {
-                    var pipelineId = Guid.NewGuid();
-                    layerId = Guid.NewGuid();
-                    await _mapDBContext.Pipelines.AddAsync(new Pipeline
+                    var newPipeline = new Pipeline
                     {
-                        Id = pipelineId,
                         Name = pipelineName,
                         CategoryId = category.Id,
                         ManagementUnit = categoryName,
                         IsGeneralPipeline = true,
                         DepartmentIds = new List<int>()
-                    });
-                    await _mapDBContext.Layers.AddAsync(new Layer
+                    };
+                    await _mapDBContext.Pipelines.AddAsync(newPipeline);
+                    await _mapDBContext.SaveChangesAsync(); // 取得 Pipeline IDENTITY Id
+
+                    var newLayer = new Layer
                     {
-                        Id = layerId,
                         Name = pipelineName,
                         GeometryTypeId = geometryTypeId,
-                        PipelineId = pipelineId,
+                        PipelineId = newPipeline.Id,
                         ImportEnabled = false
-                    });
+                    };
+                    await _mapDBContext.Layers.AddAsync(newLayer);
+                    await _mapDBContext.SaveChangesAsync(); // 取得 Layer IDENTITY Id
+                    layerId = newLayer.Id;
                 }
                 else
                 {
@@ -379,15 +382,15 @@ namespace RMIS.Controllers
 
                 if (geometryKind == "point")
                 {
-                    var areaId = Guid.NewGuid();
-                    await _mapDBContext.Areas.AddAsync(new Area
+                    var area = new Area
                     {
-                        Id = areaId,
                         Name = pipelineName,
                         LayerId = layerId,
                         ConstructionUnit = "未填寫",
                         AdminDistId = adminDistId
-                    });
+                    };
+                    await _mapDBContext.Areas.AddAsync(area);
+                    await _mapDBContext.SaveChangesAsync(); // 取得 Area IDENTITY Id
                     areaCount++;
 
                     for (int i = 0; i < features.Count; i++)
@@ -397,8 +400,7 @@ namespace RMIS.Controllers
                         var props = features[i].GetProperty("properties");
                         await _mapDBContext.Points.AddAsync(new Point
                         {
-                            Id = Guid.NewGuid(),
-                            AreaId = areaId,
+                            AreaId = area.Id,
                             Index = i,
                             Latitude = lat,
                             Longitude = lon,
@@ -416,15 +418,15 @@ namespace RMIS.Controllers
                             ? (idProp.GetString() ?? $"{pipelineName}_{fi}")
                             : $"{pipelineName}_{fi}";
 
-                        var areaId = Guid.NewGuid();
-                        await _mapDBContext.Areas.AddAsync(new Area
+                        var area = new Area
                         {
-                            Id = areaId,
                             Name = areaName,
                             LayerId = layerId,
                             ConstructionUnit = "未填寫",
                             AdminDistId = adminDistId
-                        });
+                        };
+                        await _mapDBContext.Areas.AddAsync(area);
+                        await _mapDBContext.SaveChangesAsync(); // 取得 Area IDENTITY Id
                         areaCount++;
 
                         var coordsList = features[fi].GetProperty("geometry").GetProperty("coordinates");
@@ -434,8 +436,7 @@ namespace RMIS.Controllers
                             var (lat, lon) = Twd97ToWgs84(coord[0].GetDouble(), coord[1].GetDouble());
                             await _mapDBContext.Points.AddAsync(new Point
                             {
-                                Id = Guid.NewGuid(),
-                                AreaId = areaId,
+                                AreaId = area.Id,
                                 Index = ptIdx,
                                 Latitude = lat,
                                 Longitude = lon,
@@ -513,7 +514,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("Update/Category")]
-        public async Task<IActionResult> UpdateCategoryAsync(Guid CateId, Guid newId)
+        public async Task<IActionResult> UpdateCategoryAsync(int CateId, int newId)
         {
             try
             {

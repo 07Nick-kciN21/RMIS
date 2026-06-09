@@ -37,7 +37,7 @@ namespace RMIS.Repositories
 
                 process.Id = 0;
                 process.CreatedAt = DateTime.Now;
-                process.ProcessId = Guid.NewGuid();
+                process.ProcessId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
                 // 自動計算 OrderIndex (取同專案同階段最大值 + 1)
                 if (process.OrderIndex <= 0)
@@ -85,7 +85,7 @@ namespace RMIS.Repositories
 
                 process.Id = 0;
                 process.CreatedAt = DateTime.Now;
-                process.ProcessId = Guid.NewGuid();
+                process.ProcessId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
                 // 自動計算 OrderIndex
                 if (process.OrderIndex <= 0)
@@ -133,7 +133,7 @@ namespace RMIS.Repositories
 
                 process.Id = 0;
                 process.CreatedAt = DateTime.Now;
-                process.ProcessId = Guid.NewGuid();
+                process.ProcessId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
                 // 自動計算 OrderIndex
                 if (process.OrderIndex <= 0)
@@ -294,7 +294,7 @@ namespace RMIS.Repositories
             return records;
         }
 
-        public async Task<(string result, Guid processId)> AddAllProcessRecordAsync(RoadProjectProcess process)
+        public async Task<(string result, string processId)> AddAllProcessRecordAsync(RoadProjectProcess process)
         {
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
@@ -303,11 +303,11 @@ namespace RMIS.Repositories
                 try
                 {
                     if (process == null)
-                        return ("錯誤：資料為空。", Guid.Empty);
+                        return ("錯誤：資料為空。", string.Empty);
 
                     process.Id = 0;
                     process.CreatedAt = DateTime.Now;
-                    process.ProcessId = Guid.NewGuid();
+                    process.ProcessId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
                     if (process.OrderIndex <= 0)
                     {
@@ -326,12 +326,12 @@ namespace RMIS.Repositories
                 catch (DbUpdateException dbEx)
                 {
                     await transaction.RollbackAsync();
-                    return ($"資料庫儲存失敗：{dbEx.InnerException?.Message ?? dbEx.Message}", Guid.Empty);
+                    return ($"資料庫儲存失敗：{dbEx.InnerException?.Message ?? dbEx.Message}", string.Empty);
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    return ($"伺服器發生非預期錯誤：{ex.Message}", Guid.Empty);
+                    return ($"伺服器發生非預期錯誤：{ex.Message}", string.Empty);
                 }
             });
         }
@@ -411,7 +411,7 @@ namespace RMIS.Repositories
             }); // end strategy
         }
 
-        public async Task<List<RoadProjectProcessFile>> GetProcessFilesByProcessIdAsync(Guid processId)
+        public async Task<List<RoadProjectProcessFile>> GetProcessFilesByProcessIdAsync(string processId)
         {
             return await _mapDBContext.RoadProjectProcessFiles
                 .Where(f => f.ProcessId == processId)
@@ -424,7 +424,7 @@ namespace RMIS.Repositories
                 .FirstOrDefaultAsync(f => f.Id == fileId);
         }
 
-        public async Task<string> GetProcessFilePathAsync(Guid processId, string fileName)
+        public async Task<string> GetProcessFilePathAsync(string processId, string fileName)
         {
             var folder = await GetProcessFolderAsync(processId);
             return Path.Combine(folder, fileName);
@@ -680,7 +680,7 @@ namespace RMIS.Repositories
         /// <summary>
         /// 刪除指定 ProcessId 的所有檔案，並備份以便回滾
         /// </summary>
-        private async Task<List<(string path, byte[] content)>> DeleteProcessFilesWithBackupAsync(Guid processId)
+        private async Task<List<(string path, byte[] content)>> DeleteProcessFilesWithBackupAsync(string processId)
         {
             var deletedFiles = new List<(string path, byte[] content)>();
 
@@ -733,7 +733,7 @@ namespace RMIS.Repositories
         /// <summary>
         /// 依 ProcessId 查詢對應的 (ProjectId, Step, OrderIndex)
         /// </summary>
-        private async Task<(string projectId, int step, int orderIndex)?> GetProcessInfoAsync(Guid processId)
+        private async Task<(string projectId, int step, int orderIndex)?> GetProcessInfoAsync(string processId)
         {
             var p1 = await _mapDBContext.RoadProjectProcess1.FirstOrDefaultAsync(p => p.ProcessId == processId);
             if (p1 != null) return (p1.ProjectId, 1, p1.OrderIndex);
@@ -750,13 +750,13 @@ namespace RMIS.Repositories
         /// <summary>
         /// 依 ProcessId 建立實體文件目錄路徑: {ProcessFile}/{ProjectId}/{Step}/{OrderIndex}
         /// </summary>
-        private async Task<string> GetProcessFolderAsync(Guid processId)
+        private async Task<string> GetProcessFolderAsync(string processId)
         {
             var info = await GetProcessInfoAsync(processId);
             if (info.HasValue)
                 return Path.Combine(ResolvePath(_filePaths.ProcessFile), info.Value.projectId, info.Value.step.ToString(), info.Value.orderIndex.ToString());
             // fallback: 使用 ProcessId (舊資料相容)
-            return Path.Combine(ResolvePath(_filePaths.ProcessFile), processId.ToString());
+            return Path.Combine(ResolvePath(_filePaths.ProcessFile), processId);
         }
 
         public async Task<string> UpdateProcess1Async(RoadProjectProcess1 process)

@@ -14,13 +14,13 @@ namespace RMIS.Repositories
         public Task<ProjectProcessesList> GetProcessRecordsAsync(string projectId);
         public Task<List<RoadProjectProcess>> GetAllProcessRecordsAsync(string projectId);
         public Task<List<RoadProjectProcess>> GetLastProcessRecordsByProjectIdsAsync(List<string> projectIds);
-        public Task<(string result, Guid processId)> AddAllProcessRecordAsync(RoadProjectProcess process);
+        public Task<(string result, string processId)> AddAllProcessRecordAsync(RoadProjectProcess process);
         public Task<string> UpdateAllProcessRecordAsync(RoadProjectProcess process);
         public Task<string> DeleteAllProcessRecordAsync(int id);
         public Task<string> AddProcessFileAsync(RoadProjectProcessFile file);
-        public Task<List<RoadProjectProcessFile>> GetProcessFilesByProcessIdAsync(Guid processId);
+        public Task<List<RoadProjectProcessFile>> GetProcessFilesByProcessIdAsync(string processId);
         public Task<RoadProjectProcessFile?> GetProcessFileByIdAsync(int fileId);
-        public Task<string> GetProcessFilePathAsync(Guid processId, string fileName);
+        public Task<string> GetProcessFilePathAsync(string processId, string fileName);
         public Task<string> DeleteProcessFileAsync(int fileId);
         public Task<string> DeleteProcess1Async(int id);
         public Task<string> DeleteProcess2Async(int id);

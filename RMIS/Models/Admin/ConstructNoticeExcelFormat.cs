@@ -25,7 +25,7 @@
         public string? TrafficControlPhoto { get; set; } // 打卡交管照片
         public string ConstructionScope { get; set; } // 施工範圍
         public string NoticePosition { get; set; } // 通報座標
-        public Guid PositionId { get; set; } // 通報座標的 AreaId
+        public int PositionId { get; set; } // 通報座標的 AreaId
     }
 
 }

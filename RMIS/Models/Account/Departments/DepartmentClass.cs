@@ -33,8 +33,8 @@
         public int Id { get; set; }
         public string Name { get; set; }
         public bool Status { get; set; }
-        public List<Guid> Added { get; set; }
-        public List<Guid> Removed { get; set; }
+        public List<int> Added { get; set; }
+        public List<int> Removed { get; set; }
     }
 
     public class CreateDepartmentView
@@ -42,6 +42,6 @@
         public int Id { get; set; }
         public string Name { get; set; }
         public bool Status { get; set; }
-        public List<Guid> Added { get; set; }
+        public List<int> Added { get; set; }
     }
 }

@@ -23,39 +23,38 @@ export function opacityLayer(opacity, layersId) {
 }
 
 export function displayLayer(id, opacity) {
-    layers[id].eachLayer(function (layer) {
-        if(!layer._isVisible){
-            return;
-        }
-        // 保存原始透明度
+    const layer = layers[id];
+    if (!layer) return;
+
+    if (typeof layer.setOpacity === 'function' && !layer.eachLayer) {
+        // VectorGrid
         layer._originalOpacity = opacity;
-        if (layer instanceof L.Marker) {
-            layer.setOpacity(opacity); // 恢復透明度
-        } else if (layer instanceof L.Polygon) {
-            layer.setStyle({
-                opacity: opacity, // 邊框透明度
-                fillOpacity: opacity // 填充透明度同步
-            });
-        } else if (layer instanceof L.Polyline) {
-            layer.setStyle({ opacity: opacity }); // 恢復透明度
-        }
-    });
+        layer.setOpacity(opacity);
+    } else if (typeof layer.eachLayer === 'function') {
+        // LayerGroup（point viewport 圖層）
+        layer.eachLayer(function (sub) {
+            if (!sub._isVisible) return;
+            sub._originalOpacity = opacity;
+            if (sub instanceof L.Marker) sub.setOpacity(opacity);
+            else if (sub instanceof L.Polygon) sub.setStyle({ opacity, fillOpacity: opacity });
+            else if (sub instanceof L.Polyline) sub.setStyle({ opacity });
+        });
+    }
 }
 
 export function closeLayer(id) {
-    layers[id].eachLayer(function (layer) {
-        if(layer._isVisible){
-            return;
-        }
-        if (layer instanceof L.Marker) {
-            layer.setOpacity(0); // 設置不可見
-        } else if (layer instanceof L.Polygon) {
-            layer.setStyle({
-                opacity: 0,       // 邊框透明度
-                fillOpacity: 0    // 填充透明度同步
-            });
-        } else if (layer instanceof L.Polyline) {
-            layer.setStyle({ opacity: 0 }); // 設置不可見
-        }
-    });
-};
+    const layer = layers[id];
+    if (!layer) return;
+
+    if (typeof layer.setOpacity === 'function' && !layer.eachLayer) {
+        // VectorGrid
+        layer.setOpacity(0);
+    } else if (typeof layer.eachLayer === 'function') {
+        // LayerGroup
+        layer.eachLayer(function (sub) {
+            if (sub instanceof L.Marker) sub.setOpacity(0);
+            else if (sub instanceof L.Polygon) sub.setStyle({ opacity: 0, fillOpacity: 0 });
+            else if (sub instanceof L.Polyline) sub.setStyle({ opacity: 0 });
+        });
+    }
+}

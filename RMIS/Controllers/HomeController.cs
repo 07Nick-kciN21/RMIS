@@ -16,7 +16,7 @@ using RMIS.Repositories;
 namespace RMIS.Controllers
 {
     /// <summary>
-    /// ­º­¶
+    /// ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     /// <returns></returns>
     public class HomeController : Controller
@@ -43,7 +43,7 @@ namespace RMIS.Controllers
             if (currentUser != null)
             {
                 ViewBag.Username = currentUser.UserName;
-                // ±quser¨ú±orole¸ê®Æ»P³¡ªù(°ò¥»¤W¤@­Óuser¥u¦³¤@­Órole)
+                // ï¿½quserï¿½ï¿½ï¿½oroleï¿½ï¿½Æ»Pï¿½ï¿½ï¿½ï¿½(ï¿½ò¥»¤Wï¿½@ï¿½ï¿½userï¿½uï¿½ï¿½ï¿½@ï¿½ï¿½role)
                 var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
                 var userPermissions = await _accountInterface.GetUserPermissions(userInfo.roleId);
                 return View(userPermissions);
@@ -61,7 +61,7 @@ namespace RMIS.Controllers
             if (currentUser != null)
             {
                 ViewBag.Username = currentUser.UserName;
-                // ±quser¨ú±orole¸ê®Æ»P³¡ªù(°ò¥»¤W¤@­Óuser¥u¦³¤@­Órole)
+                // ï¿½quserï¿½ï¿½ï¿½oroleï¿½ï¿½Æ»Pï¿½ï¿½ï¿½ï¿½(ï¿½ò¥»¤Wï¿½@ï¿½ï¿½userï¿½uï¿½ï¿½ï¿½@ï¿½ï¿½role)
                 var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
                 var userPermissions = await _accountInterface.GetUserPermissions(userInfo.roleId);
                 return View(userPermissions);
@@ -74,12 +74,12 @@ namespace RMIS.Controllers
         public async Task<IActionResult> BuildTreeData()
         {
             var currentUser = await _userManager.GetUserAsync(User);
-            // ±quser¨ú±orole¸ê®Æ»P³¡ªù(°ò¥»¤W¤@­Óuser¥u¦³¤@­Órole)
+            // ï¿½quserï¿½ï¿½ï¿½oroleï¿½ï¿½Æ»Pï¿½ï¿½ï¿½ï¿½(ï¿½ò¥»¤Wï¿½@ï¿½ï¿½userï¿½uï¿½ï¿½ï¿½@ï¿½ï¿½role)
 
             var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
-            if (userInfo.departmentName != "«Ý½T»{")
+            if (userInfo.departmentName != "ï¿½Ý½Tï¿½{")
             {
-                // ¨ú±o©Ò¦³¨ã¦³³¡ªù¥N¸¹ªº®ÚCategories
+                // ï¿½ï¿½ï¿½oï¿½Ò¦ï¿½ï¿½ã¦³ï¿½ï¿½ï¿½ï¿½ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Categories
                 var allCategories = await _mapDBContext.Categories
                     .Where(c => 
                         c.DepartmentIds.Contains(userInfo.departmentId)
@@ -89,14 +89,14 @@ namespace RMIS.Controllers
             }
             return null;
         }
-        private List<object> BuildJsTreeData(List<Category> allCategories, Guid? parentId, int deptId)
+        private List<object> BuildJsTreeData(List<Category> allCategories, int? parentId, int deptId)
         {
             var result = new List<object>();
-            // ¿ï¾Ü·í«e¼h¯Åªº¤ÀÃþ
+            // ï¿½ï¿½Ü·ï¿½ï¿½eï¿½hï¿½Åªï¿½ï¿½ï¿½ï¿½ï¿½
             var currentCategories = allCategories.Where(c => c.ParentId == parentId).OrderBy(c => c.OrderId).ToList();
             foreach (var category in currentCategories)
             {
-                // ³Ð«Ø¤ÀÃþ¸`ÂI
+                // ï¿½Ð«Ø¤ï¿½ï¿½ï¿½ï¿½`ï¿½I
                 var categoryNode = new
                 {
                     id = category.Id.ToString(),
@@ -106,27 +106,27 @@ namespace RMIS.Controllers
                     tag = "node"
                 };
 
-                // Àò¨ú¸Ó¤ÀÃþ¤Uªº©Ò¦³ºÞ¹D
+                // ï¿½ï¿½ï¿½ï¿½Ó¤ï¿½ï¿½ï¿½ï¿½Uï¿½ï¿½ï¿½Ò¦ï¿½ï¿½Þ¹D
                 var currentPipelines = _mapDBContext.Pipelines
                     .Where(p => p.CategoryId == category.Id && 
                            p.DepartmentIds.Contains(deptId)).ToList();
                 foreach (var pipeline in currentPipelines)
                 {
-                    // ¬°¨C­ÓºÞ¹D³Ð«Ø¸`ÂI
+                    // ï¿½ï¿½ï¿½Cï¿½ÓºÞ¹Dï¿½Ð«Ø¸`ï¿½I
                     var pipelineNode = new
                     {
                         id = pipeline.Id.ToString(),
                         text = pipeline.Name,
                         parent = category.Id.ToString(),
-                        children = false, // ºÞ¹D¤£¦A¦³¤l¸`ÂI¡A³]©w children ¬° false
+                        children = false, // ï¿½Þ¹Dï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½lï¿½`ï¿½Iï¿½Aï¿½]ï¿½w children ï¿½ï¿½ false
                         tag = "pipeline"
                     };
 
-                    // ±NºÞ¹D¸`ÂI²K¥[¨ì¤ÀÃþªº children ¤¤
+                    // ï¿½Nï¿½Þ¹Dï¿½`ï¿½Iï¿½Kï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ children ï¿½ï¿½
                     ((List<object>)categoryNode.children).Add(pipelineNode);
                 }
 
-                // ³B²z¸Ó¤ÀÃþªº¤l¤ÀÃþ
+                // ï¿½Bï¿½zï¿½Ó¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½
                 var childCategories = BuildJsTreeData(allCategories, category.Id, deptId);
                 if (childCategories.Any())
                 {

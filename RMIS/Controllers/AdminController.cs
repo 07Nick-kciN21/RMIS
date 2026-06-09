@@ -418,13 +418,6 @@ namespace RMIS.Controllers
         }
 
         [HttpGet]
-        public IActionResult DownloadProcessImportTemplate()
-        {
-            var path = Path.Combine(_env.ContentRootPath, "Sample", "專案歷程匯入範本.zip");
-            return PhysicalFile(path, "application/zip", "專案歷程匯入範本.zip");
-        }
-
-        [HttpGet]
         public IActionResult ExpansionRangeMap()
         {
             return View();

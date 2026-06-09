@@ -11,13 +11,13 @@ namespace RMIS.Repositories
         Task<int> AddCategoryAsync(AddCategoryInput categoryInput);
         Task<(int categoryCount, int pipelineCount)> AddCategoryByJsonAsync(JObject jObject);
         Task<AddCategoryInput> getCategoryInput(UserAuthInfo userAuthInfo);
-        Task<int> DeleteCategoryAsync(Guid? categoryId);
+        Task<int> DeleteCategoryAsync(int? categoryId);
 
         // Pipeline (管線)
         Task<int> AddPipelineAsync(AddPipelineInput pipelineInput);
         Task<AddPipelineInput> getPipelineInput(UserAuthInfo userAuthInfo);
         Task<FlagPanelInput> GetFlaggedPipelinesAsync(UserAuthInfo userAuthInfo);
-        Task<int> DeletePipelineAsync(Guid? pipelineId);
+        Task<int> DeletePipelineAsync(int pipelineId);
 
         // Road (道路)
         Task<int> AddRoadAsync(AddRoadInput roadInput);
@@ -48,7 +48,7 @@ namespace RMIS.Repositories
         Task<AreasByLayer> GetAreasByFocusLayerAsync(GetAreasByFocusLayerInput AreasByFocusLayerInput);
 
         // Layer (圖層)
-        Task<int> DeleteLayerDataAsync(Guid? layerId);
+        Task<int> DeleteLayerDataAsync(int layerId);
 
         // Accident (交通事故)
         Task<List<AccidentRecord>> GetAccidentDataAsync(AccidentQueryInput input);

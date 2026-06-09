@@ -69,9 +69,9 @@ namespace RMIS.Models.sql
         /// </summary>
         public string? ReviewResult { get; set; }
         // 預拓範圍的AreaId
-        public Guid? PlannedExpansionId { get; set; }
+        public int? PlannedExpansionId { get; set; }
         // 街景的AreaId
-        public Guid? StreetViewId { get; set; }
+        public int? StreetViewId { get; set; }
         // 新增時間
         public DateTime? CreateTime { get; set; }
         /// <summary>

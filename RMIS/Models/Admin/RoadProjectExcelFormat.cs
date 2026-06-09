@@ -45,8 +45,8 @@ namespace RMIS.Models.Admin
         public string StreetViewPhotos { get; set; }
         /// 備註
         // 預拓範圍的AreaId
-        public Guid PlannedExpansionId { get; set; }
+        public int PlannedExpansionId { get; set; }
         // 街景的AreaId
-        public Guid StreetViewId { get; set; }
+        public int StreetViewId { get; set; }
     }
 }

@@ -8,98 +8,70 @@ let noticeLayer = L.layerGroup();
 // 將標記加入圖層
 export function addMarkersToLayer(points, newLayer, svg, name) {
     var $indexMap = Map.getIndexMap();
-    let icon = L.icon({
+    const useCircle = !svg || svg.trim() === '';
+    const icon = useCircle ? null : L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
         iconAnchor: [15, 15],
         popupAnchor: [0, -15]
     });
     points.forEach(function (point) {
-        let marker = L.marker(point[0], {
-            icon: icon,
-            // iconSize: [30, 30],
-            // iconAnchor: [15, 15],
-            // popupAnchor: [0, -15],
-        });
+        let marker = useCircle
+            ? L.circleMarker(point[0], { radius: 6, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8, weight: 1 })
+            : L.marker(point[0], { icon });
         marker.addTo(newLayer);
         let prop = point[1];
 
-        let popupContent = name == "街景照片" ? popupPhoto(prop) : popupFormat(prop, name);
-
-        marker.bindPopup(popupContent, {
-            maxWidth: 450,
-            maxHeight: 350
-        });
         marker.on('click', function (e) {
-            if(Map.popupEnabled){
-                if(name == "施工地點"){
-                    let p = JSON.parse(prop);
-                    let latlngs =  JSON.parse(p["施工範圍"]);
-                    // 歷遍施工範圍的座標，並將其轉換成L.polygon
-                    latlngs.forEach(function (latlng) {
-                        let polygon = L.polygon(latlng.map(function (point) {
-                            return point.split(',').map(function (coord) {
-                                return parseFloat(coord);
-                            });
-                        }), {
-                            color: 'red'
-                        }).addTo(noticeLayer);
-                    });
-                    noticeLayer.addTo($indexMap);
-                    const mapClickHandler = function (e) {
-                        if (noticeLayer) {
-                            noticeLayer.clearLayers();
-                            console.log("Removed noticeLayer");
-                            
-                            // 事件執行一次後立即移除
-                            $indexMap.off('click', mapClickHandler);
-                        }
-                    };
-                    // 動態綁定地圖點擊事件
-                    $indexMap.on('click', mapClickHandler);
+            if (!Map.popupEnabled) return;
+
+            if (name == "施工地點") {
+                let p = JSON.parse(prop);
+                let latlngs = JSON.parse(p["施工範圍"]);
+                latlngs.forEach(function (latlng) {
+                    L.polygon(latlng.map(function (point) {
+                        return point.split(',').map(function (coord) {
+                            return parseFloat(coord);
+                        });
+                    }), { color: 'red' }).addTo(noticeLayer);
+                });
+                noticeLayer.addTo($indexMap);
+                const mapClickHandler = function (e) {
+                    if (noticeLayer) {
+                        noticeLayer.clearLayers();
+                        $indexMap.off('click', mapClickHandler);
+                    }
+                };
+                $indexMap.on('click', mapClickHandler);
+            } else {
+                const latLng = e.latlng;
+                $indexMap.setView(latLng, $indexMap.getZoom());
+
+                if (currentRectangle) {
+                    newLayer.removeLayer(currentRectangle);
                 }
-                else{
-                    const latLng = e.latlng;
-                    $indexMap.setView(latLng, $indexMap.getZoom());
-    
+
+                const squareIcon = L.divIcon({
+                    html: `<svg width="24" height="24"><rect x="0" y="0" width="24" height="24" fill="none" stroke="#0066CC" stroke-width="3"/></svg>`,
+                    className: 'square-marker',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+                currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
+
+                const mapClickHandler = function (e) {
                     if (currentRectangle) {
                         newLayer.removeLayer(currentRectangle);
+                        $indexMap.off('click', mapClickHandler);
                     }
-    
-                    const squareIcon = L.divIcon({
-                        html: `<svg width="24" height="24">
-                                <rect 
-                                x="0" 
-                                y="0" 
-                                width="24" 
-                                height="24" 
-                                fill="none" 
-                                stroke="#0066CC" 
-                                stroke-width="3"
-                                />
-                            </svg>`,
-                        className: 'square-marker',  // 避免 Leaflet 默認樣式
-                        iconSize: [24, 24],         // 圖標大小
-                        iconAnchor: [12, 12]        // 錨點在正方形中心
-                    });
-    
-                    currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
-    
-                    const mapClickHandler = function (e) {
-                        if (currentRectangle) {
-                            newLayer.removeLayer(currentRectangle);
-                            console.log("Removed currentRectangle");
-                
-                            // 事件執行一次後立即移除
-                            $indexMap.off('click', mapClickHandler);
-                        }
-                    };
-                    // 動態綁定地圖點擊事件
-                    $indexMap.on('click', mapClickHandler);
-                }
-            }
-            else{ 
-                e.target.closePopup();
+                };
+                $indexMap.on('click', mapClickHandler);
+
+                const popupContent = name == "街景照片" ? popupPhoto(prop) : popupFormat(prop, name);
+                L.popup({ maxWidth: 450, maxHeight: 350 })
+                    .setLatLng(latLng)
+                    .setContent(popupContent)
+                    .openOn($indexMap);
             }
         });
         marker._isVisible = true;
@@ -109,61 +81,46 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
 }
 
 export function addLineToLayer(points, newLayer, color, name) {
+    if (points.length < 2) return;
+
     var $indexMap = Map.getIndexMap();
-    var zoom = $indexMap.getZoom();
-    let segment = null;
-    console.log("Create Line");
-    for (var i = 0; i < points.length - 1; i++) {
-        var startPoint = points[i][0];
-        var endPoint = points[i + 1][0];
-        var prop = points[i][1];
+    const coords = points.map(p => p[0]);
+    const prop = points[0][1];
 
-        // 創建線段
-        segment = L.polyline([startPoint, endPoint], {
-            color: color
-        }).addTo(newLayer);
+    const segment = L.polyline(coords, { color }).addTo(newLayer);
 
-        let popupContent = popupFormat(prop, name);
-        // 為每個線段綁定 Popup，顯示其起點和終點座標
-        segment.bindPopup(popupContent, {
-            maxWidth: 350,
-            maxHeight: 450
-        });
+    segment.bindPopup(popupFormat(prop, name), {
+        maxWidth: 350,
+        maxHeight: 450
+    });
 
-        segment.on('click', function (e) {
-            if(Map.popupEnabled){
+    segment.on('click', function (e) {
+        if (Map.popupEnabled) {
+            if (currentLine) {
+                $indexMap.removeLayer(currentLine);
+            }
+            currentLine = L.polyline(e.target.getLatLngs(), {
+                color: 'white',
+                opacity: 0.8
+            }).addTo(newLayer);
+
+            const latLng = e.latlng;
+            $indexMap.setView(latLng, $indexMap.getZoom());
+
+            const mapClickHandler = function () {
                 if (currentLine) {
-                    $indexMap.removeLayer(currentLine);
+                    newLayer.removeLayer(currentLine);
                 }
-    
-                // 將當前點擊的線段設置為白色並增加線段寬度
-                currentLine = L.polyline(e.target.getLatLngs(), {
-                    color: 'white',
-                    opacity: 0.8
-                }).addTo(newLayer);
-                
-                // 移動地圖中央到點擊的點
-                const latLng = e.latlng; // 取得點擊事件中的座標
-                $indexMap.setView(latLng, $indexMap.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
-                
-                const mapClickHandler = function (e) {
-                    if (currentLine) {
-                        newLayer.removeLayer(currentLine);
-                        console.log("Removed currentLine");
-                    }
-                    $indexMap.off('click', mapClickHandler);
-                };
+                $indexMap.off('click', mapClickHandler);
+            };
+            $indexMap.on('click', mapClickHandler);
+        } else {
+            e.target.closePopup();
+        }
+    });
 
-                $indexMap.on('click', mapClickHandler);
-            }
-            else{ 
-                // popupEnabled為false時，不顯示popup
-                e.target.closePopup();
-            }
-        });
-        segment._isVisible = true;
-        points[i][2].Instance = segment;
-    }
+    segment._isVisible = true;
+    points[0][2].Instance = segment;
 }
 
 export function addPolygonToLayer(points, newLayer, color, name) {

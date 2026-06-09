@@ -13,7 +13,8 @@
 /* 容器內遮罩：父容器需設 position: relative */
 .loading-overlay.loading-local {
     position: absolute;
-    z-index: 1000;
+    z-index: 2000;   /* 高於 nav/panel (1051)，低於全頁 loading (9999) */
+    background: rgba(255, 255, 255, 0.45);
 }
 
 .loading-overlay.hidden {

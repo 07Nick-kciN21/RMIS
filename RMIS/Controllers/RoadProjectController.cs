@@ -139,16 +139,6 @@ namespace RMIS.Controllers
                     project.Remarks = "無";
                 }
 
-                // 設定預設的 Guid
-                if (project.PlannedExpansionId == Guid.Empty)
-                {
-                    project.PlannedExpansionId = Guid.NewGuid();
-                }
-                if (project.StreetViewId == Guid.Empty)
-                {
-                    project.StreetViewId = Guid.NewGuid();
-                }
-
                 await _mapDBContext.RoadProjects.AddAsync(project);
                 await _mapDBContext.SaveChangesAsync();
 
@@ -459,7 +449,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("UploadProcessFile")]
-        public async Task<IActionResult> UploadProcessFile([FromForm] Guid processId, [FromForm] IFormFile file)
+        public async Task<IActionResult> UploadProcessFile([FromForm] string processId, [FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -510,7 +500,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("UploadProcessFiles")]
-        public async Task<IActionResult> UploadProcessFiles([FromForm] Guid processId, [FromForm] List<IFormFile> files)
+        public async Task<IActionResult> UploadProcessFiles([FromForm] string processId, [FromForm] List<IFormFile> files)
         {
             if (files == null || files.Count == 0)
             {
@@ -554,7 +544,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("GetProcessFiles/{processId}")]
-        public async Task<IActionResult> GetProcessFiles(Guid processId)
+        public async Task<IActionResult> GetProcessFiles(string processId)
         {
             var files = await _roadProjectInterface.GetProcessFilesByProcessIdAsync(processId);
 
@@ -712,7 +702,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("GetProcessEditLogs/{processId}")]
-        public async Task<IActionResult> GetProcessEditLogs(Guid processId)
+        public async Task<IActionResult> GetProcessEditLogs(string processId)
         {
             var logs = await _mapDBContext.ProcessEditLogs
                 .Where(l => l.ProcessId == processId)
@@ -722,7 +712,7 @@ namespace RMIS.Controllers
             return Ok(logs);
         }
 
-        private async Task AddProcessEditLog(Guid processId, string operationType)
+        private async Task AddProcessEditLog(string processId, string operationType)
         {
             _mapDBContext.ProcessEditLogs.Add(new ProcessEditLog
             {

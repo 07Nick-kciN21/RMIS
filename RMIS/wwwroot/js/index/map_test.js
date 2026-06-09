@@ -233,6 +233,45 @@ const Map = {
         const baseMaps = {};
         const overlayMaps = {};
 
+        // 里程牌KM (ArcGIS REST 手動圖層)
+        const _kmLayerKey = '里程牌KM';
+        const _kmLayer = L.layerGroup();
+        overlayMaps[_kmLayerKey] = _kmLayer;
+        const _token = 'uJFZi5F0JMfzm_p7kDLBEpDeYodwLQmzfcc9o5IJMcC77_b-W09rp9k1BZU5CyqxbIoOjNUPU40DVxDiByDfCwrSkhKAeDRqx4yBK-I7qS1G3GgvqsxytASiy_y7uE7pNjjlNRTV-7DPOtyLBc7v5PqKDKd7fbHFn_11IWkn4yoTPGN-Igci4BfnvHk43G7D';
+        fetch(`https://oram-integ.tycg.gov.tw/gis/rest/services/Another/TYURS_16/MapServer/0/query?where=1%3D1&outFields=*&outSR=4326&returnGeometry=true&f=json&token=${_token}`)
+            .then(r => r.json())
+            .then(data => {
+                (data.features || []).forEach(f => {
+                    L.circleMarker([f.geometry.y, f.geometry.x], {
+                        radius: 5, color: '#e67e22', fillColor: '#e67e22', fillOpacity: 0.8, weight: 1
+                    })
+                    .bindPopup(`<b>里程牌</b><br>` + Object.entries(f.attributes).map(([k, v]) => `${k}：${v ?? ''}`).join('<br>'))
+                    .addTo(_kmLayer);
+                });
+            })
+            .catch(err => console.error('里程牌KM 載入失敗', err));
+
+        // 斜坡道 (ArcGIS REST 手動圖層)
+        const _rampLayerKey = '斜坡道';
+        const _rampLayer = L.layerGroup();
+        overlayMaps[_rampLayerKey] = _rampLayer;
+        const _rampColorMap = {
+            '妨礙公共通行': '#e67e22', '妨礙排水': '#2980b9',
+            '妨礙消防安全': '#e74c3c', '未有明確妨礙情事': '#27ae60', '已解列': '#95a5a6'
+        };
+        fetch(`https://oram-integ.tycg.gov.tw/gis/rest/services/Another/RampArea/MapServer/0/query?where=1%3D1&outFields=*&outSR=4326&returnGeometry=true&f=json&token=${_token}`)
+            .then(r => r.json())
+            .then(data => {
+                (data.features || []).forEach(f => {
+                    const rings = f.geometry.rings.map(ring => ring.map(([x, y]) => [y, x]));
+                    const color = _rampColorMap[f.attributes['圖例']] || '#8e44ad';
+                    L.polygon(rings, { color, fillColor: color, fillOpacity: 0.4, weight: 1.5 })
+                        .bindPopup(`<b>斜坡道</b><br>` + Object.entries(f.attributes).map(([k, v]) => `${k}：${v ?? ''}`).join('<br>'))
+                        .addTo(_rampLayer);
+                });
+            })
+            .catch(err => console.error('斜坡道 載入失敗', err));
+
         let currentTileLayer = defaultLayer;
 
         $.ajax({
@@ -280,11 +319,16 @@ const Map = {
                     $('#baseMapSelector').append(`<li class="coordinate-item" value="${name}"><span>${name}</span></li>`);
                 }
                 for (let name in overlayMaps) {
+                    if (name === _kmLayerKey || name === _rampLayerKey) continue;
                     $('#overlayMapSelector').append(`<li class="coordinate-item" value="${name}">${name}</li>`);
                 }
             },
             error: err => console.error('Error fetching map sources:', err)
         });
+
+        // 手動圖層開關直接 append（不依賴 GetMapSources API）
+        $('#overlayMapSelector').append(`<li class="coordinate-item" value="${_kmLayerKey}">${_kmLayerKey}</li>`);
+        $('#overlayMapSelector').append(`<li class="coordinate-item" value="${_rampLayerKey}">${_rampLayerKey}</li>`);
 
         $('#baseMapSelector').on('click', '.coordinate-item', function () {
             const name = $(this).text().trim();

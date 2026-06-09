@@ -6,11 +6,11 @@ namespace RMIS.Repositories
 {
     public interface MapAPIInterface
     {
-        Task<List<LayersByPipeline>> GetLayersByPipelineAsync(Guid pipelineId);
-        Task<AreasByLayer> GetAreasByLayerAsync(Guid LayerId);
-        Task<LayerIdByPipeline> GetLayerIdByPipelineAsync(Guid PipelineId);
+        Task<List<LayersByPipeline>> GetLayersByPipelineAsync(int pipelineId);
+        Task<AreasByLayer> GetAreasByLayerAsync(int LayerId);
+        Task<LayerIdByPipeline> GetLayerIdByPipelineAsync(int PipelineId);
         Task<List<RoadbyName>> GetRoadbyNameAsync(string name);
-        Task<PointsbyId> GetPointsbyLayerIdAsync(Guid LayerId);
+        Task<PointsbyId> GetPointsbyLayerIdAsync(int AreaId);
         Task<MapSourceOrderbyTileType> GetMapSourceAsync();
         Task<int> AddBulkAsync([FromBody] List<AddMapSourceInput> mapSources);
     }

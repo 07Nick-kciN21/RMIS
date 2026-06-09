@@ -1,18 +1,144 @@
 ﻿import { Map } from '../map_test.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer, addArrowlineToLayer } from './utils.js';
+import { showLoading, hideLoading } from '../../loading.js';
 
 export let layerProps = {};
 // pipeline下的各種圖層
 export let layers = {};
 let _indexMap;
+let _globalListenersBound = false;
+
+// ── Loading 狀態管理 ───────────────────────────────────────────────
+// 兩個獨立計數器：
+//   _bgLoadingCount  — 背景屬性載入（GetAreasByLayer），同時禁用地圖互動
+//   _tileLoadingCount — VectorGrid 磚片請求（vtile），只顯示遮罩不禁用互動
+
+let _bgLoadingCount   = 0;
+let _tileLoadingCount = 0;
+const _HANDLERS = ['dragging', 'scrollWheelZoom', 'touchZoom', 'doubleClickZoom', 'boxZoom', 'keyboard'];
+let _savedHandlerStates = {};
+
+function _anyLoading()  { return _bgLoadingCount > 0 || _tileLoadingCount > 0; }
+
+// 屬性載入：顯示遮罩 + 禁用地圖互動
+function _incBgLoading(n) {
+    if (_bgLoadingCount === 0) {
+        showLoading('圖資屬性載入中...', '.div0');
+        if (_indexMap) {
+            _HANDLERS.forEach(function (h) {
+                if (_indexMap[h]) {
+                    _savedHandlerStates[h] = _indexMap[h].enabled();
+                    _indexMap[h].disable();
+                }
+            });
+        }
+    }
+    _bgLoadingCount += n;
+}
+function _decBgLoading(n) {
+    _bgLoadingCount = Math.max(0, _bgLoadingCount - n);
+    if (_bgLoadingCount === 0) {
+        // 還原互動
+        if (_indexMap) {
+            _HANDLERS.forEach(function (h) {
+                if (_indexMap[h] && _savedHandlerStates[h]) _indexMap[h].enable();
+            });
+            _savedHandlerStates = {};
+        }
+        // 若磚片仍在載入，遮罩繼續顯示（僅更換文字）
+        if (_tileLoadingCount > 0) {
+            showLoading('圖磚載入中...', '.div0');
+        } else {
+            hideLoading('.div0');
+        }
+    }
+}
+
+// 磚片載入：只顯示遮罩，不禁用互動
+function _incTileLoading() {
+    _tileLoadingCount++;
+    if (_tileLoadingCount === 1 && _bgLoadingCount === 0) {
+        showLoading('圖磚載入中...', '.div0');
+    }
+}
+function _decTileLoading() {
+    _tileLoadingCount = Math.max(0, _tileLoadingCount - 1);
+    if (_tileLoadingCount === 0 && _bgLoadingCount === 0) {
+        hideLoading('.div0');
+    }
+}
+
+function _buildVTStyle(ldata, zoom = 15) {
+    const color = ldata.color || '#3388ff';
+    const weight = zoom >= 18 ? 4 : zoom >= 16 ? 3 : 2;
+    switch (ldata.kind) {
+        case 'plane':
+            return { weight: 1, color: '#000', fillColor: color, fill: true, fillOpacity: 0.5, opacity: 1 };
+        default: // line, arrowline
+            return { weight, color, opacity: 1 };
+    }
+}
+
+function _createVTPopup(prop, layerName) {
+    let formProp = {};
+    if (typeof prop === 'string' && prop.trim() !== '') {
+        try { formProp = JSON.parse(prop.replace(/NaN/g, 'null')) || {}; } catch (e) { }
+    }
+    let rows = Object.keys(formProp)
+        .map(k => `<tr><th style="white-space:nowrap;padding:3px 6px;">${k}</th><td style="padding:3px 6px;">${formProp[k] ?? ''}</td></tr>`)
+        .join('');
+    return `<div style="font-size:15px;"><b style="font-size:18px;">圖層：${layerName}</b><table style="margin-top:6px;border-collapse:collapse;">${rows}</table></div>`;
+}
+
+function _ensureGlobalListeners() {
+    if (_globalListenersBound || !_indexMap) return;
+    _globalListenersBound = true;
+
+    _indexMap.on('zoomend', function () {
+        Object.values(layers).forEach(function (layer) {
+            if (!layer._isVisible) return;
+            const opacity = layer._originalOpacity || 1;
+            // VectorGrid (L.GridLayer) 直接有 setOpacity
+            if (typeof layer.setOpacity === 'function' && !layer.eachLayer) {
+                layer.setOpacity(opacity);
+            } else if (typeof layer.eachLayer === 'function') {
+                layer.eachLayer(function (sub) {
+                    if (!sub._isVisible) return;
+                    const op = sub._originalOpacity || 1;
+                    if (sub instanceof L.Marker) sub.setOpacity(op);
+                    else if (sub instanceof L.Polygon) sub.setStyle({ opacity: op, fillOpacity: op });
+                    else if (sub instanceof L.Polyline) sub.setStyle({ opacity: op });
+                });
+            }
+        });
+    });
+
+    $("#tb-propEnabled").on('activeChange', function (event, isActive) {
+        Object.values(layers).forEach(function (layer) {
+            if (!_indexMap.hasLayer(layer)) return;
+            // 只有 LayerGroup（point viewport）有 eachLayer + SVG path
+            if (typeof layer.eachLayer !== 'function') return;
+            layer.eachLayer(function (sub) {
+                if (sub instanceof L.Polyline || sub instanceof L.Polygon) {
+                    const path = sub._path;
+                    if (path) path.style.pointerEvents = isActive ? 'auto' : 'none';
+                }
+            });
+        });
+    });
+}
 
 // viewport 模式管理：僅 point 圖層使用
-const _viewportLayers = {}; // layerId -> { svg, name, pipelineId, leafletLayer }
+const _viewportLayers = {}; // layerId -> { svg, name, pipelineId, leafletLayer, _abortController }
 let _viewportTimer = null;
 
 function _onMapViewChanged() {
     clearTimeout(_viewportTimer);
     _viewportTimer = setTimeout(() => {
+        if (_indexMap.getZoom() < 15) {
+            Object.values(_viewportLayers).forEach(vl => vl.leafletLayer.clearLayers());
+            return;
+        }
         Object.keys(_viewportLayers).forEach(layerId => {
             if (_indexMap.hasLayer(_viewportLayers[layerId].leafletLayer)) {
                 _loadViewportPoints(layerId);
@@ -24,11 +150,25 @@ function _onMapViewChanged() {
 async function _loadViewportPoints(layerId) {
     const vl = _viewportLayers[layerId];
     if (!vl) return;
+    if (_indexMap.getZoom() < 15) {
+        vl.leafletLayer.clearLayers();
+        return;
+    }
+
+    // 取消上一個尚未完成的請求，避免舊回應覆蓋新結果
+    if (vl._abortController) {
+        vl._abortController.abort();
+    }
+    vl._abortController = new AbortController();
+    const signal = vl._abortController.signal;
+
     const bounds = _indexMap.getBounds();
+    _incTileLoading();
     try {
         const res = await fetch('/api/MapAPI/GetPointsByViewport', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal,
             body: JSON.stringify({
                 layerId,
                 minLat: bounds.getSouth(),
@@ -56,7 +196,10 @@ async function _loadViewportPoints(layerId) {
         addMarkersToLayer(points, vl.leafletLayer, data.svg, data.layerName);
         console.log(`Viewport loaded ${data.total} points for layer ${layerId}`);
     } catch (e) {
+        if (e.name === 'AbortError') return;
         console.error('Viewport load failed', e);
+    } finally {
+        _decTileLoading();
     }
 }
 
@@ -83,13 +226,17 @@ export function addLayer2Map(id ,LayerData) {
         layerProps[pipelineId] = [];
     }
 
+    _ensureGlobalListeners();
+
     // 確保地圖移動事件只綁一次
     if (!_indexMap._viewportListenerBound) {
         _indexMap.on('moveend zoomend', _onMapViewChanged);
         _indexMap._viewportListenerBound = true;
     }
 
-    const ajaxCalls = LayerData.map(function (Ldata) {
+    const bgFetches = [];   // 收集背景屬性載入的 Promise
+
+    LayerData.forEach(function (Ldata) {
         // point 圖層改用 viewport 模式
         if (Ldata.kind === 'point') {
             const leafletLayer = L.layerGroup();
@@ -102,35 +249,74 @@ export function addLayer2Map(id ,LayerData) {
                 leafletLayer
             };
             _loadViewportPoints(Ldata.id);
-            console.log(`[Viewport] point layer ${Ldata.id}`);
             return;
         }
 
-        // 其他類型（line / plane / arrowline）保持原有全量載入
-        return $.ajax({
-            url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
-            method: 'POST',
-            success: function (result) {
-                console.log(`/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`);
-                try {
-                    var areas = result.areas;
-                    if (areas != null) {
-                        var newLayer = createNewLayer(result, pipelineId);
-                        _indexMap.addLayer(newLayer);
-                        setPointerEvents(newLayer, Map.popupEnabled);
-                        layers[result.id] = newLayer;
-                    }
-                    console.log("Add Layer Success");
-                }
-                catch (err) {
-                    console.error('Add Layer Fail', err)
-                }
-            },
-            error: function (err) {
-                console.error('Call API Fail', err);
+        // line / plane / arrowline 改用 Vector Tiles
+        const vtLayer = L.vectorGrid.protobuf(
+            `/api/MapAPI/vtile/${Ldata.id}/{z}/{x}/{y}`,
+            {
+                vectorTileLayerStyles: { 'layer': (properties, zoom) => _buildVTStyle(Ldata, zoom) },
+                interactive: true,
+                getFeatureId: f => f.properties.areaId,
+                updateWhenZooming: false,
+                updateWhenIdle: true,
+                keepBuffer: 2,
+                minZoom: 15,
+                maxZoom: 22
             }
+        );
+        vtLayer.on('click', function (e) {
+            if (!Map.popupEnabled) return;
+            const content = _createVTPopup(e.layer.properties.prop, Ldata.name);
+            L.popup({ maxWidth: 350, maxHeight: 450 })
+                .setLatLng(e.latlng)
+                .setContent(content)
+                .openOn(_indexMap);
         });
+        vtLayer.on('loading', _incTileLoading);
+        vtLayer.on('load',    _decTileLoading);
+
+        vtLayer._isVisible = true;
+        vtLayer._originalOpacity = 1;
+        _indexMap.addLayer(vtLayer);
+        layers[Ldata.id] = vtLayer;
+
+        // 背景載入屬性資料
+        bgFetches.push(
+            $.ajax({
+                url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
+                method: 'POST',
+                success: function (result) {
+                    if (!result.areas) return;
+                    result.areas.forEach(function (area) {
+                        (area.points || []).forEach(function (point) {
+                            let item2 = null;
+                            if (point.prop && point.prop.trim() !== '') {
+                                try { item2 = JSON.parse(point.prop.replace(/NaN/g, 'null')); } catch (e) {}
+                            }
+                            if (item2) {
+                                layerProps[pipelineId].push({ '座標': [point.latitude, point.longitude], ...item2 });
+                            }
+                        });
+                    });
+                }
+            })
+        );
     });
+
+    // 背景屬性載入：地圖 loading 遮罩 + layerBar 小 spinner
+    if (bgFetches.length > 0) {
+        _incBgLoading(bgFetches.length);
+
+        const $spinner = $('<span class="spinner-border spinner-border-sm text-secondary ms-1" role="status" title="屬性資料載入中" style="vertical-align:middle;"></span>');
+        $(`#layerBar_${pipelineId} .layerName`).append($spinner);
+
+        $.when(...bgFetches).always(function () {
+            $spinner.remove();
+            _decBgLoading(bgFetches.length);
+        });
+    }
 }
 
 // 建立新物件的圖層
@@ -176,41 +362,6 @@ function createNewLayer(result, pipelineId) {
             addArrowlineToLayer(points, newLayer, result.color, result.name);
         }
     });
-    // 添加縮放事件來控制圖層顯示
-    _indexMap.on('zoomend', function () {
-        newLayer.eachLayer(function (layer) {
-            if(!layer._isVisible){
-                return;
-            }
-            const opacity = layer._originalOpacity || 1;
-            if (layer instanceof L.Marker) {
-                layer.setOpacity(opacity); // 設置 Marker 為全可見
-            }
-            else if (layer instanceof L.Polygon) {
-                layer.setStyle({ opacity: opacity, fillOpacity: opacity });
-            } else if (layer instanceof L.Polyline) {
-                layer.setStyle({ opacity: opacity });
-            }
-        });
-    });
-    // 追蹤popupEnabled參數 如果為false，則interactive為false， 如果為true，則interactive為true
-    $("#tb-propEnabled").on('activeChange', (event, isActive) => {
-        // 檢查indexMap中有沒有該圖層
-        console.log("popupEnabled", isActive);
-        if (_indexMap.hasLayer(newLayer)) {
-            newLayer.eachLayer(function (layer) {
-                if (layer instanceof L.Polyline || layer instanceof L.Polygon) {
-                    const path = layer._path; // 直接取底層 SVG 路徑
-                    if (path) {
-                        path.style.pointerEvents = isActive ? 'auto' : 'none';
-                    }
-                } else if (layer instanceof L.PolylineDecorator) {
-                    // 如果是 L.polylineDecorator，取出裝飾的基礎圖層
-                    console.log("L.PolylineDecorator");
-                }
-            });
-        }
-    });
     return newLayer;
 }
 
@@ -241,6 +392,9 @@ export function removeLayer2Map(id) {
         _indexMap.removeLayer(layers[id]);
         delete layers[id];
         if (_viewportLayers[id]) {
+            if (_viewportLayers[id]._abortController) {
+                _viewportLayers[id]._abortController.abort();
+            }
             delete _viewportLayers[id];
         }
         console.log("Remove layer success", id);

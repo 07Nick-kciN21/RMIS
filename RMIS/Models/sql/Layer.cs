@@ -3,11 +3,11 @@
     
     public class Layer
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
-        public Guid GeometryTypeId { get; set; }
+        public int GeometryTypeId { get; set; }
         public GeometryType GeometryType { get; set; }
-        public Guid PipelineId { get; set; } // Func 的外鍵
+        public int PipelineId { get; set; } // Func 的外鍵
         public Pipeline Pipeline { get; set; }
         public ICollection<Area> Areas { get; set; }
         public bool ImportEnabled { get; set; }

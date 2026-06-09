@@ -15,7 +15,7 @@ namespace RMIS.Models.Map
         public class ProcessRecordDTO
         {
             public int Id { get; set; }
-            public Guid ProcessId { get; set; }
+            public string ProcessId { get; set; }
             public string RecordType { get; set; } = string.Empty;  // Process1, Process2, Process3
             public string RecordTitle { get; set; } = string.Empty;
             public DateTime? CreatedAt { get; set; }
@@ -34,7 +34,7 @@ namespace RMIS.Models.Map
         public class Process1ViewDTO
         {
             public int Id { get; set; }
-            public Guid ProcessId { get; set; }
+            public string ProcessId { get; set; }
             public string ProjectId { get; set; }
 
             /// <summary>

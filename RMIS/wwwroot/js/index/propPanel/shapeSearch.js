@@ -1,4 +1,4 @@
-import { layers } from '../ctrlMap/layers.js';
+import { layers, layerProps } from '../ctrlMap/layers.js';
 
 let currentShape;
 let drawingActive = false; // Track if drawing is currently active
@@ -111,33 +111,46 @@ function getObjectsInBounds(bounds, gselectedId) {
     }
 
     return new Promise((resolve, reject) => {
-        // 取得管線下所有圖層的資料
         $.ajax({
             url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${gselectedId}`,
             method: 'POST',
             success: function (result) {
                 try {
+                    let hasVectorGrid = false;
+
                     result.layerIdList.forEach(function (id) {
-                        let layer = layers[id];
+                        const layer = layers[id];
                         if (layer instanceof L.LayerGroup) {
+                            // point viewport 圖層：走原本的 SVG sub-layer 路徑
                             layer.eachLayer(function (subLayer) {
                                 if (subLayer instanceof L.Polygon && bounds.intersects(subLayer.getBounds())) {
-                                    console.log("get polygon");
                                     count++;
                                     processPopupContent(subLayer);
-                                }
-                                else if (subLayer instanceof L.Marker && bounds.contains(subLayer.getLatLng())) {
-                                    console.log("get Marker");
+                                } else if (subLayer instanceof L.Marker && bounds.contains(subLayer.getLatLng())) {
                                     count++;
                                     processPopupContent(subLayer);
                                 } else if (subLayer instanceof L.Polyline && bounds.intersects(subLayer.getBounds())) {
-                                    console.log("get Polyline");
                                     count++;
                                     processPopupContent(subLayer);
                                 }
                             });
+                        } else if (layer) {
+                            hasVectorGrid = true;
                         }
                     });
+
+                    // VectorGrid 圖層：用 layerProps 座標過濾
+                    if (hasVectorGrid) {
+                        (layerProps[gselectedId] || []).forEach(function (item) {
+                            const coord = item['座標'];
+                            if (!coord) return;
+                            if (bounds.contains(L.latLng(coord[0], coord[1]))) {
+                                filteredProps.push({ ...item });
+                                count++;
+                            }
+                        });
+                    }
+
                     console.log(`圖層內的物件數量: ${count}`);
                     resolve(filteredProps);
                 } catch (err) {
@@ -230,62 +243,43 @@ async function getObjectsInCircle(circle, gselectedId) {
             method: 'POST',
             success: function (result) {
                 try {
-                    console.log(`/api/MapAPI/GetLayerIdByPipeline?PipelineId=${gselectedId}`);
+                    let hasVectorGrid = false;
+
                     result.layerIdList.forEach(function (id) {
-                        let layer = layers[id];
+                        const layer = layers[id];
                         if (layer instanceof L.LayerGroup) {
                             layer.eachLayer(function (subLayer) {
-                                if(subLayer instanceof L.Polygon){
-                                     // 檢查圓與多邊形的邊界是否相交
+                                if (subLayer instanceof L.Polygon) {
                                     if (circle.getBounds().intersects(subLayer.getBounds())) {
-                                        const latlngs = subLayer.getLatLngs().flat(); // 獲取多邊形所有頂點
-
-                                        let isIntersecting = false;
-
-                                        // 檢查多邊形的任何一個頂點是否在圓內
-                                        for (const latlng of latlngs) {
-                                            if (circle.getLatLng().distanceTo(latlng) <= circle.getRadius()) {
-                                                isIntersecting = true;
-                                                break;
-                                            }
-                                        }
-
-                                        // 檢查圓心是否在多邊形內部
-                                        if (!isIntersecting && subLayer.getBounds().contains(circle.getLatLng())) {
-                                            isIntersecting = true;
-                                        }
-
-                                        if (isIntersecting) {
-                                            console.log("get polygon");
-                                            processPopupContent(subLayer, filteredProps);
-                                            count++;
-                                        }
+                                        const latlngs = subLayer.getLatLngs().flat();
+                                        let isIntersecting = latlngs.some(ll => circle.getLatLng().distanceTo(ll) <= circle.getRadius());
+                                        if (!isIntersecting && subLayer.getBounds().contains(circle.getLatLng())) isIntersecting = true;
+                                        if (isIntersecting) { processPopupContent(subLayer, filteredProps); count++; }
                                     }
-                                }
-                                else if (subLayer instanceof L.Marker) {
-                                    const distance = center.distanceTo(subLayer.getLatLng());
-                                    if (distance <= radius) {
-                                        console.log("get Marker");
-                                        processPopupContent(subLayer, filteredProps);
-                                        count++;
-                                    }
+                                } else if (subLayer instanceof L.Marker) {
+                                    if (center.distanceTo(subLayer.getLatLng()) <= radius) { processPopupContent(subLayer, filteredProps); count++; }
                                 } else if (subLayer instanceof L.Polyline) {
-                                    let found = false;
-                                    subLayer.getLatLngs().forEach(function (point) {
-                                        if (!found) {
-                                            const distance = center.distanceTo(point);
-                                            if (distance <= radius) {
-                                                console.log("get Polyline");
-                                                processPopupContent(subLayer, filteredProps);
-                                                count++;
-                                                found = true; // 找到一個符合的點後停止檢查這條線
-                                            }
-                                        }
-                                    });
+                                    const hit = subLayer.getLatLngs().some(pt => center.distanceTo(pt) <= radius);
+                                    if (hit) { processPopupContent(subLayer, filteredProps); count++; }
                                 }
                             });
+                        } else if (layer) {
+                            hasVectorGrid = true;
                         }
                     });
+
+                    // VectorGrid 圖層：用 layerProps 座標過濾
+                    if (hasVectorGrid) {
+                        (layerProps[gselectedId] || []).forEach(function (item) {
+                            const coord = item['座標'];
+                            if (!coord) return;
+                            if (center.distanceTo(L.latLng(coord[0], coord[1])) <= radius) {
+                                filteredProps.push({ ...item });
+                                count++;
+                            }
+                        });
+                    }
+
                     console.log(`圓範圍內的物件數量: ${count}`);
                     resolve(filteredProps);
                 } catch (err) {

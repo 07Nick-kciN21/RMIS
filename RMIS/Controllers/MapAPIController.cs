@@ -42,7 +42,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("GetLayers")]
-        public IActionResult GetLayers(Guid pipelineId)
+        public IActionResult GetLayers(int pipelineId)
         {
             var layers = _mapDBContext.Layers
                 .Where(l => l.PipelineId == pipelineId)
@@ -53,7 +53,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("GetLayersByPipeline")]
-        public async Task<LayersByPipeline> GetLayersByPipeline(Guid pipelineId)
+        public async Task<LayersByPipeline> GetLayersByPipeline(int pipelineId)
         {
             try
             {
@@ -79,7 +79,8 @@ namespace RMIS.Controllers
                         id = l.Id.ToString(),
                         name = l.Name,
                         svg = l.GeometryType.Svg,
-                        kind = l.GeometryType.Kind
+                        kind = l.GeometryType.Kind,
+                        color = l.GeometryType.Color ?? "#3388ff"
                     }).ToList()
                 };
                 return results;
@@ -92,7 +93,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("GetAreasByLayer")]
-        public async Task<AreasByLayer> GetAreasByLayer(Guid LayerId)
+        public async Task<AreasByLayer> GetAreasByLayer(int LayerId)
         {
             try
             {
@@ -141,16 +142,6 @@ namespace RMIS.Controllers
         {
             try
             {
-                var factory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
-                var bbox = factory.CreatePolygon(new Coordinate[]
-                {
-                    new(req.MinLon, req.MinLat),
-                    new(req.MaxLon, req.MinLat),
-                    new(req.MaxLon, req.MaxLat),
-                    new(req.MinLon, req.MaxLat),
-                    new(req.MinLon, req.MinLat),
-                });
-
                 var layer = await _mapDBContext.Layers
                     .Include(l => l.GeometryType)
                     .FirstOrDefaultAsync(l => l.Id == req.LayerId);
@@ -160,8 +151,8 @@ namespace RMIS.Controllers
 
                 var points = await _mapDBContext.Points
                     .Where(p => p.Area.LayerId == req.LayerId
-                             && p.GeoLocation != null
-                             && p.GeoLocation.Within(bbox))
+                             && p.Latitude  >= req.MinLat && p.Latitude  <= req.MaxLat
+                             && p.Longitude >= req.MinLon && p.Longitude <= req.MaxLon)
                     .OrderBy(p => p.AreaId)
                     .ThenBy(p => p.Index)
                     .Select(p => new
@@ -195,7 +186,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("GetLayerIdByPipeline")]
-        public async Task<LayerIdByPipeline> GetLayerIdByPipeline(Guid PipelineId)
+        public async Task<LayerIdByPipeline> GetLayerIdByPipeline(int PipelineId)
         {
             try
             {
@@ -241,13 +232,13 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("GetPointsbyLayerId")]
-        public async Task<PointsbyId> GetPointsbyLayerId(Guid LayerId)
+        public async Task<PointsbyId> GetPointsbyLayerId(int AreaId)
         {
             try
             {
                 var result = await _mapDBContext.Areas
                     .Include(a => a.Points)
-                    .FirstOrDefaultAsync(a => a.Id == LayerId);
+                    .FirstOrDefaultAsync(a => a.Id == AreaId);
 
                 if (result == null)
                 {
@@ -256,7 +247,7 @@ namespace RMIS.Controllers
 
                 return new PointsbyId
                 {
-                    Id = LayerId.ToString(),
+                    Id = AreaId.ToString(),
                     Points = result.Points.OrderBy(p => p.Index).Select(p => new PointDto
                     {
                         Index = p.Index,
@@ -326,7 +317,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ClearData(Guid PipelineId)
+        public async Task<IActionResult> ClearData(int PipelineId)
         {
             var layers = await _mapDBContext.Layers
                 .Where(l => l.PipelineId == PipelineId)
@@ -362,7 +353,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("GetGeoKindByPipeId")]
-        public async Task<IActionResult> GetGeoKindByPipeId(Guid pipelineId)
+        public async Task<IActionResult> GetGeoKindByPipeId(int pipelineId)
         {
             // 先取得 layer
             var layer = await _mapDBContext.Layers
@@ -633,6 +624,154 @@ namespace RMIS.Controllers
             }
         }
 
+        [HttpGet("vtile/{layerId}/{z}/{x}/{y}")]
+        public async Task<IActionResult> GetVectorTile(int layerId, int z, int x, int y)
+        {
+            try
+            {
+                var cacheKey = $"vtile:{layerId}:{z}:{x}:{y}";
+
+                // 後端記憶體快取命中：直接回傳，不查 DB
+                if (_tileCache.TryGetValue(cacheKey, out byte[]? cached))
+                {
+                    Response.Headers["Cache-Control"] = "public, max-age=3600";
+                    return cached!.Length == 0
+                        ? NoContent()
+                        : File(cached!, "application/x-protobuf");
+                }
+
+                var layerInfo = await _mapDBContext.Layers
+                    .Include(l => l.GeometryType)
+                    .FirstOrDefaultAsync(l => l.Id == layerId);
+
+                if (layerInfo == null) return NotFound();
+
+                var (west, south, east, north) = TileBounds(z, x, y);
+                var factory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+
+                // Step 1：計算此圖層所有 Area 的包圍框，再在記憶體內做磚片相交判斷
+                //   - GroupBy.Select（無 HAVING）：EF Core 各版本均可正確轉換為 SQL
+                //   - 記憶體過濾：避免 HAVING 語法的 EF Core 翻譯問題
+                //   - 不快取空磚：防止舊錯誤結果卡在快取中造成線段持續消失
+                var areaBboxes = await _mapDBContext.Points
+                    .Where(p => p.Area.LayerId == layerId)
+                    .GroupBy(p => p.AreaId)
+                    .Select(g => new {
+                        AreaId  = g.Key,
+                        MaxLat  = g.Max(p => p.Latitude),
+                        MinLat  = g.Min(p => p.Latitude),
+                        MaxLon  = g.Max(p => p.Longitude),
+                        MinLon  = g.Min(p => p.Longitude)
+                    })
+                    .ToListAsync();
+
+                var areaIdsInTile = areaBboxes
+                    .Where(a => a.MaxLat >= south && a.MinLat <= north
+                             && a.MaxLon >= west  && a.MinLon <= east)
+                    .Select(a => a.AreaId)
+                    .ToList();
+
+                if (areaIdsInTile.Count == 0)
+                {
+                    // 空磚不存入快取，讓下次請求重新查詢，避免快取污染
+                    return NoContent();
+                }
+
+                // Step 2：抓那些 Area 的完整點序列（跨磚片的線段才能正確連接）
+                // MapboxTileWriter 會自動裁剪超出磚片邊界的部分
+                var rawPoints = await _mapDBContext.Points
+                    .Where(p => areaIdsInTile.Contains(p.AreaId))
+                    .OrderBy(p => p.AreaId)
+                    .ThenBy(p => p.Index)
+                    .Select(p => new { p.AreaId, p.Latitude, p.Longitude, p.Property })
+                    .ToListAsync();
+
+                var features = new List<IFeature>();
+                var kind = layerInfo.GeometryType.Kind;
+
+                if (kind == "line" || kind == "arrowline")
+                {
+                    foreach (var group in rawPoints.GroupBy(p => p.AreaId))
+                    {
+                        var pts = group.ToList();
+                        if (pts.Count < 2) continue;
+                        var coords = pts.Select(p => new Coordinate(p.Longitude, p.Latitude)).ToArray();
+                        var attrs = new AttributesTable();
+                        attrs.Add("areaId", group.Key);
+                        attrs.Add("prop", pts[0].Property ?? "");
+                        features.Add(new Feature(factory.CreateLineString(coords), attrs));
+                    }
+                }
+                else if (kind == "point")
+                {
+                    foreach (var p in rawPoints)
+                    {
+                        var attrs = new AttributesTable();
+                        attrs.Add("areaId", p.AreaId);
+                        attrs.Add("prop", p.Property ?? "");
+                        features.Add(new Feature(factory.CreatePoint(new Coordinate(p.Longitude, p.Latitude)), attrs));
+                    }
+                }
+                else if (kind == "plane")
+                {
+                    foreach (var group in rawPoints.GroupBy(p => p.AreaId))
+                    {
+                        var pts = group.ToList();
+                        if (pts.Count < 3) continue;
+                        var coordList = pts.Select(p => new Coordinate(p.Longitude, p.Latitude)).ToList();
+                        if (!coordList[0].Equals2D(coordList[^1])) coordList.Add(coordList[0]);
+                        var ring = factory.CreateLinearRing(coordList.ToArray());
+                        var attrs = new AttributesTable();
+                        attrs.Add("areaId", group.Key);
+                        attrs.Add("prop", pts[0].Property ?? "");
+                        features.Add(new Feature(factory.CreatePolygon(ring), attrs));
+                    }
+                }
+
+                if (features.Count == 0) return NoContent();
+
+                var vectorTile = new VectorTile { TileId = ToTileId(x, y, z) };
+                var vtLayer = new NetTopologySuite.IO.VectorTiles.Layer { Name = "layer" };
+                foreach (var f in features) vtLayer.Features.Add(f);
+                vectorTile.Layers.Add(vtLayer);
+
+                using var ms = new MemoryStream();
+                vectorTile.Write(ms, minLinealExtent: 0, minPolygonalExtent: 0);
+                var tileBytes = ms.ToArray();
+
+                // 寫入後端快取（1 小時）
+                _tileCache.Set(cacheKey, tileBytes, TimeSpan.FromHours(1));
+
+                // 通知瀏覽器快取（1 小時）
+                Response.Headers["Cache-Control"] = "public, max-age=3600";
+
+                return File(tileBytes, "application/x-protobuf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Vector tile error", error = ex.Message });
+            }
+        }
+
+        // OsmSharp-compatible tile ID: offset(z) + y*2^z + x
+        private static ulong ToTileId(int x, int y, int z)
+        {
+            ulong offset = 0;
+            for (int i = 0; i < z; i++) offset += 1UL << (2 * i);
+            return offset + (ulong)y * (1UL << z) + (ulong)x;
+        }
+
+        private static (double west, double south, double east, double north) TileBounds(int z, int x, int y)
+        {
+            double n = Math.Pow(2, z);
+            return (
+                west:  x / n * 360.0 - 180.0,
+                south: Math.Atan(Math.Sinh(Math.PI * (1.0 - 2.0 * (y + 1.0) / n))) * 180.0 / Math.PI,
+                east:  (x + 1.0) / n * 360.0 - 180.0,
+                north: Math.Atan(Math.Sinh(Math.PI * (1.0 - 2.0 * y / n))) * 180.0 / Math.PI
+            );
+        }
+
         [HttpGet("tile/{layerId}/{z}/{y}/{x}")]
         public async Task<IActionResult> GetTile(string layerId, int z, int y, int x)
         {
@@ -687,7 +826,7 @@ namespace RMIS.Controllers
 
     public class ViewportRequest
     {
-        public Guid LayerId { get; set; }
+        public int LayerId { get; set; }
         public double MinLat { get; set; }
         public double MaxLat { get; set; }
         public double MinLon { get; set; }

@@ -6,7 +6,7 @@ namespace RMIS.Models.sql
     public class RoadProjectProcess
     {
         public int Id { get; set; }
-        public Guid ProcessId { get; set; }
+        public string ProcessId { get; set; } = string.Empty;
         public string ProjectId { get; set; }
 
         /// <summary>

@@ -32,6 +32,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true; // GDPR 相關，確保 Cookie 總是可用
 });
+builder.Services.AddMemoryCache();
 var mvcBuilder = builder.Services.AddControllersWithViews();
 if (builder.Environment.IsDevelopment())
 {
@@ -106,7 +107,7 @@ builder.Services.AddControllersWithViews()
 // 註冊 MapDBContext
 builder.Services.AddDbContext<MapDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString"),
-        x => x.UseNetTopologySuite().EnableRetryOnFailure()));
+        x => x.EnableRetryOnFailure()));
 
 // 註冊 HttpClient
 builder.Services.AddHttpClient();

@@ -10,36 +10,34 @@ export function updatePropQuery(props) {
     });
 }
 
-// 分類屬性資料
+// 分類屬性資料（用 Set 避免 O(n²) includes 導致卡死）
 function buildPropsDict(props) {
     function formatTimestamp(timestamp) {
         if (!timestamp) return timestamp;
         const date = new Date(timestamp);
         return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
     }
-    const propsDict = {};
+    const setDict = {};
     props.forEach(prop => {
         for (const key in prop) {
-            if (prop.hasOwnProperty(key) && key !== '備註' && key !== '座標') {
-                if (key === "設置日期") {
-                    prop[key] = formatTimestamp(prop[key]);
-                }
-                if (!propsDict[key]) {
-                    propsDict[key] = [];
-                }
-                if (!propsDict[key].includes(prop[key])) {
-                    propsDict[key].push(prop[key]);
-                }
-            }
+            if (!prop.hasOwnProperty(key) || key === '備註' || key === '座標' || key === 'Instance') continue;
+            if (key === '設置日期') prop[key] = formatTimestamp(prop[key]);
+            if (!setDict[key]) setDict[key] = new Set();
+            setDict[key].add(prop[key]);
         }
     });
+    // Set → sorted array
+    const propsDict = {};
+    for (const key in setDict) {
+        propsDict[key] = [...setDict[key]].sort();
+    }
     return propsDict;
 }
 
 // Build filters for the query builder
 function buildQueryFilters(propsDict) {
     return Object.keys(propsDict).map(key => {
-        const sortedValues = propsDict[key].sort();
+        const sortedValues = propsDict[key]; // buildPropsDict 已排序
         const type = typeof sortedValues[0] === 'number' ? 'integer' : 'string';
         return {
             id: key,
@@ -93,9 +91,6 @@ export function filterPropsByRules(props, rules) {
 
 // 條件式轉換
 function evaluateRules(item, rules) {
-    if (!item['Instance']) {
-        return false;
-    }
     if (rules.condition) {
         return rules.rules.reduce((acc, rule) => {
             return rules.condition === 'AND' ? acc && evaluateRules(item, rule) : acc || evaluateRules(item, rule);

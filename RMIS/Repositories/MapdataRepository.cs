@@ -40,7 +40,7 @@ namespace RMIS.Repositories
             var allCategories = await _mapDBContext.Categories.ToListAsync();
 
             // 儲存類別順序的清單
-            var categoryOrderList = new List<Guid>();
+            var categoryOrderList = new List<int>();
 
             var rootCategories = allCategories
                 .Where(c => c.ParentId == null)
@@ -93,7 +93,7 @@ namespace RMIS.Repositories
         }
 
         // 這個會將 Category 的 Id 加到順序清單中
-        private void BuildCategoryOrder(Guid id, List<Category> allCategories, List<Guid> orderList)
+        private void BuildCategoryOrder(int id, List<Category> allCategories, List<int> orderList)
         {
             orderList.Add(id); // 儲存順序
             var childCate = allCategories.Where(c => c.ParentId == id).OrderBy(c => c.OrderId).ToList();
@@ -103,7 +103,7 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<MapdataSearch> GetMapdataSearchAsync(Guid LayerId, string Dist, Guid AreaId)
+        public async Task<MapdataSearch> GetMapdataSearchAsync(int LayerId, string Dist, int AreaId)
         {
             var layer = await _mapDBContext.Layers
                 .Include(l => l.GeometryType)
@@ -120,7 +120,7 @@ namespace RMIS.Repositories
                 Config = layer.ImportConfiguration,
                 ImportEnabled = layer.ImportEnabled
             };
-            if (AreaId == Guid.Empty)
+            if (AreaId == 0)
             {
                 var areas = await _mapDBContext.Areas
                     .Where(a => a.AdminDist.Town == Dist && a.LayerId == LayerId)
@@ -147,7 +147,7 @@ namespace RMIS.Repositories
             return mapdataSearch;
         }
 
-        public async Task<List<MapdataLayer>> GetMapdataLayersAsync(Guid id)
+        public async Task<List<MapdataLayer>> GetMapdataLayersAsync(int id)
         {
             var layers = await _mapDBContext.Layers
                 .Where(l => l.PipelineId == id)
@@ -160,7 +160,7 @@ namespace RMIS.Repositories
             return layers;
         }
 
-        public async Task<List<MapdatAdminDist>> GetMapdataDistsAsync(Guid id)
+        public async Task<List<MapdatAdminDist>> GetMapdataDistsAsync(int id)
         {
             var dists = await _mapDBContext.Areas
                 .Include(a => a.AdminDist)
@@ -177,7 +177,7 @@ namespace RMIS.Repositories
             return dists;
         }
 
-        public async Task<List<MapdataArea>> GetMapdataAreasAsync(Guid LayerId, string Dist)
+        public async Task<List<MapdataArea>> GetMapdataAreasAsync(int LayerId, string Dist)
         {
             var areas = await _mapDBContext.Areas
                 .Include(a => a.AdminDist)
@@ -193,7 +193,7 @@ namespace RMIS.Repositories
             return areas;
         }
         
-        public async Task<string> GetMapdataImportSetting(Guid LayerId)
+        public async Task<string> GetMapdataImportSetting(int LayerId)
         {
             var Layer = await _mapDBContext.Layers.FindAsync(LayerId);
             // 把ImportConfiguration轉換成json
@@ -206,7 +206,7 @@ namespace RMIS.Repositories
             return importConfig;
         }
 
-        public async Task<List<MapdataPoint>> GetMapdataPointsAsync(Guid areaId)
+        public async Task<List<MapdataPoint>> GetMapdataPointsAsync(int areaId)
         {
             var points = await _mapDBContext.Points
                 .Where(p => p.AreaId == areaId)
@@ -220,7 +220,7 @@ namespace RMIS.Repositories
                 }).ToListAsync();
             return points;
         }
-        public async Task<(bool Success, string Message)> DeleteMapdataAreaAsync(Guid id, string associateLayer)
+        public async Task<(bool Success, string Message)> DeleteMapdataAreaAsync(int id, string associateLayer)
         {
             switch (associateLayer)
             {
@@ -242,7 +242,7 @@ namespace RMIS.Repositories
             return (true, "刪除資料");
         }
 
-        private async Task DeleteRoadProjectAsync(Guid plannedExpansionId)
+        private async Task DeleteRoadProjectAsync(int plannedExpansionId)
         {
             var roadProject = await _mapDBContext.RoadProjects
                 .FirstOrDefaultAsync(rp => rp.PlannedExpansionId == plannedExpansionId);
@@ -251,11 +251,11 @@ namespace RMIS.Repositories
                 return;
 
             // 刪除街景資料
-            if (roadProject.StreetViewId != Guid.Empty && roadProject.StreetViewId != plannedExpansionId)
+            if (roadProject.StreetViewId.HasValue && roadProject.StreetViewId != plannedExpansionId)
             {
                 var streetViewPoints = await _mapDBContext.Points
-                    .Where(p => p.AreaId == roadProject.StreetViewId).ToListAsync();
-                var streetViewArea = await _mapDBContext.Areas.FindAsync(roadProject.StreetViewId);
+                    .Where(p => p.AreaId == roadProject.StreetViewId.Value).ToListAsync();
+                var streetViewArea = await _mapDBContext.Areas.FindAsync(roadProject.StreetViewId.Value);
 
                 _mapDBContext.RemoveRange(streetViewPoints);
                 if (streetViewArea != null)
@@ -308,8 +308,8 @@ namespace RMIS.Repositories
                 }
 
                 // 用來儲存專案代號與 areaId 的對應關係（僅用於 RoadProject）
-                var areaIdMapping = new Dictionary<string, Guid>();
-                var streetViewIdMapping = new Dictionary<string, Guid>();
+                var areaIdMapping = new Dictionary<string, int>();
+                var streetViewIdMapping = new Dictionary<string, int>();
 
                 foreach (var mapdataArea in importMapata.ImportMapdataAreas)
                 {
@@ -319,10 +319,8 @@ namespace RMIS.Repositories
                     var AdminDist = mapdataArea.adminDist;
                     var DistId = await _mapDBContext.AdminDist.Where(ad => ad.Town == AdminDist).Select(ad => ad.Id).FirstOrDefaultAsync();
 
-                    var areaId = Guid.NewGuid();
                     var area = new Area
                     {
-                        Id = areaId,
                         Name = mapdataArea.name,
                         LayerId = importMapata.LayerId,
                         ConstructionUnit = "未填寫",
@@ -330,6 +328,8 @@ namespace RMIS.Repositories
                     };
 
                     await _mapDBContext.Areas.AddAsync(area);
+                    await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
+
                     // 如果是 RoadProject，建立專案代號與 areaId 的對應關係
                     switch (associated_table)
                     {
@@ -341,7 +341,7 @@ namespace RMIS.Repositories
                                 var projectId = val.ToString();
                                 if (!string.IsNullOrEmpty(projectId))
                                 {
-                                    areaIdMapping[projectId] = areaId;
+                                    areaIdMapping[projectId] = area.Id;
                                 }
                             }
                             await BuildStreetViewAreasAsync(mapdataArea, streetViewIdMapping, DistId);
@@ -355,8 +355,7 @@ namespace RMIS.Repositories
                     {
                         var newPoint = new Point
                         {
-                            Id = Guid.NewGuid(),
-                            AreaId = areaId,
+                            AreaId = area.Id,
                             Index = point.Index,
                             Latitude = point.Latitude,
                             Longitude = point.Longitude,
@@ -433,13 +432,14 @@ namespace RMIS.Repositories
 
             return duplicateIds;
         }
-        private async Task BuildStreetViewAreasAsync(ImportMapdataArea mapdataArea, Dictionary<string, Guid> streetViewIdMapping, Guid adminDistId)
+        private async Task BuildStreetViewAreasAsync(ImportMapdataArea mapdataArea, Dictionary<string, int> streetViewIdMapping, int adminDistId)
         {
             // 進入後 取得第一個的prop
             Console.WriteLine(mapdataArea.name);
             var propJson = mapdataArea.MapdataPoints[0].Property;
             var propDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(propJson);
             var streetViewId = await _mapDBContext.Layers.Where(l => l.Name == "街景照片").Select(l => l.Id).FirstOrDefaultAsync();
+            if (streetViewId == 0) return;
             if (propDict != null &&
                 propDict.TryGetValue("專案代號", out var idVal) &&
                 propDict.TryGetValue("街景照片", out var svJson) &&
@@ -448,17 +448,16 @@ namespace RMIS.Repositories
             {
                 var projectId = idVal.ToString();
                 var locationName = locationVal.ToString();
-                var streetViewAreaId = Guid.NewGuid();
                 var streetViewArea = new Area
                 {
-                    Id = streetViewAreaId,
                     Name = $"{locationName} - 街景照片",
                     LayerId = streetViewId,
                     ConstructionUnit = "未填寫",
                     AdminDistId = adminDistId
                 };
                 await _mapDBContext.Areas.AddAsync(streetViewArea);
-                streetViewIdMapping[projectId] = streetViewAreaId;
+                await _mapDBContext.SaveChangesAsync(); // 取得 IDENTITY Id
+                streetViewIdMapping[projectId] = streetViewArea.Id;
 
                 int index = 0;
                 foreach (var photoItem in svJson.EnumerateObject())
@@ -472,8 +471,7 @@ namespace RMIS.Repositories
                         {
                             var point = new Point
                             {
-                                Id = Guid.NewGuid(),
-                                AreaId = streetViewAreaId,
+                                AreaId = streetViewArea.Id,
                                 Latitude = lat,
                                 Longitude = lng,
                                 Index = index++,
@@ -485,7 +483,7 @@ namespace RMIS.Repositories
                 }
             }
         }
-        private async Task<List<RoadProject>> Add2RoadProject(ImportMapdataView importMapata, Dictionary<string, Guid> areaIdMapping, Dictionary<string, Guid> streetViewIdMapping)
+        private async Task<List<RoadProject>> Add2RoadProject(ImportMapdataView importMapata, Dictionary<string, int> areaIdMapping, Dictionary<string, int> streetViewIdMapping)
         {
             var roadProjects = new List<RoadProject>();
             var ImportMapdataAreas = importMapata.ImportMapdataAreas;
@@ -555,8 +553,8 @@ namespace RMIS.Repositories
                         Remarks = GetStr("備註"),
                         CreateTime = DateTime.Now,
                         // 設定預拓範圍的AreaId
-                        PlannedExpansionId = areaIdMapping.ContainsKey(projectId) ? areaIdMapping[projectId] : Guid.Empty,
-                        StreetViewId = streetViewIdMapping.ContainsKey(projectId) ? streetViewIdMapping[projectId] : Guid.Empty // 如果需要設定街景AreaId，可以在此處理
+                        PlannedExpansionId = areaIdMapping.ContainsKey(projectId) ? areaIdMapping[projectId] : (int?)null,
+                        StreetViewId = streetViewIdMapping.ContainsKey(projectId) ? streetViewIdMapping[projectId] : (int?)null
                     };
                     roadProjects.Add(project);
                     // 建立資料夾
@@ -661,7 +659,7 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<(bool Success, string? Data, string Message)> GetDatainfoAsync(Guid id)
+        public async Task<(bool Success, string? Data, string Message)> GetDatainfoAsync(int id)
         {
             var pipeline = await _mapDBContext.Pipelines.FindAsync(id);
             if (pipeline == null)

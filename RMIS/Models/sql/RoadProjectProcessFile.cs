@@ -3,7 +3,7 @@
     public class RoadProjectProcessFile
     {
             public int Id { get; set; }
-            public Guid ProcessId { get; set; }
+            public string ProcessId { get; set; }
             public string FileType { get; set; }
             public string FileName { get; set; }
             public string Base64String { get; set; }

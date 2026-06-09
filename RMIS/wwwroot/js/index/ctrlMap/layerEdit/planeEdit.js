@@ -1,5 +1,10 @@
 import {layers, layerProps} from '../layers.js';
 
+function _vtSetStyle(layer, style) {
+    layer.options.vectorTileLayerStyles = style;
+    layer.redraw();
+}
+
 var pointStep1 = `
         <h5 class="offcanvas-title">編輯圖徽 - 編輯類型</h5>
         <div id="editStep1">
@@ -410,14 +415,20 @@ function planeEditStep2(id){
             selects.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
             });
-            idList.forEach(function (id) {
-                layers[id].eachLayer(function (layer) {
-                    layer.setStyle({
-                    fillColor: formData.fillColor,
-                    color: formData.frameColor,
-                    weight: formData.thickness*formData.thickness
+            const fw = parseInt(formData.thickness);
+            idList.forEach(function (layerId) {
+                const layer = layers[layerId];
+                if (!layer) return;
+                if (typeof layer.eachLayer !== 'function') {
+                    _vtSetStyle(layer, {'layer': {
+                        fillColor: formData.fillColor, color: formData.frameColor,
+                        fill: true, fillOpacity: 0.5, weight: fw, opacity: 1
+                    }});
+                } else {
+                    layer.eachLayer(function(sub) {
+                        sub.setStyle({ fillColor: formData.fillColor, color: formData.frameColor, weight: fw * fw });
                     });
-                });
+                }
             });
 
             // 重新繪製圖徽
@@ -463,68 +474,46 @@ function planeEditStep2(id){
                 return;
             }
 
-            // 找到數值範圍（第一遍遍歷）
-            let minValue = Infinity;
-            let maxValue = -Infinity;
-        
-            idList.forEach(function (id) {
-                if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            const value = jsonData[formData.field];
-                            if (value < minValue) minValue = value;
-                            if (value > maxValue) maxValue = value;
-                        }
-                    });
-                }
+            const allPropsP1 = layerProps[id] || [];
+            let minValue = Infinity, maxValue = -Infinity;
+            allPropsP1.forEach(function(p) {
+                const v = parseFloat(p[formData.field]);
+                if (!isNaN(v)) { if (v < minValue) minValue = v; if (v > maxValue) maxValue = v; }
             });
+            if (minValue === maxValue || !isFinite(minValue)) { alert("數值範圍過於集中，無法進行有效分層"); return; }
 
-            if (minValue === maxValue) {
-                alert("數值範圍過於集中，無法進行有效分層");
-                return;
-            }
-            // 計算分層區間大小
             let levels = parseInt(formData.level);
             let rangeSize = (maxValue - minValue) / levels;
-
-            // 確保顏色頭尾一致，均勻映射到層級
             const gradientColors = gradientColorsMap[formData.fillcolor];
             let colorSet = [];
-            if (levels === gradientColors.length) {
-                colorSet = gradientColors; // 層級數等於顏色數，直接使用
-            } else {
-                // 均勻分配顏色
-                for (let i = 0; i < levels; i++) {
-                    const index = Math.round(i * (gradientColors.length - 1) / (levels - 1));
-                    colorSet.push(gradientColors[index]);
-                }
-            }
+            if (levels === gradientColors.length) { colorSet = gradientColors; }
+            else { for (let i = 0; i < levels; i++) { colorSet.push(gradientColors[Math.round(i * (gradientColors.length - 1) / (levels - 1))]); } }
 
-            idList.forEach(function (id) {
-                if(layers[id]){
-                    layers[id].eachLayer(function (layer) {
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            const value = jsonData[formData.field];
-                            let colorIndex = Math.floor((value - minValue) / rangeSize);
-                            if (colorIndex >= levels) colorIndex = levels - 1;
-                            layer.setStyle({
-                                fillColor: colorSet[colorIndex],
-                                color: formData.frameColor,
-                                weight: formData.thickness*formData.thickness
-                            });
-                        }
+            const fieldP1 = formData.field, wP1 = parseInt(formData.thickness), fcP1 = formData.frameColor;
+            idList.forEach(function(layerId) {
+                const layer = layers[layerId];
+                if (!layer) return;
+                if (typeof layer.eachLayer !== 'function') {
+                    _vtSetStyle(layer, {'layer': function(properties) {
+                        try {
+                            const pd = properties.prop ? JSON.parse(properties.prop.replace(/NaN/g, 'null')) : {};
+                            const v = parseFloat(pd[fieldP1]);
+                            if (isNaN(v)) return { fillColor: colorSet[0], color: fcP1, fill: true, fillOpacity: 0.5, weight: wP1 };
+                            let idx = Math.floor((v - minValue) / rangeSize);
+                            if (idx >= levels) idx = levels - 1; if (idx < 0) idx = 0;
+                            return { fillColor: colorSet[idx], color: fcP1, fill: true, fillOpacity: 0.5, weight: wP1 };
+                        } catch(e) { return { fillColor: colorSet[0], color: fcP1, fill: true, fillOpacity: 0.5, weight: wP1 }; }
+                    }});
+                } else {
+                    layer.eachLayer(function(sub) {
+                        const popup = sub.getPopup();
+                        if (!popup) return;
+                        try {
+                            const pd = JSON.parse(new DOMParser().parseFromString(popup.getContent(), 'text/html').querySelector('.popupData').textContent.replace(/NaN/g, 'null'));
+                            let idx = Math.floor((parseFloat(pd[fieldP1]) - minValue) / rangeSize);
+                            if (idx >= levels) idx = levels - 1;
+                            sub.setStyle({ fillColor: colorSet[idx], color: fcP1, weight: wP1 * wP1 });
+                        } catch(e) {}
                     });
                 }
             });
@@ -573,70 +562,38 @@ function planeEditStep2(id){
                 return;
             }
             console.log(formData);
-            // 使用dictionary取得該欄位處重複的值
-            let fieldsMap = {};
-            let fields = [];
-            idList.forEach(function (id) {
-                if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            
-                            let value = jsonData[formData.field];
-                            // 保持當前 `value` 的原始型態
-                            if (!fieldsMap[value]) {
-                                fieldsMap[value] = true;
-                                fields.push(value);
-                            }   
-                        }
-                    });
-                }
-            });
-            if(typeof(fields[0]) === 'string'){
-                fields.sort();
-            }else{
-                fields.sort((a, b) => a - b);
-            }
-            fields = fields.sort((a, b) => a - b);
-            console.log(fields);
-            if(fields.length > 20){
-                alert("類型數量超過20,無法進行有效分類");
-                return;
-            }
-            // 取得選擇類別的頭尾顏色
+            const allPropsP2 = layerProps[id] || [];
+            let fields = [...new Set(allPropsP2.map(p => p[formData.field]).filter(v => v != null))];
+            if (typeof fields[0] === 'string') fields.sort(); else fields.sort((a, b) => a - b);
+            if (fields.length > 20) { alert("類型數量超過20,無法進行有效分類"); return; }
+
             const groupColors = groupColorsMap[formData.fillcolor];
-            // types由小到大排序，並以頭尾之間的顏色均勻分佈
-            let colorSet = [];
-            fields.forEach(function (key, index) {
-                const colorIndex = Math.floor(index / fields.length * (groupColors.length - 1));
-                colorSet.push(groupColors[colorIndex]);
-            });
+            let colorSet = fields.map((k, i) => groupColors[Math.floor(i / fields.length * (groupColors.length - 1))]);
             colorSet = adjustDuplicateColors(colorSet);
-            console.log(colorSet);
-            idList.forEach(function (id) {
-                if(layers[id]){
-                    layers[id].eachLayer(function (layer) {
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            const value = jsonData[formData.field];
-                            const index = fields.indexOf(value);
-                            if (index === -1) return;
-                            layer.setStyle({
-                                fillColor: colorSet[index],
-                                color: formData.frameColor,
-                                weight: formData.thickness*formData.thickness
-                            });
-                        }
+
+            const fieldP2 = formData.field, wP2 = parseInt(formData.thickness), fcP2 = formData.frameColor;
+            idList.forEach(function(layerId) {
+                const layer = layers[layerId];
+                if (!layer) return;
+                if (typeof layer.eachLayer !== 'function') {
+                    _vtSetStyle(layer, {'layer': function(properties) {
+                        try {
+                            const pd = properties.prop ? JSON.parse(properties.prop.replace(/NaN/g, 'null')) : {};
+                            const idx = fields.indexOf(pd[fieldP2]);
+                            if (idx === -1) return { fillColor: '#888', color: fcP2, fill: true, fillOpacity: 0.5, weight: wP2 };
+                            return { fillColor: colorSet[idx], color: fcP2, fill: true, fillOpacity: 0.5, weight: wP2 };
+                        } catch(e) { return { fillColor: '#888', color: fcP2, fill: true, fillOpacity: 0.5, weight: wP2 }; }
+                    }});
+                } else {
+                    layer.eachLayer(function(sub) {
+                        const popup = sub.getPopup();
+                        if (!popup) return;
+                        try {
+                            const pd = JSON.parse(new DOMParser().parseFromString(popup.getContent(), 'text/html').querySelector('.popupData').textContent.replace(/NaN/g, 'null'));
+                            const idx = fields.indexOf(pd[fieldP2]);
+                            if (idx === -1) return;
+                            sub.setStyle({ fillColor: colorSet[idx], color: fcP2, weight: wP2 * wP2 });
+                        } catch(e) {}
                     });
                 }
             });

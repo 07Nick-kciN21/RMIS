@@ -605,7 +605,7 @@ namespace RMIS.Repositories
                 
                 int pipelineAdd = 0;
                 int pipelineRemove = 0;
-                var affectedCategories = new HashSet<Guid>();
+                var affectedCategories = new HashSet<int>();
                 if (updateDepartment.Removed != null)
                 {
                     foreach (var remove in updateDepartment.Removed)
@@ -633,7 +633,7 @@ namespace RMIS.Repositories
                 }
 
                 // 回推：對所有受影響的分類，進行完整上層遞迴修正
-                var visited = new HashSet<Guid>();
+                var visited = new HashSet<int>();
                 foreach (var categoryId in affectedCategories)
                 {
                     await RecalculateCategoryDepartmentsUpward(categoryId, visited);
@@ -658,7 +658,7 @@ namespace RMIS.Repositories
             }
         }
 
-        private async Task<List<int>> RecalculateCategoryDepartmentsUpward(Guid categoryId, HashSet<Guid> visited)
+        private async Task<List<int>> RecalculateCategoryDepartmentsUpward(int categoryId, HashSet<int> visited)
         {
             if (visited.Contains(categoryId)) return new List<int>();
             visited.Add(categoryId);
@@ -1096,7 +1096,7 @@ namespace RMIS.Repositories
                 });
                 int pipelineAdd = 0;
                 int pipelineRemove = 0;
-                var affectedCategories = new HashSet<Guid>();
+                var affectedCategories = new HashSet<int>();
                 if (createDepartment.Added != null)
                 {
                     foreach (var add in createDepartment.Added)
@@ -1111,7 +1111,7 @@ namespace RMIS.Repositories
                 }
 
                 // 回推：對所有受影響的分類，進行完整上層遞迴修正
-                var visited = new HashSet<Guid>();
+                var visited = new HashSet<int>();
                 foreach (var categoryId in affectedCategories)
                 {
                     await RecalculateCategoryDepartmentsUpward(categoryId, visited);
@@ -1130,7 +1130,7 @@ namespace RMIS.Repositories
 
      
         // 這個會將 Category 的 Id 加到順序清單中
-        private void BuildCategoryOrder(Guid id, List<Category> allCategories, List<Guid> orderList)
+        private void BuildCategoryOrder(int id, List<Category> allCategories, List<int> orderList)
         {
             orderList.Add(id); // 儲存順序
             var childCate = allCategories.Where(c => c.ParentId == id).OrderBy(c => c.OrderId).ToList();
@@ -1268,7 +1268,7 @@ namespace RMIS.Repositories
             var json = JsonConvert.SerializeObject(jsTreeData);
             return (true, json, null); // 成功時回傳 json 資料
         }
-        private List<object> BuildJsTreeData(List<Category> allCategories, Guid? parentId, int deptId)
+        private List<object> BuildJsTreeData(List<Category> allCategories, int? parentId, int deptId)
         {
             var result = new List<object>();
             var currentCategories = allCategories
@@ -1325,7 +1325,7 @@ namespace RMIS.Repositories
             return result;
         }
 
-        public async Task<UpdatePipelineView> UpdatePupelineViewAsync(Guid id)
+        public async Task<UpdatePipelineView> UpdatePupelineViewAsync(int id)
         {
             var pipeline = await _mapDBContext.Pipelines.FindAsync(id);
             var pipelineData = new UpdatePipelineView

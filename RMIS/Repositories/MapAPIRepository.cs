@@ -17,7 +17,7 @@ namespace RMIS.Repositories
             _mapDBContext = mapDBContext;
         }
 
-        public async Task<List<LayersByPipeline>> GetLayersByPipelineAsync(Guid pipelineId)
+        public async Task<List<LayersByPipeline>> GetLayersByPipelineAsync(int pipelineId)
         {
             var layers = await _mapDBContext.Layers
                 .Include(l => l.GeometryType)
@@ -35,7 +35,7 @@ namespace RMIS.Repositories
             return results;
         }
 
-        public async Task<AreasByLayer> GetAreasByLayerAsync(Guid LayerId)
+        public async Task<AreasByLayer> GetAreasByLayerAsync(int LayerId)
         {
             var areas = await _mapDBContext.Areas
                                     .Include(a => a.Points)
@@ -70,7 +70,7 @@ namespace RMIS.Repositories
             return results;
         }
 
-        public async Task<LayerIdByPipeline> GetLayerIdByPipelineAsync(Guid PipelineId)
+        public async Task<LayerIdByPipeline> GetLayerIdByPipelineAsync(int PipelineId)
         {
             var results = new LayerIdByPipeline
             {
@@ -97,14 +97,14 @@ namespace RMIS.Repositories
                  .ToListAsync();
             return results;
         }
-        public async Task<PointsbyId> GetPointsbyLayerIdAsync(Guid LayerId)
+        public async Task<PointsbyId> GetPointsbyLayerIdAsync(int AreaId)
         {
             var areas = await _mapDBContext.Areas
                 .Include(a => a.Points)
-                .FirstOrDefaultAsync(a => a.Id == LayerId);
+                .FirstOrDefaultAsync(a => a.Id == AreaId);
             var results = new PointsbyId
             {
-                Id = LayerId.ToString(),
+                Id = AreaId.ToString(),
                 Points = areas.Points.OrderBy(p => p.Index).Select(p => new PointDto
                 {
                     Index = p.Index,

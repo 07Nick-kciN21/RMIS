@@ -349,6 +349,27 @@ function createBaseLayers() {
     // 疊加圖層 (多選)
     var overlayMaps = {};
 
+    // 里程牌KM (ArcGIS REST 手動圖層)
+    const _kmLayerKey = '里程牌KM';
+    const _kmLayer = L.layerGroup();
+    overlayMaps[_kmLayerKey] = _kmLayer;
+    fetch('https://oram-integ.tycg.gov.tw/gis/rest/services/Another/TYURS_16/MapServer/0/query?where=1%3D1&outFields=KM%2CROADID&outSR=4326&returnGeometry=true&f=json&token=uJFZi5F0JMfzm_p7kDLBEpDeYodwLQmzfcc9o5IJMcC77_b-W09rp9k1BZU5CyqxbIoOjNUPU40DVxDiByDfCwrSkhKAeDRqx4yBK-I7qS1G3GgvqsxytASiy_y7uE7pNjjlNRTV-7DPOtyLBc7v5PqKDKd7fbHFn_11IWkn4yoTPGN-Igci4BfnvHk43G7D')
+        .then(r => r.json())
+        .then(data => {
+            (data.features || []).forEach(f => {
+                L.circleMarker([f.geometry.y, f.geometry.x], {
+                    radius: 5,
+                    color: '#e67e22',
+                    fillColor: '#e67e22',
+                    fillOpacity: 0.8,
+                    weight: 1
+                })
+                .bindPopup(`<b>里程牌</b><br>公路：${f.attributes.ROADID}<br>里程：${f.attributes.KM}`)
+                .addTo(_kmLayer);
+            });
+        })
+        .catch(err => console.error('里程牌KM 載入失敗', err));
+
     // 從 API 取得地圖來源資料
     $.ajax({
         url: '/api/MapAPI/GetMapSources',
@@ -389,14 +410,18 @@ function createBaseLayers() {
                 $('#baseMapSelector').append(`<li class="coordinate-item" value="${name}"><span>${name}</span></li>`);
             };
             for(let name in overlayMaps){
+                if (name === _kmLayerKey) continue;
                 $('#overlayMapSelector').append(`<li class="coordinate-item" value="${name}">${name}</li>`);
             }
-            
+
         },
         error: function (error) {
             console.error('Error fetching map sources:', error);
         }
     });
+
+    // 里程牌KM 開關直接 append（不依賴 GetMapSources API）
+    $('#overlayMapSelector').append(`<li class="coordinate-item" value="${_kmLayerKey}">${_kmLayerKey}</li>`);
 
     // 基本圖層切換
     $('#baseMapSelector').on('click', '.coordinate-item', function () {

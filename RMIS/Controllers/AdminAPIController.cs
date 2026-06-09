@@ -28,7 +28,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("deletePipeline")]
-        public async Task<IActionResult> DeletePipeline(Guid? pipelineId)
+        public async Task<IActionResult> DeletePipeline(int pipelineId)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace RMIS.Controllers
         }
 
         [HttpGet("deleteCategory")]
-        public async Task<IActionResult> DeleteCategory(Guid? categoryId)
+        public async Task<IActionResult> DeleteCategory(int? categoryId)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("deleteLayer")]
-        public async Task<IActionResult> DeleteLayerData(Guid? layerId)
+        public async Task<IActionResult> DeleteLayerData(int layerId)
         {
             try
             {

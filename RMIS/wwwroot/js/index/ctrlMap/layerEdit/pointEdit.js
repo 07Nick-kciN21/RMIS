@@ -511,51 +511,23 @@ function pointEditStep2(id){
                 return;
             }
         
-            // 找到數值範圍（第一遍遍歷）
-            let minValue = Infinity;
-            let maxValue = -Infinity;
-        
-            idList.forEach(function (id) {
-                if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            const value = jsonData[formData.field];
-                            if (value < minValue) minValue = value;
-                            if (value > maxValue) maxValue = value;
-                        }
-                    });
-                }
+            // 從 layerProps 取得數值範圍
+            const allPropsPt1 = layerProps[id] || [];
+            let minValue = Infinity, maxValue = -Infinity;
+            allPropsPt1.forEach(function(p) {
+                const v = parseFloat(p[formData.field]);
+                if (!isNaN(v)) { if (v < minValue) minValue = v; if (v > maxValue) maxValue = v; }
             });
-        
-            if (minValue === maxValue) {
-                alert("數值範圍過於集中，無法進行有效分層");
-                return;
-            }
-        
-            // 計算分層區間大小
+            if (minValue === maxValue || !isFinite(minValue)) { alert("數值範圍過於集中，無法進行有效分層"); return; }
+
             let levels = parseInt(formData.level);
             let rangeSize = (maxValue - minValue) / levels;
-
-            // 確保顏色頭尾一致，均勻映射到層級
             const gradientColors = gradientColorsMap[formData.fillcolor];
             let colorSet = [];
-            if (levels === gradientColors.length) {
-                colorSet = gradientColors; // 層級數等於顏色數，直接使用
-            } else {
-                // 均勻分配顏色
-                for (let i = 0; i < levels; i++) {
-                    const index = Math.round(i * (gradientColors.length - 1) / (levels - 1));
-                    colorSet.push(gradientColors[index]);
-                }
-            }
-        
-            // 賦予顏色和樣式（第二遍遍歷）
+            if (levels === gradientColors.length) { colorSet = gradientColors; }
+            else { for (let i = 0; i < levels; i++) { colorSet.push(gradientColors[Math.round(i * (gradientColors.length - 1) / (levels - 1))]); } }
+
+            // 賦予顏色（point 仍是 LayerGroup + L.Marker，直接 eachLayer）
             idList.forEach(function (id) {
                 if (layers[id]) {
                     layers[id].eachLayer(function (layer) {
@@ -565,16 +537,10 @@ function pointEditStep2(id){
                             var parser = new DOMParser();
                             var doc = parser.parseFromString(content, 'text/html');
                             var popupData = doc.querySelector('.popupData');
+                            if (!popupData) return;
                             var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
                             const value = jsonData[formData.field];
-                            // 如果值為 NaN，則levelIndex為最大值
-                            if (isNaN(value)) {
-                                var levelIndex = levels - 1;
-                            } else {
-                                // 計算層級索引
-                                var levelIndex = Math.floor((value - minValue) / rangeSize);
-                                if (levelIndex >= levels) levelIndex = levels - 1;
-                            }
+                            var levelIndex = isNaN(value) ? levels - 1 : Math.min(levels - 1, Math.floor((value - minValue) / rangeSize));
 
                             const fillColor = colorSet[levelIndex];
                             const diameter = parseInt(formData.size);
@@ -655,36 +621,10 @@ function pointEditStep2(id){
                 return;
             }
             console.log(formData);
-            // 使用dictionary取得該欄位處重複的值
-            let fieldsMap = {};
-            let fields = [];
-            idList.forEach(function (id) {
-                if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            
-                            let value = jsonData[formData.field];
-                            // 保持當前 `value` 的原始型態
-                            if (!fieldsMap[value]) {
-                                fieldsMap[value] = true;
-                                fields.push(value);
-                            }   
-                        }
-                    });
-                }
-            });
-            if(typeof(fields[0]) === 'string'){
-                fields.sort();
-            }else{
-                fields.sort((a, b) => a - b);
-            }
-            fields = fields.sort((a, b) => a - b);
+            // 從 layerProps 取得唯一類型值
+            const allPropsPt2 = layerProps[id] || [];
+            let fields = [...new Set(allPropsPt2.map(p => p[formData.field]).filter(v => v != null))];
+            if (typeof fields[0] === 'string') fields.sort(); else fields.sort((a, b) => a - b);
             console.log(fields);
             if(fields.length > 20){
                 alert("類型數量超過20,無法進行有效分類");

@@ -2,12 +2,12 @@ namespace RMIS.Models.sql
 {
     public class GeometryType
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
         public string? Name { get; set; }
-        public string Svg { get; set; } // svg¦WºÙ
-        public int OrderId { get; set; } // ±Æ§Ç
-        public string Kind { get; set; } // ÂI¡B½u¡B­±
-        public string? Color { get; set; } // ÃC¦â
+        public string Svg { get; set; } // svgï¿½Wï¿½ï¿½
+        public int OrderId { get; set; } // ï¿½Æ§ï¿½
+        public string Kind { get; set; } // ï¿½Iï¿½Bï¿½uï¿½Bï¿½ï¿½
+        public string? Color { get; set; } // ï¿½Cï¿½ï¿½
         public ICollection<Layer> Layers { get; set; }
     }
 }

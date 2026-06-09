@@ -1,5 +1,11 @@
 import {layers, layerProps} from '../layers.js';
 
+// VectorGrid 1.3.0 沒有 setStyle，直接更新 options 再 redraw
+function _vtSetStyle(layer, style) {
+    layer.options.vectorTileLayerStyles = style;
+    layer.redraw();
+}
+
 var pointStep1 = `
         <h5 class="offcanvas-title">編輯圖徽 - 編輯類型</h5>
         <div id="editStep1">
@@ -414,18 +420,18 @@ function lineEditStep2(id){
             //     "thickness": "1", 外框厚度
             // }
             // 改變線段的顏色與粗細
-            idList.forEach(function(id){
-                if(layers[id]){
-                    layers[id].eachLayer(function(layer){
-                        if(layer instanceof L.PolylineDecorator) {
-                            console.log("L.PolylineDecorator");
-                            layers[id].removeLayer(layer);
-                            return;
-                        }
-                        layer.setStyle({
-                            color: color,
-                            weight: thickness*thickness
-                        });
+            const w = parseInt(thickness);
+            idList.forEach(function(layerId){
+                const layer = layers[layerId];
+                if (!layer) return;
+                if (typeof layer.eachLayer !== 'function') {
+                    // VectorGrid
+                    _vtSetStyle(layer, {'layer': { color, weight: w }});
+                } else {
+                    // LayerGroup（backward compat）
+                    layer.eachLayer(function(sub){
+                        if (sub instanceof L.PolylineDecorator) { layers[layerId].removeLayer(sub); return; }
+                        sub.setStyle({ color, weight: w * w });
                     });
                 }
             });
@@ -470,78 +476,67 @@ function lineEditStep2(id){
                 return;
             }
 
-            // 找到數值範圍（第一遍遍歷）
-            let minValue = Infinity;
-            let maxValue = -Infinity;
-        
-            idList.forEach(function (id) {
-                if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {    
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            const value = jsonData[formData.field];
-                            if (value < minValue) minValue = value;
-                            if (value > maxValue) maxValue = value;
-                        }
-                    });
+            // 從 layerProps 取得數值範圍（不再解析 popup HTML）
+            const allProps1 = layerProps[id] || [];
+            let minValue = Infinity, maxValue = -Infinity;
+            allProps1.forEach(function(p) {
+                const v = parseFloat(p[formData.field]);
+                if (!isNaN(v)) {
+                    if (v < minValue) minValue = v;
+                    if (v > maxValue) maxValue = v;
                 }
             });
 
-            if (minValue === maxValue) {
+            if (minValue === maxValue || !isFinite(minValue)) {
                 alert("數值範圍過於集中，無法進行有效分層");
                 return;
             }
 
-            // 計算分層區間大小
             let levels = parseInt(formData.level);
             let rangeSize = (maxValue - minValue) / levels;
-
-            // 確保顏色頭尾一致，均勻映射到層級
             const gradientColors = gradientColorsMap[formData.fillcolor];
             let colorSet = [];
             if (levels === gradientColors.length) {
-                colorSet = gradientColors; // 層級數等於顏色數，直接使用
+                colorSet = gradientColors;
             } else {
-                // 均勻分配顏色
                 for (let i = 0; i < levels; i++) {
                     const index = Math.round(i * (gradientColors.length - 1) / (levels - 1));
                     colorSet.push(gradientColors[index]);
                 }
             }
-            
-            console.log(colorSet);
-            idList.forEach(function (id) {
-                if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {
-                        if(layer instanceof L.PolylineDecorator) {
-                            console.log("L.PolylineDecorator");
-                            layers[id].removeLayer(layer);
-                            return;
-                        }                        
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            
-                            const value = jsonData[formData.field];
-                            let colorIndex = Math.floor((value - minValue) / rangeSize);
-                            if (colorIndex >= levels) colorIndex = levels - 1;
-                            const color = colorSet[colorIndex];
-                            if(jsonData[formData.field] == undefined){
-                            }
-                            layer.setStyle({
-                                color: color,
-                                weight: formData.thickness*formData.thickness
-                            });
-                        }
+
+            const field1 = formData.field;
+            const weight1 = parseInt(formData.thickness);
+            idList.forEach(function(layerId) {
+                const layer = layers[layerId];
+                if (!layer) return;
+                if (typeof layer.eachLayer !== 'function') {
+                    // VectorGrid：style function 依屬性值決定顏色
+                    _vtSetStyle(layer, {'layer': function(properties) {
+                        try {
+                            const pd = properties.prop ? JSON.parse(properties.prop.replace(/NaN/g, 'null')) : {};
+                            const v = parseFloat(pd[field1]);
+                            if (isNaN(v)) return { color: colorSet[0], weight: weight1 };
+                            let idx = Math.floor((v - minValue) / rangeSize);
+                            if (idx >= levels) idx = levels - 1;
+                            if (idx < 0)       idx = 0;
+                            return { color: colorSet[idx], weight: weight1 };
+                        } catch(e) { return { color: colorSet[0], weight: weight1 }; }
+                    }});
+                } else {
+                    // LayerGroup
+                    layer.eachLayer(function(sub) {
+                        if (sub instanceof L.PolylineDecorator) { layers[layerId].removeLayer(sub); return; }
+                        const popup = sub.getPopup();
+                        if (!popup) return;
+                        try {
+                            const doc = new DOMParser().parseFromString(popup.getContent(), 'text/html');
+                            const pd = JSON.parse(doc.querySelector('.popupData').textContent.replace(/NaN/g, 'null'));
+                            const v = parseFloat(pd[field1]);
+                            let idx = Math.floor((v - minValue) / rangeSize);
+                            if (idx >= levels) idx = levels - 1;
+                            sub.setStyle({ color: colorSet[idx], weight: weight1 * weight1 });
+                        } catch(e) {}
                     });
                 }
             });
@@ -591,75 +586,51 @@ function lineEditStep2(id){
                 return;
             }
             console.log(formData);
-            // 使用dictionary取得該欄位處重複的值
-            let fieldsMap = {};
-            let fields = [];
-            idList.forEach(function (id) {
-                if (layers[id]) {
-                    layers[id].eachLayer(function (layer) {     
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            
-                            let value = jsonData[formData.field];
-                            // 保持當前 `value` 的原始型態
-                            if (!fieldsMap[value]) {
-                                fieldsMap[value] = true;
-                                fields.push(value);
-                            }   
-                        }
-                    });
-                }
-            });
-            if(typeof(fields[0]) === 'string'){
-                fields.sort();
-            }else{
-                fields.sort((a, b) => a - b);
-            }
-            fields = fields.sort((a, b) => a - b);
-            console.log(fields);
-            if(fields.length > 20){
+            // 從 layerProps 取得唯一類型值（不再解析 popup HTML）
+            const allProps2 = layerProps[id] || [];
+            let fields = [...new Set(allProps2.map(p => p[formData.field]).filter(v => v != null && v !== undefined))];
+            if (typeof fields[0] === 'string') fields.sort();
+            else fields.sort((a, b) => a - b);
+
+            if (fields.length > 20) {
                 alert("類型數量超過20,無法進行有效分類");
                 return;
             }
-            // 取得選擇類別的頭尾顏色
+
             const groupColors = groupColorsMap[formData.fillcolor];
-            // types由小到大排序，並以頭尾之間的顏色均勻分佈
-            let colorSet = [];
-            fields.forEach(function (key, index) {
-                const colorIndex = Math.floor(index / fields.length * (groupColors.length - 1));
-                colorSet.push(groupColors[colorIndex]);
+            let colorSet = fields.map(function(key, index) {
+                return groupColors[Math.floor(index / fields.length * (groupColors.length - 1))];
             });
             colorSet = adjustDuplicateColors(colorSet);
-            console.log(colorSet);
-            idList.forEach(function (id) {
-                if(layers[id]){
-                    layers[id].eachLayer(function (layer) {
-                        if(layer instanceof L.PolylineDecorator) {
-                            console.log("L.PolylineDecorator");
-                            layers[id].removeLayer(layer);
-                            return;
-                        }  
-                        var popup = layer.getPopup();
-                        if (popup) {
-                            var content = popup.getContent();
-                            var parser = new DOMParser();
-                            var doc = parser.parseFromString(content, 'text/html');
-                            var popupData = doc.querySelector('.popupData');
-                            var jsonData = JSON.parse(popupData.textContent.replace(/NaN/g, 'null'));
-                            const value = jsonData[formData.field];
-                            const index = fields.indexOf(value);
-                            if (index === -1) return;
-                            const fillColor = colorSet[index];
-                            layer.setStyle({
-                                color: fillColor,
-                                weight: formData.thickness*formData.thickness,
-                            });
-                        }
+
+            const field2 = formData.field;
+            const weight2 = parseInt(formData.thickness);
+            idList.forEach(function(layerId) {
+                const layer = layers[layerId];
+                if (!layer) return;
+                if (typeof layer.eachLayer !== 'function') {
+                    // VectorGrid：style function 依類型決定顏色
+                    _vtSetStyle(layer, {'layer': function(properties) {
+                        try {
+                            const pd = properties.prop ? JSON.parse(properties.prop.replace(/NaN/g, 'null')) : {};
+                            const idx = fields.indexOf(pd[field2]);
+                            if (idx === -1) return { color: '#888', weight: weight2 };
+                            return { color: colorSet[idx], weight: weight2 };
+                        } catch(e) { return { color: '#888', weight: weight2 }; }
+                    }});
+                } else {
+                    // LayerGroup
+                    layer.eachLayer(function(sub) {
+                        if (sub instanceof L.PolylineDecorator) { layers[layerId].removeLayer(sub); return; }
+                        const popup = sub.getPopup();
+                        if (!popup) return;
+                        try {
+                            const doc = new DOMParser().parseFromString(popup.getContent(), 'text/html');
+                            const pd = JSON.parse(doc.querySelector('.popupData').textContent.replace(/NaN/g, 'null'));
+                            const idx = fields.indexOf(pd[field2]);
+                            if (idx === -1) return;
+                            sub.setStyle({ color: colorSet[idx], weight: weight2 * weight2 });
+                        } catch(e) {}
                     });
                 }
             });

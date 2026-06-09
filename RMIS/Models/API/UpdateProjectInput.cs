@@ -49,6 +49,6 @@
         // 備註
         public string Remarks { get; set; }
         // 街景的 AreaId（null 表示不更新，保留原值）
-        public Guid? StreetViewId { get; set; }
+        public int? StreetViewId { get; set; }
     }
 }

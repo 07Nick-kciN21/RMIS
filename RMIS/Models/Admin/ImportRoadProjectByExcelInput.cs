@@ -17,15 +17,6 @@ namespace RMIS.Models.Admin
         /// </summary>
         public IFormFile? PhotoZipFile { get; set; }
 
-        /// <summary>
-        /// 歷程 Excel 檔案 (.xlsx)
-        /// </summary>
-        public IFormFile? ProcessExcelFile { get; set; }
-
-        /// <summary>
-        /// 歷程文件壓縮檔 (.zip)，目錄結構: {ProjectId}/{Step}/{項次}/{FileName}
-        /// </summary>
-        public IFormFile? ProcessDocZipFile { get; set; }
     }
 
     /// <summary>
@@ -80,35 +71,6 @@ namespace RMIS.Models.Admin
     }
 
     /// <summary>
-    /// Excel 匯入歷程 - 單筆資料
-    /// </summary>
-    public class ExcelProcessRow
-    {
-        public string ProjectId { get; set; } = "";
-        public int Step { get; set; }
-        public int OrderIndex { get; set; }
-        public string District { get; set; } = "";
-        public string RecordType { get; set; } = "";
-        public string RecordTitle { get; set; } = "";
-        public string ExecutionUnit { get; set; } = "";
-        public string ConstructionUnit { get; set; } = "";
-        public string ProjectName { get; set; } = "";
-        public string PreviousMeetingStatus { get; set; } = "";
-        public string PreviousMeetingResolution { get; set; } = "";
-        public string CurrentStatus { get; set; } = "";
-        public string CurrentMeetingResolution { get; set; } = "";
-        public string SupportingDocument { get; set; } = "";
-        // Step 2 專有
-        public string Category { get; set; } = "";
-        // Step 3 專有
-        public string BudgetFiscalYearApprovedAmount { get; set; } = "";
-        public string ContractType { get; set; } = "";
-        public string ConstructionPeriod { get; set; } = "";
-        public string AnnouncementCommencementDate { get; set; } = "";
-        public string AwardCompletionDate { get; set; } = "";
-    }
-
-    /// <summary>
     /// Excel 匯入結果
     /// </summary>
     public class ImportRoadProjectResult
@@ -116,7 +78,6 @@ namespace RMIS.Models.Admin
         public bool Success { get; set; }
         public string Message { get; set; } = "";
         public int ImportedCount { get; set; }
-        public int ProcessImportedCount { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
     }
 }

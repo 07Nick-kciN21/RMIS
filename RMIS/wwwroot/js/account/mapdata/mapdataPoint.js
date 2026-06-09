@@ -1,228 +1,220 @@
-﻿$(document).ready(function () {
-    // 初始化欄位值
+const TABLE_LIMIT = 200;
+
+$(document).ready(function () {
     showLoading();
     initMapdataPoints();
-    $('#goback').on('click', function (e) {
+
+    $('#goback').on('click', function () {
         const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
-        if (returnUrl) {
-            window.location.href = returnUrl;
-        } else {
-            history.back(); // 若沒有 returnUrl 就用瀏覽器返回
-        }
+        if (returnUrl) window.location.href = returnUrl;
+        else history.back();
     });
 });
 
-function initMapdataPoints(){
-    function getQueryParam(key) {
-        let query = window.location.search.substring(1);
-        let vars = query.split("&");
-        for (let i = 0; i < vars.length; i++) {
-            let pair = vars[i].split("=");
-            if (decodeURIComponent(pair[0]) === key) {
-                return decodeURIComponent(pair[1]);
-            }
-        }
-        return null;
-    }
-    var areaId = getQueryParam("areaId");
+function initMapdataPoints() {
+    const areaId = getQueryParam("areaId");
     $.ajax({
         url: `/Mapdata/Get/Point?areaId=${areaId}`,
         type: "GET",
-        processData: false,
-        contentType: false,
-        xhrFields: {
-            withCredentials: true // 確保攜帶 Cookie
-        },
+        xhrFields: { withCredentials: true },
         success: function (data) {
-            if (data.success) {
-                console.log(data);
-                let points = data.points;
-                let tbody = $("#mapdataPointBody");
-                initMap(points);
-                tbody.empty(); // 清空舊資料
-                points.forEach(point => {
-                    // 將 point.Property 格式化成漂亮的 JSON 字串
-                    let infoHtml = '';
-                    const props = point.property ? jsonPrettify(point.property) : {};
-                    for (const key in props) {
-                        infoHtml += `<b>${key}</b>: ${props[key]}<br>`;
-                    }
-                    let row = `
-                        <tr>
-                            <td>${point.index}</td>
-                            <td>${point.latitude}</td>
-                            <td>${point.longitude}</td>
-                            <td style="width: 450px;">${infoHtml}</td>
-                        </tr>
-                    `;
-                    tbody.append(row);
-                });
-                // ✅ 最後關閉 loading
-                setTimeout(() => {
-                    console.log("關閉 loading");
-                    hideLoading();
-                }, 100); // 小延遲避免過快銜接
-            }
+            if (!data.success) { hideLoading(); return; }
+            const points = data.points;
+            initMap(points);
+            renderTable(points);
+            setTimeout(hideLoading, 100);
         },
         error: function (xhr) {
             console.log("取得資料失敗:", xhr.status);
+            hideLoading();
         }
     });
 }
 
-function initMap(mapdataArea){
-    function getQueryParam(key) {
-        let query = window.location.search.substring(1);
-        let vars = query.split("&");
-        for (let i = 0; i < vars.length; i++) {
-            let pair = vars[i].split("=");
-            if (decodeURIComponent(pair[0]) === key) {
-                return decodeURIComponent(pair[1]);
-            }
+// ── 表格渲染（DocumentFragment 批次寫入，最多顯示 TABLE_LIMIT 筆）──────────
+function renderTable(points) {
+    const tbody = document.getElementById('mapdataPointBody');
+    const fragment = document.createDocumentFragment();
+    const limit = Math.min(points.length, TABLE_LIMIT);
+
+    for (let i = 0; i < limit; i++) {
+        const point = points[i];
+        const props = point.property ? jsonPrettify(point.property) : {};
+
+        const tr = document.createElement('tr');
+
+        const tdIdx  = document.createElement('td'); tdIdx.textContent  = point.index;
+        const tdLat  = document.createElement('td'); tdLat.textContent  = point.latitude;
+        const tdLng  = document.createElement('td'); tdLng.textContent  = point.longitude;
+        const tdInfo = document.createElement('td'); tdInfo.style.width = '450px';
+
+        if (props && typeof props === 'object') {
+            Object.entries(props).forEach(([k, v]) => {
+                const b = document.createElement('b');
+                b.textContent = k;
+                tdInfo.appendChild(b);
+                tdInfo.appendChild(document.createTextNode(': ' + v));
+                tdInfo.appendChild(document.createElement('br'));
+            });
+        } else if (props) {
+            tdInfo.textContent = props;
         }
-        return null;
+
+        tr.append(tdIdx, tdLat, tdLng, tdInfo);
+        fragment.appendChild(tr);
     }
-    let kind = getQueryParam("kind");
-    let svg = getQueryParam("svg");
-    // color : #228b22
-    let color = getQueryParam("color");
-    let icon = L.icon({
-        iconUrl: `/img/${svg}`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
-        popupAnchor: [0, -15]
-    });
-    let map = L.map('map').setView([23.5, 121], 17); // 台灣地圖預設中心    
+
+    if (points.length > TABLE_LIMIT) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 4;
+        td.className = 'text-muted text-center small';
+        td.textContent = `顯示前 ${TABLE_LIMIT} 筆，共 ${points.length} 筆`;
+        tr.appendChild(td);
+        fragment.appendChild(tr);
+    }
+
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+}
+
+// ── 地圖渲染 ──────────────────────────────────────────────────────────────
+function initMap(mapdataArea) {
+    const kind  = getQueryParam("kind");
+    const svg   = getQueryParam("svg");
+    const color = getQueryParam("color") || '#3388ff';
+
+    const map = L.map('map').setView([23.5, 121], 17);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap',
         maxZoom: 20
     }).addTo(map);
-    
-    let latlngs = mapdataArea.map(p => [p.latitude, p.longitude]);
-    console.log(latlngs, kind, color);
+
+    const latlngs = mapdataArea.map(p => [p.latitude, p.longitude]);
+
+    // Canvas renderer：用單一 canvas 元素繪製，取代逐條 SVG path，大量節點時顯著加快
+    const canvasRenderer = L.canvas({ padding: 0.5 });
+
     switch (kind) {
-        case "point":
-            console.log("進入point");
-            latlngs.forEach(latlng => {
-                let marker = L.marker(latlng, {
-                    icon: icon,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15],
-                    popupAnchor: [0, -15],
+        case "point": {
+            const icon = L.icon({
+                iconUrl: `/img/${svg}`,
+                iconSize: [30, 30],
+                iconAnchor: [15, 15],
+                popupAnchor: [0, -15]
+            });
+            // MarkerClusterGroup：大量圖標聚合，避免萬筆同時渲染 DOM
+            const cluster = L.markerClusterGroup({
+                maxClusterRadius: 40,
+                disableClusteringAtZoom: 18
+            });
+            mapdataArea.forEach(p => {
+                const marker = L.marker([p.latitude, p.longitude], { icon });
+                const props = p.property ? jsonPrettify(p.property) : {};
+                if (props && typeof props === 'object') {
+                    const info = Object.entries(props)
+                        .map(([k, v]) => `<b>${escapeHtml(String(k))}</b>: ${escapeHtml(String(v))}`)
+                        .join('<br>');
+                    if (info) marker.bindPopup(info);
+                }
+                cluster.addLayer(marker);
+            });
+            cluster.addTo(map);
+            break;
+        }
+
+        case "line": {
+            const polyline = L.polyline(latlngs, { color, renderer: canvasRenderer, smoothFactor: 1.5 }).addTo(map);
+            const popup = buildFeaturePopup(mapdataArea[0]);
+            if (popup) polyline.bindPopup(popup);
+            break;
+        }
+
+        case "plane": {
+            const polygon = L.polygon(latlngs, { color, fillOpacity: 0.3, renderer: canvasRenderer }).addTo(map);
+            const popup = buildFeaturePopup(mapdataArea[0]);
+            if (popup) polygon.bindPopup(popup);
+            break;
+        }
+
+        case "arrowline": {
+            const layer = L.layerGroup().addTo(map);
+            let currentHighlight = null;
+
+            const arrowline = L.polyline(latlngs, { color, renderer: canvasRenderer }).addTo(layer);
+            L.polylineDecorator(arrowline, {
+                patterns: [{
+                    offset: '100%', repeat: 0,
+                    symbol: L.Symbol.arrowHead({
+                        pixelSize: 25,
+                        pathOptions: { fillOpacity: 1, weight: 0, color, interactive: false }
+                    })
+                }]
+            }).addTo(layer);
+
+            arrowline.on('click', function (e) {
+                if (currentHighlight) {
+                    map.removeLayer(currentHighlight);
+                    currentHighlight = null;
+                }
+                currentHighlight = L.polyline(arrowline.getLatLngs(), {
+                    color: invertColor(color), opacity: 0.8, weight: 5
+                }).addTo(layer);
+                map.setView(e.latlng, map.getZoom());
+                map.once('click', function () {
+                    if (currentHighlight) { map.removeLayer(currentHighlight); currentHighlight = null; }
                 });
-                marker.addTo(map);
-                // L.marker(latlng).addTo(map);
             });
             break;
-    
-        case "line":
-            console.log("進入line");
-            L.polyline(latlngs, { color: color }).addTo(map);
-            break;
-    
-        case "plane":
-            console.log("進入plane");
-            L.polygon(latlngs, { color: color, fillOpacity: 0.3 }).addTo(map);
-            break;
-    
-        case "arrowline":
-            function addArrowlineToLayer(points, newLayer, color, name) {
-                function addArrowToLine(line, color) {
-                    var arrow = L.polylineDecorator(line, {
-                        patterns: [
-                            {
-                                offset: '100%',
-                                repeat: 0,      // 不重複，僅在尾端顯示箭頭
-                                symbol: L.Symbol.arrowHead({
-                                    pixelSize: 25,
-                                    pathOptions: {
-                                        fillOpacity: 1,
-                                        weight: 0,
-                                        color: color,
-                                        interactive: false, // 禁用互動
-                                    }
-                                })
-                            }
-                        ]
-                    }).addTo(newLayer);
-                }
-                // 把所有points的[0]取出集合
-                let pointGroup = [];
-                for (let i = 0; i < points.length; i++) {
-                    if (points[i] && points[i][0]) {
-                        pointGroup.push(points[i][0]); // 提取座標點
-                    }
-                }
-                // 建立arrowline
-                let arrowline = L.polyline(pointGroup, {
-                    color: color,
-                }).addTo(newLayer);
-    
-                var prop = points[0][1];
-                // 在尾端添加箭頭
-                addArrowToLine(arrowline, color);
-                arrowline.on('click', function (e) {
-                    if (popupEnabled) {
-                        if (currentArrow) {
-                            map.removeLayer(currentArrow);
-                        }
-                        let inverseColor = getInverseColor(color);
-                        currentArrow = L.polyline(arrowline.getLatLngs(), {
-                            color: inverseColor,
-                            opacity: 0.8
-                        }).addTo(newLayer);
-                        let latLng = e.latlng; // 取得點擊事件中的座標
-                        map.setView(latLng, map.getZoom()); // 將地圖的中央移動到該點，保持當前縮放級別
-    
-                        let mapClickHandler = function (e) {
-                            if (currentArrow) {
-                                map.removeLayer(currentArrow);
-                            }
-                            map.off('click', mapClickHandler);
-                        };
-    
-                        map.on('click', mapClickHandler);
-                    }
-                    else {
-                        arrowline.closePopup();
-                    }
-                });
-            }
-            let points = latlngs.map((pt, index) => [pt, mapdataArea[index].Property]); // [[latlng, property]]
-            let arrowLayer = L.layerGroup().addTo(map);
-            addArrowlineToLayer(points, arrowLayer, color, mapdataArea[0]?.Name || 'Arrowline');
-            break;
-    };
-    
-    // 自動調整視野
-    // ✅ 計算中心並設定地圖視角
-    if (latlngs.length > 0) {
-        let bounds = L.latLngBounds(latlngs);
-        let center = bounds.getCenter();
-        map.setView(center, 17); // 可依需要調整 zoom
+        }
     }
+
+    if (latlngs.length > 0) {
+        map.fitBounds(L.latLngBounds(latlngs));
+    }
+}
+
+// ── 工具函式 ──────────────────────────────────────────────────────────────
+
+// 從第一個點的 property 建立 popup HTML（line / plane / arrowline 共用）
+function buildFeaturePopup(point) {
+    if (!point || !point.property) return null;
+    const props = jsonPrettify(point.property);
+    if (!props || typeof props !== 'object') return null;
+    const html = Object.entries(props)
+        .map(([k, v]) => `<b>${escapeHtml(String(k))}</b>: ${escapeHtml(String(v))}`)
+        .join('<br>');
+    return html || null;
+}
+
+function getQueryParam(key) {
+    return new URLSearchParams(window.location.search).get(key);
+}
+
+function escapeHtml(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function invertColor(hex) {
+    if (!hex || !hex.startsWith('#') || hex.length < 7) return '#ff0000';
+    const r = (255 - parseInt(hex.slice(1, 3), 16)).toString(16).padStart(2, '0');
+    const g = (255 - parseInt(hex.slice(3, 5), 16)).toString(16).padStart(2, '0');
+    const b = (255 - parseInt(hex.slice(5, 7), 16)).toString(16).padStart(2, '0');
+    return `#${r}${g}${b}`;
 }
 
 function jsonPrettify(jsonStr) {
-    if (!jsonStr || jsonStr.trim() === "null") {
-        return "";
-    }
+    if (!jsonStr || jsonStr.trim() === "null") return {};
     try {
-        // 將 NaN 替換為 null
-        jsonStr = jsonStr.replace(/\bNaN\b/g, "null");
-        // 嘗試解析 JSON
-        let obj = JSON.parse(jsonStr);
-        // 轉換為漂亮格式（2空格縮排）
-        return obj;
-    } catch (e) {
-        return jsonStr; // 無法解析時返回原始內容
+        return JSON.parse(jsonStr.replace(/\bNaN\b/g, "null"));
+    } catch {
+        return jsonStr;
     }
 }
 
-function showLoading() {
-    $(".loadingSpinner").show();
-}
-
-function hideLoading() {
-    $(".loadingSpinner").hide();
-}
+function showLoading() { $(".loadingSpinner").show(); }
+function hideLoading() { $(".loadingSpinner").hide(); }
