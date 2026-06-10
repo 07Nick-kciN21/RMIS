@@ -243,8 +243,11 @@ const RoadProjectImport = {
         if (result.success) {
             $resultSection.addClass('success');
             let html = '<div class="result-title">匯入成功</div>';
-            if (result.importedCount > 0) {
-                html += `<div class="result-message">成功匯入 ${result.importedCount} 筆道路專案資料</div>`;
+            const parts = [];
+            if (result.importedCount > 0) parts.push(`新增 ${result.importedCount} 筆`);
+            if (result.updatedCount > 0) parts.push(`更新 ${result.updatedCount} 筆`);
+            if (parts.length > 0) {
+                html += `<div class="result-message">${parts.join('、')}</div>`;
             }
             $resultContent.html(html);
         } else {

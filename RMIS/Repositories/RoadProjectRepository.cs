@@ -50,7 +50,7 @@ namespace RMIS.Repositories
                 }
                 
                 _mapDBContext.RoadProjectProcess1.Add(process);
-
+                await TouchProjectUpdateTimeAsync(process.ProjectId);
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -98,7 +98,7 @@ namespace RMIS.Repositories
                 }
 
                 _mapDBContext.RoadProjectProcess2.Add(process);
-
+                await TouchProjectUpdateTimeAsync(process.ProjectId);
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -146,7 +146,7 @@ namespace RMIS.Repositories
                 }
 
                 _mapDBContext.RoadProjectProcess3.Add(process);
-
+                await TouchProjectUpdateTimeAsync(process.ProjectId);
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -319,6 +319,7 @@ namespace RMIS.Repositories
                     }
 
                     _mapDBContext.RoadProjectProcesses.Add(process);
+                    await TouchProjectUpdateTimeAsync(process.ProjectId);
                     await _mapDBContext.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return ("success", process.ProcessId);
@@ -527,6 +528,7 @@ namespace RMIS.Repositories
                 existing.LandAcquisitionBudget = process.LandAcquisitionBudget;
                 existing.ConstructionBudget = process.ConstructionBudget;
 
+                await TouchProjectUpdateTimeAsync(existing.ProjectId);
                 await _mapDBContext.SaveChangesAsync();
                 return "success";
             }
@@ -715,6 +717,16 @@ namespace RMIS.Repositories
         }
 
         /// <summary>
+        /// 將對應 ProjectId 的 RoadProject.UpdateTime 設為現在（不呼叫 SaveChanges，由呼叫端統一儲存）
+        /// </summary>
+        private async Task TouchProjectUpdateTimeAsync(string? projectId)
+        {
+            if (string.IsNullOrEmpty(projectId)) return;
+            var rp = await _mapDBContext.RoadProjects.FirstOrDefaultAsync(r => r.ProjectId == projectId);
+            if (rp != null) rp.UpdateTime = DateTime.Now;
+        }
+
+        /// <summary>
         /// 還原已刪除的檔案
         /// </summary>
         private async Task RestoreDeletedFilesAsync(List<(string path, byte[] content)> deletedFiles)
@@ -787,6 +799,7 @@ namespace RMIS.Repositories
                 existing.CurrentStatus = process.CurrentStatus;
                 existing.CurrentMeetingResolution = process.CurrentMeetingResolution;
 
+                await TouchProjectUpdateTimeAsync(existing.ProjectId);
                 await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return "success";
@@ -828,6 +841,7 @@ namespace RMIS.Repositories
                 existing.CurrentStatus = process.CurrentStatus;
                 existing.CurrentMeetingResolution = process.CurrentMeetingResolution;
 
+                await TouchProjectUpdateTimeAsync(existing.ProjectId);
                 await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return "success";
@@ -872,6 +886,7 @@ namespace RMIS.Repositories
                 existing.CurrentStatus = process.CurrentStatus;
                 existing.CurrentMeetingResolution = process.CurrentMeetingResolution;
 
+                await TouchProjectUpdateTimeAsync(existing.ProjectId);
                 await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return "success";

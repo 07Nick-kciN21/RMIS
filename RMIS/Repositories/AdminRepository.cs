@@ -1263,7 +1263,9 @@ namespace RMIS.Repositories
                 var endBudget = data.Budgets.TotalBudgetRange.End * 10000;
                 query = query.Where(rp => rp.TotalBudget >= startBudget && rp.TotalBudget <= endBudget);
             }
-            var roadProjects = await query.OrderBy(rp => rp.Id).ToListAsync();
+            var roadProjects = await query
+                .OrderByDescending(rp => rp.UpdateTime ?? rp.CreateTime)
+                .ToListAsync();
             return roadProjects;
         }
 
@@ -1552,7 +1554,9 @@ namespace RMIS.Repositories
             try
             {
                 int importedCount = 0;
+                int updatedCount = 0;
                 var rows = new List<ExcelRoadProjectRow>();
+                var existingIdSet = new HashSet<string>();
 
                 // ── 道路專案 Excel ──
                 if (input.ExcelFile != null && input.ExcelFile.Length > 0)
@@ -1577,21 +1581,26 @@ namespace RMIS.Repositories
                         return result;
                     }
 
-                    // 2. 檢查重複的 ProjectId
+                    // 2. 區分新增 / 更新
                     var projectIds = rows.Select(r => r.ProjectId).Where(id => !string.IsNullOrEmpty(id)).ToList();
-                    var existingIds = await _mapDBContext.RoadProjects
+                    existingIdSet = (await _mapDBContext.RoadProjects
                         .Where(rp => projectIds.Contains(rp.ProjectId))
                         .Select(rp => rp.ProjectId)
-                        .ToListAsync();
-
-                    if (existingIds.Count > 0)
-                    {
-                        result.Success = false;
-                        result.Message = $"以下專案代號已存在: {string.Join(", ", existingIds)}";
-                        return result;
-                    }
+                        .ToListAsync()).ToHashSet();
 
                     // 3. 解壓縮照片 ZIP（如果有）
+                    // 更新的專案先清除舊照片目錄，確保解壓後為全新內容
+                    if (input.PhotoZipFile != null && input.PhotoZipFile.Length > 0)
+                    {
+                        var photoBasePath = ResolvePath(_filePaths.RoadProjectPhoto);
+                        foreach (var id in existingIdSet)
+                        {
+                            var oldDir = Path.Combine(photoBasePath, id);
+                            if (Directory.Exists(oldDir))
+                                Directory.Delete(oldDir, recursive: true);
+                        }
+                    }
+
                     var photoDict = new Dictionary<string, List<string>>();
                     if (input.PhotoZipFile != null && input.PhotoZipFile.Length > 0)
                     {
@@ -1627,13 +1636,21 @@ namespace RMIS.Repositories
                         return result;
                     }
 
-                    // 4. 建立專案資料
+                    // 4. 建立或更新專案資料
                     foreach (var row in rows)
                     {
                         try
                         {
-                            await CreateRoadProjectFromExcelRow(row, photoDict);
-                            importedCount++;
+                            if (existingIdSet.Contains(row.ProjectId))
+                            {
+                                await UpdateRoadProjectFromExcelRow(row, photoDict);
+                                updatedCount++;
+                            }
+                            else
+                            {
+                                await CreateRoadProjectFromExcelRow(row, photoDict);
+                                importedCount++;
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -1646,9 +1663,11 @@ namespace RMIS.Repositories
 
                 await transaction.CommitAsync();
 
-                // commit 後，針對沒有座標的專案在背景查詢 Nominatim
+                // commit 後，針對沒有座標的「新增」專案在背景查詢 Nominatim
+                // 更新的專案若原本已有座標（Points 未被清除），不再觸發 geocoding
                 var rowsToGeocode = rows
-                    .Where(r => string.IsNullOrWhiteSpace(r.ExpansionRangeJson) &&
+                    .Where(r => !existingIdSet.Contains(r.ProjectId) &&
+                                string.IsNullOrWhiteSpace(r.ExpansionRangeJson) &&
                                 (!string.IsNullOrWhiteSpace(r.StartPoint) || !string.IsNullOrWhiteSpace(r.EndPoint)))
                     .Select(r => (r.ProjectId, r.AdministrativeDistrict, r.StartPoint, r.EndPoint))
                     .ToList();
@@ -1657,8 +1676,12 @@ namespace RMIS.Repositories
                     _ = Task.Run(() => GeocodeAndUpdateDbAsync(rowsToGeocode));
 
                 result.Success = true;
-                result.Message = importedCount > 0 ? $"成功匯入 {importedCount} 筆專案" : "匯入完成";
+                var parts = new List<string>();
+                if (importedCount > 0) parts.Add($"新增 {importedCount} 筆");
+                if (updatedCount > 0) parts.Add($"更新 {updatedCount} 筆");
+                result.Message = parts.Count > 0 ? $"匯入完成：{string.Join("、", parts)}" : "匯入完成";
                 result.ImportedCount = importedCount;
+                result.UpdatedCount = updatedCount;
                 result.Errors = errors;
                 return result;
             }
@@ -1718,7 +1741,6 @@ namespace RMIS.Repositories
                         ReviewResult = worksheet.Cells[row, 23].Text?.Trim() ?? "",
                         ExpansionRangeJson = worksheet.Cells[row, 24].Text?.Trim() ?? "",
                         StreetViewPhotoJson = worksheet.Cells[row, 25].Text?.Trim() ?? "",
-                        Progress = ParseInt(worksheet.Cells[row, 26].Text)
                     };
 
                     // 自動組合起訖位置
@@ -1800,6 +1822,173 @@ namespace RMIS.Repositories
         }
 
         /// <summary>
+        /// 從 Excel 行更新已存在的道路專案
+        /// </summary>
+        private async Task UpdateRoadProjectFromExcelRow(ExcelRoadProjectRow row, Dictionary<string, List<string>> photoDict)
+        {
+            var distName = row.AdministrativeDistrict;
+            var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == distName)?.Id
+                           ?? _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == distName + "區")?.Id
+                           ?? _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == distName.TrimEnd('區'))?.Id;
+            if (adminDistId == null)
+                throw new InvalidOperationException($"找不到行政區「{row.AdministrativeDistrict}」，請確認行政區名稱");
+
+            var exLayerId  = await _mapDBContext.Layers.Where(l => l.Name == "預拓範圍").Select(l => l.Id).FirstOrDefaultAsync();
+            var svLayerId  = await _mapDBContext.Layers.Where(l => l.Name == "街景照片").Select(l => l.Id).FirstOrDefaultAsync();
+            if (exLayerId == 0)
+                throw new InvalidOperationException("找不到圖層「預拓範圍」，請確認圖層資料是否存在");
+            if (svLayerId == 0)
+                throw new InvalidOperationException("找不到圖層「街景照片」，請確認圖層資料是否存在");
+
+            var roadProject = await _mapDBContext.RoadProjects
+                .FirstAsync(rp => rp.ProjectId == row.ProjectId);
+
+            // 更新所有欄位
+            roadProject.Proposer             = row.Proposer;
+            roadProject.AdministrativeDistrict= row.AdministrativeDistrict;
+            roadProject.StartPoint           = row.StartPoint;
+            roadProject.EndPoint             = row.EndPoint;
+            roadProject.StartEndLocation     = row.StartEndLocation;
+            roadProject.RoadLength           = row.RoadLength;
+            roadProject.CurrentRoadWidth     = row.CurrentRoadWidth;
+            roadProject.PlannedRoadWidth     = row.PlannedRoadWidth;
+            roadProject.PublicLand           = row.PublicLand;
+            roadProject.PrivateLand          = row.PrivateLand;
+            roadProject.PublicPrivateLand    = row.PublicPrivateLand;
+            roadProject.ConstructionBudget   = row.ConstructionBudget;
+            roadProject.LandAcquisitionBudget= row.LandAcquisitionBudget;
+            roadProject.CompensationBudget   = row.CompensationBudget;
+            roadProject.TotalBudget          = row.TotalBudget;
+            roadProject.Remarks              = row.Remarks;
+            roadProject.ReviewYear           = row.ReviewYear;
+            roadProject.CaseType             = row.CaseType;
+            roadProject.ProjectName          = row.ProjectName;
+            roadProject.RCCount              = row.RCCount;
+            roadProject.TinHouseCount        = row.TinHouseCount;
+            roadProject.ReviewResult         = row.ReviewResult;
+            roadProject.CoordinateChecked    = !string.IsNullOrWhiteSpace(row.ExpansionRangeJson) ? true
+                                             : (!string.IsNullOrWhiteSpace(row.StartPoint) || !string.IsNullOrWhiteSpace(row.EndPoint)) ? null
+                                             : false;
+            roadProject.UpdateTime           = DateTime.Now;
+
+            var projectPropObj = new Dictionary<string, string>
+            {
+                { "提案人", row.Proposer },
+                { "行政區", row.AdministrativeDistrict },
+                { "起訖位置", row.StartEndLocation },
+                { "道路長度", row.RoadLength },
+                { "現況路寬", row.CurrentRoadWidth },
+                { "計畫路寬", row.PlannedRoadWidth },
+                { "公有土地", row.PublicLand },
+                { "私有土地", row.PrivateLand },
+                { "公私土地", row.PublicPrivateLand },
+                { "工程經費", row.ConstructionBudget.ToString() },
+                { "用地經費", row.LandAcquisitionBudget.ToString() },
+                { "補償經費", row.CompensationBudget.ToString() },
+                { "合計經費", row.TotalBudget.ToString() },
+                { "審議年度", row.ReviewYear },
+                { "案件類型", row.CaseType },
+                { "工程名稱", row.ProjectName },
+                { "RC數量", row.RCCount },
+                { "鐵皮屋數量", row.TinHouseCount },
+                { "審議結果", row.ReviewResult },
+                { "備註", row.Remarks }
+            };
+            var projectProp = JsonConvert.SerializeObject(projectPropObj);
+
+            // 重建預拓範圍 Points
+            // Excel 未提供座標時保留現有 Points，避免覆蓋已人工驗證的座標
+            var newRangePoints = ParseCoordinatesJson(row.ExpansionRangeJson);
+            if (roadProject.PlannedExpansionId.HasValue)
+            {
+                var expansionArea = await _mapDBContext.Areas.FindAsync(roadProject.PlannedExpansionId.Value);
+                if (expansionArea != null)
+                {
+                    expansionArea.Name = $"{row.StartEndLocation} - 預拓範圍";
+                    expansionArea.AdminDistId = adminDistId ?? 0;
+
+                    if (newRangePoints.Count > 0)
+                    {
+                        var oldPoints = _mapDBContext.Points.Where(p => p.AreaId == expansionArea.Id);
+                        _mapDBContext.Points.RemoveRange(oldPoints);
+                        await _mapDBContext.SaveChangesAsync();
+                    }
+
+                    var rangePoints = newRangePoints;
+                    for (int i = 0; i < rangePoints.Count; i++)
+                    {
+                        await _mapDBContext.Points.AddAsync(new Point
+                        {
+                            Index = i,
+                            Latitude = rangePoints[i].lat,
+                            Longitude = rangePoints[i].lng,
+                            AreaId = expansionArea.Id,
+                            Property = i == 0 ? projectProp : null
+                        });
+                    }
+                }
+            }
+
+            // 重建街景照片 DB 紀錄（舊目錄已在呼叫端解壓前清除）
+            var photoCoords = ParsePhotoCoordinatesJson(row.StreetViewPhotoJson);
+            if (roadProject.StreetViewId.HasValue)
+            {
+                var svArea = await _mapDBContext.Areas.FindAsync(roadProject.StreetViewId.Value);
+                if (svArea != null)
+                {
+                    _mapDBContext.Points.RemoveRange(_mapDBContext.Points.Where(p => p.AreaId == svArea.Id));
+                    await _mapDBContext.SaveChangesAsync();
+
+                    if (photoCoords.Count > 0)
+                    {
+                        svArea.Name = $"{row.StartEndLocation} - 街景照片";
+                        svArea.AdminDistId = adminDistId ?? 0;
+                        for (int i = 0; i < photoCoords.Count; i++)
+                        {
+                            await _mapDBContext.Points.AddAsync(new Point
+                            {
+                                Index = i,
+                                Latitude = photoCoords[i].lat,
+                                Longitude = photoCoords[i].lng,
+                                AreaId = svArea.Id,
+                                Property = $"{{\"url\": \"{row.ProjectId}/{photoCoords[i].photoName}\"}}"
+                            });
+                        }
+                    }
+                    else
+                    {
+                        _mapDBContext.Areas.Remove(svArea);
+                        roadProject.StreetViewId = null;
+                    }
+                }
+            }
+            else if (photoCoords.Count > 0)
+            {
+                var newSvArea = new Area
+                {
+                    Name = $"{row.StartEndLocation} - 街景照片",
+                    ConstructionUnit = "工務局",
+                    AdminDistId = adminDistId ?? 0,
+                    LayerId = svLayerId
+                };
+                await _mapDBContext.Areas.AddAsync(newSvArea);
+                await _mapDBContext.SaveChangesAsync();
+                roadProject.StreetViewId = newSvArea.Id;
+                for (int i = 0; i < photoCoords.Count; i++)
+                {
+                    await _mapDBContext.Points.AddAsync(new Point
+                    {
+                        Index = i,
+                        Latitude = photoCoords[i].lat,
+                        Longitude = photoCoords[i].lng,
+                        AreaId = newSvArea.Id,
+                        Property = $"{{\"url\": \"{row.ProjectId}/{photoCoords[i].photoName}\"}}"
+                    });
+                }
+            }
+        }
+
+        /// <summary>
         /// 從 Excel 行建立道路專案
         /// </summary>
         private async Task CreateRoadProjectFromExcelRow(ExcelRoadProjectRow row, Dictionary<string, List<string>> photoDict)
@@ -1841,7 +2030,6 @@ namespace RMIS.Repositories
                 CoordinateChecked = !string.IsNullOrWhiteSpace(row.ExpansionRangeJson) ? true
                                   : (!string.IsNullOrWhiteSpace(row.StartPoint) || !string.IsNullOrWhiteSpace(row.EndPoint)) ? null
                                   : false,
-                Progress = Math.Clamp(row.Progress, 0, 100)
             };
 
             // 建立 Property JSON
@@ -2361,6 +2549,7 @@ namespace RMIS.Repositories
                 if (projectInput.StreetViewId.HasValue)
                     roadProject.StreetViewId = projectInput.StreetViewId;
 
+                roadProject.UpdateTime = DateTime.Now;
                 await _mapDBContext.SaveChangesAsync();
 
                 // 取得與此專案對應的預拓範圍屬性點

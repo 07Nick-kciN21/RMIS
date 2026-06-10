@@ -88,21 +88,6 @@ namespace RMIS.Controllers
             return Ok(project);
         }
 
-        [HttpPost("UpdateProgress")]
-        public async Task<IActionResult> UpdateProgress([FromBody] UpdateProgressInput input)
-        {
-            var project = await _mapDBContext.RoadProjects.FirstOrDefaultAsync(p => p.ProjectId == input.ProjectId);
-            if (project == null && int.TryParse(input.ProjectId, out int g))
-                project = await _mapDBContext.RoadProjects.FirstOrDefaultAsync(p => p.Id == g);
-            if (project == null)
-                return NotFound(new { success = false, message = $"找不到專案 ID: {input.ProjectId}" });
-
-            project.Progress = Math.Clamp(input.Progress, 0, 100);
-            await _mapDBContext.SaveChangesAsync();
-            return Ok(new { success = true, progress = project.Progress });
-        }
-
-        public class UpdateProgressInput { public string ProjectId { get; set; } public int Progress { get; set; } }
 
         /// <summary>
         /// 新增道路專案

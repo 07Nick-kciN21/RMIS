@@ -83,40 +83,6 @@ const ProcessBox = {
             self.downloadFile(fileId, fileName);
         });
 
-        // 點擊進度文字 → 切換成 input 編輯
-        $('#page-process').on('click', '#process-progress-text', function() {
-            const current = parseInt($(this).text()) || 0;
-            $('#progress-edit-input').val(current);
-            $('#process-progress-text').hide();
-            $('#progress-edit-wrap').show();
-            $('#progress-edit-input').focus().select();
-        });
-
-        function commitProgressEdit() {
-            const v = Math.min(100, Math.max(0, parseInt($('#progress-edit-input').val()) || 0));
-            $('#progress-edit-wrap').hide();
-            $('#process-progress-text').show().text(`${v}%`);
-            $('#process-progress-path').attr('stroke-dasharray', `${v}, 100`);
-            if (self.projectId) {
-                fetch('/api/RoadProject/UpdateProgress', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ projectId: self.projectId, progress: v })
-                }).catch(err => console.error('進度儲存失敗:', err));
-            }
-        }
-
-        $(document).on('blur', '#progress-edit-input', function() {
-            commitProgressEdit();
-        });
-
-        $(document).on('keydown', '#progress-edit-input', function(e) {
-            if (e.key === 'Enter') $(this).blur();
-            if (e.key === 'Escape') {
-                $('#progress-edit-wrap').hide();
-                $('#process-progress-text').show();
-            }
-        });
 
         self.initModalEvents();
 
@@ -146,9 +112,6 @@ const ProcessBox = {
         $('#process-budget').text(project.budget || '-');
         $('#process-pm').text(project.pm || '-');
 
-        const progress = project.progress || 0;
-        $('#process-progress-path').attr('stroke-dasharray', `${progress}, 100`);
-        $('#process-progress-text').text(`${progress}%`);
     },
 
     fetchAllProcessData: function(projectId) {

@@ -59,11 +59,6 @@ namespace RMIS.Models.Admin
         public string StreetViewPhotoJson { get; set; } = "";
 
         /// <summary>
-        /// 施工進度（0-100）
-        /// </summary>
-        public int Progress { get; set; } = 0;
-
-        /// <summary>
         /// 座標是否由 OpenStreetMap API 自動取得（非 Excel 原始資料）
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
@@ -78,6 +73,7 @@ namespace RMIS.Models.Admin
         public bool Success { get; set; }
         public string Message { get; set; } = "";
         public int ImportedCount { get; set; }
+        public int UpdatedCount { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
     }
 }

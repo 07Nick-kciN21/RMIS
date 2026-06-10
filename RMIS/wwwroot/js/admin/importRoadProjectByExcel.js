@@ -124,10 +124,11 @@
             });
             html += '</ul>';
             $details.innerHTML = html;
-        } else if (data.importedCount) {
-            $details.innerHTML = `<p>成功匯入 ${data.importedCount} 筆專案資料</p>`;
         } else {
-            $details.innerHTML = '';
+            const parts = [];
+            if (data.importedCount) parts.push(`新增 ${data.importedCount} 筆`);
+            if (data.updatedCount) parts.push(`更新 ${data.updatedCount} 筆`);
+            $details.innerHTML = parts.length ? `<p>${parts.join('、')}</p>` : '';
         }
 
         // 滾動到結果區域
@@ -156,7 +157,7 @@
             '道路長度', '現況路寬', '計畫路寬', '公有土地', '私有土地', '公私土地',
             '工程經費', '用地經費', '補償經費', '合計經費', '備註',
             '審議年度', '案件類型', '工程名稱', 'RC數量', '鐵皮屋數量', '審議結果',
-            '拓寬範圍座標', '街景照片座標', '施工進度'
+            '拓寬範圍座標', '街景照片座標'
         ];
 
         const sampleData = [

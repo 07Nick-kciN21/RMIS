@@ -74,14 +74,12 @@ namespace RMIS.Models.sql
         public int? StreetViewId { get; set; }
         // 新增時間
         public DateTime? CreateTime { get; set; }
+        // 最後更新時間
+        public DateTime? UpdateTime { get; set; }
         /// <summary>
         /// 座標是否已確認（透過 OpenStreetMap 自動取得的座標預設為 false）
         /// </summary>
         public bool? CoordinateChecked { get; set; }
 
-        /// <summary>
-        /// 施工進度（0-100）
-        /// </summary>
-        public int? Progress { get; set; } = 0;
     }
 }
