@@ -199,6 +199,7 @@ const RoadProjectEdit = {
      * 從 API 載入現有座標點並渲染
      */
     loadPoints: async function(projectId) {
+        showLoading('載入座標中...', '#right-box');
         try {
             const response = await fetch(`/api/RoadProject/getPoints/${projectId}`);
             if (!response.ok) return;
@@ -249,6 +250,8 @@ const RoadProjectEdit = {
             }
         } catch(err) {
             console.error('載入座標點失敗:', err);
+        } finally {
+            hideLoading('#right-box');
         }
     },
 

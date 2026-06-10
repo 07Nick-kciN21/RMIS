@@ -96,6 +96,7 @@ const RoadProjectView = {
         })
         .catch(error => {
             console.error('載入專案失敗:', error);
+            $('.view-loading').remove();
             self.showError('載入失敗，請稍後再試');
         });
     },

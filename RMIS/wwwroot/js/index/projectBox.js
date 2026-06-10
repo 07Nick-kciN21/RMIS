@@ -629,12 +629,13 @@ const ProjectBox = {
                     });
                 }
             }
-            hideLoading();
         })
         .catch(error => {
-            hideLoading();
             console.error('定位失敗:', error);
             alert('定位失敗，請稍後再試');
+        })
+        .finally(() => {
+            hideLoading();
         });
     },
 
