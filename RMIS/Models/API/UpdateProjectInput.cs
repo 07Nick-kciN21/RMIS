@@ -28,14 +28,14 @@
         public int PrivateLand { get; set; }
         // 公私土地數量
         public int PublicPrivateLand { get; set; }
-        // 工程經費（單位：萬元）
-        public long ConstructionBudget { get; set; }
-        // 用地經費（單位：萬元）
-        public long LandAcquisitionBudget { get; set; }
-        // 補償經費（單位：萬元）
-        public long CompensationBudget { get; set; }
-        // 合計經費（單位：萬元）
-        public long TotalBudget { get; set; }
+        // 工程經費（單位：元）
+        public int ConstructionBudget { get; set; }
+        // 用地經費（單位：元）
+        public int LandAcquisitionBudget { get; set; }
+        // 補償經費（單位：元）
+        public int CompensationBudget { get; set; }
+        // 合計經費（單位：元）
+        public int TotalBudget { get; set; }
         // 審議年度
         public string ReviewYear { get; set; }
         // 案件類型

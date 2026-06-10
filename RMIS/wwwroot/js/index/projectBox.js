@@ -485,6 +485,8 @@ const ProjectBox = {
             return;
         }
 
+        showLoading('定位中...');
+
         // 呼叫 API 取得專案的座標點資料
         fetch(`/api/MapAPI/GetPointsByProjectId?projectId=${projectId}`, {
             method: 'POST'
@@ -611,21 +613,26 @@ const ProjectBox = {
                 allCoords.push([point.latitude, point.longitude]);
             });
 
-            // ── 視圖定位（保留左側偏移邏輯）──
+            // ── 視圖定位（左側面板偏移）──
             if (allCoords.length > 0) {
-                let centerLat = 0, centerLng = 0;
-                allCoords.forEach(c => { centerLat += c[0]; centerLng += c[1]; });
-                centerLat /= allCoords.length;
-                centerLng /= allCoords.length;
-
-                self.$indexMap.setView([centerLat, centerLng], 18);
-
-                const mapSize = self.$indexMap.getSize();
-                const offsetX = -mapSize.x * 0.25;
-                self.$indexMap.panBy([offsetX, 0], { animate: true, duration: 0.5 });
+                const leftPanelWidth = document.getElementById('left-box')?.offsetWidth ?? 0;
+                const padding = 40;
+                if (allCoords.length === 1) {
+                    self.$indexMap.setView(allCoords[0], 17, { animate: false });
+                    if (leftPanelWidth > 0) {
+                        self.$indexMap.panBy([-leftPanelWidth / 2, 0], { animate: true });
+                    }
+                } else {
+                    self.$indexMap.fitBounds(L.latLngBounds(allCoords), {
+                        paddingTopLeft:     [leftPanelWidth + padding, padding],
+                        paddingBottomRight: [padding, padding]
+                    });
+                }
             }
+            hideLoading();
         })
         .catch(error => {
+            hideLoading();
             console.error('定位失敗:', error);
             alert('定位失敗，請稍後再試');
         });

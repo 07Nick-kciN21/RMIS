@@ -30,6 +30,10 @@ const RoadProjectEdit = {
     addingRangePoint: false,
     addingPhotoPoint: false,
 
+    // ── 路名搜尋 ──
+    searchTimer: null,
+    searchResults: { start: [], end: [] },
+
     /**
      * 初始化編輯模組
      */
@@ -55,6 +59,41 @@ const RoadProjectEdit = {
         // 綁定起訖位置自動組合
         $(document).on('blur', '#edit-start-point, #edit-end-point', function() {
             self.combineLocation();
+        });
+
+        // 綁定起點路名搜尋
+        $(document).on('input', '#edit-start-point', function() {
+            self.startCoord = null;
+            self.syncRangeTable();
+            self.scheduleSearch('start', $(this).val().trim());
+        });
+
+        // 綁定終點路名搜尋
+        $(document).on('input', '#edit-end-point', function() {
+            self.endCoord = null;
+            self.syncRangeTable();
+            self.scheduleSearch('end', $(this).val().trim());
+        });
+
+        // 點擊搜尋結果項目
+        $(document).on('click', '#page-project-edit .autocomplete-item', function() {
+            const type = $(this).data('type');
+            const idx = parseInt($(this).data('index'));
+            self.selectLocation(type, idx);
+        });
+
+        // 點擊外部關閉下拉列表
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#page-project-edit .autocomplete-wrapper').length) {
+                $('#page-project-edit .autocomplete-dropdown').addClass('hidden');
+            }
+        });
+
+        // Escape 鍵關閉下拉列表
+        $(document).on('keydown', '#edit-start-point, #edit-end-point', function(e) {
+            if (e.key === 'Escape') {
+                $('#page-project-edit .autocomplete-dropdown').addClass('hidden');
+            }
         });
 
         // 綁定拓寬範圍表格緯經度輸入（保持焦點）
@@ -142,6 +181,9 @@ const RoadProjectEdit = {
         this.photoList = [];
         this.addingRangePoint = false;
         this.addingPhotoPoint = false;
+        this.searchResults = { start: [], end: [] };
+        $('#edit-start-point-dropdown').addClass('hidden').empty();
+        $('#edit-end-point-dropdown').addClass('hidden').empty();
         $('#btn-edit-toggle-add-range-point').removeClass('active');
         $('#btn-edit-toggle-add-photo-point').removeClass('active');
         $('#edit-preview-map').removeClass('adding-point');
@@ -280,6 +322,73 @@ const RoadProjectEdit = {
             $location.val(endPoint);
             $location.data('auto-combined', true);
         }
+    },
+
+    // ──── 路名搜尋 ────
+
+    scheduleSearch: function(type, query) {
+        clearTimeout(this.searchTimer);
+        const dropdownId = type === 'start' ? 'edit-start-point-dropdown' : 'edit-end-point-dropdown';
+
+        if (query.length < 2) {
+            $(`#${dropdownId}`).addClass('hidden').empty();
+            return;
+        }
+
+        const self = this;
+        this.searchTimer = setTimeout(function() {
+            self.searchNominatim(type, query, dropdownId);
+        }, 300);
+    },
+
+    searchNominatim: function(type, query, dropdownId) {
+        const self = this;
+        const district = $('#edit-district').val();
+        const q = district ? `${district}${query}` : query;
+        const params = new URLSearchParams({ q, ...(district && { district }) });
+        fetch(`/api/MapAPI/SearchAddress?${params}`)
+            .then(response => response.json())
+            .then(results => {
+                self.searchResults[type] = results;
+                const $dropdown = $(`#${dropdownId}`);
+                $dropdown.empty();
+
+                if (results.length === 0) {
+                    $dropdown.addClass('hidden');
+                    return;
+                }
+
+                results.forEach((item, idx) => {
+                    $dropdown.append(
+                        `<div class="autocomplete-item" data-type="${type}" data-index="${idx}">
+                            ${item.content}
+                        </div>`
+                    );
+                });
+                $dropdown.removeClass('hidden');
+            })
+            .catch(err => console.error('地址搜尋失敗:', err));
+    },
+
+    selectLocation: function(type, index) {
+        const item = this.searchResults[type][index];
+        if (!item) return;
+
+        const shortName = item.content;
+        const [lng, lat] = item.location.split(',').map(Number);
+        const coord = { lat, lng };
+
+        if (type === 'start') {
+            $('#edit-start-point').val(shortName);
+            $('#edit-start-point-dropdown').addClass('hidden');
+            this.startCoord = coord;
+        } else {
+            $('#edit-end-point').val(shortName);
+            $('#edit-end-point-dropdown').addClass('hidden');
+            this.endCoord = coord;
+        }
+        this.syncRangeTable();
+        this.combineLocation();
     },
 
     // ──── 拓寬範圍 ────

@@ -11,10 +11,10 @@
         public int PublicLand { get; set; }
         public int PrivateLand { get; set; }
         public int PublicPrivateLand { get; set; }
-        public long ConstructionBudget { get; set; }
-        public long LandAcquisitionBudget { get; set; }
-        public long CompensationBudget { get; set; }
-        public long TotalBudget { get; set; }
+        public int ConstructionBudget { get; set; }
+        public int LandAcquisitionBudget { get; set; }
+        public int CompensationBudget { get; set; }
+        public int TotalBudget { get; set; }
         public string ReviewYear { get; set; }
         public string CaseType { get; set; }
         public string RCCount { get; set; }

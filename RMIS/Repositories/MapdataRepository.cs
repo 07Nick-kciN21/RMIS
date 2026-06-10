@@ -507,7 +507,7 @@ namespace RMIS.Repositories
                         float.TryParse(val.ToString(), out var result) ? result : 0f;
 
                     int ParseMoney(string? raw) =>
-                        int.TryParse(raw?.Replace("萬", "").Trim(), out var value) ? value * 10000 : 0;
+                        int.TryParse(raw?.Replace("萬", "").Trim(), out var value) ? value : 0;
 
                     var parseRoadWidth = (string roadWidthStr) =>
                     {

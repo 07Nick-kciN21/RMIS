@@ -70,11 +70,17 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">起點</label>
-                                <input type="text" id="edit-start-point" name="startPoint" class="form-control">
+                                <div class="autocomplete-wrapper">
+                                    <input type="text" id="edit-start-point" name="startPoint" class="form-control" placeholder="輸入路名搜尋..." autocomplete="off">
+                                    <div id="edit-start-point-dropdown" class="autocomplete-dropdown hidden"></div>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">終點</label>
-                                <input type="text" id="edit-end-point" name="endPoint" class="form-control">
+                                <div class="autocomplete-wrapper">
+                                    <input type="text" id="edit-end-point" name="endPoint" class="form-control" placeholder="輸入路名搜尋..." autocomplete="off">
+                                    <div id="edit-end-point-dropdown" class="autocomplete-dropdown hidden"></div>
+                                </div>
                             </div>
                             <div class="form-group form-group-wide">
                                 <label class="form-label">起訖位置</label>
@@ -234,28 +240,28 @@
                                 <label class="form-label">工程經費</label>
                                 <div class="input-with-unit">
                                     <input type="number" id="edit-construction-budget" name="constructionBudget" class="form-control" value="0">
-                                    <span class="input-unit">萬</span>
+
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">用地經費</label>
                                 <div class="input-with-unit">
                                     <input type="number" id="edit-land-budget" name="landAcquisitionBudget" class="form-control" value="0">
-                                    <span class="input-unit">萬</span>
+
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">補償經費</label>
                                 <div class="input-with-unit">
                                     <input type="number" id="edit-compensation-budget" name="compensationBudget" class="form-control" value="0">
-                                    <span class="input-unit">萬</span>
+
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">合計經費</label>
                                 <div class="input-with-unit">
                                     <input type="number" id="edit-total-budget" name="totalBudget" class="form-control" value="0" readonly>
-                                    <span class="input-unit">萬</span>
+
                                 </div>
                             </div>
                         </div>

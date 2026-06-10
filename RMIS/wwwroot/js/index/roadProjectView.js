@@ -252,7 +252,20 @@ const RoadProjectView = {
 
     formatBudget: function(budget) {
         if (budget === undefined || budget === null) return '-';
-        return `${(budget / 10000).toLocaleString()} 萬`;
+        if (budget === 0) return '0 元';
+        const wan = Math.floor(budget / 10000);
+        const remainder = budget % 10000;
+        if (wan >= 10000) {
+            const yi = Math.floor(wan / 10000);
+            const wanPart = wan % 10000;
+            let s = `${yi.toLocaleString()}億`;
+            if (wanPart > 0) s += `${wanPart.toLocaleString()}萬`;
+            if (remainder > 0) s += `${remainder.toLocaleString()}元`;
+            return s;
+        }
+        if (wan > 0 && remainder > 0) return `${wan.toLocaleString()}萬${remainder.toLocaleString()}元`;
+        if (wan > 0) return `${wan.toLocaleString()}萬元`;
+        return `${remainder.toLocaleString()}元`;
     },
 
     formatDate: function(dateString) {
@@ -291,6 +304,7 @@ const RoadProjectView = {
      */
     locateProject: function(projectId) {
         const self = this;
+        showLoading('定位中...');
         fetch(`/api/RoadProject/getPoints/${projectId}`)
         .then(response => response.json())
         .then(data => {
@@ -390,12 +404,28 @@ const RoadProjectView = {
                 allCoords.push([p.latitude, p.longitude]);
             });
 
-            // 自動縮放至所有點位
-            if (allCoords.length > 1) {
-                self.$indexMap.fitBounds(L.latLngBounds(allCoords), { padding: [50, 50] });
-            } else if (allCoords.length === 1) {
-                self.$indexMap.setView(allCoords[0], 17);
+            // 自動縮放至所有點位（右側面板偏移）
+            if (allCoords.length > 0) {
+                const rightPanelWidth = document.getElementById('right-box')?.offsetWidth ?? 0;
+                const padding = 40;
+                if (allCoords.length === 1) {
+                    self.$indexMap.setView(allCoords[0], 17, { animate: false });
+                    if (rightPanelWidth > 0) {
+                        self.$indexMap.panBy([rightPanelWidth / 2, 0], { animate: true });
+                    }
+                } else {
+                    self.$indexMap.fitBounds(L.latLngBounds(allCoords), {
+                        paddingTopLeft:     [padding, padding],
+                        paddingBottomRight: [rightPanelWidth + padding, padding]
+                    });
+                }
             }
+            hideLoading();
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('定位失敗:', error);
+            alert('定位失敗，請稍後再試');
         });
     },
 

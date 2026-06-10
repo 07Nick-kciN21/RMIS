@@ -1332,10 +1332,10 @@ namespace RMIS.Repositories
                     PublicLand = roadProjectInput.PublicLand.ToString(),
                     PrivateLand = roadProjectInput.PrivateLand.ToString(),
                     PublicPrivateLand = roadProjectInput.PublicPrivateLand.ToString(),
-                    ConstructionBudget = roadProjectInput.ConstructionBudget * 10000,
-                    LandAcquisitionBudget = roadProjectInput.LandBudget * 10000,
-                    CompensationBudget = roadProjectInput.CompensationBudget * 10000,
-                    TotalBudget = roadProjectInput.TotalBudget * 10000,
+                    ConstructionBudget = roadProjectInput.ConstructionBudget,
+                    LandAcquisitionBudget = roadProjectInput.LandBudget,
+                    CompensationBudget = roadProjectInput.CompensationBudget,
+                    TotalBudget = roadProjectInput.TotalBudget,
                     Remarks = roadProjectInput.Remark == null ? "無" : roadProjectInput.Remark,
                     ReviewYear = roadProjectInput.ReviewYear ?? "",
                     CaseType = roadProjectInput.CaseType ?? "",
@@ -2111,10 +2111,10 @@ namespace RMIS.Repositories
                         { "公有土地", project.PublicLand },
                         { "私有土地", project.PrivateLand },
                         { "公私土地", project.PublicPrivateLand },
-                        { "工程經費", (project.ConstructionBudget * 10000).ToString() },
-                        { "用地經費", (project.LandAcquisitionBudget * 10000).ToString() },
-                        { "補償經費", (project.CompensationBudget * 10000).ToString() },
-                        { "合計經費", (project.TotalBudget * 10000).ToString() },
+                        { "工程經費", project.ConstructionBudget.ToString() },
+                        { "用地經費", project.LandAcquisitionBudget.ToString() },
+                        { "補償經費", project.CompensationBudget.ToString() },
+                        { "合計經費", project.TotalBudget.ToString() },
                         { "審議年度", project.ReviewYear },
                         { "案件類型", project.CaseType },
                         { "工程名稱", project.ProjectName },
@@ -2347,10 +2347,7 @@ namespace RMIS.Repositories
                 {
                     return false;
                 }
-                projectInput.ConstructionBudget *= 10000;
-                projectInput.LandAcquisitionBudget *= 10000;
-                projectInput.CompensationBudget *= 10000;
-                projectInput.TotalBudget *= 10000;
+                // 經費直接使用原始值（元），不再轉換單位
                 var config = new MapperConfiguration(cfg =>
                 {
                     cfg.CreateMap<UpdateProjectInput, RoadProject>()
