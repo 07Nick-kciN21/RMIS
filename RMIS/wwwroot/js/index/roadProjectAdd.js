@@ -331,11 +331,9 @@ const RoadProjectAdd = {
         const coord = { lat, lng };
 
         if (type === 'start') {
-            $('#add-start-point').val(shortName);
             $('#add-start-point-dropdown').addClass('hidden');
             this.startCoord = coord;
         } else {
-            $('#add-end-point').val(shortName);
             $('#add-end-point-dropdown').addClass('hidden');
             this.endCoord = coord;
         }

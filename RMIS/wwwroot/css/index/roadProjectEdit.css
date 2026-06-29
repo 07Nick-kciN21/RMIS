@@ -587,3 +587,46 @@
         justify-content: center;
     }
 }
+
+/* ===== Autocomplete Dropdown ===== */
+#page-project-edit .autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+#page-project-edit .autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#page-project-edit .autocomplete-dropdown.hidden {
+    display: none;
+}
+
+#page-project-edit .autocomplete-item {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #334155;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    line-height: 1.4;
+}
+
+#page-project-edit .autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+#page-project-edit .autocomplete-item:hover {
+    background-color: #eff6ff;
+    color: #2563eb;
+}

@@ -382,11 +382,9 @@ const RoadProjectEdit = {
         const coord = { lat, lng };
 
         if (type === 'start') {
-            $('#edit-start-point').val(shortName);
             $('#edit-start-point-dropdown').addClass('hidden');
             this.startCoord = coord;
         } else {
-            $('#edit-end-point').val(shortName);
             $('#edit-end-point-dropdown').addClass('hidden');
             this.endCoord = coord;
         }
