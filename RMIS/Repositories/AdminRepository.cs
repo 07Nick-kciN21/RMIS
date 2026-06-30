@@ -2552,18 +2552,6 @@ namespace RMIS.Repositories
                 roadProject.UpdateTime = DateTime.Now;
                 await _mapDBContext.SaveChangesAsync();
 
-                // 取得與此專案對應的預拓範圍屬性點
-                var roadProjectPropItem = await _mapDBContext.Points
-                    .Where(p => p.AreaId == roadProject.PlannedExpansionId)
-                    .OrderBy(p => p.Index)
-                    .FirstOrDefaultAsync();
-
-                if (roadProjectPropItem == null)
-                {
-                    _logger.LogError($"Id {projectInput.Id} 不存在預拓範圍資訊");
-                    return false;
-                }
-
                 // 欄位對應表（UpdateProjectInput => Property 中的中文欄位）
                 var propMap = new Dictionary<string, string>
                 {
