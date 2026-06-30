@@ -2576,19 +2576,72 @@ namespace RMIS.Repositories
                     { "Remarks", "備註" }
                 };
 
-                // 將原本 Property 字串轉換為 Dictionary
-                var originalPropDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(roadProjectPropItem.Property ?? "{}");
-
                 // 擷取 projectInput 中對應的欄位，產生更新用 Dictionary
                 var updatedProp = MapperHelper.A2B<UpdateProjectInput, RoadProjectProp>(projectInput);
                 var updatedDict = updatedProp.GetType().GetProperties()
-                    .Where(p => propMap.ContainsKey(p.Name)) // 只處理定義過的欄位
+                    .Where(p => propMap.ContainsKey(p.Name))
                     .ToDictionary(
-                        prop => propMap[prop.Name], // 中文欄位名稱
+                        prop => propMap[prop.Name],
                         prop => prop.GetValue(updatedProp)?.ToString() ?? ""
                     );
 
-                // 將更新值合併進原本的字典
+                // 取得與此專案對應的預拓範圍屬性點；若 Area 或 Point 不存在則建立
+                var roadProjectPropItem = roadProject.PlannedExpansionId.HasValue
+                    ? await _mapDBContext.Points
+                        .Where(p => p.AreaId == roadProject.PlannedExpansionId)
+                        .OrderBy(p => p.Index)
+                        .FirstOrDefaultAsync()
+                    : null;
+
+                if (roadProjectPropItem == null)
+                {
+                    // 確認 Area 是否存在（PlannedExpansionId 有值但 Area 被刪除的情況）
+                    Area expansionArea = roadProject.PlannedExpansionId.HasValue
+                        ? await _mapDBContext.Areas.FindAsync(roadProject.PlannedExpansionId.Value)
+                        : null;
+
+                    if (expansionArea == null)
+                    {
+                        var expansionLayerId = await _mapDBContext.Layers
+                            .Where(l => l.Name == "預拓範圍")
+                            .Select(l => l.Id)
+                            .FirstOrDefaultAsync();
+                        if (expansionLayerId == 0)
+                            throw new InvalidOperationException("找不到圖層「預拓範圍」");
+
+                        var adminDistId = await _mapDBContext.AdminDist
+                            .Where(ad => ad.Town == projectInput.AdministrativeDistrict)
+                            .Select(ad => ad.Id)
+                            .FirstOrDefaultAsync();
+
+                        expansionArea = new Area
+                        {
+                            Name = $"{projectInput.StartEndLocation} - 預拓範圍",
+                            ConstructionUnit = "工務局",
+                            AdminDistId = adminDistId,
+                            LayerId = expansionLayerId
+                        };
+                        await _mapDBContext.Areas.AddAsync(expansionArea);
+                        await _mapDBContext.SaveChangesAsync();
+
+                        roadProject.PlannedExpansionId = expansionArea.Id;
+                        await _mapDBContext.SaveChangesAsync();
+                    }
+
+                    // 建立屬性點（Index=0，座標留 0，Property 存 JSON）
+                    roadProjectPropItem = new Point
+                    {
+                        Index = 0,
+                        Latitude = 0,
+                        Longitude = 0,
+                        AreaId = expansionArea.Id
+                    };
+                    await _mapDBContext.Points.AddAsync(roadProjectPropItem);
+                    await _mapDBContext.SaveChangesAsync();
+                }
+
+                // 將更新值合併進原本的 Property JSON
+                var originalPropDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(roadProjectPropItem.Property ?? "{}");
                 foreach (var kvp in updatedDict)
                 {
                     originalPropDict[kvp.Key] = kvp.Value;
