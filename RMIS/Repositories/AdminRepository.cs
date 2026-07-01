@@ -1182,12 +1182,6 @@ namespace RMIS.Repositories
                 query = query.Where(rp => rp.ProjectName != null && rp.ProjectName.Contains(data.ProjectName));
             }
             
-            // 終點(模糊搜尋)
-            if (!string.IsNullOrEmpty(data.EndPoint))
-            {
-                query = query.Where(rp => rp.EndPoint.Contains(data.EndPoint));
-            }
-  
             // 現況路寬(開頭查詢)
             if (data.CurrentRoadWidth != null)
             {
