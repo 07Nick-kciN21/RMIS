@@ -170,7 +170,8 @@ function initMeasure() {
 
     $indexMap.pm.removeControls();
 
-    $('.mBtn').on('click', function() {
+    $('.mBtn').on('click', function(e) {
+        e.stopPropagation();
         if (selectTool) {
             selectTool.removeClass('active');
             $indexMap.pm.disableDraw();

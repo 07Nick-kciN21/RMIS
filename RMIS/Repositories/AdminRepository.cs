@@ -1176,10 +1176,10 @@ namespace RMIS.Repositories
                 query = query.Where(rp => rp.AdministrativeDistrict == data.AdminDistrict);
             }
 
-            // 起點(模糊搜尋)
-            if (!string.IsNullOrEmpty(data.StartPoint))
+            // 專案名稱(模糊搜尋)
+            if (!string.IsNullOrEmpty(data.ProjectName))
             {
-                query = query.Where(rp => rp.StartPoint.Contains(data.StartPoint));
+                query = query.Where(rp => rp.ProjectName != null && rp.ProjectName.Contains(data.ProjectName));
             }
             
             // 終點(模糊搜尋)

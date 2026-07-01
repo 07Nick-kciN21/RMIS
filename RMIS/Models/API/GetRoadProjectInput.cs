@@ -5,11 +5,8 @@ namespace RMIS.Models.API
         // 行政區
         public string? AdminDistrict { get; set; }
 
-        // 起點
-        public string? StartPoint { get; set; }
-
-        // 終點
-        public string? EndPoint { get; set; }
+        // 專案名稱
+        public string? ProjectName { get; set; }
 
         // 道路長度
         public int? RoadLength { get; set; }

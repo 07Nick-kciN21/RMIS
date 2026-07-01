@@ -142,8 +142,7 @@ const ProjectBox = {
         // 封裝表單資料為 JSON 物件（修正為與 panel 一致的巢狀結構）
         const formData = {
             adminDistrict: adminDistrict, // 行政區名稱
-            startPoint: self.convertInputValue($('#projectStartPoint').val()), // 起點
-            endPoint: self.convertInputValue($('#projectEndPoint').val()), // 終點
+            projectName: self.convertInputValue($('#projectProjectName').val()), // 專案名稱
             roadLength: self.convertInputValue($('#projectRoadLength').val()), // 道路長度
             currentRoadWidth: self.convertInputValue($('#projectCurrentRoadWidth').val()), // 現況路寬
             plannedRoadWidth: self.convertInputValue($('#projectPlannedRoadWidth').val()), // 計畫路寬
@@ -248,7 +247,7 @@ const ProjectBox = {
                     ${hasUpdatePermission ? `<td><button class="btn btn-sm btn-outline-secondary btn-ProcessView" data-id="${item.projectId}">歷程</button></td>` : ''}
                     <td>${item.proposer || ''}</td>
                     <td>${item.administrativeDistrict || ''}</td>
-                    <td class="td-clickable" style="cursor: pointer; color: #2563eb;">${item.startEndLocation || ''}</td>
+                    <td class="td-clickable" style="cursor: pointer; color: #2563eb;">${item.projectName || ''}</td>
                     <td>${totalBudgetDisplay}</td>
                 </tr>`;
 
@@ -358,7 +357,7 @@ const ProjectBox = {
     formatProjectData: function(apiData) {
         return {
             id: apiData.projectId || '-',
-            name: apiData.startEndLocation || apiData.name || '未命名專案',
+            name: apiData.projectName || apiData.name || '未命名專案',
             createDate: this.parseDate(apiData.createTime) || '-',
             budget: apiData.totalBudget ? (apiData.totalBudget / 10000) + ' 萬' : '-',
             pm: apiData.proposer || apiData.pm || '-',
