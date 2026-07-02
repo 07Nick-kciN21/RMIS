@@ -266,7 +266,7 @@ const RoadProjectEdit = {
         $('#edit-start-point').val(project.startPoint || '');
         $('#edit-end-point').val(project.endPoint || '');
         $('#edit-location').val(project.startEndLocation || '');
-        $('#edit-location').data('auto-combined', false);
+        $('#edit-location').data('auto-combined', true);
         $('#edit-road-length').val(project.roadLength || '');
 
         $('#edit-current-width').val(project.currentRoadWidth || '');
