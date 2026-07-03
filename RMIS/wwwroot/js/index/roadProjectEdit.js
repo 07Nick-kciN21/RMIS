@@ -592,9 +592,9 @@ const RoadProjectEdit = {
             doubleClickZoom: false
         }).setView([24.993, 121.301], 14);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
+        L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
+            attribution: '© 國土測繪中心',
+            maxZoom: 20
         }).addTo(this.previewMap);
 
         this.previewRangeLayer = L.layerGroup().addTo(this.previewMap);
