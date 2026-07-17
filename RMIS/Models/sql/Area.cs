@@ -10,5 +10,8 @@
         public int LayerId { get; set; }
         public Layer Layer { get; set; }
         public ICollection<Point> Points { get; set; }
+
+        // 由 DB trigger（trg_Points_SyncAreaBBox）依 Points 自動維護，應用程式不寫入
+        public NetTopologySuite.Geometries.Geometry? BBox { get; set; }
     }
 }

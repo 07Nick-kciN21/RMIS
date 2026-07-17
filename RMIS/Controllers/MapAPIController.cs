@@ -656,28 +656,22 @@ namespace RMIS.Controllers
 
                 var (west, south, east, north) = TileBounds(z, x, y);
                 var factory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var envelope = factory.CreatePolygon(
+                [
+                    new Coordinate(west, south),
+                    new Coordinate(east, south),
+                    new Coordinate(east, north),
+                    new Coordinate(west, north),
+                    new Coordinate(west, south),
+                ]);
 
-                // Step 1：計算此圖層所有 Area 的包圍框，再在記憶體內做磚片相交判斷
-                //   - GroupBy.Select（無 HAVING）：EF Core 各版本均可正確轉換為 SQL
-                //   - 記憶體過濾：避免 HAVING 語法的 EF Core 翻譯問題
+                // Step 1：用 Areas.BBox（由 trg_Points_SyncAreaBBox 觸發器維護、有空間索引）
+                //   直接篩出跟本 tile 相交的 Area，取代原本對 Points 表全量 GroupBy 聚合再記憶體篩選的作法
                 //   - 不快取空磚：防止舊錯誤結果卡在快取中造成線段持續消失
-                var areaBboxes = await _mapDBContext.Points
-                    .Where(p => p.Area.LayerId == layerId)
-                    .GroupBy(p => p.AreaId)
-                    .Select(g => new {
-                        AreaId  = g.Key,
-                        MaxLat  = g.Max(p => p.Latitude),
-                        MinLat  = g.Min(p => p.Latitude),
-                        MaxLon  = g.Max(p => p.Longitude),
-                        MinLon  = g.Min(p => p.Longitude)
-                    })
+                var areaIdsInTile = await _mapDBContext.Areas
+                    .Where(a => a.LayerId == layerId && a.BBox != null && a.BBox.Intersects(envelope))
+                    .Select(a => a.Id)
                     .ToListAsync();
-
-                var areaIdsInTile = areaBboxes
-                    .Where(a => a.MaxLat >= south && a.MinLat <= north
-                             && a.MaxLon >= west  && a.MinLon <= east)
-                    .Select(a => a.AreaId)
-                    .ToList();
 
                 if (areaIdsInTile.Count == 0)
                 {

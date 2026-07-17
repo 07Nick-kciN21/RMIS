@@ -56,6 +56,15 @@ namespace RMIS.Data
                 .Property(p => p.GeoLocation)
                 .HasComputedColumnSql("geography::Point([Latitude], [Longitude], 4326)", stored: true);
 
+            // Areas.BBox 由 trg_Points_SyncAreaBBox 觸發器維護，EF 只讀不寫，
+            // 避免其他地方對 Area 的 Update 意外把 DB 算好的值覆寫成 null
+            modelBuilder.Entity<Area>()
+                .Property(a => a.BBox)
+                .Metadata.SetBeforeSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
+            modelBuilder.Entity<Area>()
+                .Property(a => a.BBox)
+                .Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
+
             // 交通事故 101~113（民國年）各自對應獨立資料表
             for (int year = 101; year <= 113; year++)
             {
