@@ -9,61 +9,19 @@ let _indexMap;
 let _globalListenersBound = false;
 
 // ── Loading 狀態管理 ───────────────────────────────────────────────
-// 兩個獨立計數器：
-//   _bgLoadingCount  — 背景屬性載入（GetAreasByLayer），同時禁用地圖互動
-//   _tileLoadingCount — VectorGrid 磚片請求（vtile），只顯示遮罩不禁用互動
+// VectorGrid 磚片請求（vtile）：只顯示遮罩，不禁用地圖互動
 
-let _bgLoadingCount   = 0;
 let _tileLoadingCount = 0;
-const _HANDLERS = ['dragging', 'scrollWheelZoom', 'touchZoom', 'doubleClickZoom', 'boxZoom', 'keyboard'];
-let _savedHandlerStates = {};
 
-function _anyLoading()  { return _bgLoadingCount > 0 || _tileLoadingCount > 0; }
-
-// 屬性載入：顯示遮罩 + 禁用地圖互動
-function _incBgLoading(n) {
-    if (_bgLoadingCount === 0) {
-        showLoading('圖資屬性載入中...', '.div0');
-        if (_indexMap) {
-            _HANDLERS.forEach(function (h) {
-                if (_indexMap[h]) {
-                    _savedHandlerStates[h] = _indexMap[h].enabled();
-                    _indexMap[h].disable();
-                }
-            });
-        }
-    }
-    _bgLoadingCount += n;
-}
-function _decBgLoading(n) {
-    _bgLoadingCount = Math.max(0, _bgLoadingCount - n);
-    if (_bgLoadingCount === 0) {
-        // 還原互動
-        if (_indexMap) {
-            _HANDLERS.forEach(function (h) {
-                if (_indexMap[h] && _savedHandlerStates[h]) _indexMap[h].enable();
-            });
-            _savedHandlerStates = {};
-        }
-        // 若磚片仍在載入，遮罩繼續顯示（僅更換文字）
-        if (_tileLoadingCount > 0) {
-            showLoading('圖磚載入中...', '.div0');
-        } else {
-            hideLoading('.div0');
-        }
-    }
-}
-
-// 磚片載入：只顯示遮罩，不禁用互動
 function _incTileLoading() {
     _tileLoadingCount++;
-    if (_tileLoadingCount === 1 && _bgLoadingCount === 0) {
+    if (_tileLoadingCount === 1) {
         showLoading('圖磚載入中...', '.div0');
     }
 }
 function _decTileLoading() {
     _tileLoadingCount = Math.max(0, _tileLoadingCount - 1);
-    if (_tileLoadingCount === 0 && _bgLoadingCount === 0) {
+    if (_tileLoadingCount === 0) {
         hideLoading('.div0');
     }
 }
@@ -234,8 +192,6 @@ export function addLayer2Map(id ,LayerData) {
         _indexMap._viewportListenerBound = true;
     }
 
-    const bgFetches = [];   // 收集背景屬性載入的 Promise
-
     LayerData.forEach(function (Ldata) {
         // point 圖層改用 viewport 模式
         if (Ldata.kind === 'point') {
@@ -281,42 +237,8 @@ export function addLayer2Map(id ,LayerData) {
         vtLayer._originalOpacity = 1;
         _indexMap.addLayer(vtLayer);
         layers[Ldata.id] = vtLayer;
-
-        // 背景載入屬性資料
-        bgFetches.push(
-            $.ajax({
-                url: `/api/MapAPI/GetAreasByLayer?LayerId=${Ldata.id}`,
-                method: 'POST',
-                success: function (result) {
-                    if (!result.areas) return;
-                    result.areas.forEach(function (area) {
-                        (area.points || []).forEach(function (point) {
-                            let item2 = null;
-                            if (point.prop && point.prop.trim() !== '') {
-                                try { item2 = JSON.parse(point.prop.replace(/NaN/g, 'null')); } catch (e) {}
-                            }
-                            if (item2) {
-                                layerProps[pipelineId].push({ '座標': [point.latitude, point.longitude], ...item2 });
-                            }
-                        });
-                    });
-                }
-            })
-        );
+        // GetAreasByLayer 改為按需載入，見 loadLayerProps()，由屬性查詢面板等實際消費者觸發
     });
-
-    // 背景屬性載入：地圖 loading 遮罩 + layerBar 小 spinner
-    if (bgFetches.length > 0) {
-        _incBgLoading(bgFetches.length);
-
-        const $spinner = $('<span class="spinner-border spinner-border-sm text-secondary ms-1" role="status" title="屬性資料載入中" style="vertical-align:middle;"></span>');
-        $(`#layerBar_${pipelineId} .layerName`).append($spinner);
-
-        $.when(...bgFetches).always(function () {
-            $spinner.remove();
-            _decBgLoading(bgFetches.length);
-        });
-    }
 }
 
 // 建立新物件的圖層
@@ -446,6 +368,60 @@ export function addFocusLayer2Map(id, ofType, LayerData, startDate, endDate){
             }
         });
     });
+}
+
+const _layerPropsLoading = {}; // pipelineId -> 進行中的載入 Promise（避免同一 pipeline 重複發request）
+
+// 依 pipelineId 取得該 pipeline 下所有圖層的完整屬性資料，若尚未載入則觸發 GetAreasByLayer 抓取
+export function loadLayerProps(pipelineId) {
+    if (layerProps[pipelineId] && layerProps[pipelineId].length > 0) {
+        return Promise.resolve(layerProps[pipelineId]);
+    }
+    if (_layerPropsLoading[pipelineId]) {
+        return _layerPropsLoading[pipelineId];
+    }
+    if (layerProps[pipelineId] == null) layerProps[pipelineId] = [];
+
+    const promise = new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${pipelineId}`,
+            method: 'POST'
+        }).then(function (idResult) {
+            console.log('[loadLayerProps] GetLayerIdByPipeline result:', idResult);
+            const layerIds = idResult.layerIdList || [];
+            const fetches = layerIds.map(function (layerId) {
+                return $.ajax({
+                    url: `/api/MapAPI/GetAreasByLayer?LayerId=${layerId}`,
+                    method: 'POST'
+                }).then(function (result) {
+                    console.log(`[loadLayerProps] GetAreasByLayer(${layerId}) areas count:`, result.areas ? result.areas.length : 'null/undefined', result);
+                    if (!result.areas) return;
+                    result.areas.forEach(function (area) {
+                        (area.points || []).forEach(function (point) {
+                            let item2 = null;
+                            if (point.prop && point.prop.trim() !== '') {
+                                try { item2 = JSON.parse(point.prop.replace(/NaN/g, 'null')); } catch (e) { console.warn('[loadLayerProps] JSON parse failed for point.prop:', point.prop, e); }
+                            } else {
+                                console.log('[loadLayerProps] point.prop empty:', point);
+                            }
+                            if (item2) {
+                                layerProps[pipelineId].push({ '座標': [point.latitude, point.longitude], ...item2 });
+                            }
+                        });
+                    });
+                });
+            });
+            $.when.apply($, fetches).then(function () {
+                console.log(`[loadLayerProps] pipeline ${pipelineId} final layerProps length:`, layerProps[pipelineId].length);
+                resolve(layerProps[pipelineId]);
+            }).fail(function (err) { console.error('[loadLayerProps] GetAreasByLayer fail', err); reject(err); });
+        }).fail(function (err) { console.error('[loadLayerProps] GetLayerIdByPipeline fail', err); reject(err); });
+    }).finally(function () {
+        delete _layerPropsLoading[pipelineId];
+    });
+
+    _layerPropsLoading[pipelineId] = promise;
+    return promise;
 }
 
 export function getLayerProps(id) {

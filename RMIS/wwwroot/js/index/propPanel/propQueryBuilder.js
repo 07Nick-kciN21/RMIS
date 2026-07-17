@@ -1,7 +1,12 @@
 ﻿// 建立queryBuild
 export function updatePropQuery(props) {
-    const propsDict = buildPropsDict(props);
+    const propsDict = buildPropsDict(props || []);
     const filters = buildQueryFilters(propsDict);
+
+    if (filters.length === 0) {
+        $('#propQuery').empty().text('此圖層無可查詢的屬性資料');
+        return;
+    }
 
     $('#propQuery').queryBuilder({
         filters: filters,

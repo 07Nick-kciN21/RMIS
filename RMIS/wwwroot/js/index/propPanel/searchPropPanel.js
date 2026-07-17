@@ -1,8 +1,9 @@
 ﻿// Import required modules
-import { layerProps } from '../ctrlMap/layers.js';
+import { loadLayerProps } from '../ctrlMap/layers.js';
 import { Map } from '../map_test.js';
 import { updatePropQuery, filterPropsByRules, parseRules } from './propQueryBuilder.js';
 import { handleDrawShape, filterPropsByShape, clearShape, getShape } from './shapeSearch.js';
+import { showLoading, hideLoading } from '../../loading.js';
 // Global variables
 let props;
 let currentPage = 1;
@@ -78,8 +79,19 @@ function setupSelectChangeHandlers() {
         if (pselectedId == -1) {
             return;
         };
-        props = layerProps[pselectedId];
-        updatePropQuery(props);
+        showLoading('圖層資料載入中...', '#searchPropPanel');
+        loadLayerProps(pselectedId)
+            .then(function (result) {
+                props = result;
+                updatePropQuery(props);
+            })
+            .catch(function (err) {
+                console.error('載入圖層屬性失敗', err);
+                alert('載入圖層屬性失敗，請稍後再試');
+            })
+            .finally(function () {
+                hideLoading('#searchPropPanel');
+            });
     });
 
     // 依圖形塗層選擇
@@ -91,11 +103,22 @@ function setupSelectChangeHandlers() {
             $('#shapeGroup').addClass('hide');
             return;
         }
-        // 選擇後顯示圖形選項
-        props = layerProps[gselectedId];
-        $('#shapeGroup').removeClass('hide');
-        // 開始繪圖
-        handleDrawShape($indexMap, gselectedId);
+        showLoading('圖層資料載入中...', '#searchPropPanel');
+        loadLayerProps(gselectedId)
+            .then(function (result) {
+                props = result;
+                // 選擇後顯示圖形選項
+                $('#shapeGroup').removeClass('hide');
+                // 開始繪圖
+                handleDrawShape($indexMap, gselectedId);
+            })
+            .catch(function (err) {
+                console.error('載入圖層屬性失敗', err);
+                alert('載入圖層屬性失敗，請稍後再試');
+            })
+            .finally(function () {
+                hideLoading('#searchPropPanel');
+            });
     });
 }
 
