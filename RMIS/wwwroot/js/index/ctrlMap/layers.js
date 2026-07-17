@@ -193,7 +193,7 @@ async function _loadViewportPoints(layerId) {
             if (item2 != null) layerProps[pipelineId].push(merged);
             return [[p.latitude, p.longitude], p.property, merged, null];
         });
-        addMarkersToLayer(points, vl.leafletLayer, data.svg, data.layerName);
+        addMarkersToLayer(points, vl.leafletLayer, data.svg, data.layerName, data.color);
         console.log(`Viewport loaded ${data.total} points for layer ${layerId}`);
     } catch (e) {
         if (e.name === 'AbortError') return;
@@ -353,7 +353,7 @@ function createNewLayer(result, pipelineId) {
             return [[point.latitude, point.longitude], point.prop, merged, null];
         });
         if (result.type === "point") {
-            addMarkersToLayer(points, newLayer, result.svg, result.name);
+            addMarkersToLayer(points, newLayer, result.svg, result.name, result.color);
         } else if (result.type === "line") {
             addLineToLayer(points, newLayer, result.color, result.name);
         } else if (result.type === "plane") {

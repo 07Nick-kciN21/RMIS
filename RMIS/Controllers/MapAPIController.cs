@@ -149,10 +149,18 @@ namespace RMIS.Controllers
                 if (layer == null)
                     return NotFound(new { success = false, message = "找不到圖層" });
 
+                var factory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                var envelope = factory.CreatePolygon(
+                [
+                    new Coordinate(req.MinLon, req.MinLat),
+                    new Coordinate(req.MaxLon, req.MinLat),
+                    new Coordinate(req.MaxLon, req.MaxLat),
+                    new Coordinate(req.MinLon, req.MaxLat),
+                    new Coordinate(req.MinLon, req.MinLat),
+                ]);
+
                 var points = await _mapDBContext.Points
-                    .Where(p => p.Area.LayerId == req.LayerId
-                             && p.Latitude  >= req.MinLat && p.Latitude  <= req.MaxLat
-                             && p.Longitude >= req.MinLon && p.Longitude <= req.MaxLon)
+                    .Where(p => p.Area.LayerId == req.LayerId && p.GeoLocation!.Intersects(envelope))
                     .OrderBy(p => p.AreaId)
                     .ThenBy(p => p.Index)
                     .Select(p => new

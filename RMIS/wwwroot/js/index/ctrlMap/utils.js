@@ -6,9 +6,10 @@ let currentPolygon = null; // 用於保存當前的多邊形
 let currentArrow = null; // 用於保存當前的箭頭線段
 let noticeLayer = L.layerGroup();
 // 將標記加入圖層
-export function addMarkersToLayer(points, newLayer, svg, name) {
+export function addMarkersToLayer(points, newLayer, svg, name, color) {
     var $indexMap = Map.getIndexMap();
     const useCircle = !svg || svg.trim() === '';
+    const markerColor = color || '#3388ff';
     const icon = useCircle ? null : L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
@@ -17,7 +18,7 @@ export function addMarkersToLayer(points, newLayer, svg, name) {
     });
     points.forEach(function (point) {
         let marker = useCircle
-            ? L.circleMarker(point[0], { radius: 6, color: '#3388ff', fillColor: '#3388ff', fillOpacity: 0.8, weight: 1 })
+            ? L.circleMarker(point[0], { radius: 6, color: markerColor, fillColor: markerColor, fillOpacity: 0.8, weight: 1 })
             : L.marker(point[0], { icon });
         marker.addTo(newLayer);
         let prop = point[1];

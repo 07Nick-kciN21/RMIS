@@ -107,7 +107,7 @@ builder.Services.AddControllersWithViews()
 // 註冊 MapDBContext
 builder.Services.AddDbContext<MapDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MapDbConnectionString"),
-        x => x.EnableRetryOnFailure()));
+        x => { x.EnableRetryOnFailure(); x.UseNetTopologySuite(); }));
 
 // 註冊 HttpClient
 builder.Services.AddHttpClient();

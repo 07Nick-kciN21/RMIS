@@ -470,6 +470,7 @@ function pointEditStep2(id){
             idList.forEach(function (id) {
                 if(layers[id]){
                     layers[id].eachLayer(function (layer) {
+                        if (typeof layer.setIcon !== 'function') return; // 無svg的圖層以circleMarker渲染，跳過
                         layer.setIcon(svgDivIcon);
                     });
                 }
@@ -531,6 +532,7 @@ function pointEditStep2(id){
             idList.forEach(function (id) {
                 if (layers[id]) {
                     layers[id].eachLayer(function (layer) {
+                        if (typeof layer.setIcon !== 'function') return; // 無svg的圖層以circleMarker渲染，跳過
                         var popup = layer.getPopup();
                         if (popup) {
                             var content = popup.getContent();
@@ -644,6 +646,7 @@ function pointEditStep2(id){
             idList.forEach(function (id) {
                 if (layers[id]) {
                     layers[id].eachLayer(function (layer) {
+                        if (typeof layer.setIcon !== 'function') return; // 無svg的圖層以circleMarker渲染，跳過
                         var popup = layer.getPopup();
                         if (popup) {
                             var content = popup.getContent();

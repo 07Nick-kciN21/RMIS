@@ -14,9 +14,10 @@ export function add2List(id, name, datas, metaData) {
     // pipeline下的layer
     datas.forEach(function (data) {
         layersId.push(data.id);
+        var iconStyle = data.svg ? `style="background-image: url('/img/${data.svg}');"` : '';
         var section = `
             <div class="section" id="section_${data.id}">
-                <span class="section_icon" style="background-image: url('/img/${data.svg}');"></span>
+                <span class="section_icon" ${iconStyle}></span>
                 ${data.name}
             </div>
         `;

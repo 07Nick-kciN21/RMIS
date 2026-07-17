@@ -9,5 +9,7 @@
         public string? Property { get; set; }
         public int AreaId { get; set; }
         public Area Area { get; set; }
+        public NetTopologySuite.Geometries.Point? GeoLocation { get; set; }
+
     }
 }

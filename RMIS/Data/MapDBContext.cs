@@ -52,6 +52,9 @@ namespace RMIS.Data
                 .Property(r => r.CreateTime)
                 .HasDefaultValueSql("GETUTCDATE()");
 
+            modelBuilder.Entity<Point>()
+                .Property(p => p.GeoLocation)
+                .HasComputedColumnSql("geography::Point([Latitude], [Longitude], 4326)", stored: true);
 
             // 交通事故 101~113（民國年）各自對應獨立資料表
             for (int year = 101; year <= 113; year++)
