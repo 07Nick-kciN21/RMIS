@@ -65,6 +65,12 @@ namespace RMIS.Data
                 .Property(a => a.BBox)
                 .Metadata.SetAfterSaveBehavior(Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
 
+            // Points 資料表有 trg_Points_SyncAreaBBox 觸發器，SQL Server 不允許對有觸發器的資料表使用 OUTPUT 子句，
+            // 需關閉 EF Core 8 預設的 OUTPUT 子句寫回機制，否則 INSERT/UPDATE/DELETE Points 會拋出
+            // "the target table has database triggers" 錯誤
+            modelBuilder.Entity<Point>()
+                .ToTable(tb => tb.UseSqlOutputClause(false));
+
             // 交通事故 101~113（民國年）各自對應獨立資料表
             for (int year = 101; year <= 113; year++)
             {
