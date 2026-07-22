@@ -21,6 +21,28 @@ const RoadProjectEdit = {
     // 每筆：{ Id, Latitude, Longitude, Photo (base64|null), PhotoName, existingUrl }
     photoList: [],
 
+    // ── 備註附件 ──
+    remarkFileList: [],      // 既有附件（來自伺服器）：{ id, fileName, fileSize, ... }
+    newRemarkFiles: [],      // 待上傳的新檔案（File 物件），儲存時才送出
+    removedRemarkFileIds: [], // 待刪除的既有附件 id，儲存時才送出
+
+    fileIcons: {
+        'pdf': 'fa-file-pdf-o',
+        'doc': 'fa-file-word-o',
+        'docx': 'fa-file-word-o',
+        'xls': 'fa-file-excel-o',
+        'xlsx': 'fa-file-excel-o',
+        'ppt': 'fa-file-powerpoint-o',
+        'pptx': 'fa-file-powerpoint-o',
+        'jpg': 'fa-file-image-o',
+        'jpeg': 'fa-file-image-o',
+        'png': 'fa-file-image-o',
+        'gif': 'fa-file-image-o',
+        'zip': 'fa-file-archive-o',
+        'rar': 'fa-file-archive-o',
+        'default': 'fa-file-o'
+    },
+
     // ── 座標預覽地圖 ──
     previewMap: null,
     previewRangeLayer: null,
@@ -143,6 +165,28 @@ const RoadProjectEdit = {
             self.updatePreviewMap();
         });
 
+        // 綁定「新增附件」按鈕：觸發隱藏的檔案選取
+        $(document).on('click', '#btn-edit-add-remark-file', function() {
+            $('#edit-remark-file-input').trigger('click');
+        });
+
+        // 綁定備註附件檔案選擇（可複選）
+        $(document).on('change', '#edit-remark-file-input', function() {
+            self.handleRemarkFileSelect(this);
+        });
+
+        // 綁定既有備註附件刪除按鈕
+        $(document).on('click', '.edit-btn-remove-remark-file', function() {
+            const id = parseInt($(this).data('id'));
+            self.removeExistingRemarkFile(id);
+        });
+
+        // 綁定新增中的備註附件刪除按鈕
+        $(document).on('click', '.edit-btn-remove-new-remark-file', function() {
+            const index = parseInt($(this).data('index'));
+            self.removeNewRemarkFile(index);
+        });
+
         console.log('RoadProjectEdit 模組初始化完成');
     },
 
@@ -168,6 +212,8 @@ const RoadProjectEdit = {
             self.initPreviewMap();
             self.loadPoints(project.id);
         }, 100);
+
+        this.loadRemarkFiles(project.id);
     },
 
     /**
@@ -179,6 +225,9 @@ const RoadProjectEdit = {
         this.middleRangePoints = [];
         this.rangeList = [];
         this.photoList = [];
+        this.remarkFileList = [];
+        this.newRemarkFiles = [];
+        this.removedRemarkFileIds = [];
         this.addingRangePoint = false;
         this.addingPhotoPoint = false;
         this.searchResults = { start: [], end: [] };
@@ -189,6 +238,7 @@ const RoadProjectEdit = {
         $('#edit-preview-map').removeClass('adding-point');
         $('#edit-expansion-range-tbody').html('<tr class="empty-row"><td colspan="4">尚無資料，請點圖新增範圍點</td></tr>');
         $('#edit-street-photo-list').html('<div class="empty-photo-hint">尚無照片，請點擊「新增一筆」或「點預覽圖選取」</div>');
+        $('#edit-remark-file-list').html('<div class="empty-file-hint">尚無附件，請點擊「新增附件」</div>');
         if (this.previewMap) {
             if (this.previewRangeLayer) this.previewRangeLayer.clearLayers();
             if (this.previewPhotoLayer) this.previewPhotoLayer.clearLayers();
@@ -877,6 +927,164 @@ const RoadProjectEdit = {
         this.updatePreviewMap();
     },
 
+    // ──── 備註附件 ────
+
+    /**
+     * 從 API 載入既有備註附件
+     */
+    loadRemarkFiles: async function(projectId) {
+        this.remarkFileList = [];
+        this.newRemarkFiles = [];
+        this.removedRemarkFileIds = [];
+        try {
+            const response = await fetch(`/api/RoadProject/GetRemarkFiles/${projectId}`);
+            if (response.ok) {
+                this.remarkFileList = await response.json();
+            }
+        } catch (err) {
+            console.error('載入備註附件失敗:', err);
+        }
+        this.renderRemarkFileList();
+    },
+
+    /**
+     * 處理備註附件檔案選擇（可複選），選取後暫存於畫面上，儲存時才上傳
+     */
+    handleRemarkFileSelect: function(input) {
+        const files = input.files;
+        if (!files || files.length === 0) return;
+
+        Array.from(files).forEach(file => this.newRemarkFiles.push(file));
+        input.value = '';
+        this.renderRemarkFileList();
+    },
+
+    /**
+     * 移除既有附件（僅標記，儲存時才真正呼叫刪除 API）
+     */
+    removeExistingRemarkFile: function(id) {
+        this.removedRemarkFileIds.push(id);
+        this.renderRemarkFileList();
+    },
+
+    /**
+     * 移除新增中、尚未上傳的附件
+     */
+    removeNewRemarkFile: function(index) {
+        this.newRemarkFiles.splice(index, 1);
+        this.renderRemarkFileList();
+    },
+
+    /**
+     * 渲染備註附件清單（既有未刪除 + 新增中尚未上傳）
+     */
+    renderRemarkFileList: function() {
+        const self = this;
+        const $list = $('#edit-remark-file-list');
+        $list.empty();
+
+        const existingItems = this.remarkFileList.filter(f => !this.removedRemarkFileIds.includes(f.id));
+
+        if (existingItems.length === 0 && this.newRemarkFiles.length === 0) {
+            $list.html('<div class="empty-file-hint">尚無附件，請點擊「新增附件」</div>');
+            return;
+        }
+
+        existingItems.forEach(function(file) {
+            const ext = self.getFileExtension(file.fileName);
+            const iconClass = self.fileIcons[ext] || self.fileIcons['default'];
+            $list.append(`
+                <div class="file-list-item">
+                    <div class="file-info">
+                        <i class="fa ${iconClass} file-icon"></i>
+                        <span class="file-name">${self.escapeHtml(file.fileName)}</span>
+                        <span class="file-size">(${file.fileSize || '-'})</span>
+                    </div>
+                    <div class="file-actions">
+                        <button type="button" class="edit-btn-remove-remark-file" data-id="${file.id}" title="刪除">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `);
+        });
+
+        this.newRemarkFiles.forEach(function(file, index) {
+            const ext = self.getFileExtension(file.name);
+            const iconClass = self.fileIcons[ext] || self.fileIcons['default'];
+            $list.append(`
+                <div class="file-list-item file-list-item-new">
+                    <div class="file-info">
+                        <i class="fa ${iconClass} file-icon"></i>
+                        <span class="file-name">${self.escapeHtml(file.name)}</span>
+                        <span class="file-size">(${self.formatFileSize(file.size)}，尚未上傳）</span>
+                    </div>
+                    <div class="file-actions">
+                        <button type="button" class="edit-btn-remove-new-remark-file" data-index="${index}" title="移除">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `);
+        });
+    },
+
+    /**
+     * 儲存時才真正送出備註附件的新增與刪除
+     */
+    submitRemarkFiles: async function() {
+        const projectId = this.currentProject.id;
+
+        // 刪除已標記移除的既有附件
+        if (this.removedRemarkFileIds.length > 0) {
+            await Promise.all(this.removedRemarkFileIds.map(id =>
+                fetch(`/api/RoadProject/DeleteRemarkFile/${id}`, { method: 'DELETE' })
+            ));
+        }
+
+        // 上傳新增中的附件
+        if (this.newRemarkFiles.length > 0) {
+            const formData = new FormData();
+            formData.append('projectId', projectId);
+            this.newRemarkFiles.forEach(file => formData.append('files', file, file.name));
+
+            const response = await fetch('/api/RoadProject/UploadRemarkFiles', {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.message || '備註附件上傳失敗');
+            }
+        }
+    },
+
+    getFileExtension: function(fileName) {
+        if (!fileName) return 'default';
+        const parts = fileName.split('.');
+        return parts.length > 1 ? parts.pop().toLowerCase() : 'default';
+    },
+
+    formatFileSize: function(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+
+    escapeHtml: function(text) {
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    },
+
     // ──── 提交 ────
 
     /**
@@ -941,7 +1149,11 @@ const RoadProjectEdit = {
             return self.submitPoints();
         })
         .then(function() {
-            // 第三步：若座標未確認，儲存時自動確認
+            // 第三步：送出備註附件的新增與刪除
+            return self.submitRemarkFiles();
+        })
+        .then(function() {
+            // 第四步：若座標未確認，儲存時自動確認
             if (self.currentProject.coordinateChecked === false) {
                 return fetch(`/api/RoadProject/confirmCoordinate/${self.currentProject.id}`, { method: 'POST' })
                     .then(function(r) { return r.json(); });

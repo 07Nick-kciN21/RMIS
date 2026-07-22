@@ -590,6 +590,111 @@ namespace RMIS.Controllers
             return BadRequest(new { success = false, message = result });
         }
 
+        [HttpPost("UploadRemarkFiles")]
+        public async Task<IActionResult> UploadRemarkFiles([FromForm] int projectId, [FromForm] List<IFormFile> files)
+        {
+            if (files == null || files.Count == 0)
+            {
+                return BadRequest("未收到檔案");
+            }
+
+            var results = new List<object>();
+            var uploadUser = User.Identity?.Name ?? "Unknown";
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    using var memoryStream = new MemoryStream();
+                    await file.CopyToAsync(memoryStream);
+                    var base64String = Convert.ToBase64String(memoryStream.ToArray());
+
+                    var fileExtension = Path.GetExtension(file.FileName)?.TrimStart('.').ToLower() ?? "";
+                    var fileSize = FormatFileSize(file.Length);
+
+                    var remarkFile = new RoadProjectRemarkFile
+                    {
+                        ProjectId = projectId,
+                        FileName = file.FileName,
+                        FileType = fileExtension,
+                        Base64String = base64String,
+                        FileSize = fileSize,
+                        UploadUser = uploadUser
+                    };
+
+                    var result = await _roadProjectInterface.AddRemarkFileAsync(remarkFile);
+                    results.Add(new { fileName = file.FileName, success = result == "success", message = result });
+                }
+                catch (Exception ex)
+                {
+                    results.Add(new { fileName = file.FileName, success = false, message = ex.Message });
+                }
+            }
+
+            return Ok(new { success = true, results });
+        }
+
+        [HttpGet("GetRemarkFiles/{projectId}")]
+        public async Task<IActionResult> GetRemarkFiles(int projectId)
+        {
+            var files = await _roadProjectInterface.GetRemarkFilesByProjectIdAsync(projectId);
+
+            // 回傳時不包含 Base64 內容，只回傳檔案資訊
+            var fileInfoList = files.Select(f => new
+            {
+                f.Id,
+                f.ProjectId,
+                f.FileName,
+                f.FileType,
+                f.FileSize,
+                f.UploadUser
+            }).ToList();
+
+            return Ok(fileInfoList);
+        }
+
+        [HttpGet("DownloadRemarkFile/{fileId}")]
+        public async Task<IActionResult> DownloadRemarkFile(int fileId)
+        {
+            var file = await _roadProjectInterface.GetRemarkFileByIdAsync(fileId);
+
+            if (file == null)
+            {
+                return NotFound("找不到檔案");
+            }
+
+            try
+            {
+                var filePath = await _roadProjectInterface.GetRemarkFilePathAsync(file.ProjectId, file.FileName);
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound("檔案不存在於伺服器");
+                }
+
+                var bytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                var contentType = GetContentType(file.FileType);
+                return File(bytes, contentType, file.FileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"下載失敗：{ex.Message}");
+            }
+        }
+
+        [HttpDelete("DeleteRemarkFile/{fileId}")]
+        public async Task<IActionResult> DeleteRemarkFile(int fileId)
+        {
+            var result = await _roadProjectInterface.DeleteRemarkFileAsync(fileId);
+
+            if (result == "success")
+            {
+                return Ok(new { success = true, message = "檔案刪除成功" });
+            }
+
+            return BadRequest(new { success = false, message = result });
+        }
+
         [HttpDelete("DeleteProcess1/{id}")]
         public async Task<IActionResult> DeleteProcess1(int id)
         {

@@ -26,6 +26,7 @@ namespace RMIS.Data
         public DbSet<RoadProjectProcess3> RoadProjectProcess3 { get; set; }
         public DbSet<RoadProjectProcess> RoadProjectProcesses { get; set; }
         public DbSet<RoadProjectProcessFile> RoadProjectProcessFiles { get; set; }
+        public DbSet<RoadProjectRemarkFile> RoadProjectRemarkFiles { get; set; }
         public DbSet<ProcessEditLog> ProcessEditLogs { get; set; }
 
         /// <summary>

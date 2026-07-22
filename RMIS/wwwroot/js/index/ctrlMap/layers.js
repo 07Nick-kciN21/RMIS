@@ -370,52 +370,54 @@ export function addFocusLayer2Map(id, ofType, LayerData, startDate, endDate){
     });
 }
 
-const _layerPropsLoading = {}; // pipelineId -> 進行中的載入 Promise（避免同一 pipeline 重複發request）
+const _layerPropsLoading = {};      // pipelineId -> 進行中的載入 Promise（避免同一 pipeline 重複發request）
+const _fullyLoadedPipelines = new Set(); // 已透過 loadLayerProps 完整抓取過的 pipelineId
+                                          // 注意：layerProps[pipelineId] 也會被 point 圖層的 viewport 渲染
+                                          // （_loadViewportPoints）當作副作用寫入部分資料，不能拿陣列長度
+                                          // 當作「是否已完整載入」的判斷依據，必須用獨立旗標
 
-// 依 pipelineId 取得該 pipeline 下所有圖層的完整屬性資料，若尚未載入則觸發 GetAreasByLayer 抓取
+// 依 pipelineId 取得該 pipeline 下所有圖層的完整屬性資料，若尚未完整載入則觸發 GetAreasByLayer 抓取
 export function loadLayerProps(pipelineId) {
-    if (layerProps[pipelineId] && layerProps[pipelineId].length > 0) {
+    if (_fullyLoadedPipelines.has(pipelineId)) {
         return Promise.resolve(layerProps[pipelineId]);
     }
     if (_layerPropsLoading[pipelineId]) {
         return _layerPropsLoading[pipelineId];
     }
-    if (layerProps[pipelineId] == null) layerProps[pipelineId] = [];
+    // 完整抓取前清空，避免跟 viewport 渲染留下的部分資料混雜
+    layerProps[pipelineId] = [];
 
     const promise = new Promise((resolve, reject) => {
         $.ajax({
             url: `/api/MapAPI/GetLayerIdByPipeline?PipelineId=${pipelineId}`,
             method: 'POST'
         }).then(function (idResult) {
-            console.log('[loadLayerProps] GetLayerIdByPipeline result:', idResult);
             const layerIds = idResult.layerIdList || [];
             const fetches = layerIds.map(function (layerId) {
                 return $.ajax({
                     url: `/api/MapAPI/GetAreasByLayer?LayerId=${layerId}`,
                     method: 'POST'
                 }).then(function (result) {
-                    console.log(`[loadLayerProps] GetAreasByLayer(${layerId}) areas count:`, result.areas ? result.areas.length : 'null/undefined', result);
                     if (!result.areas) return;
                     result.areas.forEach(function (area) {
                         (area.points || []).forEach(function (point) {
                             let item2 = null;
                             if (point.prop && point.prop.trim() !== '') {
-                                try { item2 = JSON.parse(point.prop.replace(/NaN/g, 'null')); } catch (e) { console.warn('[loadLayerProps] JSON parse failed for point.prop:', point.prop, e); }
-                            } else {
-                                console.log('[loadLayerProps] point.prop empty:', point);
+                                try { item2 = JSON.parse(point.prop.replace(/NaN/g, 'null')); } catch (e) {}
                             }
                             if (item2) {
-                                layerProps[pipelineId].push({ '座標': [point.latitude, point.longitude], ...item2 });
+                                // AreaId/Kind 供屬性搜尋結果沒有 Instance 時，可回頭向後端要完整座標畫高亮用
+                                layerProps[pipelineId].push({ '座標': [point.latitude, point.longitude], 'AreaId': area.id, 'Kind': result.type, ...item2 });
                             }
                         });
                     });
                 });
             });
             $.when.apply($, fetches).then(function () {
-                console.log(`[loadLayerProps] pipeline ${pipelineId} final layerProps length:`, layerProps[pipelineId].length);
+                _fullyLoadedPipelines.add(pipelineId);
                 resolve(layerProps[pipelineId]);
-            }).fail(function (err) { console.error('[loadLayerProps] GetAreasByLayer fail', err); reject(err); });
-        }).fail(function (err) { console.error('[loadLayerProps] GetLayerIdByPipeline fail', err); reject(err); });
+            }).fail(reject);
+        }).fail(reject);
     }).finally(function () {
         delete _layerPropsLoading[pipelineId];
     });

@@ -64,6 +64,15 @@ const RoadProjectView = {
             RoadProjectEdit.openEdit(self.currentProject);
         });
 
+        // 綁定備註附件下載按鈕事件
+        $(document).on('click', '.btn-download-remark-file', function(e) {
+            e.stopPropagation();
+            const $item = $(this).closest('.file-list-item');
+            const fileId = $item.data('file-id');
+            const fileName = $item.find('.file-name').text();
+            self.downloadRemarkFile(fileId, fileName);
+        });
+
         console.log('RoadProjectView 模組初始化完成');
     },
 
@@ -159,6 +168,9 @@ const RoadProjectView = {
 
         // 載入街景照片
         self.loadStreetViewPhotos(project.id || project.projectId);
+
+        // 載入備註附件
+        self.loadRemarkFiles(project.id || project.projectId);
     },
     // 輔助方法：確保 Input 被換回 Span
     refreshSpanField: function(id, value) {
@@ -235,6 +247,115 @@ const RoadProjectView = {
         if ($('#pv-photo-lightbox').length === 0) {
             $('body').append('<div id="pv-photo-lightbox" onclick="this.classList.remove(\'active\')"><img id="pv-lightbox-img" src="" /></div>');
         }
+    },
+
+    // 檔案圖示對照表
+    fileIcons: {
+        'pdf': 'fa-file-pdf-o',
+        'doc': 'fa-file-word-o',
+        'docx': 'fa-file-word-o',
+        'xls': 'fa-file-excel-o',
+        'xlsx': 'fa-file-excel-o',
+        'ppt': 'fa-file-powerpoint-o',
+        'pptx': 'fa-file-powerpoint-o',
+        'jpg': 'fa-file-image-o',
+        'jpeg': 'fa-file-image-o',
+        'png': 'fa-file-image-o',
+        'gif': 'fa-file-image-o',
+        'zip': 'fa-file-archive-o',
+        'rar': 'fa-file-archive-o',
+        'default': 'fa-file-o'
+    },
+
+    /**
+     * 載入備註附件清單
+     */
+    loadRemarkFiles: function(projectId) {
+        const self = this;
+        $('#pv-remark-file-list').html('<div class="empty-file-hint"><i class="fa fa-spinner fa-spin"></i> 載入中...</div>');
+
+        fetch(`/api/RoadProject/GetRemarkFiles/${projectId}`)
+            .then(response => response.json())
+            .then(files => self.renderRemarkFileList(files || []))
+            .catch(() => {
+                $('#pv-remark-file-list').html('<div class="empty-file-hint">附件載入失敗</div>');
+            });
+    },
+
+    /**
+     * 渲染備註附件清單（唯讀，僅提供下載）
+     */
+    renderRemarkFileList: function(files) {
+        const self = this;
+        const $list = $('#pv-remark-file-list');
+        $list.empty();
+
+        if (!files || files.length === 0) {
+            $list.html('<div class="empty-file-hint">尚無附件</div>');
+            return;
+        }
+
+        files.forEach(function(file) {
+            const ext = self.getFileExtension(file.fileName);
+            const iconClass = self.fileIcons[ext] || self.fileIcons['default'];
+            $list.append(`
+                <div class="file-list-item" data-file-id="${file.id}">
+                    <div class="file-info">
+                        <i class="fa ${iconClass} file-icon"></i>
+                        <span class="file-name">${self.escapeHtml(file.fileName)}</span>
+                        <span class="file-size">(${file.fileSize || '-'})</span>
+                    </div>
+                    <div class="file-actions">
+                        <button type="button" class="btn-download-remark-file" title="下載">
+                            <img src="/svg/download.svg" alt="下載" />
+                        </button>
+                    </div>
+                </div>
+            `);
+        });
+    },
+
+    /**
+     * 下載備註附件
+     */
+    downloadRemarkFile: function(fileId, fileName) {
+        fetch(`/api/RoadProject/DownloadRemarkFile/${fileId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('下載失敗');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            })
+            .catch(err => {
+                console.error('下載附件失敗:', err);
+                alert('下載失敗，請稍後再試');
+            });
+    },
+
+    getFileExtension: function(fileName) {
+        if (!fileName) return 'default';
+        const parts = fileName.split('.');
+        return parts.length > 1 ? parts.pop().toLowerCase() : 'default';
+    },
+
+    escapeHtml: function(text) {
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
     },
 
     /**

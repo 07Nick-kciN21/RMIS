@@ -345,7 +345,7 @@ function renderTableHeaders(pageData) {
 
     const headRow = $('<tr></tr>').append($('<th></th>'));
     Object.keys(pageData[0]).forEach(key => {
-        if (key !== "座標" && key !== 'Instance') {
+        if (key !== "座標" && key !== 'Instance' && key !== 'AreaId' && key !== 'Kind') {
             headRow.append($('<th></th>').text(key));
         }
     });
@@ -373,7 +373,7 @@ function renderTableBody(pageData) {
         tableRow.append($('<td></td>').append(button));
 
         for (const key in item) {
-            if (key !== "座標" && key !== 'Instance') {
+            if (key !== "座標" && key !== 'Instance' && key !== 'AreaId' && key !== 'Kind') {
                 tableRow.append($('<td></td>').text(item[key]));
             }
         }
@@ -396,41 +396,120 @@ function updatePagination(totalPages) {
 }
 // 物件標記
 function highlightMapFeature(item) {
-    try {
-        if (item['Instance'] instanceof L.Marker) {
-            markerHighlight(item['Instance']);
-        }
-        else if (item['Instance'] instanceof L.Polygon){
-            polygonHighlight(item['Instance']);
-        } 
-        else if (item['Instance'] instanceof L.Polyline) {
-            lineHighlight(item['Instance']);
-        }
-        
-    } catch (e) {
-        console.log("error:", e);
-    } finally {
+    if (item['Instance'] instanceof L.Marker || item['Instance'] instanceof L.CircleMarker) {
+        markerHighlight(item['Instance']);
         $indexMap.setView(item["座標"], 19);
-        // item['Instance'].openPopup();
+        return;
+    }
+    if (item['Instance'] instanceof L.Polygon) {
+        polygonHighlight(item['Instance']);
+        $indexMap.setView(item["座標"], 19);
+        return;
+    }
+    if (item['Instance'] instanceof L.Polyline) {
+        lineHighlight(item['Instance']);
+        $indexMap.setView(item["座標"], 19);
+        return;
+    }
+    // line/plane：向後端要該 Area 完整座標畫出整條線/整個面（多筆結果可能同屬一個 Area，仍照各自座標置中）
+    if ((item['Kind'] === 'line' || item['Kind'] === 'arrowline' || item['Kind'] === 'plane') && item['AreaId'] != null) {
+        highlightByAreaId(item['AreaId'], item['Kind']);
+    }
+    // point（或無法辨識種類）：每一列本來就有自己的座標，不需要問後端，直接用自己的座標畫框
+    else if (item['座標']) {
+        if (highlightRectangle) { $indexMap.removeLayer(highlightRectangle); highlightRectangle = null; }
+        if (highlightedLine) { $indexMap.removeLayer(highlightedLine); highlightedLine = null; }
+        highlightRectangle = drawHighlightFrame(L.latLng(item['座標'][0], item['座標'][1]), 30);
+    }
+    $indexMap.setView(item["座標"], 19);
+}
+
+// line/plane：用 AreaId 向後端要該 Area 完整座標序列，畫出整條線/整個面（僅負責畫形狀，置中已由呼叫端處理）
+function highlightByAreaId(areaId, kind) {
+    $.ajax({
+        url: `/api/MapAPI/GetPointsbyLayerId?AreaId=${areaId}`,
+        method: 'POST'
+    }).then(function (result) {
+        const latlngs = (result.points || []).map(p => [p.latitude, p.longitude]);
+        if (latlngs.length === 0) return;
+
+        if (highlightRectangle) { $indexMap.removeLayer(highlightRectangle); highlightRectangle = null; }
+        if (highlightedLine) { $indexMap.removeLayer(highlightedLine); highlightedLine = null; }
+
+        if (kind === 'plane' && latlngs.length >= 3) {
+            ensureHighlightPane();
+            highlightRectangle = L.polygon(latlngs, {
+                color: '#ff7800',
+                weight: 2,
+                fillColor: '#ff7800',
+                fillOpacity: 0.4,
+                interactive: false,
+                pane: 'searchHighlightPane'
+            }).addTo($indexMap);
+        } else if ((kind === 'line' || kind === 'arrowline') && latlngs.length >= 2) {
+            ensureHighlightPane();
+            highlightedLine = L.polyline(latlngs, {
+                color: 'white',
+                weight: 6,
+                opacity: 0.9,
+                interactive: false,
+                pane: 'searchHighlightPane'
+            }).addTo($indexMap);
+        }
+    }).catch(function (err) {
+        console.error('取得 Area 座標失敗', err);
+    });
+}
+
+// 確保有一個專用的高亮 pane，z-index 高於預設的 markerPane(600)/overlayPane(400)，
+// 避免高亮標示跟原本的點位在不同 pane 排序時被蓋住
+function ensureHighlightPane() {
+    if (!$indexMap.getPane('searchHighlightPane')) {
+        const pane = $indexMap.createPane('searchHighlightPane');
+        pane.style.zIndex = 700;
+        pane.style.pointerEvents = 'none';
     }
 }
 
+// 畫一個橘色框線標示（純座標+尺寸，不需要實際的 marker 物件）
+// line 用 L.polyline（SVG 向量圖層）在同一個 searchHighlightPane 裡已證實能正常顯示，
+// 改用同樣是向量圖層的 L.circleMarker，而不是 L.marker+divIcon（HTML 圖示，實測不會顯示）
+function drawHighlightFrame(latLng, size) {
+    ensureHighlightPane();
+    const layer = L.circleMarker(latLng, {
+        radius: size / 2,
+        color: '#ff7800',
+        weight: 3,
+        fill: false,
+        interactive: false,
+        pane: 'searchHighlightPane'
+    }).addTo($indexMap);
+
+    // 除錯用：暴露到 window，方便在 Console 用 hasLayer()/outerHTML 直接確認，不受物件複製貼上失真影響
+    window.__debugMap = $indexMap;
+    window.__debugHighlight = layer;
+
+    return layer;
+}
+
+// 產生選中標示：不管有沒有圖示，統一用橘色框線標示
 function markerHighlight(marker) {
-    console.log('click Marker');
     const latLng = marker.getLatLng();
 
     if (highlightRectangle) {
         $indexMap.removeLayer(highlightRectangle);
+        highlightRectangle = null;
     }
-    const bounds = [[latLng.lat - 0.00001, latLng.lng - 0.00001], [latLng.lat + 0.00001, latLng.lng + 0.00001]];
-    highlightRectangle = L.rectangle(bounds, {
-        color: "#ff7800",
-        weight: 1,
-        fillOpacity: 0.3
-    }).addTo($indexMap);
 
-    // 把地圖移動到高亮的位置
-    $indexMap.setView(latLng, 19);
+    let size = 30;
+    if (marker instanceof L.Marker) {
+        const icon = marker.getIcon();
+        size = (icon && icon.options && icon.options.iconSize && icon.options.iconSize[0]) || 30;
+    } else {
+        size = ((marker.options.radius || 6) * 2) + 8;
+    }
+
+    highlightRectangle = drawHighlightFrame(latLng, size);
 }
 
 function lineHighlight(polyline) {

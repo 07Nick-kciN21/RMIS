@@ -97,42 +97,50 @@ namespace RMIS.Controllers
         {
             try
             {
+                // 只投影需要的欄位，避免 EF Core 連帶 materialize Point.GeoLocation
+                // （NetTopologySuite 的 SqlServerBytesReader 反序列化 geography 欄位在部分資料上會拋例外）
+                var layerInfo = await _mapDBContext.Layers
+                                    .Where(l => l.Id == LayerId)
+                                    .Select(l => new { l.Id, l.Name, l.GeometryType.Color, l.GeometryType.Svg, l.GeometryType.Kind })
+                                    .FirstOrDefaultAsync();
+                if (layerInfo == null)
+                {
+                    return new AreasByLayer();
+                }
+
                 var areas = await _mapDBContext.Areas
-                                    .Include(a => a.Points)
-                                    .Include(a => a.Layer)
-                                        .ThenInclude(l => l.GeometryType)
                                     .Where(a => a.LayerId == LayerId)
+                                    .Select(a => new AreaDto
+                                    {
+                                        id = a.Id,
+                                        ConstructionUnit = a.ConstructionUnit,
+                                        points = a.Points.OrderBy(p => p.Index).Select(p => new PointDto
+                                        {
+                                            Index = p.Index,
+                                            Latitude = p.Latitude,
+                                            Longitude = p.Longitude,
+                                            Prop = p.Property
+                                        }).ToList()
+                                    })
                                     .ToListAsync();
-                var layer = await _mapDBContext.Layers.Include(l => l.Pipeline).FirstOrDefaultAsync(l => l.Id == LayerId);
                 if (areas.Count == 0)
                 {
                     return new AreasByLayer();
                 }
                 var results = new AreasByLayer
                 {
-                    id = layer.Id,
-                    name = layer.Name,
-                    color = layer.GeometryType.Color,
-                    svg = layer.GeometryType.Svg,
-                    type = layer.GeometryType.Kind,
-                    areas = areas.Select(a => new AreaDto
-                    {
-                        id = a.Id,
-                        ConstructionUnit = a.ConstructionUnit,
-                        points = a.Points.OrderBy(p => p.Index).Select(p => new PointDto
-                        {
-                            Index = p.Index,
-                            Latitude = p.Latitude,
-                            Longitude = p.Longitude,
-                            Prop = p.Property
-                        }).ToList()
-                    }).ToList()
+                    id = layerInfo.Id,
+                    name = layerInfo.Name,
+                    color = layerInfo.Color,
+                    svg = layerInfo.Svg,
+                    type = layerInfo.Kind,
+                    areas = areas
                 };
                 return results;
             }
             catch (Exception e)
             {
-                ModelState.AddModelError("", "Error: " + e.Message);
+                Console.WriteLine($"[GetAreasByLayer] LayerId={LayerId} 發生例外: {e}");
                 return new AreasByLayer();
             }
         }
@@ -244,11 +252,19 @@ namespace RMIS.Controllers
         {
             try
             {
-                var result = await _mapDBContext.Areas
-                    .Include(a => a.Points)
-                    .FirstOrDefaultAsync(a => a.Id == AreaId);
+                var points = await _mapDBContext.Areas
+                    .Where(a => a.Id == AreaId)
+                    .SelectMany(a => a.Points)
+                    .OrderBy(p => p.Index)
+                    .Select(p => new PointDto
+                    {
+                        Index = p.Index,
+                        Latitude = p.Latitude,
+                        Longitude = p.Longitude
+                    })
+                    .ToListAsync();
 
-                if (result == null)
+                if (points.Count == 0)
                 {
                     return new PointsbyId();
                 }
@@ -256,12 +272,7 @@ namespace RMIS.Controllers
                 return new PointsbyId
                 {
                     Id = AreaId.ToString(),
-                    Points = result.Points.OrderBy(p => p.Index).Select(p => new PointDto
-                    {
-                        Index = p.Index,
-                        Latitude = p.Latitude,
-                        Longitude = p.Longitude
-                    }).ToList()
+                    Points = points
                 };
             }
             catch (Exception e)

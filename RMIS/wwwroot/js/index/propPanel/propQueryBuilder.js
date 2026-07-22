@@ -1,10 +1,16 @@
 ﻿// 建立queryBuild
 export function updatePropQuery(props) {
+    // 清除前一次的狀態（可能是舊的 queryBuilder 實例，也可能是「無可查詢屬性」的提示文字）
+    if ($('#propQuery').data('queryBuilder')) {
+        $('#propQuery').queryBuilder('destroy');
+    }
+    $('#propQuery').empty();
+
     const propsDict = buildPropsDict(props || []);
     const filters = buildQueryFilters(propsDict);
 
     if (filters.length === 0) {
-        $('#propQuery').empty().text('此圖層無可查詢的屬性資料');
+        $('#propQuery').text('此圖層無可查詢的屬性資料');
         return;
     }
 
@@ -25,7 +31,7 @@ function buildPropsDict(props) {
     const setDict = {};
     props.forEach(prop => {
         for (const key in prop) {
-            if (!prop.hasOwnProperty(key) || key === '備註' || key === '座標' || key === 'Instance') continue;
+            if (!prop.hasOwnProperty(key) || key === '備註' || key === '座標' || key === 'Instance' || key === 'AreaId' || key === 'Kind') continue;
             if (key === '設置日期') prop[key] = formatTimestamp(prop[key]);
             if (!setDict[key]) setDict[key] = new Set();
             setDict[key].add(prop[key]);

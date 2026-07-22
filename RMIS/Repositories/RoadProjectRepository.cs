@@ -492,6 +492,158 @@ namespace RMIS.Repositories
             }); // end strategy
         }
 
+        /// <summary>
+        /// 依 ProjectId 建立備註附件的實體文件目錄路徑: {RemarkFile}/{ProjectId}
+        /// </summary>
+        private string GetRemarkFolder(int projectId) =>
+            Path.Combine(ResolvePath(_filePaths.RemarkFile), projectId.ToString());
+
+        public async Task<string> AddRemarkFileAsync(RoadProjectRemarkFile file)
+        {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            string? savedFilePath = null;
+
+            try
+            {
+                if (file == null)
+                {
+                    return "錯誤：接收到的檔案資料為空。";
+                }
+
+                var remarkFolder = GetRemarkFolder(file.ProjectId);
+
+                if (!Directory.Exists(remarkFolder))
+                {
+                    Directory.CreateDirectory(remarkFolder);
+                }
+
+                var fileBytes = Convert.FromBase64String(file.Base64String);
+                var filePath = Path.Combine(remarkFolder, file.FileName);
+
+                // 如果檔案已存在，加上時間戳避免覆蓋
+                if (File.Exists(filePath))
+                {
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
+                    var extension = Path.GetExtension(file.FileName);
+                    var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                    filePath = Path.Combine(remarkFolder, $"{fileNameWithoutExt}_{timestamp}{extension}");
+                    file.FileName = Path.GetFileName(filePath);
+                }
+
+                await File.WriteAllBytesAsync(filePath, fileBytes);
+                savedFilePath = filePath; // 記錄已儲存的檔案路徑，以便回滾時刪除
+
+                // 清空 Base64String（不需要存到資料庫，節省空間）
+                file.Base64String = "";
+
+                file.Id = 0;
+                _mapDBContext.RoadProjectRemarkFiles.Add(file);
+                await _mapDBContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return "success";
+            }
+            catch (DbUpdateException dbEx)
+            {
+                await transaction.RollbackAsync();
+                if (savedFilePath != null && File.Exists(savedFilePath))
+                {
+                    File.Delete(savedFilePath);
+                }
+                var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+                return $"資料庫儲存失敗：{innerMessage}";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                if (savedFilePath != null && File.Exists(savedFilePath))
+                {
+                    File.Delete(savedFilePath);
+                }
+                return $"伺服器發生非預期錯誤：{ex.Message}";
+            }
+            }); // end strategy
+        }
+
+        public async Task<List<RoadProjectRemarkFile>> GetRemarkFilesByProjectIdAsync(int projectId)
+        {
+            return await _mapDBContext.RoadProjectRemarkFiles
+                .Where(f => f.ProjectId == projectId)
+                .ToListAsync();
+        }
+
+        public async Task<RoadProjectRemarkFile?> GetRemarkFileByIdAsync(int fileId)
+        {
+            return await _mapDBContext.RoadProjectRemarkFiles
+                .FirstOrDefaultAsync(f => f.Id == fileId);
+        }
+
+        public Task<string> GetRemarkFilePathAsync(int projectId, string fileName)
+        {
+            var folder = GetRemarkFolder(projectId);
+            return Task.FromResult(Path.Combine(folder, fileName));
+        }
+
+        public async Task<string> DeleteRemarkFileAsync(int fileId)
+        {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+            using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+            string? deletedFilePath = null;
+            byte[]? deletedFileContent = null;
+
+            try
+            {
+                var file = await _mapDBContext.RoadProjectRemarkFiles
+                    .FirstOrDefaultAsync(f => f.Id == fileId);
+
+                if (file == null)
+                {
+                    return "錯誤：找不到該檔案。";
+                }
+
+                var remarkFolder = GetRemarkFolder(file.ProjectId);
+                var filePath = Path.Combine(remarkFolder, file.FileName);
+
+                if (File.Exists(filePath))
+                {
+                    deletedFilePath = filePath;
+                    deletedFileContent = await File.ReadAllBytesAsync(filePath);
+                    File.Delete(filePath);
+                }
+
+                _mapDBContext.RoadProjectRemarkFiles.Remove(file);
+                await _mapDBContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return "success";
+            }
+            catch (DbUpdateException dbEx)
+            {
+                await transaction.RollbackAsync();
+                if (deletedFilePath != null && deletedFileContent != null)
+                {
+                    await File.WriteAllBytesAsync(deletedFilePath, deletedFileContent);
+                }
+                var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+                return $"資料庫刪除失敗：{innerMessage}";
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                if (deletedFilePath != null && deletedFileContent != null)
+                {
+                    await File.WriteAllBytesAsync(deletedFilePath, deletedFileContent);
+                }
+                return $"伺服器發生非預期錯誤：{ex.Message}";
+            }
+            }); // end strategy
+        }
+
         public async Task<string> UpdateAllProcessRecordAsync(RoadProjectProcess process)
         {
             try

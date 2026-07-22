@@ -626,6 +626,98 @@
     border-bottom: none;
 }
 
+/* ===== 備註附件 ===== */
+#page-project-edit .file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#page-project-edit .empty-file-hint {
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 20px;
+}
+
+#page-project-edit .file-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+#page-project-edit .file-list-item:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
+}
+
+#page-project-edit .file-list-item-new {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+#page-project-edit .file-list-item .file-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+#page-project-edit .file-list-item .file-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    color: #64748b;
+}
+
+#page-project-edit .file-list-item .file-name {
+    font-size: 13px;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#page-project-edit .file-list-item .file-size {
+    font-size: 12px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+#page-project-edit .file-list-item .file-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+#page-project-edit .edit-btn-remove-remark-file,
+#page-project-edit .edit-btn-remove-new-remark-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+    color: #ef4444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#page-project-edit .edit-btn-remove-remark-file:hover,
+#page-project-edit .edit-btn-remove-new-remark-file:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #fff;
+}
+
 #page-project-edit .autocomplete-item:hover {
     background-color: #eff6ff;
     color: #2563eb;

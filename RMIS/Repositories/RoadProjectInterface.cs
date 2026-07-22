@@ -22,6 +22,11 @@ namespace RMIS.Repositories
         public Task<RoadProjectProcessFile?> GetProcessFileByIdAsync(int fileId);
         public Task<string> GetProcessFilePathAsync(string processId, string fileName);
         public Task<string> DeleteProcessFileAsync(int fileId);
+        public Task<string> AddRemarkFileAsync(RoadProjectRemarkFile file);
+        public Task<List<RoadProjectRemarkFile>> GetRemarkFilesByProjectIdAsync(int projectId);
+        public Task<RoadProjectRemarkFile?> GetRemarkFileByIdAsync(int fileId);
+        public Task<string> GetRemarkFilePathAsync(int projectId, string fileName);
+        public Task<string> DeleteRemarkFileAsync(int fileId);
         public Task<string> DeleteProcess1Async(int id);
         public Task<string> DeleteProcess2Async(int id);
         public Task<string> DeleteProcess3Async(int id);
