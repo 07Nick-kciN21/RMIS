@@ -1,84 +1,161 @@
 ﻿import { Map } from '../map_test.js';
+import { resolvePointColor } from './layerEdit/pointStyleStore.js';
 
 let currentRectangle = null; // 用於保存當前的矩形
 let currentLine = null; // 用於保存當前的線段
 let currentPolygon = null; // 用於保存當前的多邊形
 let currentArrow = null; // 用於保存當前的箭頭線段
 let noticeLayer = L.layerGroup();
-// 將標記加入圖層
-export function addMarkersToLayer(points, newLayer, svg, name, color) {
+
+// 綁定 point marker 共用的點擊行為（顯示施工範圍框選 或 一般屬性 popup）
+function bindPointClick(marker, prop, name, newLayer, $indexMap) {
+    marker.on('click', function (e) {
+        if (!Map.popupEnabled) return;
+
+        if (name == "施工地點") {
+            let p = JSON.parse(prop);
+            let latlngs = JSON.parse(p["施工範圍"]);
+            latlngs.forEach(function (latlng) {
+                L.polygon(latlng.map(function (point) {
+                    return point.split(',').map(function (coord) {
+                        return parseFloat(coord);
+                    });
+                }), { color: 'red' }).addTo(noticeLayer);
+            });
+            noticeLayer.addTo($indexMap);
+            const mapClickHandler = function (e) {
+                if (noticeLayer) {
+                    noticeLayer.clearLayers();
+                    $indexMap.off('click', mapClickHandler);
+                }
+            };
+            $indexMap.on('click', mapClickHandler);
+        } else {
+            const latLng = e.latlng;
+            $indexMap.setView(latLng, $indexMap.getZoom());
+
+            if (currentRectangle) {
+                newLayer.removeLayer(currentRectangle);
+            }
+
+            const squareIcon = L.divIcon({
+                html: `<svg width="24" height="24"><rect x="0" y="0" width="24" height="24" fill="none" stroke="#0066CC" stroke-width="3"/></svg>`,
+                className: 'square-marker',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
+
+            const mapClickHandler = function (e) {
+                if (currentRectangle) {
+                    newLayer.removeLayer(currentRectangle);
+                    $indexMap.off('click', mapClickHandler);
+                }
+            };
+            $indexMap.on('click', mapClickHandler);
+
+            const popupContent = name == "街景照片" ? popupPhoto(prop) : popupFormat(prop, name);
+            L.popup({ maxWidth: 450, maxHeight: 350 })
+                .setLatLng(latLng)
+                .setContent(popupContent)
+                .openOn($indexMap);
+        }
+    });
+}
+
+// 依是否有「編輯圖徽」規則／伺服器提供的 svg，決定要畫圖片 icon 還是 circleMarker
+function resolveRenderOpts(props, icon, markerColor, styleRule) {
+    if (styleRule) {
+        const fillColor = resolvePointColor(styleRule, props);
+        return {
+            useCircle: true,
+            circleOptions: {
+                // radius 是描邊中心線，內縮半個 weight 讓「填色+外框」總直徑等於使用者選的 diameter
+                radius: styleRule.diameter / 2 - styleRule.strokeWidth / 2,
+                color: styleRule.frameColor,
+                weight: styleRule.strokeWidth,
+                fillColor: fillColor == null ? markerColor : fillColor,
+                fillOpacity: 1
+            }
+        };
+    }
+    if (icon) return { useCircle: false, icon };
+    return {
+        useCircle: true,
+        circleOptions: { radius: 6, color: markerColor, fillColor: markerColor, fillOpacity: 0.8, weight: 1 }
+    };
+}
+
+function createPointGraphic(latlng, renderOpts) {
+    return renderOpts.useCircle
+        ? L.circleMarker(latlng, renderOpts.circleOptions)
+        : L.marker(latlng, { icon: renderOpts.icon });
+}
+
+// 掛上屬性資料、綁定點擊事件、加入圖層——建立新 marker／即時重繪既有 marker 共用
+function finalizeMarker(marker, prop, name, props, newLayer, $indexMap) {
+    marker.addTo(newLayer);
+    marker._isVisible = true;
+    marker._prop = prop;
+    marker._layerName = name;
+    marker.feature = props; // 供「編輯圖徽」依欄位值上色時直接讀取，不必反查 popup
+    bindPointClick(marker, prop, name, newLayer, $indexMap);
+    if (props) props.Instance = marker;
+    return marker;
+}
+
+// 將標記加入圖層；styleRule 有值時（來自「編輯圖徽」）直接以規則算好的顏色建立 circleMarker
+export function addMarkersToLayer(points, newLayer, svg, name, color, styleRule) {
     var $indexMap = Map.getIndexMap();
-    const useCircle = !svg || svg.trim() === '';
     const markerColor = color || '#3388ff';
-    const icon = useCircle ? null : L.icon({
+    const icon = (!styleRule && svg && svg.trim() !== '') ? L.icon({
         iconUrl: `/img/${svg}`,
         iconSize: [30, 30],
         iconAnchor: [15, 15],
         popupAnchor: [0, -15]
-    });
+    }) : null;
+
     points.forEach(function (point) {
-        let marker = useCircle
-            ? L.circleMarker(point[0], { radius: 6, color: markerColor, fillColor: markerColor, fillOpacity: 0.8, weight: 1 })
-            : L.marker(point[0], { icon });
-        marker.addTo(newLayer);
-        let prop = point[1];
-
-        marker.on('click', function (e) {
-            if (!Map.popupEnabled) return;
-
-            if (name == "施工地點") {
-                let p = JSON.parse(prop);
-                let latlngs = JSON.parse(p["施工範圍"]);
-                latlngs.forEach(function (latlng) {
-                    L.polygon(latlng.map(function (point) {
-                        return point.split(',').map(function (coord) {
-                            return parseFloat(coord);
-                        });
-                    }), { color: 'red' }).addTo(noticeLayer);
-                });
-                noticeLayer.addTo($indexMap);
-                const mapClickHandler = function (e) {
-                    if (noticeLayer) {
-                        noticeLayer.clearLayers();
-                        $indexMap.off('click', mapClickHandler);
-                    }
-                };
-                $indexMap.on('click', mapClickHandler);
-            } else {
-                const latLng = e.latlng;
-                $indexMap.setView(latLng, $indexMap.getZoom());
-
-                if (currentRectangle) {
-                    newLayer.removeLayer(currentRectangle);
-                }
-
-                const squareIcon = L.divIcon({
-                    html: `<svg width="24" height="24"><rect x="0" y="0" width="24" height="24" fill="none" stroke="#0066CC" stroke-width="3"/></svg>`,
-                    className: 'square-marker',
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12]
-                });
-                currentRectangle = L.marker(latLng, { icon: squareIcon }).addTo(newLayer);
-
-                const mapClickHandler = function (e) {
-                    if (currentRectangle) {
-                        newLayer.removeLayer(currentRectangle);
-                        $indexMap.off('click', mapClickHandler);
-                    }
-                };
-                $indexMap.on('click', mapClickHandler);
-
-                const popupContent = name == "街景照片" ? popupPhoto(prop) : popupFormat(prop, name);
-                L.popup({ maxWidth: 450, maxHeight: 350 })
-                    .setLatLng(latLng)
-                    .setContent(popupContent)
-                    .openOn($indexMap);
-            }
-        });
-        marker._isVisible = true;
-        point[2].Instance = marker;
+        const prop = point[1];
+        const props = point[2];
+        const renderOpts = resolveRenderOpts(props, icon, markerColor, styleRule);
+        const marker = createPointGraphic(point[0], renderOpts);
+        finalizeMarker(marker, prop, name, props, newLayer, $indexMap);
     });
     console.log("Create Maker");
+}
+
+// 對畫面上既有的 point 圖層即時套用「編輯圖徽」規則（圖片 icon 會就地換成 circleMarker）
+export function restyleLayerGroup(layerGroup, rule) {
+    if (!rule || !layerGroup || typeof layerGroup.eachLayer !== 'function') return;
+    var $indexMap = Map.getIndexMap();
+    const markers = [];
+    layerGroup.eachLayer(function (m) { markers.push(m); });
+
+    markers.forEach(function (marker) {
+        const props = marker.feature;
+        const fillColor = resolvePointColor(rule, props);
+        if (fillColor == null) return; // 依類型找不到對應分類，維持原樣式
+
+        const circleOptions = {
+            radius: rule.diameter / 2 - rule.strokeWidth / 2,
+            color: rule.frameColor,
+            weight: rule.strokeWidth,
+            fillColor,
+            fillOpacity: 1
+        };
+
+        if (typeof marker.setStyle === 'function' && typeof marker.setRadius === 'function') {
+            marker.setStyle(circleOptions); // CircleMarker.setStyle 內含 radius 一併更新
+        } else {
+            const latlng = marker.getLatLng();
+            const prop = marker._prop;
+            const name = marker._layerName;
+            layerGroup.removeLayer(marker);
+            const newMarker = L.circleMarker(latlng, circleOptions);
+            finalizeMarker(newMarker, prop, name, props, layerGroup, $indexMap);
+        }
+    });
 }
 
 export function addLineToLayer(points, newLayer, color, name) {

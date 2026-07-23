@@ -947,6 +947,9 @@ const RoadProjectEdit = {
         this.renderRemarkFileList();
     },
 
+    // 單一附件檔案大小上限（5MB）
+    MAX_REMARK_FILE_SIZE: 5 * 1024 * 1024,
+
     /**
      * 處理備註附件檔案選擇（可複選），選取後暫存於畫面上，儲存時才上傳
      */
@@ -954,7 +957,19 @@ const RoadProjectEdit = {
         const files = input.files;
         if (!files || files.length === 0) return;
 
-        Array.from(files).forEach(file => this.newRemarkFiles.push(file));
+        const oversized = [];
+        Array.from(files).forEach(file => {
+            if (file.size > this.MAX_REMARK_FILE_SIZE) {
+                oversized.push(file.name);
+                return;
+            }
+            this.newRemarkFiles.push(file);
+        });
+
+        if (oversized.length > 0) {
+            alert(`以下檔案超過 5MB 上限，未加入附件：\n${oversized.join('\n')}`);
+        }
+
         input.value = '';
         this.renderRemarkFileList();
     },
@@ -1037,9 +1052,12 @@ const RoadProjectEdit = {
 
         // 刪除已標記移除的既有附件
         if (this.removedRemarkFileIds.length > 0) {
-            await Promise.all(this.removedRemarkFileIds.map(id =>
+            const deleteResponses = await Promise.all(this.removedRemarkFileIds.map(id =>
                 fetch(`/api/RoadProject/DeleteRemarkFile/${id}`, { method: 'DELETE' })
             ));
+            if (deleteResponses.some(r => !r.ok)) {
+                throw new Error('部分備註附件刪除失敗');
+            }
         }
 
         // 上傳新增中的附件
@@ -1055,6 +1073,12 @@ const RoadProjectEdit = {
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
                 throw new Error(err.message || '備註附件上傳失敗');
+            }
+
+            const data = await response.json();
+            const failed = (data.results || []).filter(r => !r.success);
+            if (failed.length > 0) {
+                throw new Error(`以下附件上傳失敗：${failed.map(f => f.fileName).join('、')}`);
             }
         }
     },
@@ -1133,11 +1157,16 @@ const RoadProjectEdit = {
 
         showLoading('更新中...', '#right-box');
 
-        // 第一步：更新基本資料
-        fetch('/Admin/UpdateRoadProject', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+        // 第一步：先送出備註附件的新增與刪除。若失敗就整個中止，
+        // 避免專案主資料（含 UpdateTime）在附件沒存成功的情況下被誤標為已更新。
+        self.submitRemarkFiles()
+        .then(function() {
+            // 第二步：更新基本資料
+            return fetch('/Admin/UpdateRoadProject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
         })
         .then(function(response) {
             if (!response.ok) return response.json().then(function(err) { throw err; });
@@ -1145,12 +1174,8 @@ const RoadProjectEdit = {
         })
         .then(function(result) {
             if (!result.success) throw new Error(result.message);
-            // 第二步：更新座標點
+            // 第三步：更新座標點
             return self.submitPoints();
-        })
-        .then(function() {
-            // 第三步：送出備註附件的新增與刪除
-            return self.submitRemarkFiles();
         })
         .then(function() {
             // 第四步：若座標未確認，儲存時自動確認

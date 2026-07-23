@@ -1,4 +1,4 @@
-import {layers, layerProps} from '../layers.js';
+import {layers, loadLayerProps} from '../layers.js';
 
 // VectorGrid 1.3.0 沒有 setStyle，直接更新 options 再 redraw
 function _vtSetStyle(layer, style) {
@@ -15,7 +15,7 @@ var pointStep1 = `
             <div id="lineEdit1" class="symbolClass pSymbol1" data-symclass="1">
                 <div class="symbolText">依分級</div>
             </div>
-            <div id="lineEdit2" class="symbolClass pSymbol2" data-symclass="2">       
+            <div id="lineEdit2" class="symbolClass pSymbol2" data-symclass="2">
                 <div class="symbolText">依類型</div>
             </div>
         </div>
@@ -23,7 +23,7 @@ var pointStep1 = `
             <button class="btn js-modal-toggle editCancel">取消</button>
             <button class="btn js-modal-toggle" id="editNext">下一步</button>
         </div>`;
-let idList; 
+let idList;
 let name;
 
 export function lineEdit(id, pipeName, layersId){
@@ -31,12 +31,12 @@ export function lineEdit(id, pipeName, layersId){
     idList = layersId;
     name = pipeName;
     console.log("pointEdit", id, idList, `編輯圖徽 - ${name}`);
-    
+
     $('#layerBarContainer').addClass('hidden');
     $('#editSymbol-Step1').removeClass('hidden');
     $('#editSymbol-Step1').html(pointStep1);
     // $("#editSymbol-Title0").append(`編輯圖徽 - ${name} <br> 選擇編輯類型`);
-    
+
     $('#editNext').click(function () {
         lineEditStep2(id);
     });
@@ -60,26 +60,27 @@ export function lineEdit(id, pipeName, layersId){
 
 // 線符號選擇
 var pointStep2_0 = `
-    <div id="symbolProp-0" class="symbolProp">     
+    <div id="symbolProp-0" class="symbolProp">
         <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
         <!-- 外框 -->
         <span>外框</span>
-        <input class="color-box" type="color" name="frameColor" value="#ff0000"> 
+        <input class="color-box" type="color" name="frameColor" value="#ff0000">
         <select class="select2" name="thickness">
+            <option value="0">0</option>
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
-        </select>   
-        <br>            
+        </select>
+        <br>
         <div class="form-group" style="clear:both;">
             <button class="btn js-modal-toggle editBack">上一步</button>
             <button class="btn js-modal-toggle editComplete">完成</button>
-        </div>                
+        </div>
     </div>`;
 
     // 依分級選擇
 var pointStep2_1 = `
-    <div id="symbolProp-1" class="symbolProp">  
+    <div id="symbolProp-1" class="symbolProp">
         <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
         <!-- 欄位 -->
         <span>欄位</span>
@@ -105,6 +106,7 @@ var pointStep2_1 = `
         <!-- 粗細 -->
         <span>粗細</span>
         <select class="select2" name="thickness">
+            <option value="0">0</option>
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -130,8 +132,8 @@ var pointStep2_1 = `
 
 // 依類型選擇
 var pointStep2_2 = `
-    <div id="symbolProp-2" class="symbolProp">    
-        <h5 id="editSymbol-Title1" class="offcanvas-title"></h5> 
+    <div id="symbolProp-2" class="symbolProp">
+        <h5 id="editSymbol-Title1" class="offcanvas-title"></h5>
         <!-- 欄位 -->
         <span>欄位</span>
         <select class="select2" name="field">
@@ -155,6 +157,7 @@ var pointStep2_2 = `
         <!-- 粗細 -->
         <span>粗細</span>
         <select class="select2" name="thickness">
+            <option value="0">0</option>
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -195,13 +198,13 @@ var groupColorsMap = {
 function createGradientDataURL(colors){
     var canvas = document.getElementById('gradientColor');
     var ctx = canvas.getContext('2d');
-    
+
     // 清空畫布
     ctx.clearRect(0,0,200,50);
 
     // 建立水平漸層
     var gradient = ctx.createLinearGradient(0,0,200,0);
-    
+
     // 根據顏色數量平均分佈
     var step = 1/(colors.length-1);
     colors.forEach(function(color, index){
@@ -217,7 +220,7 @@ function createGradientDataURL(colors){
 function creategroupColor(colors){
     var canvas = document.getElementById('groupColor');
     var ctx = canvas.getContext('2d');
-    
+
     // 清空畫布
     ctx.clearRect(0,0,200,50);
 
@@ -267,12 +270,30 @@ function adjustDuplicateColors(colorSet) {
     return colorSet;
 }
 
-const lineNoSelect = ["座標", "備註", "OBJECTID", "內容物", "Instance", "類別碼", "識別碼", "起點編號", "終點編號", "管理單位", "管線編號", "設置日期", "管線材料"];
-const focusNoSelect = ["ID", "申請日期", "申請租借事由", "租借起始日", "租借結束日", "借用時段", "借用路段", "案件狀態"];
+// 圖例色塊，直接用 CSS 畫，不再產生 SVG data URL
+function buildLegendSwatch(color) {
+    return `<span class="edit_icon" style="display:inline-block; background-color:${color};"></span>`;
+}
 
+// 系統／內部欄位，不提供使用者選擇
+const SYSTEM_FIELDS = ["座標", "備註", "OBJECTID", "內容物", "Instance", "AreaId", "Kind"];
+
+function getSelectableFields(allProps) {
+    if (!allProps || !allProps[0]) return [];
+    return Object.keys(allProps[0]).filter(field => !SYSTEM_FIELDS.includes(field));
+}
+
+// 動態判斷「可分級」欄位：抽樣檢查是否具備可解析成數字的值，取代寫死的欄位名單
+function getNumericFields(allProps) {
+    if (!allProps || allProps.length === 0) return [];
+    const sample = allProps.slice(0, 50);
+    return getSelectableFields(allProps).filter(function (field) {
+        return sample.some(function (p) { return p[field] != null && p[field] !== '' && !isNaN(parseFloat(p[field])); });
+    });
+}
 
 function lineEditStep2(id){
-    console.log("pointEditStep2");
+    console.log("lineEditStep2");
     // 從.symbolClass下找到.selected的data-symclass
     var symClass = $('.symbolClass.selected').data('symclass');
     console.log(symClass);
@@ -283,115 +304,88 @@ function lineEditStep2(id){
     $('#editSymbol-Step1').addClass('hidden');
     $('#editSymbol-Step2').removeClass('hidden');
 
-    // 依照選擇的類型，載入對應的HTML
     if(symClass == 0){
         console.log("pointStep2_0");
         $('#editSymbol-Step2').html(pointStep2_0);
         $('#editSymbol-Title1').append(`編輯圖徽 - 線符號選擇`);
+        bindStep2Actions(id, null);
+        return;
     }
-    if(symClass == 1){
-        console.log("pointStep2_1");
-        $('#editSymbol-Step2').html(pointStep2_1);
-        $('#editSymbol-Title1').append(`編輯圖徽 - 依分級選擇`);
-        var fields = Object.keys(layerProps[id][0]);
-        
-        fields.forEach(function(field){
-            if (!lineNoSelect.includes(field) && !focusNoSelect.includes(field)) {
-                $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
-            }
-        });
 
-        // 2. 初始化 Select2，並使用 templateResult
-        $('#gradientColorsMap').select2({
-            templateResult: function (state) {
-                if (!state.id) {
-                    return state.text;
-                }
-                var colors = gradientColorsMap[state.id];
-                if(!colors) return state.text; // 如果無對應顏色集，則顯示文字即可
-                
-                var imgData = createGradientDataURL(colors);
-                var $span = $('<span></span>');
-                var $img = $('<img>', {
-                    src: imgData,
-                    width: 170, 
-                    height: 20,
-                    css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' }
-                });
-                $span.append($img); // 將 value 當作文字標籤顯示
-                return $span;
-            },
-            templateSelection: function(state){
-                // 選擇後顯示同樣的圖片
-                if(!state.id) return state.text;
-                var colors = gradientColorsMap[state.id];
-                if(!colors) return state.text;
-                
-                var imgData = createGradientDataURL(colors);
-                var $span = $('<span></span>');
-                var $img = $('<img>', {
-                    src: imgData,
-                    width: 170, 
-                    height: 20,
-                    css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' }
-                });
-                $span.append($img);
-                return $span;
-            },
-            minimumResultsForSearch: Infinity, // 隱藏搜索框
-            // name: 'field'
-        });
-    }
-    if(symClass == 2){
-        console.log("pointStep2_2");
-        $('#editSymbol-Step2').html(pointStep2_2);
-        $('#editSymbol-Title1').append(`編輯圖徽 - 依類型選擇`);
-        var fields = Object.keys(layerProps[id][0]);
-        fields.forEach(function (field) {
-            // 不等於座標、備註、OBJECTID、內容物、Instance
-            if(field != "座標" && field != "備註" && field != "OBJECTID" && field != "內容物" && field != "Instance"){
+    // 依分級／依類型需要該 pipeline 完整屬性資料才能正確列出欄位與計算範圍/分類，
+    // 不能只看目前剛好被其他功能載入的部分資料（甚至可能完全還沒載入）
+    $('#editSymbol-Step2').html(`<div style="padding:20px;">載入欄位資料中...</div>`);
+    loadLayerProps(id).then(function (allProps) {
+        if(symClass == 1){
+            console.log("pointStep2_1");
+            $('#editSymbol-Step2').html(pointStep2_1);
+            $('#editSymbol-Title1').append(`編輯圖徽 - 依分級選擇`);
+            getNumericFields(allProps).forEach(function (field) {
                 $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
-            };
-        });
-        $('#groupColorsMap').select2({
-            // 使用groupColorsMap的顏色但不要漸層
-            templateResult: function (state) {
-                if (!state.id) {
-                    return state.text;
-                }
-                var colors = groupColorsMap[state.id];
-                if(!colors) return state.text;
-                
-                var imgData = creategroupColor(colors);
-                var $span = $('<span></span>');
-                var $img = $('<img>', {
-                    src: imgData,
-                    width: 170, 
-                    height: 20,
-                    css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' }
-                });
-                $span.append($img);
-                return $span;
-            },
-            templateSelection: function(state){
-                if(!state.id) return state.text;
-                var colors = groupColorsMap[state.id];
-                if(!colors) return state.text;
-                // 每個寬度平均分佈在 200 px 的 Canvas 中，不同的區段顏色清晰分隔（類似色階圖的感覺）
-                var imgData = creategroupColor(colors);
-                var $span = $('<span></span>');
-                var $img = $('<img>', {
-                    src: imgData,
-                    width: 170, 
-                    height: 20,
-                    css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' }
-                });
-                $span.append($img);
-                return $span;
-            },
-            minimumResultsForSearch: Infinity, // 隱藏搜索框
-        });
-    }
+            });
+
+            // 初始化 Select2，並使用 templateResult 顯示漸層色預覽
+            $('#gradientColorsMap').select2({
+                templateResult: function (state) {
+                    if (!state.id) return state.text;
+                    var colors = gradientColorsMap[state.id];
+                    if(!colors) return state.text;
+                    var imgData = createGradientDataURL(colors);
+                    var $span = $('<span></span>');
+                    var $img = $('<img>', { src: imgData, width: 170, height: 20, css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' } });
+                    $span.append($img);
+                    return $span;
+                },
+                templateSelection: function(state){
+                    if(!state.id) return state.text;
+                    var colors = gradientColorsMap[state.id];
+                    if(!colors) return state.text;
+                    var imgData = createGradientDataURL(colors);
+                    var $span = $('<span></span>');
+                    var $img = $('<img>', { src: imgData, width: 170, height: 20, css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' } });
+                    $span.append($img);
+                    return $span;
+                },
+                minimumResultsForSearch: Infinity, // 隱藏搜索框
+            });
+        } else if(symClass == 2){
+            console.log("pointStep2_2");
+            $('#editSymbol-Step2').html(pointStep2_2);
+            $('#editSymbol-Title1').append(`編輯圖徽 - 依類型選擇`);
+            getSelectableFields(allProps).forEach(function (field) {
+                $('select[name="field"]').append(`<option value="${field}">${field}</option>`);
+            });
+
+            $('#groupColorsMap').select2({
+                // 使用groupColorsMap的顏色但不要漸層
+                templateResult: function (state) {
+                    if (!state.id) return state.text;
+                    var colors = groupColorsMap[state.id];
+                    if(!colors) return state.text;
+                    var imgData = creategroupColor(colors);
+                    var $span = $('<span></span>');
+                    var $img = $('<img>', { src: imgData, width: 170, height: 20, css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' } });
+                    $span.append($img);
+                    return $span;
+                },
+                templateSelection: function(state){
+                    if(!state.id) return state.text;
+                    var colors = groupColorsMap[state.id];
+                    if(!colors) return state.text;
+                    var imgData = creategroupColor(colors);
+                    var $span = $('<span></span>');
+                    var $img = $('<img>', { src: imgData, width: 170, height: 20, css: { 'vertical-align': 'unset', 'margin-top': '4px', 'border':'1px solid #ccc' } });
+                    $span.append($img);
+                    return $span;
+                },
+                minimumResultsForSearch: Infinity, // 隱藏搜索框
+            });
+        }
+        bindStep2Actions(id, allProps);
+    });
+}
+
+function bindStep2Actions(id, allProps) {
     $(".editBack").on('click', function () {
         $('#editSymbol-Step2').addClass('hidden');
         $('#editSymbol-Step1').removeClass('hidden');
@@ -431,38 +425,25 @@ function lineEditStep2(id){
                     // LayerGroup（backward compat）
                     layer.eachLayer(function(sub){
                         if (sub instanceof L.PolylineDecorator) { layers[layerId].removeLayer(sub); return; }
-                        sub.setStyle({ color, weight: w * w });
+                        sub.setStyle({ color, weight: w });
                     });
                 }
             });
             // 清除sections_{id}下的所有section
             $(`#sections_${id}`).empty();
-            
-            // 新增一個svg，為該顏色的橫條線段
-            var svgHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="20">
-                <line x1="0" y1="10" x2="100" y2="10" style="stroke:${color};stroke-width:${thickness}"></line>
-            </svg>`;
-
-            // 新增 SVG 內容以 encodeURIComponent 包起來
-            var encodedSVG = encodeURIComponent(svgHTML);
-
-            // 使用模板字串插入資料
-            var section = `
+            $(`#sections_${id}`).append(`
             <div class="section" id="section_${id}">
-                <span class="edit_icon" style="background-image: url('data:image/svg+xml;utf8,${encodedSVG}');"></span>
+                ${buildLegendSwatch(color)}
             </div>
-            `;
+            `);
             $('#editSymbol-Step1').empty();
             $('#editSymbol-Step2').empty();
-            // 將 section 插入到對應的元素中
-            $(`#sections_${id}`).append(section);
         }
 
         if(symbolProp == "symbolProp-1"){
             var inputs = $('#symbolProp-1').find('input');
             var selects = $('#symbolProp-1').find('select');
-        
+
             let formData = {};
             inputs.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
@@ -470,14 +451,14 @@ function lineEditStep2(id){
             selects.each(function() {
                 formData[$(this).attr('name')] = $(this).val();
             });
-        
+
             if (formData.field == 'none') {
                 alert("請選擇欄位");
                 return;
             }
 
-            // 從 layerProps 取得數值範圍（不再解析 popup HTML）
-            const allProps1 = layerProps[id] || [];
+            // 從已完整載入的屬性資料取得數值範圍
+            const allProps1 = allProps || [];
             let minValue = Infinity, maxValue = -Infinity;
             allProps1.forEach(function(p) {
                 const v = parseFloat(p[formData.field]);
@@ -535,7 +516,7 @@ function lineEditStep2(id){
                             const v = parseFloat(pd[field1]);
                             let idx = Math.floor((v - minValue) / rangeSize);
                             if (idx >= levels) idx = levels - 1;
-                            sub.setStyle({ color: colorSet[idx], weight: weight1 * weight1 });
+                            sub.setStyle({ color: colorSet[idx], weight: weight1 });
                         } catch(e) {}
                     });
                 }
@@ -546,23 +527,12 @@ function lineEditStep2(id){
                 let rangeMin = minValue + i * rangeSize;
                 let rangeMax = minValue + (i + 1) * rangeSize;
 
-                // 建立一個 SVG 橫條
-                var svgHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="20">
-                    <line x1="0" y1="10" x2="100" y2="10" style="stroke:${colorSet[i]};stroke-width:${formData.thickness}"></line>
-                </svg>`;
-
-                // 新增 SVG 內容以 encodeURIComponent 包起來
-                var encodedSVG = encodeURIComponent(svgHTML);
-
-                // 使用模板字串插入資料
-                var section = `
+                const section = `
                 <div class="section" id="section_${id}">
-                    <span class="edit_icon" style="background-image: url('data:image/svg+xml;utf8,${encodedSVG}');"></span>
+                    ${buildLegendSwatch(colorSet[i])}
                     <span class="range_label" style="margin-left:5px">${rangeMin.toFixed(1)} - ${rangeMax.toFixed(1)}</span>
                 </div>
                 `;
-                // 將 section 插入到對應的元素中
                 $(`#sections_${id}`).append(section);
             }
             // 清空表單步驟
@@ -586,8 +556,8 @@ function lineEditStep2(id){
                 return;
             }
             console.log(formData);
-            // 從 layerProps 取得唯一類型值（不再解析 popup HTML）
-            const allProps2 = layerProps[id] || [];
+            // 從已完整載入的屬性資料取得唯一類型值
+            const allProps2 = allProps || [];
             let fields = [...new Set(allProps2.map(p => p[formData.field]).filter(v => v != null && v !== undefined))];
             if (typeof fields[0] === 'string') fields.sort();
             else fields.sort((a, b) => a - b);
@@ -629,30 +599,19 @@ function lineEditStep2(id){
                             const pd = JSON.parse(doc.querySelector('.popupData').textContent.replace(/NaN/g, 'null'));
                             const idx = fields.indexOf(pd[field2]);
                             if (idx === -1) return;
-                            sub.setStyle({ color: colorSet[idx], weight: weight2 * weight2 });
+                            sub.setStyle({ color: colorSet[idx], weight: weight2 });
                         } catch(e) {}
                     });
                 }
             });
             $(`#sections_${id}`).empty();
             for (let i = 0; i < colorSet.length; i++) {
-                // 建立一個 SVG 橫條
-                var svgHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="20">
-                    <rect x="0" y="0" width="100" height="20" fill="${colorSet[i]}"></rect>
-                </svg>`;
-
-                // 新增 SVG 內容以 encodeURIComponent 包起來
-                var encodedSVG = encodeURIComponent(svgHTML);
-
-                // 使用模板字串插入資料
-                var section = `
+                const section = `
                 <div class="section" id="section_${id}">
-                    <span class="edit_icon" style="background-image: url('data:image/svg+xml;utf8,${encodedSVG}');"></span>
+                    ${buildLegendSwatch(colorSet[i])}
                     <span class="range_label" style="margin-left:5px">${fields[i]}</span>
                 </div>
                 `;
-                // 將 section 插入到對應的元素中
                 $(`#sections_${id}`).append(section);
             }
         }

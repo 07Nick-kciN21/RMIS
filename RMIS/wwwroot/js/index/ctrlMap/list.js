@@ -7,6 +7,22 @@ import { layerEditor } from './layerEdit/layerEditor.js';
 import { opacityLayer } from './opacityCtrl.js';
 import { openPanel } from '../metaDataPanel.js';
 
+// 沒有設定 svg 的圖層，依 kind + color 自動產生一個示意圖示（圓形/橫線/方形）
+function buildFallbackIconStyle(kind, color) {
+    const c = color || '#3388ff';
+    switch (kind) {
+        case 'point':
+            return `background-color:${c}; border-radius:50%;`;
+        case 'plane':
+            return `background-color:${c}; border:1px solid rgba(0,0,0,0.3); box-sizing:border-box;`;
+        case 'line':
+        case 'arrowline':
+            return `background-color:${c}; height:4px; margin-top:10px; border-radius:2px;`;
+        default:
+            return `background-color:${c};`;
+    }
+}
+
 // 圖資清單控制
 export function add2List(id, name, datas, metaData) {
     let sections = "";
@@ -14,7 +30,9 @@ export function add2List(id, name, datas, metaData) {
     // pipeline下的layer
     datas.forEach(function (data) {
         layersId.push(data.id);
-        var iconStyle = data.svg ? `style="background-image: url('/img/${data.svg}');"` : '';
+        var iconStyle = data.svg
+            ? `style="background-image: url('/img/${data.svg}');"`
+            : `style="${buildFallbackIconStyle(data.kind, data.color)}"`;
         var section = `
             <div class="section" id="section_${data.id}">
                 <span class="section_icon" ${iconStyle}></span>

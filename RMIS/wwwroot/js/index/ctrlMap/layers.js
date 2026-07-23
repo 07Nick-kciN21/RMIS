@@ -1,6 +1,7 @@
 ﻿import { Map } from '../map_test.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer, addArrowlineToLayer } from './utils.js';
 import { showLoading, hideLoading } from '../../loading.js';
+import { getPointStyleRule } from './layerEdit/pointStyleStore.js';
 
 export let layerProps = {};
 // pipeline下的各種圖層
@@ -151,7 +152,10 @@ async function _loadViewportPoints(layerId) {
             if (item2 != null) layerProps[pipelineId].push(merged);
             return [[p.latitude, p.longitude], p.property, merged, null];
         });
-        addMarkersToLayer(points, vl.leafletLayer, data.svg, data.layerName, data.color);
+        // 有先前透過「編輯圖徽」設定的樣式規則就直接照規則建立 marker，
+        // 避免移動地圖重新載入後變回伺服器預設圖標
+        const styleRule = getPointStyleRule(layerId);
+        addMarkersToLayer(points, vl.leafletLayer, data.svg, data.layerName, data.color, styleRule);
         console.log(`Viewport loaded ${data.total} points for layer ${layerId}`);
     } catch (e) {
         if (e.name === 'AbortError') return;
