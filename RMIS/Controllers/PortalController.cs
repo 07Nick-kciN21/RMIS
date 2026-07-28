@@ -183,7 +183,7 @@ namespace RMIS.Controllers
             var userName = User.Identity?.Name ?? "Unknown";
             var clientIp = HttpContext.GetClientIpAddress();
             await _signInManager.SignOutAsync();
-            _logger?.LogOperation("Logout", true, "使用者登出", userName, clientIp);
+            _logger?.LogOperation("登出", true, "使用者登出", userName, clientIp);
             return RedirectToAction("Login");
         }
 

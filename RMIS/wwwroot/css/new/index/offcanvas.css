@@ -8,6 +8,19 @@
     border-radius: 5px;
 }
 
+#layerBar-ListTitle {
+    flex: 0 0 auto;
+}
+
+#layerBarContainer {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 85%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
 .layerBar {
     margin-bottom: 5px;
     display: flex;

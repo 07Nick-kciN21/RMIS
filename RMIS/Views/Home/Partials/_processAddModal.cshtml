@@ -22,7 +22,7 @@
                     <h4 class="section-title">階段與基本資訊</h4>
 
                     <div class="form-row">
-                        <div class="form-group col-6">
+                        <div class="form-group col-6 field-hide-file-upload">
                             <label for="sa-district">行政區</label>
                             <select id="sa-district" name="district" class="form-control">
                                 <option value="">請選擇</option>
@@ -49,6 +49,7 @@
                                 <option value="會議記錄">會議記錄</option>
                                 <option value="公文核定">公文核定</option>
                                 <option value="進度說明">進度說明</option>
+                                <option value="檔案上傳">檔案上傳</option>
                             </select>
                         </div>
                     </div>
@@ -60,14 +61,14 @@
                                    placeholder="請輸入記錄標題" required>
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row field-hide-file-upload">
                         <div class="form-group col-12">
                             <label for="sa-project-name">工程名稱</label>
                             <input type="text" id="sa-project-name" name="project_name" class="form-control"
                                    placeholder="請輸入工程名稱" readonly>
                         </div>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row field-hide-file-upload">
                         <div class="form-group col-6">
                             <label for="sa-execution-unit">執行單位</label>
                             <input type="text" id="sa-execution-unit" name="execution_unit" class="form-control"
@@ -82,7 +83,7 @@
                 </div>
 
                 @* 用地取得資訊 *@
-                <div class="form-section">
+                <div class="form-section field-hide-file-upload">
                     <h4 class="section-title">用地取得資訊</h4>
                     <div class="form-row">
                         <div class="form-group col-6">
@@ -164,7 +165,7 @@
                 </div>
 
                 @* 工程資訊 *@
-                <div class="form-section">
+                <div class="form-section field-hide-file-upload">
                     <h4 class="section-title">工程資訊</h4>
                     <div class="form-row">
                         <div class="form-group col-6">
@@ -259,7 +260,7 @@
                 </div>
 
                 @* 會議資訊 *@
-                <div class="form-section">
+                <div class="form-section field-hide-file-upload">
                     <h4 class="section-title">會議資訊</h4>
                     <div class="form-row">
                         <div class="form-group col-12">

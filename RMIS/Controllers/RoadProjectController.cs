@@ -33,13 +33,6 @@ namespace RMIS.Controllers
         private readonly FilePathSettings _filePaths;
         private readonly ILogger<RoadProjectController> _logger;
 
-        private static readonly Dictionary<int, string> StageNames = new()
-        {
-            { 1, "前期規劃" },
-            { 2, "用地取得" },
-            { 3, "設計與施工" }
-        };
-
         public RoadProjectController(
             RoadProjectInterface roadProjectInterface,
             AdminInterface adminInterface,
@@ -62,9 +55,6 @@ namespace RMIS.Controllers
         {
             _logger.LogOperation(operation, isSuccess, reason, User.Identity?.Name, HttpContext.GetClientIpAddress(), exception);
         }
-
-        private static string StageReason(string projectId, int stage) =>
-            $"專案 {projectId} 階段{stage}({StageNames[stage]})";
 
         /// <summary>
         /// 根據專案 ID 取得單一道路專案詳細資料
@@ -270,101 +260,6 @@ namespace RMIS.Controllers
             return Ok(projects);
         }
 
-        [HttpPost("AddProcess1")]
-        public async Task<IActionResult> AddProcess1(RoadProjectProcess1 process1)
-        {
-            if (process1 == null) return BadRequest(new { success = false, message = "接收不到資料" });
-
-            process1.Id = 0;
-            var result = await _roadProjectInterface.AddProcess1Async(process1);
-
-            if (result == "success")
-            {
-                await AddProcessEditLog(process1.ProcessId, "建立");
-                LogOp("新增歷程", true, StageReason(process1.ProjectId, 1));
-                return Ok(new { success = true, processId = process1.ProcessId });
-            }
-            LogOp("新增歷程", false, $"{StageReason(process1.ProjectId, 1)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpPost("AddProcess2")]
-        public async Task<IActionResult> AddProcess2(RoadProjectProcess2 process2)
-        {
-            if (process2 == null) return BadRequest(new { success = false, message = "接收不到資料" });
-
-            process2.Id = 0;
-            var result = await _roadProjectInterface.AddProcess2Async(process2);
-
-            if (result == "success")
-            {
-                await AddProcessEditLog(process2.ProcessId, "建立");
-                LogOp("新增歷程", true, StageReason(process2.ProjectId, 2));
-                return Ok(new { success = true, processId = process2.ProcessId });
-            }
-            LogOp("新增歷程", false, $"{StageReason(process2.ProjectId, 2)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpPost("AddProcess3")]
-        public async Task<IActionResult> AddProcess3(RoadProjectProcess3 process3)
-        {
-            if (process3 == null) return BadRequest(new { success = false, message = "接收不到資料" });
-
-            process3.Id = 0;
-            var result = await _roadProjectInterface.AddProcess3Async(process3);
-
-            if (result == "success")
-            {
-                await AddProcessEditLog(process3.ProcessId, "建立");
-                LogOp("新增歷程", true, StageReason(process3.ProjectId, 3));
-                return Ok(new { success = true, processId = process3.ProcessId });
-            }
-            LogOp("新增歷程", false, $"{StageReason(process3.ProjectId, 3)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpGet("GetProcess1/{id}")]
-        public async Task<ActionResult<RoadProjectProcess1>> GetProcess1(int id)
-        {
-            var result = await _roadProjectInterface.GetProcess1ByIdAsync(id);
-            if (result == null)
-            {
-                return NotFound($"找不到 ID 為 {id} 的 Process1 資料");
-            }
-            return Ok(result);
-        }
-
-        [HttpGet("GetProcess2/{id}")]
-        public async Task<ActionResult<RoadProjectProcess2>> GetProcess2(int id)
-        {
-            var result = await _roadProjectInterface.GetProcess2ByIdAsync(id);
-            if (result == null)
-            {
-                return NotFound($"找不到 ID 為 {id} 的 Process2 資料");
-            }
-            return Ok(result);
-        }
-
-        [HttpGet("GetProcess3/{id}")]
-        public async Task<ActionResult<RoadProjectProcess3>> GetProcess3(int id)
-        {
-            var result = await _roadProjectInterface.GetProcess3ByIdAsync(id);
-            if (result == null)
-            {
-                return NotFound($"找不到 ID 為 {id} 的 Process3 資料");
-            }
-            return Ok(result);
-        }
-
-        [HttpGet("GetProcessRecords/{projectId}")]
-        public async Task<ProjectProcessesList> GetProcessRecords(string projectId)
-        {
-            var result = await _roadProjectInterface.GetProcessRecordsAsync(projectId);
-
-            return result;
-        }
-
         [HttpGet("GetAllProcessRecords/{projectId}")]
         public async Task<IActionResult> GetAllProcessRecords(string projectId)
         {
@@ -393,11 +288,11 @@ namespace RMIS.Controllers
             if (result == "success")
             {
                 await AddProcessEditLog(processId, "建立");
-                LogOp("新增總階段歷程", true, $"專案:{process.ProjectId}");
+                LogOp("新增歷程", true, $"專案:{process.ProjectName}");
                 return Ok(new { success = true, processId });
             }
 
-            LogOp("新增總階段歷程", false, $"專案:{process.ProjectId}, {result}");
+            LogOp("新增歷程", false, $"專案:{process.ProjectName}, {result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -411,11 +306,11 @@ namespace RMIS.Controllers
             {
                 var existing = await _mapDBContext.RoadProjectProcesses.FindAsync(process.Id);
                 if (existing != null) await AddProcessEditLog(existing.ProcessId, "修改");
-                LogOp("更新總階段歷程", true, $"Id:{process.Id}");
+                LogOp("更新歷程", true, $"Id:{process.Id}");
                 return Ok(new { success = true });
             }
 
-            LogOp("更新總階段歷程", false, $"Id:{process.Id}, {result}");
+            LogOp("更新歷程", false, $"Id:{process.Id}, {result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -425,11 +320,11 @@ namespace RMIS.Controllers
             var result = await _roadProjectInterface.DeleteAllProcessRecordAsync(id);
             if (result == "success")
             {
-                LogOp("刪除總階段歷程", true, $"Id:{id}");
+                LogOp("刪除歷程", true, $"Id:{id}");
                 return Ok(new { success = true, message = "刪除成功" });
             }
 
-            LogOp("刪除總階段歷程", false, $"Id:{id}, {result}");
+            LogOp("刪除歷程", false, $"Id:{id}, {result}");
             return BadRequest(new { success = false, message = result });
         }
 
@@ -695,102 +590,6 @@ namespace RMIS.Controllers
             return BadRequest(new { success = false, message = result });
         }
 
-        [HttpDelete("DeleteProcess1/{id}")]
-        public async Task<IActionResult> DeleteProcess1(int id)
-        {
-            var record = await _mapDBContext.RoadProjectProcess1.FindAsync(id);
-            var result = await _roadProjectInterface.DeleteProcess1Async(id);
-
-            if (result == "success")
-            {
-                LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 1));
-                return Ok(new { success = true, message = "記錄刪除成功" });
-            }
-            LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 1)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpDelete("DeleteProcess2/{id}")]
-        public async Task<IActionResult> DeleteProcess2(int id)
-        {
-            var record = await _mapDBContext.RoadProjectProcess2.FindAsync(id);
-            var result = await _roadProjectInterface.DeleteProcess2Async(id);
-
-            if (result == "success")
-            {
-                LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 2));
-                return Ok(new { success = true, message = "記錄刪除成功" });
-            }
-            LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 2)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpDelete("DeleteProcess3/{id}")]
-        public async Task<IActionResult> DeleteProcess3(int id)
-        {
-            var record = await _mapDBContext.RoadProjectProcess3.FindAsync(id);
-            var result = await _roadProjectInterface.DeleteProcess3Async(id);
-
-            if (result == "success")
-            {
-                LogOp("刪除歷程", true, StageReason(record?.ProjectId ?? "?", 3));
-                return Ok(new { success = true, message = "記錄刪除成功" });
-            }
-            LogOp("刪除歷程", false, $"{StageReason(record?.ProjectId ?? "?", 3)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpPut("UpdateProcess1")]
-        public async Task<IActionResult> UpdateProcess1([FromBody] RoadProjectProcess1 process)
-        {
-            if (process == null) return BadRequest(new { success = false, message = "接收不到資料" });
-
-            var result = await _roadProjectInterface.UpdateProcess1Async(process);
-
-            if (result == "success")
-            {
-                await AddProcessEditLog(process.ProcessId, "編輯");
-                LogOp("編輯歷程", true, StageReason(process.ProjectId, 1));
-                return Ok(new { success = true, processId = process.ProcessId });
-            }
-            LogOp("編輯歷程", false, $"{StageReason(process.ProjectId, 1)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpPut("UpdateProcess2")]
-        public async Task<IActionResult> UpdateProcess2([FromBody] RoadProjectProcess2 process)
-        {
-            if (process == null) return BadRequest(new { success = false, message = "接收不到資料" });
-
-            var result = await _roadProjectInterface.UpdateProcess2Async(process);
-
-            if (result == "success")
-            {
-                await AddProcessEditLog(process.ProcessId, "編輯");
-                LogOp("編輯歷程", true, StageReason(process.ProjectId, 2));
-                return Ok(new { success = true, processId = process.ProcessId });
-            }
-            LogOp("編輯歷程", false, $"{StageReason(process.ProjectId, 2)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
-        [HttpPut("UpdateProcess3")]
-        public async Task<IActionResult> UpdateProcess3([FromBody] RoadProjectProcess3 process)
-        {
-            if (process == null) return BadRequest(new { success = false, message = "接收不到資料" });
-
-            var result = await _roadProjectInterface.UpdateProcess3Async(process);
-
-            if (result == "success")
-            {
-                await AddProcessEditLog(process.ProcessId, "編輯");
-                LogOp("編輯歷程", true, StageReason(process.ProjectId, 3));
-                return Ok(new { success = true, processId = process.ProcessId });
-            }
-            LogOp("編輯歷程", false, $"{StageReason(process.ProjectId, 3)}，{result}");
-            return BadRequest(new { success = false, message = result });
-        }
-
         [HttpGet("GetProcessEditLogs/{processId}")]
         public async Task<IActionResult> GetProcessEditLogs(string processId)
         {
@@ -953,12 +752,14 @@ namespace RMIS.Controllers
                 var ms = new MemoryStream();
                 BuildSupplementWord(ms, input);
                 var fileName = $"局長補充資料_{input.ProjectName}_{DateTime.Now:yyyyMMdd}.docx";
+                LogOp("匯出歷程補充資料", true, $"專案:{input.ProjectName}");
                 return File(ms.ToArray(),
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     fileName);
             }
             catch (Exception ex)
             {
+                LogOp("匯出歷程補充資料", false, $"專案:{input?.ProjectName}，{ex.Message}", ex);
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }

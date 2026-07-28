@@ -74,6 +74,9 @@ body {
     grid-column-end: 4;
     padding: 10px;
     min-width: 270px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* 新增：地圖容器內的切換按鈕樣式 */

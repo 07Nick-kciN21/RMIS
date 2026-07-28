@@ -21,9 +21,6 @@ namespace RMIS.Data
         public DbSet<RoadProject> RoadProjects { get; set; }
         public DbSet<ConstructNotice> ConstructNotices { get; set; }
         public DbSet<MetaData> MetaDatas { get; set; }
-        public DbSet<RoadProjectProcess1> RoadProjectProcess1 { get; set; }
-        public DbSet<RoadProjectProcess2> RoadProjectProcess2 { get; set; }
-        public DbSet<RoadProjectProcess3> RoadProjectProcess3 { get; set; }
         public DbSet<RoadProjectProcess> RoadProjectProcesses { get; set; }
         public DbSet<RoadProjectProcessFile> RoadProjectProcessFiles { get; set; }
         public DbSet<RoadProjectRemarkFile> RoadProjectRemarkFiles { get; set; }

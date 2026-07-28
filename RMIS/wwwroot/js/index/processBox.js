@@ -3,7 +3,7 @@ import { showLoading, hideLoading } from '../loading.js';
 
 /**
  * 專案歷程詳情業務邏輯模組
- * 功能：顯示專案基本資訊、總階段歷程記錄、佐證文件下載
+ * 功能：顯示專案基本資訊、歷程記錄、佐證文件下載
  */
 const ProcessBox = {
     currentProject: null,
@@ -164,7 +164,8 @@ const ProcessBox = {
             '會議記錄':   'type-meeting',
             '公文核定':   'type-official',
             '進度說明':   'type-progress',
-            '局長補充格式': 'type-official'
+            '局長補充格式': 'type-official',
+            '檔案上傳':   'type-file'
         };
 
         const items = records.map(r => {
@@ -298,7 +299,15 @@ const ProcessBox = {
             $('#sa-previous-resolution').val(last?.currentMeetingResolution || '');
         }
 
+        self.updateFormModeForRecordType();
         $('#all-process-add-modal').removeClass('hidden');
+    },
+
+    updateFormModeForRecordType: function() {
+        const isFileUpload = $('#sa-record-type').val() === '檔案上傳';
+        $('#form-stage-all').toggleClass('mode-file-upload', isFileUpload);
+        // 隱藏區塊內若有 required 欄位，隱藏時一併解除，避免瀏覽器驗證時嘗試 focus 不可見欄位而噴錯
+        $('#sa-current-status').prop('required', !isFileUpload);
     },
 
     closeAllProcessAddModal: function() {
@@ -537,6 +546,10 @@ const ProcessBox = {
             self.submitAllProcessRecord();
         });
 
+        $(document).on('change', '#sa-record-type', function() {
+            self.updateFormModeForRecordType();
+        });
+
         $(document).on('click', '#btn-add-public-hearing', function() {
             self.addDateNoteItem('public-hearing-list');
         });
@@ -644,6 +657,7 @@ const ProcessBox = {
         fillDateNoteList('construction-execution-list',     record.constructionExecution);
 
         self._editingRecordId = record.id;
+        self.updateFormModeForRecordType();
         $('#all-process-add-modal').removeClass('hidden');
     },
 
@@ -671,7 +685,7 @@ const ProcessBox = {
 
     renderDetail: function(record) {
         const self = this;
-        const typeClassMap = { '重要里程碑': 'type-milestone', '會議記錄': 'type-meeting', '公文核定': 'type-official', '進度說明': 'type-progress' };
+        const typeClassMap = { '重要里程碑': 'type-milestone', '會議記錄': 'type-meeting', '公文核定': 'type-official', '進度說明': 'type-progress', '檔案上傳': 'type-file' };
         const typeClass = typeClassMap[record.recordType] || 'type-progress';
 
         const section = (icon, title, rows) => {

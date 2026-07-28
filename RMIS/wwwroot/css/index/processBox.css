@@ -418,6 +418,11 @@
     color: #d97706;
 }
 
+.record-type.type-file {
+    background-color: #e2e8f0;
+    color: #475569;
+}
+
 /* 記錄標題 */
 .record-title {
     font-size: 1.05rem;

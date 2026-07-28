@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using RMIS.Helpers;
 using RMIS.Models.Account.Departments;
 using RMIS.Models.Account.Permissions;
 using RMIS.Models.Account.Roles;
@@ -26,8 +27,9 @@ namespace RMIS.Controllers
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly AuthDbContext _authDbContext;
         private readonly IEmailSender _emailSender;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(AccountInterface accountInterface, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, AdminInterface adminInterface, IEmailSender emailSender)
+        public AccountController(AccountInterface accountInterface, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, AdminInterface adminInterface, IEmailSender emailSender, ILogger<AccountController> logger)
         {
             _accountInterface = accountInterface;
             _adminInterface = adminInterface;
@@ -35,6 +37,12 @@ namespace RMIS.Controllers
             _roleManager = roleManager;
             _authDbContext = authDbContext;
             _emailSender = emailSender;
+            _logger = logger;
+        }
+
+        private void LogOp(string operation, bool isSuccess, string reason = "", Exception exception = null)
+        {
+            _logger.LogOperation(operation, isSuccess, reason, User.Identity?.Name, HttpContext.GetClientIpAddress(), exception);
         }
 
         private IActionResult RedirectToLocal(string returnUrl)
@@ -201,6 +209,7 @@ namespace RMIS.Controllers
             currentUser.DisplayName = displayName?.Trim() ?? currentUser.DisplayName;
             currentUser.PhoneNumber = phone?.Trim() ?? currentUser.PhoneNumber;
             var result = await _userManager.UpdateAsync(currentUser);
+            LogOp("更新個人資料", result.Succeeded, $"UserId:{currentUser.Id}");
             return Json(result.Succeeded
                 ? new { success = true, message = "資料更新成功" }
                 : new { success = false, message = "資料更新失敗" });
@@ -257,6 +266,7 @@ namespace RMIS.Controllers
             }
             Console.WriteLine("UserUpdate");
             var updated = await _accountInterface.UpdateUserAsync(updateUser);
+            LogOp("更新使用者", updated.Success, updated.Success ? $"UserId:{updateUser.UserId}" : $"UserId:{updateUser.UserId}，{updated.Message}");
 
             if (updated.Success)
             {
@@ -287,6 +297,7 @@ namespace RMIS.Controllers
             }
 
             var updated = await _accountInterface.UpdateUserPasswordAsync(updateUserPassword);
+            LogOp("更新使用者密碼", updated.Success, updated.Success ? $"UserId:{updateUserPassword.UserId}" : $"UserId:{updateUserPassword.UserId}，{updated.Message}");
             return Json(new { success = updated.Success, message = updated.Message });
         }
 
@@ -316,6 +327,7 @@ namespace RMIS.Controllers
             var existEmailUser = await _userManager.FindByEmailAsync(updateUserEmail.NewEmail);
             if (existEmailUser != null)
             {
+                LogOp("更新使用者信箱", false, $"UserId:{updateUserEmail.UserId}，信箱已被註冊");
                 return Json(new { success = false, message = "信箱已被註冊" });
             }
             // ✅ 更新 Security Stamp - 這會讓所有舊的 token 失效
@@ -329,9 +341,10 @@ namespace RMIS.Controllers
             await _emailSender.SendEmailAsync(updateUserEmail.NewEmail, "請驗證您的新電子郵件",
                     $"請點擊以下連結完成信箱更改驗證：<a href='{confirmLink}'>驗證信箱</a>");
 
+            LogOp("更新使用者信箱", true, $"UserId:{updateUserEmail.UserId}，已寄送驗證信至新信箱");
             ViewBag.ResendMessage = "已重新寄送驗證信至您的信箱，請查看信件。";
             return Json(new { success = true, message = "已寄送驗證信至新信箱，請查看信件。" });
-        }        
+        }
 
         [HttpGet("[controller]/User/UpdateEmailConfirm")]
         public async Task<IActionResult> UpdateEmailConfirm(string userId, string newEmail, string token)
@@ -346,10 +359,12 @@ namespace RMIS.Controllers
             var result = await _userManager.ChangeEmailAsync(user, newEmail, token);
             if (result.Succeeded)
             {
+                LogOp("確認使用者信箱", true, $"UserId:{userId}，信箱已變更為{newEmail}");
                 return View();
             }
             else
             {
+                LogOp("確認使用者信箱", false, $"UserId:{userId}，Token無效或已過期");
                 ViewBag.ErrorMessage = "驗證失敗，請聯絡管理員。";
                 return View("UpdateEmailConfirmExpired");
             }
@@ -362,6 +377,7 @@ namespace RMIS.Controllers
             if (string.IsNullOrEmpty(code) || !string.Equals(code, newCitizenCardNoCaptcha, StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "驗證碼錯誤" });
             var updated = await _accountInterface.UpdateCitizenCardNoAsync(updateCitizenCardNo);
+            LogOp("更新身分證字號", updated.Success, updated.Success ? $"UserId:{updateCitizenCardNo.UserId}" : $"UserId:{updateCitizenCardNo.UserId}，{updated.Message}");
 
             if (updated.Success)
             {
@@ -391,6 +407,7 @@ namespace RMIS.Controllers
             }
             Console.WriteLine("DeleteUser");
             var result = await _accountInterface.DeleteUserAsync(UserId);
+            LogOp("刪除使用者", result.Success, result.Success ? $"UserId:{UserId}" : $"UserId:{UserId}，{result.Message}");
 
             return Json(new { success = result.Success, message = result.Message });
         }
@@ -447,10 +464,12 @@ namespace RMIS.Controllers
                 await _emailSender.SendEmailAsync(createUser.Email, "請驗證您的電子郵件",
                     $"請點擊以下連結完成信箱驗證：<a href='{confirmLink}'>驗證信箱</a>");
 
+                LogOp("新增使用者", true, $"Account:{createUser.Account}");
                 return Json(new { Success = true, Message = "建立帳號，請完成信箱認證" });
             }
             else
             {
+                LogOp("新增使用者", false, $"Account:{createUser.Account}，{created.Message}");
                 // ✅ 透過 ViewData 讓錯誤訊息顯示在 `Register` View
                 // ViewData["ErrorMessage"] = result.Message;
                 return Json(new { Success = false, Message = created.Message }); ;
@@ -543,6 +562,7 @@ namespace RMIS.Controllers
                 return Json(new { success = false, message = "修改失敗" });
             }
             var updated = await _accountInterface.UpdateRoleAsync(updaterole);
+            LogOp("更新角色", updated.Success, updated.Success ? $"RoleId:{updaterole.RoleId}" : $"RoleId:{updaterole.RoleId}，{updated.Message}");
             return Json(new { success = updated.Success, message = updated.Message });
         }
 
@@ -559,6 +579,7 @@ namespace RMIS.Controllers
             }
 
             var deleted = await _accountInterface.DeleteRoleAsync(id);
+            LogOp("刪除角色", deleted.Success, deleted.Success ? $"RoleId:{id}" : $"RoleId:{id}，{deleted.Message}");
 
             return Json(new { success = deleted.Success, message = deleted.Message });
         }
@@ -603,6 +624,7 @@ namespace RMIS.Controllers
             }
 
             var created = await _accountInterface.CreateRoleAsync(createRole);
+            LogOp("新增角色", created.Success, created.Success ? $"RoleName:{createRole.RoleName}" : $"RoleName:{createRole.RoleName}，{created.Message}");
 
             return Json(new { success = created.Success, message = created.Message });
         }
@@ -651,6 +673,7 @@ namespace RMIS.Controllers
             }
 
             var updated = await _accountInterface.UpdatePermissionAsync(updatePermission);
+            LogOp("更新權限", updated.Success, updated.Success ? $"PermissionId:{updatePermission.Id}" : $"PermissionId:{updatePermission.Id}，{updated.Message}");
             return Json(new { success = updated.Success, message = updated.Message });
         }
 
@@ -681,6 +704,7 @@ namespace RMIS.Controllers
             }
 
             var Created = await _accountInterface.CreatePermissionAsync(createPermission);
+            LogOp("新增權限", Created.Success, Created.Success ? $"Name:{createPermission.Name}" : $"Name:{createPermission.Name}，{Created.Message}");
 
             return Json( new { success = Created.Success, message = Created.Message });
         }
@@ -698,6 +722,7 @@ namespace RMIS.Controllers
             }
 
             var deleted = await _accountInterface.DeletePermissionAsync(permissionId);
+            LogOp("刪除權限", deleted.Success, deleted.Success ? $"PermissionId:{permissionId}" : $"PermissionId:{permissionId}，{deleted.Message}");
             return Ok(new {success = deleted.Success, message = deleted.Message});
         }
 
@@ -761,6 +786,7 @@ namespace RMIS.Controllers
 
             Console.WriteLine("DepartmentUpdate");
             var updated = await _accountInterface.UpdateDepartmentAsync(updateDepartment);
+            LogOp("更新部門", updated.Success, updated.Success ? $"DepartmentId:{updateDepartment.Id}" : $"DepartmentId:{updateDepartment.Id}，{updated.Message}");
             if (updated.Success)
             {
                 return Ok(new { success = true, message = updated.Message });
@@ -783,6 +809,7 @@ namespace RMIS.Controllers
             }
 
             var result = await _accountInterface.DeleteDepartmentAsync(departmentId);
+            LogOp("刪除部門", result.Success, result.Success ? $"DepartmentId:{departmentId}" : $"DepartmentId:{departmentId}，{result.Message}");
 
             return Ok(new { success = result.Success, message = result.Message });
         }
@@ -813,6 +840,7 @@ namespace RMIS.Controllers
             }
 
             var result = await _accountInterface.CreateDepartmentAsync(createDepartment);
+            LogOp("新增部門", result.Success, result.Success ? $"Name:{createDepartment.Name}" : $"Name:{createDepartment.Name}，{result.Message}");
 
             return Json(new {success = result.Success, message = result.Message });
         }

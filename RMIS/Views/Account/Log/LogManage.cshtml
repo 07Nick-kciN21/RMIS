@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "操作紀錄控管";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/Account/logManager.css" />
+<script type="module" src="~/js/account/log/logManager.js"></script>
+
+<div class="log-page">
+    <h2>操作紀錄檢視</h2>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>開始時間</label>
+            <input type="date" id="filterDateFrom" class="form-control form-control-sm" />
+        </div>
+        <div class="filter-group">
+            <label>結束時間</label>
+            <input type="date" id="filterDateTo" class="form-control form-control-sm" />
+        </div>
+        <div class="filter-group">
+            <label>使用者</label>
+            <input type="text" id="filterUser" class="form-control form-control-sm" placeholder="輸入使用者名稱" />
+        </div>
+        <div class="filter-group">
+            <label>操作類別</label>
+            <select id="filterCategory" class="form-control form-control-sm">
+                <option value="">全部</option>
+                <option value="account">帳號</option>
+                <option value="management">管理</option>
+                <option value="operation">操作</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button id="btnFilter" class="btn btn-primary btn-sm">篩選</button>
+            <button id="btnClear" class="btn btn-outline-secondary btn-sm">清除</button>
+        </div>
+    </div>
+
+    <div class="record-info mb-1">
+        顯示 <span id="displayedCount">0</span> / 共 <span id="totalCount">0</span> 筆
+    </div>
+
+    <div class="table-container">
+        <table class="table table-bordered text-center permissionTable">
+            <thead>
+                <tr>
+                    <th class="time-cell">時間</th>
+                    <th class="ip-cell">IP</th>
+                    <th class="user-cell">使用者</th>
+                    <th class="type-cell">操作</th>
+                    <th class="success-cell">結果</th>
+                    <th class="reason-cell">原因</th>
+                </tr>
+            </thead>
+        </table>
+        <div class="tbody-scroll">
+            <table class="table table-bordered text-center mb-0">
+                <tbody id="logTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mt-2">
+        <button id="btnMore" class="btn btn-outline-primary" style="display:none;">載入更多</button>
+    </div>
+</div>

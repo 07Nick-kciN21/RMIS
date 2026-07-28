@@ -1477,17 +1477,10 @@ namespace RMIS.Repositories
                 // 刪除歷程資料及相關文件
                 var strProjectId = project.ProjectId;
 
-                var process1List = await _mapDBContext.RoadProjectProcess1
-                    .Where(p => p.ProjectId == strProjectId).ToListAsync();
-                var process2List = await _mapDBContext.RoadProjectProcess2
-                    .Where(p => p.ProjectId == strProjectId).ToListAsync();
-                var process3List = await _mapDBContext.RoadProjectProcess3
+                var processList = await _mapDBContext.RoadProjectProcesses
                     .Where(p => p.ProjectId == strProjectId).ToListAsync();
 
-                var allProcessIds = process1List.Select(p => p.ProcessId)
-                    .Concat(process2List.Select(p => p.ProcessId))
-                    .Concat(process3List.Select(p => p.ProcessId))
-                    .ToList();
+                var allProcessIds = processList.Select(p => p.ProcessId).ToList();
 
                 if (allProcessIds.Count > 0)
                 {
@@ -1498,14 +1491,15 @@ namespace RMIS.Repositories
                     if (processFiles.Any())
                         _mapDBContext.RoadProjectProcessFiles.RemoveRange(processFiles);
 
-                    // 刪除磁碟上的文件目錄 ({ProcessFile}/{ProjectId}/)
-                    var projectFolder = Path.Combine(ResolvePath(_filePaths.ProcessFile), strProjectId);
-                    if (Directory.Exists(projectFolder))
-                        Directory.Delete(projectFolder, recursive: true);
+                    // 刪除磁碟上的文件目錄 ({ProcessFile}/{ProcessId}/)
+                    foreach (var processId in allProcessIds)
+                    {
+                        var processFolder = Path.Combine(ResolvePath(_filePaths.ProcessFile), processId);
+                        if (Directory.Exists(processFolder))
+                            Directory.Delete(processFolder, recursive: true);
+                    }
 
-                    _mapDBContext.RoadProjectProcess1.RemoveRange(process1List);
-                    _mapDBContext.RoadProjectProcess2.RemoveRange(process2List);
-                    _mapDBContext.RoadProjectProcess3.RemoveRange(process3List);
+                    _mapDBContext.RoadProjectProcesses.RemoveRange(processList);
                 }
 
                 // 刪除專案

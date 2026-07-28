@@ -32,6 +32,11 @@ bld/
 [Oo]ut/
 [Ll]og/
 [Ll]ogs/
+# [Ll]og/ above unintentionally matches source folders literally named "Log" anywhere in the tree; unignore ours
+!RMIS/Views/Account/Log/
+!RMIS/Views/Account/Log/**
+!RMIS/wwwroot/js/account/log/
+!RMIS/wwwroot/js/account/log/**
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
