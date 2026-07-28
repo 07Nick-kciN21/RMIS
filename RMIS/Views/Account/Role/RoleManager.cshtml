@@ -7,32 +7,34 @@
 <link rel="stylesheet" href="~/css/account/rolePermission.css" />
 <script type="module" src="~/js/account/role/roleManager.js"></script>
 
-<h2>功能群組列表</h2>
-<div style="display: flex;">
-    <select id="roleSelector" class="selector form-select">
-    </select>
-    <button id="createRole">新增功能群組</button>
-</div>
-<div class="table-container">
-    <table class="table table-bordered text-center permissionTable">
-        <thead>
-            <tr>
-                <th class="name-cell">功能群組名稱</th>
-                <th class="permission-cell">功能</th>
-                <th class="status-cell">狀態</th>
-                <th class="createAt-cell">創建日期</th>
-                <th class="action-cell">操作</th>
-            </tr>
-        </thead>
-    </table>
-    <div class="tbody-scroll">
-        <table class="table table-bordered text-center permissionTable mb-0">
-            <tbody id="roleTable">
-            </tbody>
-        </table>
+<div class="role-page">
+    <h2>功能群組列表</h2>
+    <div style="display: flex;">
+        <select id="roleSelector" class="selector form-select">
+        </select>
+        <button id="createRole">新增功能群組</button>
     </div>
-</div>
-<div id="rolePage" class="d-flex justify-content-center mt-2">
+    <div class="table-container">
+        <table class="table table-bordered text-center permissionTable">
+            <thead>
+                <tr>
+                    <th class="name-cell">功能群組名稱</th>
+                    <th class="permission-cell">功能</th>
+                    <th class="status-cell">狀態</th>
+                    <th class="createAt-cell">創建日期</th>
+                    <th class="action-cell">操作</th>
+                </tr>
+            </thead>
+        </table>
+        <div class="tbody-scroll">
+            <table class="table table-bordered text-center permissionTable mb-0">
+                <tbody id="roleTable">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="rolePage" class="d-flex justify-content-center mt-2">
+    </div>
 </div>
 
 <!-- 新增功能群組 Modal -->

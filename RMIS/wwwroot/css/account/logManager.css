@@ -22,7 +22,11 @@
 
 .log-page .tbody-scroll {
     flex: 1 1 auto;
-    max-height: none;
+    /* 60vh 沒扣掉頁首/篩選列/表頭/分頁列這些固定佔用的高度（Log 頁比其他清單頁多了篩選列，
+       這些固定高度加總後在較矮的視窗下仍會把 60vh 頂出可視範圍）。
+       改用 calc() 直接扣掉這些固定區塊的大約高度，確保表格區塊本身有明確上限，超過就在區塊內捲動、不撐開整頁。
+       clamp() 是保險：視窗極矮時至少留 200px 可視，極高時最多只長到 550px（跟其他清單頁一致）。 */
+    max-height: clamp(200px, calc(100vh - 480px), 550px);
     min-height: 0;
     overflow-y: auto;
 }

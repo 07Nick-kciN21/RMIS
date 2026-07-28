@@ -8,33 +8,35 @@
 <script src="~/lib/select2/select2.min.js"></script>
 <script type="module" src="~/js/account/department/departmentManager.js" asp-append-version="true"></script>
 
-<h2>部門列表</h2>
-<div style="display: flex;">
-    <select id="departmentSelector" class="selector form-select">
-    </select>
-    <button id="createDepartment">新增部門</button>
-</div>
-<div class="table-container">
-    <table class="table table-bordered text-center permissionTable">
-        <thead>
-            <tr>
-                <th class="name-cell">部門名稱</th>
-                <th class="status-cell">狀態</th>
-                <th class="createAt-cell">創建日期</th>
-                <th class="action-cell">操作</th>
-            </tr>
-        </thead>
-    </table>
-    <!-- tbody 放在獨立容器中滾動 -->
-    <div class="tbody-scroll">
-        <table class="table table-bordered text-center permissionTable mb-0">
-            <tbody id="departmentTable">
-                <!-- 資料動態插入 -->
-            </tbody>
-        </table>
+<div class="department-page">
+    <h2>部門列表</h2>
+    <div style="display: flex;">
+        <select id="departmentSelector" class="selector form-select">
+        </select>
+        <button id="createDepartment">新增部門</button>
     </div>
-</div>
-<div id="departmentPage" class="d-flex justify-content-center mt-2">
+    <div class="table-container">
+        <table class="table table-bordered text-center permissionTable">
+            <thead>
+                <tr>
+                    <th class="name-cell">部門名稱</th>
+                    <th class="status-cell">狀態</th>
+                    <th class="createAt-cell">創建日期</th>
+                    <th class="action-cell">操作</th>
+                </tr>
+            </thead>
+        </table>
+        <!-- tbody 放在獨立容器中滾動 -->
+        <div class="tbody-scroll">
+            <table class="table table-bordered text-center permissionTable mb-0">
+                <tbody id="departmentTable">
+                    <!-- 資料動態插入 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="departmentPage" class="d-flex justify-content-center mt-2">
+    </div>
 </div>
 
 <!-- 新增部門 Modal -->

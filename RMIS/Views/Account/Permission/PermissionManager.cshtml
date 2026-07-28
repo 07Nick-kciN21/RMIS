@@ -6,33 +6,35 @@
 <link rel="stylesheet" href="~/css/Account/permissionManager.css" asp-append-version="true" />
 <script type="module" src="~/js/account/permission/permissionManage.js" asp-append-version="true"></script>
 
-<h2>功能模組列表</h2>
-<div style="display: flex;">
-    <select id="permissionSelector" class="selector form-select">
-    </select>
-    <button id="createPermission">新增功能模組</button>
-</div>
-<div class="table-container">
-    <table class="table table-bordered text-center permissionTable">
-        <thead>
-            <tr>
-                <th>功能模組名稱</th>
-                <th class="status-cell">狀態</th>
-                <th class="createAt-cell">創建日期</th>
-                <th class="action-cell">操作</th>
-            </tr>
-        </thead>
-    </table>
-    <!-- tbody 放在獨立容器中滾動 -->
-    <div class="tbody-scroll">
-        <table class="table table-bordered text-center permissionTable mb-0">
-            <tbody id="permissionTable">
-                <!-- 資料動態插入 -->
-            </tbody>
-        </table>
+<div class="permission-page">
+    <h2>功能模組列表</h2>
+    <div style="display: flex;">
+        <select id="permissionSelector" class="selector form-select">
+        </select>
+        <button id="createPermission">新增功能模組</button>
     </div>
-</div>
-<div id="permissionPage" class="d-flex justify-content-center mt-2">
+    <div class="table-container">
+        <table class="table table-bordered text-center permissionTable">
+            <thead>
+                <tr>
+                    <th>功能模組名稱</th>
+                    <th class="status-cell">狀態</th>
+                    <th class="createAt-cell">創建日期</th>
+                    <th class="action-cell">操作</th>
+                </tr>
+            </thead>
+        </table>
+        <!-- tbody 放在獨立容器中滾動 -->
+        <div class="tbody-scroll">
+            <table class="table table-bordered text-center permissionTable mb-0">
+                <tbody id="permissionTable">
+                    <!-- 資料動態插入 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="permissionPage" class="d-flex justify-content-center mt-2">
+    </div>
 </div>
 
 <!-- 新增功能模組 Modal -->

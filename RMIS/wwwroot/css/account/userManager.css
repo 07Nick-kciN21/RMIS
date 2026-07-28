@@ -1,3 +1,32 @@
+/* 讓表格區塊自動吃掉扣除頁首/工具列/表頭/分頁列之後的剩餘高度，資料再多也只在表格內部捲動，不撐開整頁。
+   詳細原因與作法同 /Account/Log/List（見 logManager.css），calc() 扣除值較小是因為這幾頁的工具列只有一行，
+   比 Log 頁的篩選列矮。 */
+.user-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.user-page .table-container {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.user-page .table-container > table {
+    flex: 0 0 auto;
+}
+
+.user-page .tbody-scroll {
+    flex: 1 1 auto;
+    max-height: clamp(200px, calc(100vh - 400px), 550px);
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .department-cell{
     width: auto;
 }

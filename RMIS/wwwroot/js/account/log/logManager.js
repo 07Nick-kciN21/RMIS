@@ -1,4 +1,6 @@
-const PAGE_SIZE = 20;
+import { initPage } from "../Pagination.js";
+
+const PAGE_SIZE = 10;
 
 // 「帳號」類別：登入/登出/延長登入等身分驗證相關操作
 const ACCOUNT_TYPES = ["登入", "Login-POST", "登出", "登入延長", "ExtendSession"];
@@ -28,13 +30,12 @@ const OPERATION_TYPES = [
 
 let allLogs = [];
 let filteredLogs = [];
-let displayedCount = 0;
+let pagination = null;
 
 $(document).ready(function () {
     loadLogData();
     $("#btnFilter").on("click", applyFilter);
     $("#btnClear").on("click", clearFilter);
-    $("#btnMore").on("click", loadMore);
 });
 
 function loadLogData() {
@@ -47,8 +48,8 @@ function loadLogData() {
             if (data.success) {
                 allLogs = data.logManage;
                 filteredLogs = allLogs;
-                displayedCount = 0;
-                renderRows();
+                pagination = initPage("logPage", renderRows, filteredLogs, PAGE_SIZE);
+                $("#totalCount").text(filteredLogs.length);
             }
         }
     });
@@ -73,8 +74,8 @@ function applyFilter() {
         return true;
     });
 
-    displayedCount = 0;
-    renderRows();
+    pagination.updateDataList(filteredLogs);
+    $("#totalCount").text(filteredLogs.length);
 }
 
 function clearFilter() {
@@ -83,26 +84,15 @@ function clearFilter() {
     $("#filterUser").val("");
     $("#filterCategory").val("");
     filteredLogs = allLogs;
-    displayedCount = 0;
-    renderRows();
+    pagination.updateDataList(filteredLogs);
+    $("#totalCount").text(filteredLogs.length);
 }
 
-function loadMore() {
-    renderRows(true);
-}
-
-function renderRows(append = false) {
+function renderRows(pageLogs) {
     const tbody = $("#logTable");
+    tbody.empty();
 
-    if (!append) {
-        tbody.empty();
-        displayedCount = 0;
-    }
-
-    const nextCount = Math.min(displayedCount + PAGE_SIZE, filteredLogs.length);
-    const slice = filteredLogs.slice(displayedCount, nextCount);
-
-    slice.forEach(log => {
+    pageLogs.forEach(log => {
         const row = $("<tr>");
         row.append(`<td class="time-cell"><span class="read">${convertDate(log.timestamp)}</span></td>`);
         row.append(`<td class="ip-cell"><span class="read">${log.ip}</span></td>`);
@@ -116,14 +106,6 @@ function renderRows(append = false) {
         row.append(`<td class="reason-cell"><span class="read">${log.reason}</span></td>`);
         tbody.append(row);
     });
-
-    displayedCount = nextCount;
-
-    $("#displayedCount").text(displayedCount);
-    $("#totalCount").text(filteredLogs.length);
-
-    const hasMore = displayedCount < filteredLogs.length;
-    $("#btnMore").toggle(hasMore);
 }
 
 function convertDate(createAt) {
