@@ -1340,7 +1340,8 @@ namespace RMIS.Repositories
                     TinHouseCount = roadProjectInput.TinHouseCount ?? "",
                     ReviewResult = roadProjectInput.ReviewResult ?? "",
                     CreateTime = now,
-                    CreatedByUserId = currentUserId
+                    CreatedByUserId = currentUserId,
+                    CoordinateChecked = true
                 };
 
                 var expansionLayerId = await _mapDBContext.Layers.Where(l => l.Name == "預拓範圍").Select(l => l.Id).FirstOrDefaultAsync();
