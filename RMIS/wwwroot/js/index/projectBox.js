@@ -346,7 +346,8 @@ const ProjectBox = {
      */
     openProjectView: function(projectData) {
         console.log('開啟專案詳情:', projectData);
-        RoadProjectView.openView(projectData);
+        // 透過 API 重新取得專案資料，順便由後端判斷目前使用者是否為建立者（isOwner）
+        RoadProjectView.openViewById(projectData.id);
     },
 
     /**

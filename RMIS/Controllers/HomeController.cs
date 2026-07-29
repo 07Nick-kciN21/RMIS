@@ -42,7 +42,7 @@ namespace RMIS.Controllers
 
             if (currentUser != null)
             {
-                ViewBag.Username = currentUser.UserName;
+                ViewBag.Username = currentUser.DisplayName;
                 // �quser���orole��ƻP����(�򥻤W�@��user�u���@��role)
                 var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
                 var userPermissions = await _accountInterface.GetUserPermissions(userInfo.roleId);
@@ -60,7 +60,7 @@ namespace RMIS.Controllers
 
             if (currentUser != null)
             {
-                ViewBag.Username = currentUser.UserName;
+                ViewBag.Username = currentUser.DisplayName;
                 // �quser���orole��ƻP����(�򥻤W�@��user�u���@��role)
                 var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
                 var userPermissions = await _accountInterface.GetUserPermissions(userInfo.roleId);

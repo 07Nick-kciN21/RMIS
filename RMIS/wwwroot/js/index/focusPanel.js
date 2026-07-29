@@ -13,6 +13,8 @@ let pageSize = 10;
 let focusPipeline = [];
 
 export function initFocusPanel(){
+    initFocusDatePickers();
+
     $('#focusGoResult').on('click', function(){
         var formData = new FormData();
         // focusStartDate與focusEndDate，轉換成時間戳記
@@ -93,6 +95,93 @@ export function initFocusPanel(){
         currentPage = 1;
         updateFlagTable();
     });
+}
+
+// 日期範圍篩選用的日曆元件（原本誤植於 flagPanel.js，已移回這裡）
+function initFocusDatePickers() {
+    const startDateInput = document.getElementById('focusStartDate');
+    const endDateInput = document.getElementById('focusEndDate');
+
+    // 沒有「養工焦點」權限時 _focusPanel.cshtml 不會被渲染，這兩個 input 就不存在
+    if (!startDateInput || !endDateInput) return;
+
+    const i18nSettings = {
+        previousMonth: '上個月',
+        nextMonth: '下個月',
+        months: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+        weekdays: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
+        weekdaysShort: ['日', '一', '二', '三', '四', '五', '六']
+    };
+
+    const options = {
+        i18n: i18nSettings,
+        firstDay: 1, // 星期一為每週第一天
+        container: document.getElementById('focusPanel'), // 將月曆渲染限制在 focusPanel 內
+        reposition: false, // 確保月曆自動調整位置，避免超出容器
+    };
+
+    new Pikaday({
+        field: startDateInput,
+        ...options,
+        onOpen: function() {
+            adjustCalendarPosition(this.el, 'focusStartDate');
+        },
+        onSelect: function(selectedDate) {
+            const formattedDate = formatFocusDate(selectedDate, 'YYYY/MM/DD');
+            document.getElementById('focusStartDate').value = formattedDate;
+        }
+    });
+    new Pikaday({
+        field: endDateInput,
+        ...options,
+        onOpen: function() {
+            adjustCalendarPosition(this.el, 'focusEndDate');
+        },
+        onSelect: function(selectedDate) {
+            const formattedDate = formatFocusDate(selectedDate, 'YYYY/MM/DD');
+            document.getElementById('focusEndDate').value = formattedDate;
+        }
+    });
+}
+
+// 調整月曆位置的函數
+function adjustCalendarPosition(calendar, inputId) {
+    const input = document.getElementById(inputId);
+    const panel = document.getElementById('focusPanel');
+    if (!input || !panel) return;
+
+    const inputRect = input.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const calendarRect = calendar.getBoundingClientRect();
+
+    // 計算月曆的 top 和 left，使其位於目標 input 下方
+    const top = inputRect.bottom - panelRect.top;
+    const left = inputRect.left - panelRect.left;
+
+    // 確保月曆不超出 focusPanel 的右邊界
+    const maxLeft = panelRect.width - calendarRect.width;
+    const adjustedLeft = Math.min(left, maxLeft);
+
+    // 設置月曆的位置
+    calendar.style.position = 'absolute';
+    calendar.style.top = `${top}px`;
+    calendar.style.left = `${adjustedLeft}px`;
+}
+
+function formatFocusDate(date, format) {
+    const padZero = (num) => (num < 10 ? `0${num}` : num);
+    const year = date.getFullYear();
+    const month = padZero(date.getMonth() + 1); // 月份從 0 開始
+    const day = padZero(date.getDate());
+
+    switch (format) {
+        case 'YYYY/MM/DD':
+            return `${year}/${month}/${day}`;
+        case 'DD-MM-YYYY':
+            return `${day}-${month}-${year}`;
+        default:
+            return date.toISOString().split('T')[0]; // 默認格式為 YYYY-MM-DD
+    }
 }
 
 // 更新屬性表格

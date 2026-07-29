@@ -1,4 +1,20 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using RMIS.Models.Auth
+@using RMIS.Repositories
+@inject UserManager<ApplicationUser> UserManager
+@inject AccountInterface AccountInterface
+@{
+    var sidebarCurrentUser = await UserManager.GetUserAsync(User);
+    var sidebarPermissions = new Dictionary<string, RMIS.Models.Account.Users.PermissionDetail>();
+    if (sidebarCurrentUser != null)
+    {
+        var sidebarUserInfo = await AccountInterface.GetUserAuthInfo(sidebarCurrentUser);
+        sidebarPermissions = await AccountInterface.GetUserPermissions(sidebarUserInfo.roleId);
+    }
+    bool SidebarCanRead(string permissionName) =>
+        sidebarPermissions.TryGetValue(permissionName, out var detail) && detail.Read;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -164,42 +180,48 @@
                             <span>整合平台</span>
                         </a>
                     </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/User/List">
-                            <span id="user" class="account-menu-icon"></span>
-                            <span>使用者列表</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/Role/List">
-                            <span id="role" class="account-menu-icon"></span>
-                            <span>身分列表</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/Permission/List">
-                            <span id="permission" class="account-menu-icon"></span>
-                            <span>權限列表</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/Department/List">
-                            <span id="department" class="account-menu-icon"></span>
-                            <span>部門列表</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Account/Log/List">
-                            <span id="log" class="account-menu-icon"></span>
-                            <span>操作記錄</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="nav-link menu-title" href="/Mapdata/List">
-                            <span id="data" class="account-menu-icon"></span>
-                            <span>圖資列表</span>
-                        </a>
-                    </li>
+                    @if (SidebarCanRead("使用者管理"))
+                    {
+                        <li>
+                            <a class="nav-link menu-title" href="/Account/User/List">
+                                <span id="user" class="account-menu-icon"></span>
+                                <span>使用者列表</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link menu-title" href="/Account/Role/List">
+                                <span id="role" class="account-menu-icon"></span>
+                                <span>身分列表</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link menu-title" href="/Account/Permission/List">
+                                <span id="permission" class="account-menu-icon"></span>
+                                <span>權限列表</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link menu-title" href="/Account/Department/List">
+                                <span id="department" class="account-menu-icon"></span>
+                                <span>部門列表</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="nav-link menu-title" href="/Account/Log/List">
+                                <span id="log" class="account-menu-icon"></span>
+                                <span>操作記錄</span>
+                            </a>
+                        </li>
+                    }
+                    @if (SidebarCanRead("業務圖資"))
+                    {
+                        <li>
+                            <a class="nav-link menu-title" href="/Mapdata/List">
+                                <span id="data" class="account-menu-icon"></span>
+                                <span>圖資列表</span>
+                            </a>
+                        </li>
+                    }
                 </ul>
             </div>
             <div style="width:calc(100% - 300px); padding: 15px;">

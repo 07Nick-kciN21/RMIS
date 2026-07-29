@@ -24,6 +24,10 @@ import RoadProjectEdit from './index/roadProjectEdit.js';
 import RoadProjectImport from './index/roadProjectImport.js';
 
 $(document).ready(function () {
+    // 各面板的權限旗標。頁面若沒有設定 window.panelPermissions（例如舊版頁面），預設視為有權限，維持原本行為
+    const perm = window.panelPermissions || {};
+    const canUse = (name) => perm[name] ?? true;
+
     // 初始化地图
     Map.init("indexMap");
     // initMap("indexMap");
@@ -33,20 +37,20 @@ $(document).ready(function () {
     initPanel("metaDataPanel");
     initPanel("searchPanel");
     initPanel("painterPanel");
-    initPanel("searchPropPanel");
     initPanel("measurePanel");
-    initPanel("flagPanel");
-    initPanel("focusPanel");
-    initPanel("accidentPanel");
+    if (canUse("searchPropPanel")) initPanel("searchPropPanel");
+    if (canUse("flagPanel")) initPanel("flagPanel");
+    if (canUse("focusPanel")) initPanel("focusPanel");
+    if (canUse("accidentPanel")) initPanel("accidentPanel");
     // initPanel("projectPanel");
     initSearchPanel();
     initPainterPanel();
     initPhoto();
-    initSearchPropPanel();
     initMeasurePanel();
-    initFlagPanel();
-    initFocusPanel();
-    initAccidentPanel();
+    if (canUse("searchPropPanel")) initSearchPropPanel();
+    if (canUse("flagPanel")) initFlagPanel();
+    if (canUse("focusPanel")) initFocusPanel();
+    if (canUse("accidentPanel")) initAccidentPanel();
 
     BoxManager.initFullBox();
     BoxManager.initRightBox();

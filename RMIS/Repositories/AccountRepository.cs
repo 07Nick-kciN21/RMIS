@@ -55,12 +55,12 @@ namespace RMIS.Repositories
 
         public async Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId)
         {
-            var permissions = await _authDbContext.RolePermissions
+            var rolePermissions = await _authDbContext.RolePermissions
                 .Include(rp => rp.Permission)
                 .Where(rp => rp.RoleId == roleId)
                 .ToListAsync();
 
-            return permissions.ToDictionary(
+            var result = rolePermissions.ToDictionary(
                 p => p.Permission.Name,
                 p => new PermissionDetail
                 {
@@ -71,6 +71,22 @@ namespace RMIS.Repositories
                     Delete = p.Delete,
                     Export = p.Export
                 });
+
+            // 該角色沒有被明確指派的權限類別，一律補上「全部無權限」的預設值，
+            // 避免畫面上 Model["權限名稱"] 直接索引時因找不到 key 而拋出例外
+            var allPermissionNames = await _authDbContext.Permissions
+                .Select(p => p.Name)
+                .ToListAsync();
+
+            foreach (var name in allPermissionNames)
+            {
+                if (!result.ContainsKey(name))
+                {
+                    result[name] = new PermissionDetail();
+                }
+            }
+
+            return result;
         }
 
         public async Task<UserAuthInfo> GetUserAuthInfo(ApplicationUser user)

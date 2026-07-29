@@ -550,7 +550,7 @@ namespace RMIS.Controllers
 
 
             _logger?.LogOperation("登入", true, "自然人憑證登入", user.UserName, clientIp);
-            ViewBag.Username = user.UserName;
+            ViewBag.Username = user.DisplayName;
             var redirectUrl = string.IsNullOrEmpty(returnUrl) ? Url.Action("Index", "Home") : returnUrl;
             return Json(new { success = true, redirectUrl = redirectUrl });
         }

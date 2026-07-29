@@ -57,6 +57,25 @@ namespace RMIS.Controllers
         }
 
         /// <summary>
+        /// 檢查目前使用者是否為該道路專案的建立者，只有建立者本人可編輯/刪除。
+        /// 回傳 null 表示可以繼續執行，否則回傳應直接回應的 IActionResult。
+        /// </summary>
+        private async Task<IActionResult?> CheckProjectOwnershipAsync(int roadProjectId)
+        {
+            var creatorId = await _adminInterface.GetRoadProjectCreatorIdAsync(roadProjectId);
+
+            // 專案不存在，或為新增建立者欄位前的舊資料（沒有記錄建立者）：交由後續流程處理，不在此攔截
+            if (creatorId == null)
+                return null;
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || creatorId != currentUser.Id)
+                return Ok(new { success = false, message = "僅建立者本人可編輯或刪除此專案" });
+
+            return null;
+        }
+
+        /// <summary>
         /// 根據專案 ID 取得單一道路專案詳細資料
         /// </summary>
         /// <param name="projectId">專案 ID (ProjectId 或 Guid Id)</param>
@@ -74,6 +93,9 @@ namespace RMIS.Controllers
             {
                 return NotFound(new { success = false, message = $"找不到專案 ID: {projectId}" });
             }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            project.IsOwner = project.CreatedByUserId == null || project.CreatedByUserId == currentUser?.Id;
 
             return Ok(project);
         }
@@ -93,6 +115,9 @@ namespace RMIS.Controllers
             try
             {
                 project.CreateTime = DateTime.Now;
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                project.CreatedByUserId = currentUser?.Id;
 
                 // 如果沒有提供 ProjectId，自動產生
                 if (string.IsNullOrEmpty(project.ProjectId))
@@ -658,6 +683,10 @@ namespace RMIS.Controllers
                 {
                     return Ok(new { success = false, message = "無權限更新資料" });
                 }
+
+                var ownershipError = await CheckProjectOwnershipAsync(projectData.Id);
+                if (ownershipError != null) return ownershipError;
+
                 var updated = await _adminInterface.UpdateProjectDataAsync(projectData);
                 if (updated)
                 {
@@ -687,6 +716,9 @@ namespace RMIS.Controllers
         {
             try
             {
+                var ownershipError = await CheckProjectOwnershipAsync(projectId);
+                if (ownershipError != null) return ownershipError;
+
                 var result = await _adminInterface.ConfirmCoordinateAsync(projectId);
                 if (result)
                     return Ok(new { success = true, message = "座標已確認" });
@@ -703,6 +735,9 @@ namespace RMIS.Controllers
         {
             try
             {
+                var ownershipError = await CheckProjectOwnershipAsync(input.ProjectId);
+                if (ownershipError != null) return ownershipError;
+
                 var result = await _adminInterface.UpdateProjectPointsAsync(input.ProjectId, input.RangePoints, input.PhotoPoints);
                 if (result)
                 {

@@ -27,7 +27,7 @@ namespace RMIS.Controllers
 
             if (currentUser != null)
             {
-                ViewBag.Username = currentUser.UserName;
+                ViewBag.Username = currentUser.DisplayName;
                 // 從user取得role資料與部門(基本上一個user只有一個role)
                 var userInfo = await _accountInterface.GetUserAuthInfo(currentUser);
                 var userPermissions = await _accountInterface.GetUserPermissions(userInfo.roleId);

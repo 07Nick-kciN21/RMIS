@@ -81,5 +81,16 @@ namespace RMIS.Models.sql
         /// </summary>
         public bool? CoordinateChecked { get; set; }
 
+        /// <summary>
+        /// 建立者 (ApplicationUser.Id)，只有建立者本人可編輯/刪除此專案
+        /// </summary>
+        public string? CreatedByUserId { get; set; }
+
+        /// <summary>
+        /// 目前登入者是否為建立者（或無建立者紀錄的舊資料），由 API 於查詢時計算，不寫入資料庫
+        /// </summary>
+        [NotMapped]
+        public bool IsOwner { get; set; }
+
     }
 }

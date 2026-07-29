@@ -124,9 +124,18 @@ const RoadProjectView = {
 
         $('#pv-coord-pending').toggleClass('hidden', !isPending);
         $('#pv-coord-warning').toggleClass('hidden', !isUnchecked);
-        $('#btn-edit-project').prop('disabled', isPending)
-                              .toggleClass('disabled', isPending)
-                              .attr('title', isPending ? '尚未取得座標，無法編輯' : '');
+
+        // 僅建立者本人（或無建立者紀錄的舊資料）才顯示編輯/刪除按鈕
+        const $ownerActions = $('#pv-owner-actions').empty();
+        if (project.isOwner) {
+            $ownerActions.append(
+                $('<button type="button" class="btn btn-primary btn-sm" id="btn-edit-project"><i class="fa fa-pencil"></i> 編輯專案</button>')
+                    .prop('disabled', isPending)
+                    .toggleClass('disabled', isPending)
+                    .attr('title', isPending ? '尚未取得座標，無法編輯' : ''),
+                $('<button type="button" class="btn btn-danger btn-sm" id="btn-delete-project"><i class="fa fa-trash"></i> 刪除專案</button>')
+            );
+        }
 
         // 更新標題與路徑導航 [cite: 1, 2, 3]
         const title = project.projectName || project.startEndLocation || '道路專案';

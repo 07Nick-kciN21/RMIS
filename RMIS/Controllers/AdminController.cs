@@ -50,6 +50,25 @@ namespace RMIS.Controllers
             _logger.LogOperation(operation, isSuccess, reason, User.Identity?.Name, HttpContext.GetClientIpAddress(), exception);
         }
 
+        /// <summary>
+        /// 檢查目前使用者是否為該道路專案的建立者，只有建立者本人可編輯/刪除。
+        /// 回傳 null 表示可以繼續執行，否則回傳應直接回應的 IActionResult。
+        /// </summary>
+        private async Task<IActionResult?> CheckProjectOwnershipAsync(int roadProjectId)
+        {
+            var creatorId = await _adminInterface.GetRoadProjectCreatorIdAsync(roadProjectId);
+
+            // 專案不存在，或為新增建立者欄位前的舊資料（沒有記錄建立者）：交由後續流程處理，不在此攔截
+            if (creatorId == null)
+                return null;
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || creatorId != currentUser.Id)
+                return Ok(new { success = false, message = "僅建立者本人可編輯或刪除此專案" });
+
+            return null;
+        }
+
         [HttpGet]
         public async Task<IActionResult> AddCategory()
         {
@@ -400,7 +419,8 @@ namespace RMIS.Controllers
         {
             try
             {
-                var result = await _adminInterface.ImportRoadProjectByExcelAsync(input);
+                var currentUser = await _userManager.GetUserAsync(User);
+                var result = await _adminInterface.ImportRoadProjectByExcelAsync(input, currentUser?.Id);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -434,7 +454,8 @@ namespace RMIS.Controllers
         {
             try
             {
-                var rowsAffected = await _adminInterface.AddRoadProjectAsync(input);
+                var currentUser = await _userManager.GetUserAsync(User);
+                var rowsAffected = await _adminInterface.AddRoadProjectAsync(input, currentUser?.Id);
 
                 if (rowsAffected > 0)
                 {
@@ -459,6 +480,9 @@ namespace RMIS.Controllers
         {
             try
             {
+                var ownershipError = await CheckProjectOwnershipAsync(input.Id);
+                if (ownershipError != null) return ownershipError;
+
                 var result = await _adminInterface.DeleteRoadProjectAsync(input.Id);
 
                 if (result)
@@ -484,6 +508,9 @@ namespace RMIS.Controllers
         {
             try
             {
+                var ownershipError = await CheckProjectOwnershipAsync(input.Id);
+                if (ownershipError != null) return ownershipError;
+
                 var result = await _adminInterface.UpdateProjectDataAsync(input);
                 if (result)
                 {

@@ -1296,7 +1296,7 @@ namespace RMIS.Repositories
             return result;
         }
 
-        public async Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput)
+        public async Task<int> AddRoadProjectAsync(AddRoadProjectInput roadProjectInput, string? currentUserId)
         {
             Console.WriteLine("AddRoadProjectAsync");
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
@@ -1339,7 +1339,8 @@ namespace RMIS.Repositories
                     RCCount = roadProjectInput.RCCount ?? "",
                     TinHouseCount = roadProjectInput.TinHouseCount ?? "",
                     ReviewResult = roadProjectInput.ReviewResult ?? "",
-                    CreateTime = now
+                    CreateTime = now,
+                    CreatedByUserId = currentUserId
                 };
 
                 var expansionLayerId = await _mapDBContext.Layers.Where(l => l.Name == "預拓範圍").Select(l => l.Id).FirstOrDefaultAsync();
@@ -1523,7 +1524,7 @@ namespace RMIS.Repositories
         /// <summary>
         /// 從 Excel 匯入道路專案（含 ZIP 照片壓縮檔）
         /// </summary>
-        public async Task<ImportRoadProjectResult> ImportRoadProjectByExcelAsync(ImportRoadProjectByExcelInput input)
+        public async Task<ImportRoadProjectResult> ImportRoadProjectByExcelAsync(ImportRoadProjectByExcelInput input, string? currentUserId)
         {
             var result = new ImportRoadProjectResult();
             var errors = new List<string>();
@@ -1636,7 +1637,7 @@ namespace RMIS.Repositories
                             }
                             else
                             {
-                                await CreateRoadProjectFromExcelRow(row, photoDict);
+                                await CreateRoadProjectFromExcelRow(row, photoDict, currentUserId);
                                 importedCount++;
                             }
                         }
@@ -1979,7 +1980,7 @@ namespace RMIS.Repositories
         /// <summary>
         /// 從 Excel 行建立道路專案
         /// </summary>
-        private async Task CreateRoadProjectFromExcelRow(ExcelRoadProjectRow row, Dictionary<string, List<string>> photoDict)
+        private async Task CreateRoadProjectFromExcelRow(ExcelRoadProjectRow row, Dictionary<string, List<string>> photoDict, string? currentUserId)
         {
             var distName = row.AdministrativeDistrict;
             var adminDistId = _mapDBContext.AdminDist.FirstOrDefault(ad => ad.Town == distName)?.Id
@@ -2018,6 +2019,7 @@ namespace RMIS.Repositories
                 CoordinateChecked = !string.IsNullOrWhiteSpace(row.ExpansionRangeJson) ? true
                                   : (!string.IsNullOrWhiteSpace(row.StartPoint) || !string.IsNullOrWhiteSpace(row.EndPoint)) ? null
                                   : false,
+                CreatedByUserId = currentUserId,
             };
 
             // 建立 Property JSON
@@ -2419,6 +2421,12 @@ namespace RMIS.Repositories
             }
 
         }
+        public async Task<string?> GetRoadProjectCreatorIdAsync(int id)
+        {
+            var project = await _mapDBContext.RoadProjects.FindAsync(id);
+            return project?.CreatedByUserId;
+        }
+
         public async Task<bool> ConfirmCoordinateAsync(int projectId)
         {
             var project = await _mapDBContext.RoadProjects.FindAsync(projectId);
