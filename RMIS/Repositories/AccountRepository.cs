@@ -1386,7 +1386,29 @@ namespace RMIS.Repositories
                 return (false, "部門修改失敗");
             }
         }
-        public async Task<List<LogRecord>> GetLogRecordAsync()
+        // 「帳號」類別：登入/登出/延長登入等身分驗證相關操作
+        private static readonly string[] LogAccountTypes = { "登入", "Login-POST", "登出", "登入延長", "ExtendSession" };
+
+        // 「管理」類別：使用者/角色/權限/部門的新增修改刪除（不含個人資料自助操作、不含專案管理）
+        private static readonly string[] LogManagementTypes = {
+            "新增使用者", "更新使用者", "刪除使用者",
+            "新增角色", "更新角色", "刪除角色",
+            "新增權限", "更新權限", "刪除權限",
+            "新增部門", "更新部門", "刪除部門"
+        };
+
+        // 「操作」類別：帳號、管理以外的所有業務操作
+        private static readonly string[] LogOperationTypes = {
+            "RegisterSelect", "註冊", "ConfirmEmail", "ResendConfirmationEmail",
+            "ForgotPassword", "ResetPassword-GET", "重設密碼", "重設密碼T",
+            "更新個人資料", "更新使用者密碼", "更新使用者信箱", "確認使用者信箱", "更新身分證字號",
+            "新增類別", "新增類別(JSON)", "新增地圖來源", "新增道路", "新增道路(CSV)", "新增管線",
+            "新增道路專案", "更新道路專案", "刪除道路專案",
+            "匯入道路專案(Excel)", "匯入施工通告(Excel)",
+            "新增歷程", "更新歷程", "刪除歷程", "匯出歷程補充資料"
+        };
+
+        public async Task<List<LogRecord>> GetLogRecordAsync(LogQuery query)
         {
             var logRecords = new List<LogRecord>();
             var _logDirectory = "C:/RMIS/Logs";
@@ -1397,8 +1419,9 @@ namespace RMIS.Repositories
                     return logRecords;
                 }
 
-                // 取得目錄下所有 .log 檔案
+                // 取得目錄下所有 .log 檔案，並依查詢的日期區間先排除掉不可能符合的檔案
                 var logFiles = Directory.GetFiles(_logDirectory, "*.log")
+                                        .Where(f => IsLogFileInDateRange(f, query?.DateFrom, query?.DateTo))
                                         .OrderByDescending(f => f)
                                         .ToList();
 
@@ -1408,14 +1431,59 @@ namespace RMIS.Repositories
                     logRecords.AddRange(records);
                 }
 
+                var filtered = logRecords.AsEnumerable();
+
+                if (query?.DateFrom != null)
+                    filtered = filtered.Where(r => r.Timestamp >= query.DateFrom.Value.Date);
+
+                if (query?.DateTo != null)
+                    filtered = filtered.Where(r => r.Timestamp < query.DateTo.Value.Date.AddDays(1));
+
+                if (!string.IsNullOrWhiteSpace(query?.User))
+                    filtered = filtered.Where(r => r.UserId != null && r.UserId.Contains(query.User, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(query?.Category))
+                {
+                    var types = query.Category switch
+                    {
+                        "account" => LogAccountTypes,
+                        "management" => LogManagementTypes,
+                        "operation" => LogOperationTypes,
+                        _ => null
+                    };
+
+                    if (types != null)
+                        filtered = filtered.Where(r => types.Contains(r.Type));
+                }
+
                 // 依時間排序（最新的在前）
-                logRecords = logRecords.OrderByDescending(r => r.Timestamp).ToList();
+                logRecords = filtered.OrderByDescending(r => r.Timestamp).ToList();
             }
             catch (Exception ex)
             {
             }
 
             return logRecords;
+        }
+
+        // 依檔名（log-yyyyMMdd.log）判斷該檔案是否落在查詢日期區間內，避免開啟不必要的檔案
+        private bool IsLogFileInDateRange(string filePath, DateTime? dateFrom, DateTime? dateTo)
+        {
+            if (dateFrom == null && dateTo == null)
+                return true;
+
+            var fileName = Path.GetFileNameWithoutExtension(filePath);
+            var match = Regex.Match(fileName, @"(?<date>\d{8})$");
+            if (!match.Success || !DateTime.TryParseExact(match.Groups["date"].Value, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var fileDate))
+                return true; // 檔名無法判斷日期時保留，交由內容過濾
+
+            if (dateFrom != null && fileDate < dateFrom.Value.Date)
+                return false;
+
+            if (dateTo != null && fileDate > dateTo.Value.Date)
+                return false;
+
+            return true;
         }
 
         private async Task<List<LogRecord>> ParseLogFileAsync(string filePath)

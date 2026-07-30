@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RMIS.Helpers;
 using RMIS.Models.Account.Departments;
+using RMIS.Models.Account.Mapdatas;
 using RMIS.Models.Account.Permissions;
 using RMIS.Models.Account.Roles;
 using RMIS.Models.Account.Users;
@@ -862,9 +863,9 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/Log/Get/ManagerData")]
-        public async Task<IActionResult> LogManagerData()
+        public async Task<IActionResult> LogManagerData([FromQuery] LogQuery query)
         {
-            var result = await _accountInterface.GetLogRecordAsync();
+            var result = await _accountInterface.GetLogRecordAsync(query);
             return Json( new { Success = true, LogManage = result });
         }
         // 無權限時

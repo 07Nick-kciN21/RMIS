@@ -687,7 +687,7 @@ namespace RMIS.Controllers
                 var ownershipError = await CheckProjectOwnershipAsync(projectData.Id);
                 if (ownershipError != null) return ownershipError;
 
-                var updated = await _adminInterface.UpdateProjectDataAsync(projectData);
+                var (updated, _) = await _adminInterface.UpdateProjectDataAsync(projectData);
                 if (updated)
                 {
                     return Ok(new { success = true, message = "資料已更新" });

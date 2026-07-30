@@ -2,90 +2,86 @@ import { initPage } from "../Pagination.js";
 
 const PAGE_SIZE = 10;
 
-// 「帳號」類別：登入/登出/延長登入等身分驗證相關操作
-const ACCOUNT_TYPES = ["登入", "Login-POST", "登出", "登入延長", "ExtendSession"];
-
-// 「管理」類別：使用者/角色/權限/部門的新增修改刪除（不含個人資料自助操作、不含專案管理）
-const MANAGEMENT_TYPES = [
-    "新增使用者", "更新使用者", "刪除使用者",
-    "新增角色", "更新角色", "刪除角色",
-    "新增權限", "更新權限", "刪除權限",
-    "新增部門", "更新部門", "刪除部門"
-];
-
-// 「操作」類別：帳號、管理以外的所有業務操作，明確列出對應的 log 操作名稱
-const OPERATION_TYPES = [
-    // 註冊 / 信箱驗證 / 忘記密碼
-    "RegisterSelect", "註冊", "ConfirmEmail", "ResendConfirmationEmail",
-    "ForgotPassword", "ResetPassword-GET", "重設密碼", "重設密碼T",
-    // 個人資料自助操作
-    "更新個人資料", "更新使用者密碼", "更新使用者信箱", "確認使用者信箱", "更新身分證字號",
-    // 業務圖資 / 專案管理
-    "新增類別", "新增類別(JSON)", "新增地圖來源", "新增道路", "新增道路(CSV)", "新增管線",
-    "新增道路專案", "更新道路專案", "刪除道路專案",
-    "匯入道路專案(Excel)", "匯入施工通告(Excel)",
-    // 道路專案歷程
-    "新增歷程", "更新歷程", "刪除歷程", "匯出歷程補充資料"
-];
-
-let allLogs = [];
-let filteredLogs = [];
+let currentLogs = [];
 let pagination = null;
 
 $(document).ready(function () {
+    applyDefaultDateRange();
     loadLogData();
-    $("#btnFilter").on("click", applyFilter);
+    $("#btnFilter").on("click", onFilterClick);
     $("#btnClear").on("click", clearFilter);
 });
 
+// 預設查詢區間：最近一個月（今天往前推一個月～今天）
+function applyDefaultDateRange() {
+    const to = new Date();
+    const from = new Date(to);
+    from.setMonth(from.getMonth() - 1);
+
+    $("#filterDateFrom").val(formatDateInput(from));
+    $("#filterDateTo").val(formatDateInput(to));
+}
+
+function formatDateInput(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+// 結束時間是否超過開始時間往後推一個月（即區間 > 1 個月）
+function isRangeOverOneMonth(dateFrom, dateTo) {
+    const maxTo = new Date(dateFrom);
+    maxTo.setMonth(maxTo.getMonth() + 1);
+    return new Date(dateTo) > maxTo;
+}
+
+function onFilterClick() {
+    const dateFrom = $("#filterDateFrom").val();
+    const dateTo = $("#filterDateTo").val();
+
+    if (dateFrom && dateTo && isRangeOverOneMonth(dateFrom, dateTo)) {
+        alert("查詢區間不可超過一個月，請重新選擇開始與結束時間");
+        return;
+    }
+
+    loadLogData();
+}
+
+// 依目前篩選條件向後端查詢（精確過濾，非前端過濾）
 function loadLogData() {
+    const params = {
+        dateFrom: $("#filterDateFrom").val() || null,
+        dateTo: $("#filterDateTo").val() || null,
+        user: $("#filterUser").val().trim() || null,
+        category: $("#filterCategory").val() || null
+    };
+
     $.ajax({
         url: "/Account/Log/Get/ManagerData",
         type: "POST",
-        processData: false,
-        contentType: false,
+        data: params,
         success: function (data) {
             if (data.success) {
-                allLogs = data.logManage;
-                filteredLogs = allLogs;
-                pagination = initPage("logPage", renderRows, filteredLogs, PAGE_SIZE);
-                $("#totalCount").text(filteredLogs.length);
+                currentLogs = data.logManage;
+
+                if (pagination) {
+                    pagination.updateDataList(currentLogs);
+                } else {
+                    pagination = initPage("logPage", renderRows, currentLogs, PAGE_SIZE);
+                }
+
+                $("#totalCount").text(currentLogs.length);
             }
         }
     });
 }
 
-function applyFilter() {
-    const dateFrom = $("#filterDateFrom").val();
-    const dateTo = $("#filterDateTo").val();
-    const user = $("#filterUser").val().trim().toLowerCase();
-    const category = $("#filterCategory").val();
-
-    filteredLogs = allLogs.filter(log => {
-        const ts = new Date(log.timestamp);
-
-        if (dateFrom && ts < new Date(dateFrom)) return false;
-        if (dateTo && ts > new Date(dateTo + "T23:59:59")) return false;
-        if (user && !log.userId.toLowerCase().includes(user)) return false;
-        if (category === "account" && !ACCOUNT_TYPES.includes(log.type)) return false;
-        if (category === "management" && !MANAGEMENT_TYPES.includes(log.type)) return false;
-        if (category === "operation" && !OPERATION_TYPES.includes(log.type)) return false;
-
-        return true;
-    });
-
-    pagination.updateDataList(filteredLogs);
-    $("#totalCount").text(filteredLogs.length);
-}
-
 function clearFilter() {
-    $("#filterDateFrom").val("");
-    $("#filterDateTo").val("");
     $("#filterUser").val("");
     $("#filterCategory").val("");
-    filteredLogs = allLogs;
-    pagination.updateDataList(filteredLogs);
-    $("#totalCount").text(filteredLogs.length);
+    applyDefaultDateRange();
+    loadLogData();
 }
 
 function renderRows(pageLogs) {

@@ -483,11 +483,11 @@ namespace RMIS.Controllers
                 var ownershipError = await CheckProjectOwnershipAsync(input.Id);
                 if (ownershipError != null) return ownershipError;
 
-                var result = await _adminInterface.DeleteRoadProjectAsync(input.Id);
+                var (success, projectName) = await _adminInterface.DeleteRoadProjectAsync(input.Id);
 
-                if (result)
+                if (success)
                 {
-                    LogOp("刪除道路專案", true, $"已刪除專案: {input.ProjectId}");
+                    LogOp("刪除道路專案", true, $"已刪除專案: {projectName}");
                     return Ok(new { success = true, message = "專案已成功刪除" });
                 }
                 else
@@ -511,10 +511,10 @@ namespace RMIS.Controllers
                 var ownershipError = await CheckProjectOwnershipAsync(input.Id);
                 if (ownershipError != null) return ownershipError;
 
-                var result = await _adminInterface.UpdateProjectDataAsync(input);
-                if (result)
+                var (success, projectName) = await _adminInterface.UpdateProjectDataAsync(input);
+                if (success)
                 {
-                    LogOp("更新道路專案", true, $"已更新專案: {input.ProjectId}");
+                    LogOp("更新道路專案", true, $"已更新專案: {projectName}");
                     return Ok(new { success = true, message = "專案已成功更新" });
                 }
                 else

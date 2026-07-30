@@ -1425,7 +1425,7 @@ namespace RMIS.Repositories
             }); // end strategy
         }
 
-        public async Task<bool> DeleteRoadProjectAsync(int projectId)
+        public async Task<(bool Success, string? ProjectName)> DeleteRoadProjectAsync(int projectId)
         {
             Console.WriteLine($"DeleteRoadProjectAsync: {projectId}");
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
@@ -1440,8 +1440,10 @@ namespace RMIS.Repositories
 
                 if (project == null)
                 {
-                    return false;
+                    return (false, (string?)null);
                 }
+
+                var projectName = project.ProjectName;
 
                 // 刪除相關的 Points (拓寬範圍)
                 var expansionPoints = await _mapDBContext.Points
@@ -1511,7 +1513,7 @@ namespace RMIS.Repositories
                 await transaction.CommitAsync();
 
                 _logger.LogInformation($"已刪除專案: {projectId}");
-                return true;
+                return (true, projectName);
             }
             catch (Exception ex)
             {
@@ -2517,7 +2519,7 @@ namespace RMIS.Repositories
             }); // end strategy
         }
 
-        public async Task<Boolean> UpdateProjectDataAsync(UpdateProjectInput projectInput)
+        public async Task<(bool Success, string? ProjectName)> UpdateProjectDataAsync(UpdateProjectInput projectInput)
         {
             Console.WriteLine("UpdateProjectDataAsync");
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
@@ -2530,7 +2532,7 @@ namespace RMIS.Repositories
                 var roadProject = await _mapDBContext.RoadProjects.FirstOrDefaultAsync(rp => rp.Id == projectInput.Id);
                 if (roadProject == null)
                 {
-                    return false;
+                    return (false, (string?)null);
                 }
                 // 經費直接使用原始值（元），不再轉換單位
                 var config = new MapperConfiguration(cfg =>
@@ -2649,7 +2651,7 @@ namespace RMIS.Repositories
                 await _mapDBContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
-                return true;
+                return (true, roadProject.ProjectName);
             }
             catch (Exception ex)
             {

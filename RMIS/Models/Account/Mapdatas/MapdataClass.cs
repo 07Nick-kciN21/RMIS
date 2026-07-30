@@ -119,4 +119,12 @@ namespace RMIS.Models.Account.Mapdatas
         public bool Success { get; set; }
         public string? Reason { get; set; }
     }
+
+    public class LogQuery
+    {
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
+        public string? User { get; set; }
+        public string? Category { get; set; } // account, management, operation
+    }
 }
