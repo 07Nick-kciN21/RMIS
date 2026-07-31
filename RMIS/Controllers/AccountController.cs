@@ -863,7 +863,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("[controller]/Log/Get/ManagerData")]
-        public async Task<IActionResult> LogManagerData([FromQuery] LogQuery query)
+        public async Task<IActionResult> LogManagerData(LogQuery query)
         {
             var result = await _accountInterface.GetLogRecordAsync(query);
             return Json( new { Success = true, LogManage = result });
