@@ -16,6 +16,7 @@ using NetTopologySuite.Features;
 using NetTopologySuite.IO.VectorTiles;
 using NetTopologySuite.IO.VectorTiles.Mapbox;
 using System.Net.Http;
+using Newtonsoft.Json.Linq;
 
 
 namespace RMIS.Controllers
@@ -223,21 +224,32 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("GetRoadbyName")]
-        public async Task<List<RoadbyName>> GetRoadbyName(string name)
+        public async Task<List<RoadbyName>> GetRoadbyName(string name, string district = null)
         {
             try
             {
-                var result = await _mapDBContext.Areas
-                    .Where(a => a.Name.StartsWith(name) && a.Layer.Pipeline.Name == "道路")
-                    .Include(a => a.AdminDist)
-                    .OrderBy(a => a.AdminDist.orderId)
-                    .ThenBy(a => a.Name)
-                    .Select(a => new RoadbyName
-                    {
-                        Id = a.Id.ToString(),
-                        Name = a.Name + "(" + a.AdminDist.Town + ")"
-                    })
-                    .ToListAsync();
+                // 道路資料的行政區(Town)、道路名稱(RoadID) 存放在每個 Area 第一個點(Index == 0)的 Property JSON 中。
+                // 用 SQL Server 的 JSON_VALUE 直接在資料庫端過濾，避免把整個道路PA圖層（3萬多筆）撈到記憶體逐筆解析。
+                var districtParam = district ?? "";
+                var nameParam = name ?? "";
+                var namePattern = "%" + EscapeLike(nameParam) + "%";
+
+
+                var result = await _mapDBContext.Database.SqlQuery<RoadbyName>($@"
+                    SELECT
+                        CAST(a.Id AS NVARCHAR(20)) AS Id,
+                        ISNULL(JSON_VALUE(p.Property, '$.RoadID'), N'') + N'(' + ISNULL(JSON_VALUE(p.Property, '$.Town'), N'') + N')' AS Name
+                    FROM Points p
+                    JOIN Areas a ON p.AreaId = a.Id
+                    JOIN Layers l ON a.LayerId = l.Id
+                    JOIN Pipelines pl ON l.PipelineId = pl.Id
+                    WHERE p.[Index] = 0
+                      AND pl.Name = N'道路PA'
+                      AND ({districtParam} = N'' OR JSON_VALUE(p.Property, '$.Town') = {districtParam})
+                      AND ({nameParam} = N'' OR JSON_VALUE(p.Property, '$.RoadID') LIKE {namePattern} ESCAPE '\')
+                    ORDER BY JSON_VALUE(p.Property, '$.Town'), JSON_VALUE(p.Property, '$.RoadID')
+                ").ToListAsync();
+
                 return result;
             }
             catch (Exception e)
@@ -245,6 +257,12 @@ namespace RMIS.Controllers
                 ModelState.AddModelError("", "Error: " + e.Message);
                 return new List<RoadbyName>();
             }
+        }
+
+        // 把使用者輸入中的 LIKE 萬用字元跳脫，避免搜尋字含有 % _ [ 時被當成 SQL 萬用字元
+        private static string EscapeLike(string input)
+        {
+            return input.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_").Replace("[", "\\[");
         }
 
         [HttpPost("GetPointsbyLayerId")]

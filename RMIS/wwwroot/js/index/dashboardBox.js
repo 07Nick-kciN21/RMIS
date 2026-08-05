@@ -25,6 +25,9 @@ const DashboardBox = (function () {
     function init() {
         console.log('DashboardBox 初始化');
 
+        // 載入年度篩選選項
+        loadYearOptions();
+
         // 載入 KPI 數據
         loadKPIData();
 
@@ -74,6 +77,33 @@ const DashboardBox = (function () {
                 $('#kpi-total-length').text('--');
                 $('#kpi-contract-amount').text('--');
                 $('#kpi-contract-percent').text('佔總經費 --%');
+            }
+        });
+    }
+
+    /**
+     * 載入年度篩選選項（動態從後端取得資料庫中現有的審議年度）
+     */
+    function loadYearOptions() {
+        const $select = $('#filter-year');
+
+        $.ajax({
+            url: '/api/RoadProject/GetAvailableYears',
+            method: 'GET',
+            success: function(years) {
+                const currentValue = $select.val();
+                $select.find('option:not(:first)').remove();
+
+                (years || []).forEach(year => {
+                    $select.append(`<option value="${year}">${year} 年度</option>`);
+                });
+
+                if (currentValue) {
+                    $select.val(currentValue);
+                }
+            },
+            error: function() {
+                console.error('載入年度選項失敗');
             }
         });
     }
@@ -280,16 +310,25 @@ const DashboardBox = (function () {
 
         // 查看更多專案
         $('#btn-view-all-projects').on('click', function() {
-            // 關閉儀表板，開啟專案列表
+            // 關閉儀表板，開啟專案查詢頁面
             closeBox('full-box');
-            // TODO: 開啟專案查詢頁面
+            DashboardBox.close();
+            if (window.BoxManager) {
+                window.BoxManager.openLeftBoxPage('page-project', '專案查詢');
+            }
         });
 
         // 點擊專案項目
         $('#latest-projects-list').on('click', '.latest-project-item', function() {
             const projectId = $(this).data('project-id');
-            console.log('點擊專案:', projectId);
-            // TODO: 開啟專案詳情
+            if (!projectId) return;
+
+            // 關閉儀表板，開啟專案詳情
+            closeBox('full-box');
+            DashboardBox.close();
+            if (window.RoadProjectView) {
+                window.RoadProjectView.openViewById(projectId);
+            }
         });
     }
 

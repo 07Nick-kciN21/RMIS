@@ -23,6 +23,10 @@ import RoadProjectAdd from './index/roadProjectAdd.js';
 import RoadProjectEdit from './index/roadProjectEdit.js';
 import RoadProjectImport from './index/roadProjectImport.js';
 
+// 供非 module 腳本 (例如 dashboardBox.js) 呼叫
+window.BoxManager = BoxManager;
+window.RoadProjectView = RoadProjectView;
+
 $(document).ready(function () {
     // 各面板的權限旗標。頁面若沒有設定 window.panelPermissions（例如舊版頁面），預設視為有權限，維持原本行為
     const perm = window.panelPermissions || {};

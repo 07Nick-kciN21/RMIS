@@ -18,15 +18,6 @@ let taoyuanDistrictCenters = {
 };
 
 export function initSearchPanel() {
-    const $panelSearchBtn = $('#searchPanel').find(".searchPanelBtn");
-    $panelSearchBtn.on("click", () => {
-        handleSearch();
-    })
-
-    $("#searchRoadInput").on("click", () => {
-        handleSearch();
-    })
-
     $('#search_Close').on('click', () => {
         var indexMap = Map.getIndexMap();
         if (roadlayer) {
@@ -34,51 +25,59 @@ export function initSearchPanel() {
         }
     })
 
-
-
     $('#districtSelect').on('change', function () {
         const selectedDistrict = $(this).val();
         const center = taoyuanDistrictCenters[selectedDistrict];
         if (center) {
             const indexMap = Map.getIndexMap();
             indexMap.setView([center.lat, center.lng], 13);
-        } 
+        }
+        handleSearch();
+    });
+
+    $('#searchRoadInput').on('keyup', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
     });
 }
 
 function handleSearch() {
-    const $searchInput = $("#searchRoadInput");
     const $searchList = $("#searchList");
-    const query = $searchInput.val().trim()
-    console.log(query);
-    if (query) {
-        $.ajax({
-            url: `/api/MapAPI/GetRoadbyName?name=${query}`,
-            method: 'POST',
-            success: function (result) {
-                try {
-                    $searchList.empty();
-                    result.forEach(road => {
-                        var $li = $(`<li class="panelResult">${road.name}</li>`).on('click', function () {
-                            $(`#searchList li`).removeClass("selected");
-                            $(this).addClass("selected");
-                            addRoadLayer(road.id);
-                            console.log(road.id);
-                        });
-                        $searchList.append($li);
-                    });
-                }
-                catch (e) {
-                    console.log(e);
-                }
-            }
-        })
+    const district = $('#districtSelect').val();
+    const query = $('#searchRoadInput').val().trim();
+    if (!district && !query) {
+        $searchList.empty();
+        return;
     }
+    $.ajax({
+        // GetRoadbyName 是簡單型別參數([ApiController]預設從查詢字串綁定)，
+        // 必須帶在網址上，不能放進 POST body(data)，否則後端收不到必填的 name 而回 400
+        url: `/api/MapAPI/GetRoadbyName?${$.param({ name: query, district: district })}`,
+        method: 'POST',
+        success: function (result) {
+            try {
+                $searchList.empty();
+                result.forEach(road => {
+                    var $li = $(`<li class="panelResult">${road.name}</li>`).on('click', function () {
+                        $(`#searchList li`).removeClass("selected");
+                        $(this).addClass("selected");
+                        addRoadLayer(road.id);
+                        console.log(road.id);
+                    });
+                    $searchList.append($li);
+                });
+            }
+            catch (e) {
+                console.log(e);
+            }
+        }
+    })
 }
 function addRoadLayer(id) {
     var indexMap = Map.getIndexMap();
     $.ajax({
-        url: `/api/MapAPI/GetPointsbyLayerId?LayerId=${id}`,
+        url: `/api/MapAPI/GetPointsbyLayerId?AreaId=${id}`,
         method: 'POST',
         success: function (result) {
             try {

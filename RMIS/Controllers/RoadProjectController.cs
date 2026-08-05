@@ -176,6 +176,26 @@ namespace RMIS.Controllers
             return query;
         }
 
+        /// <summary>
+        /// 取得資料庫中現有的審議年度清單（供儀表板篩選下拉選單使用）
+        /// </summary>
+        [HttpGet("GetAvailableYears")]
+        public async Task<IActionResult> GetAvailableYears()
+        {
+            var years = await _mapDBContext.RoadProjects
+                .Where(p => p.ReviewYear != null && p.ReviewYear != "")
+                .Select(p => p.ReviewYear!)
+                .Distinct()
+                .ToListAsync();
+
+            var sorted = years
+                .OrderByDescending(y => int.TryParse(y, out var n) ? n : -1)
+                .ThenByDescending(y => y)
+                .ToList();
+
+            return Ok(sorted);
+        }
+
         [HttpGet("GetDashboardKPI")]
         public async Task<IActionResult> GetDashboardKPI(string district = "", string year = "", string budget = "")
         {
