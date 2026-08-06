@@ -9,7 +9,7 @@ namespace RMIS.Repositories
         public Task<List<RoadProjectProcess>> GetLastProcessRecordsByProjectIdsAsync(List<string> projectIds);
         public Task<(string result, string processId)> AddAllProcessRecordAsync(RoadProjectProcess process);
         public Task<string> UpdateAllProcessRecordAsync(RoadProjectProcess process);
-        public Task<string> DeleteAllProcessRecordAsync(int id);
+        public Task<(string result, string? ProjectName, string? RecordTitle)> DeleteAllProcessRecordAsync(int id);
         public Task<string> AddProcessFileAsync(RoadProjectProcessFile file);
         public Task<List<RoadProjectProcessFile>> GetProcessFilesByProcessIdAsync(string processId);
         public Task<RoadProjectProcessFile?> GetProcessFileByIdAsync(int fileId);

@@ -20,8 +20,13 @@
                     <h2 class="view-title" id="pv-title">專案名稱載入中...</h2>
                 </div>
             </div>
-            @* 編輯/刪除按鈕僅在確認目前使用者為建立者後才會由 JS 動態加入，見 roadProjectView.js renderView() *@
-            <div class="view-header-right" id="pv-owner-actions"></div>
+            <div class="view-header-right">
+                <button type="button" class="btn btn-secondary" id="btn-view-history">
+                    <i class="fa fa-history"></i> 檢視歷程
+                </button>
+                @* 編輯/刪除按鈕僅在確認目前使用者為建立者後才會由 JS 動態加入，見 roadProjectView.js renderView() *@
+                <div id="pv-owner-actions" style="display:flex; gap:8px;"></div>
+            </div>
         </div>
 
         @* ===== 1.5 座標狀態警示 ===== *@

@@ -446,29 +446,34 @@ namespace RMIS.Repositories
             }
         }
 
-        public async Task<string> DeleteAllProcessRecordAsync(int id)
+        public async Task<(string result, string? ProjectName, string? RecordTitle)> DeleteAllProcessRecordAsync(int id)
         {
             var strategy = _mapDBContext.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
                 using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
                 var deletedFiles = new List<(string path, byte[] content)>();
+                string? projectName = null;
+                string? recordTitle = null;
                 try
                 {
                     var process = await _mapDBContext.RoadProjectProcesses.FindAsync(id);
-                    if (process == null) return "錯誤：找不到該記錄。";
+                    if (process == null) return ("錯誤：無此記錄可刪除。", (string?)null, (string?)null);
+
+                    projectName = process.ProjectName;
+                    recordTitle = process.RecordTitle;
 
                     deletedFiles = await DeleteProcessFilesWithBackupAsync(process.ProcessId);
                     _mapDBContext.RoadProjectProcesses.Remove(process);
                     await _mapDBContext.SaveChangesAsync();
                     await transaction.CommitAsync();
-                    return "success";
+                    return ("success", projectName, recordTitle);
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
                     await RestoreDeletedFilesAsync(deletedFiles);
-                    return $"刪除失敗：{ex.Message}";
+                    return ($"刪除失敗：{ex.Message}", projectName, recordTitle);
                 }
             });
         }

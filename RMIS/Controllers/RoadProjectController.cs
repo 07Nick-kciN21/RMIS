@@ -351,25 +351,28 @@ namespace RMIS.Controllers
             {
                 var existing = await _mapDBContext.RoadProjectProcesses.FindAsync(process.Id);
                 if (existing != null) await AddProcessEditLog(existing.ProcessId, "修改");
-                LogOp("更新歷程", true, $"Id:{process.Id}");
+                LogOp("更新歷程", true, $"專案:{existing?.ProjectName}, 記錄標題:{existing?.RecordTitle}");
                 return Ok(new { success = true });
             }
 
-            LogOp("更新歷程", false, $"Id:{process.Id}, {result}");
+            LogOp("更新歷程", false, $"專案:{process.ProjectName}, 記錄標題:{process.RecordTitle}, {result}");
             return BadRequest(new { success = false, message = result });
         }
 
         [HttpDelete("DeleteAllProcessRecord/{id}")]
         public async Task<IActionResult> DeleteAllProcessRecord(int id)
         {
-            var result = await _roadProjectInterface.DeleteAllProcessRecordAsync(id);
+            var (result, projectName, recordTitle) = await _roadProjectInterface.DeleteAllProcessRecordAsync(id);
             if (result == "success")
             {
-                LogOp("刪除歷程", true, $"Id:{id}");
+                LogOp("刪除歷程", true, $"專案:{projectName}, 記錄標題:{recordTitle}");
                 return Ok(new { success = true, message = "刪除成功" });
             }
 
-            LogOp("刪除歷程", false, $"Id:{id}, {result}");
+            var failReason = recordTitle != null
+                ? $"專案:{projectName}, 記錄標題:{recordTitle}, {result}"
+                : $"Id:{id}, {result}";
+            LogOp("刪除歷程", false, failReason);
             return BadRequest(new { success = false, message = result });
         }
 

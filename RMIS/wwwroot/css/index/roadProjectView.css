@@ -86,17 +86,6 @@
     color: #334155;
 }
 
-#page-project-view .btn-view-history {
-    background-color: #3b82f6;
-    border: 1px solid #3b82f6;
-    color: white;
-}
-
-#page-project-view .btn-view-history:hover {
-    background-color: #2563eb;
-    border-color: #2563eb;
-}
-
 /* ===== Coordinate Warning Banner ===== */
 #page-project-view .coord-warning-banner {
     display: flex;

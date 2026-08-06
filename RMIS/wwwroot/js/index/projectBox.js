@@ -116,6 +116,21 @@ const ProjectBox = {
     },
 
     /**
+     * Helper function: HTML escape，避免使用者輸入資料（申請人、專案名稱等）被當成 HTML 解析
+     */
+    escapeHtml: function(text) {
+        if (text === null || text === undefined) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    },
+
+    /**
      * Helper function: 處理 select 值
      */
     convertSelectValue: function(value) {
@@ -237,17 +252,17 @@ const ProjectBox = {
             let row = `
                 <tr data-project-index="${startIndex + currentPageData.indexOf(item)}" class="${isUnchecked ? 'coord-unchecked-row' : ''}">
                     <td style="text-align:center;">
-                        <input type="checkbox" class="project-row-check" value="${item.projectId}">
+                        <input type="checkbox" class="project-row-check" value="${self.escapeHtml(item.projectId)}">
                     </td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary btn-locate" data-id="${item.id}">
                             定位
                         </button>
                     </td>
-                    ${hasUpdatePermission ? `<td><button class="btn btn-sm btn-outline-secondary btn-ProcessView" data-id="${item.projectId}">歷程</button></td>` : ''}
-                    <td>${item.proposer || ''}</td>
-                    <td>${item.administrativeDistrict || ''}</td>
-                    <td class="td-clickable" style="cursor: pointer; color: #2563eb;">${item.projectName || ''}</td>
+                    ${hasUpdatePermission ? `<td><button class="btn btn-sm btn-outline-secondary btn-ProcessView" data-id="${self.escapeHtml(item.projectId)}">${self.escapeHtml(item.reviewYear) || '-'}</button></td>` : ''}
+                    <td>${self.escapeHtml(item.proposer)}</td>
+                    <td>${self.escapeHtml(item.administrativeDistrict)}</td>
+                    <td class="td-clickable" style="cursor: pointer; color: #2563eb;">${self.escapeHtml(item.projectName)}</td>
                     <td>${totalBudgetDisplay}</td>
                 </tr>`;
 
@@ -325,13 +340,13 @@ const ProjectBox = {
         console.log('開啟專案歷程，ID:', projectId);
         // 從 API 回傳的資料中尋找對應專案
         let projectData = self.filterProject.find(p => p.projectId === projectId);
-        
-        // 如果找不到，使用測試資料
+
         if (!projectData) {
-            projectData = self.MOCK_PROJECTS.find(p => p.projectId === projectId);
+            console.error('找不到專案資料，ID:', projectId);
+            return;
         }
         console.log('專案資料:', projectData);
-       
+
         // 補充 API 資料用於顯示）
         projectData = self.formatProjectData(projectData);
         
