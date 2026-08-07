@@ -22,10 +22,13 @@ const RoadProjectView = {
     init: function() {
         const self = this;
 
-        // 初始化地圖圖層 
+        // 初始化地圖圖層
         self.$indexMap = Map.getIndexMap();
         self.projectLayer = L.layerGroup();
         self.projectLayer.addTo(self.$indexMap);
+
+        // 記錄各資訊卡片區塊的預設順序，供 applySectionOrder() 還原使用
+        self.defaultSectionOrder = $('.project-view-container .view-content-area > .view-section').toArray();
 
         // 初始化編輯模組並傳入目前的 View 實例 
 
@@ -77,20 +80,41 @@ const RoadProjectView = {
     },
 
     /**
-     * 開啟專案檢視頁面 
+     * 依據進入來源調整資訊卡片順序
+     * @param {string|null} prioritizeSectionId - 要移到最上面的區塊 id，未指定則還原預設順序
      */
-    openView: function(project) {
+    applySectionOrder: function(prioritizeSectionId) {
+        const self = this;
+        if (!self.defaultSectionOrder || self.defaultSectionOrder.length === 0) return;
+
+        const $container = $('.project-view-container .view-content-area');
+        self.defaultSectionOrder.forEach(el => $container.append(el));
+
+        if (prioritizeSectionId) {
+            const $target = $(`#${prioritizeSectionId}`);
+            if ($target.length > 0) {
+                $container.prepend($target);
+            }
+        }
+    },
+
+    /**
+     * 開啟專案檢視頁面
+     */
+    openView: function(project, options) {
         if (!project) return;
         this.currentProject = project;
+        this.applySectionOrder(options && options.prioritizeSectionId);
         BoxManager.openRightBoxPage('page-project-view', '專案詳情');
         this.renderView(project);
     },
 
     /**
-     * 透過 ID 開啟專案檢視（從 API 載入資料） 
+     * 透過 ID 開啟專案檢視（從 API 載入資料）
      */
-    openViewById: function(projectId) {
+    openViewById: function(projectId, options) {
         const self = this;
+        self.applySectionOrder(options && options.prioritizeSectionId);
         BoxManager.openRightBoxPage('page-project-view', '專案詳情');
         self.showLoading();
 
