@@ -36,11 +36,6 @@
     height: 500px;
 }
 
-#projectPanel {
-    width: 550px;
-    height: 630px;
-}
-
 #accidentPanel {
     width: 450px;
     height: 450px;
@@ -203,7 +198,6 @@
     #searchPropPanel { width: 420px; }
     #flagPanel      { width: 420px; height: 420px; }
     #focusPanel     { width: 380px; height: 440px; }
-    #projectPanel   { width: 480px; height: 520px; }
     #accidentPanel  { width: 380px; height: 380px; }
     #painterPanel   { width: 340px; }
 }
@@ -219,11 +213,6 @@
     }
 
     #focusPanel{
-        top:51.5px;
-        left: 0%;
-        width: 100%;
-    }
-    #projectPanel{
         top:51.5px;
         left: 0%;
         width: 100%;

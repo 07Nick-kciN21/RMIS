@@ -241,7 +241,6 @@
         <span id="tb-flagPanel" title="權管土地"></span>
         <span id="tb-focusPanel" class="mobileTool" title="養工焦點"></span>
         <span id="tb-accidentPanel" title="交通事故"></span>
-        <span id="tb-projectPanel" class="mobileTool" title="專案查詢"></span>
     </div>
     <div id="indexMap" class="div3">
         <div class="map-footer">
@@ -320,12 +319,6 @@
 {
     @section focusPanel {
         @Html.Partial("~/Views/Home/Partials/_focusPanel.cshtml")
-    }
-}
- @if (Model.ContainsKey("專案查詢") && Model["專案查詢"].Read && Model["專案查詢"].Status)
-{
-    @section projectPanel {
-        @Html.Partial("~/Views/Home/Partials/_projectPanel.cshtml")
     }
 }
  @if (Model.ContainsKey("交通事故") && Model["交通事故"].Read && Model["交通事故"].Status)

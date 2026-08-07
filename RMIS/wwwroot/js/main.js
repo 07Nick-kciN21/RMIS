@@ -12,7 +12,6 @@ import { initSearchPropPanel } from './index/propPanel/searchPropPanel.js'
 import { initMeasurePanel } from './index/measure.js';
 import { initFlagPanel } from './index/flagPanel.js';
 import { initFocusPanel } from './index/focusPanel.js';
-import { initProjectPanel } from './index/projectPanel.js';
 import { initAccidentPanel } from './index/accidentPanel.js';
 
 import BoxManager from './index/box.js';
@@ -46,7 +45,6 @@ $(document).ready(function () {
     if (canUse("flagPanel")) initPanel("flagPanel");
     if (canUse("focusPanel")) initPanel("focusPanel");
     if (canUse("accidentPanel")) initPanel("accidentPanel");
-    // initPanel("projectPanel");
     initSearchPanel();
     initPainterPanel();
     initPhoto();

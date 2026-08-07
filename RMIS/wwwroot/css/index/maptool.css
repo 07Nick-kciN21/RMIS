@@ -107,12 +107,6 @@
     background-position: center;
 }
 
-#tb-projectPanel{
-    background-image: url('/svg/tiptool/roadproject.svg');
-    background-size: 70%;
-    background-position: center;
-}
-
 #mapSelect{
     width: 250px;
     top: -350px;

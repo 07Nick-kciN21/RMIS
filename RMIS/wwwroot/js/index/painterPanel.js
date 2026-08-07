@@ -543,52 +543,52 @@ function exitEraserMode() {
     $('.dtBtn').off('click', exitEraserMode);
 }
 
+let activeEditHandler = null;
+let activeEditExitHandler = null;
+
 function initEdit() {
+    // 若已有編輯工作階段在進行中，先結束前一個，避免事件重複綁定造成 undo 記錄重複寫入
+    if (activeEditHandler) {
+        $indexMap.off('contextmenu', activeEditExitHandler);
+        activeEditHandler.save();
+        activeEditHandler.disable();
+    }
+    $indexMap.off('draw:edited');
 
     var editHandler = new L.EditToolbar.Edit($indexMap, {
         featureGroup: drawnItems
     });
+
+    // 進入編輯前，先記錄所有圖層目前的幾何狀態，供結束編輯後比對是否變動並寫入復原堆疊
+    var beforeEditSnapshots = {};
+    drawnItems.eachLayer(function (layer) {
+        beforeEditSnapshots[L.Util.stamp(layer)] = getLayerGeometrySnapshot(layer);
+    });
+
     editHandler.enable(); // 啟動編輯模式
 
-    // 當使用者開始編輯時
-    $indexMap.on('draw:editstart', function (e) {
-        console.log('Edit mode activated.');
-    });
-
-    // 當使用者在編輯過程中，例如移動圖層、調整形狀等
-    $indexMap.on('draw:editmove', function (e) {
-        var layer = e.layer;
-        console.log('Layer moved:', layer);
-    });
-
-    // 當使用者調整多邊形的頂點
-    $indexMap.on('draw:editvertex', function (e) {
-        console.log('Vertex edited.');
-    });
-
-    // 當使用者完成編輯並點擊保存按鈕時
+    // 當使用者完成編輯（save() 觸發）時，把實際變動過的圖層寫入復原堆疊
     $indexMap.on('draw:edited', function (e) {
-        var layers = e.layers;
-
-        layers.eachLayer(function (layer) {
-            console.log('Layer edited:', layer);
-
-            var updatedGeoJSON = layer.toGeoJSON();
-            console.log('Updated GeoJSON:', updatedGeoJSON);
-
+        e.layers.eachLayer(function (layer) {
+            var before = beforeEditSnapshots[L.Util.stamp(layer)];
+            if (!before) return;
+            var after = getLayerGeometrySnapshot(layer);
+            saveOperation({ type: 'edit', layer: layer, before: before, after: after });
         });
-        console.log('Edit mode finished.');
     });
 
-    // 當使用者結束編輯模式（無論是否保存）
-    $indexMap.on('draw:editstop', function (e) {
-        console.log('Edit mode deactivated.');
-    });
+    activeEditHandler = editHandler;
+    activeEditExitHandler = function () {
+        // 先儲存變動（觸發 draw:edited 寫入復原堆疊），再結束編輯模式
+        editHandler.save();
+        editHandler.disable();
+        $indexMap.off('contextmenu', activeEditExitHandler);
+        activeEditHandler = null;
+        activeEditExitHandler = null;
+    };
 
     // 右鍵退出編輯模式
-    $indexMap.on('contextmenu', function (e) {
-        editHandler.disable();
-    });
+    $indexMap.on('contextmenu', activeEditExitHandler);
 }
 
 function initCircle() {
@@ -1192,6 +1192,38 @@ function redo() {
 
 }
 
+// 取得圖層目前的幾何狀態快照（供編輯復原/取消復原使用）
+function getLayerGeometrySnapshot(layer) {
+    if (layer instanceof L.Circle) {
+        return { latlng: layer.getLatLng(), radius: layer.getRadius() };
+    } else if (layer instanceof L.CircleMarker || layer instanceof L.Marker) {
+        return { latlng: layer.getLatLng() };
+    } else if (layer instanceof L.Polyline) { // 涵蓋 Polygon、Rectangle（皆繼承自 Polyline）
+        return { latlngs: cloneLatLngs(layer.getLatLngs()) };
+    }
+    return null;
+}
+
+// 將圖層還原為指定的幾何快照
+function applyLayerGeometrySnapshot(layer, snapshot) {
+    if (!snapshot) return;
+    if (layer instanceof L.Circle) {
+        layer.setLatLng(snapshot.latlng);
+        layer.setRadius(snapshot.radius);
+    } else if (layer instanceof L.CircleMarker || layer instanceof L.Marker) {
+        layer.setLatLng(snapshot.latlng);
+    } else if (layer instanceof L.Polyline) {
+        layer.setLatLngs(cloneLatLngs(snapshot.latlngs));
+    }
+}
+
+function cloneLatLngs(latlngs) {
+    if (Array.isArray(latlngs)) {
+        return latlngs.map(cloneLatLngs);
+    }
+    return L.latLng(latlngs.lat, latlngs.lng);
+}
+
 // 執行返回操作
 function excuteUndoOP(state) {
 
@@ -1207,6 +1239,9 @@ function excuteUndoOP(state) {
     }
     else if (state.type == 'import') {
         clearLayers();
+    }
+    else if (state.type == 'edit') {
+        applyLayerGeometrySnapshot(state.layer, state.before);
     }
 }
 
@@ -1225,6 +1260,9 @@ function excuteRedoOP(state) {
     }
     else if (state.type == 'import') {
         recoverJson(importJsonData);
+    }
+    else if (state.type == 'edit') {
+        applyLayerGeometrySnapshot(state.layer, state.after);
     }
 
 }

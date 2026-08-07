@@ -115,7 +115,7 @@ const ProjectBox = {
     },
 
     /**
-     * Helper function: HTML escape，避免使用者輸入資料（申請人、專案名稱等）被當成 HTML 解析
+     * Helper function: HTML escape，避免使用者輸入資料（提案人、專案名稱等）被當成 HTML 解析
      */
     escapeHtml: function(text) {
         if (text === null || text === undefined) return '';
@@ -681,7 +681,7 @@ const ProjectBox = {
         const data = self.filterProject.map((project, idx) => {
             return {
                 '項次': idx + 1,
-                '申請人': project['proposer'],
+                '提案人': project['proposer'],
                 '行政區': project['administrativeDistrict'],
                 '起訖位置': project['startEndLocation'],
                 '道路長度': project['roadLength'] + '公尺',

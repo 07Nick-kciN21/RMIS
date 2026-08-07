@@ -16,7 +16,7 @@ namespace RMIS.Middleware
             "/portal",
             "/css",
             "/js",
-            "/images",
+            "/img",
             "/lib",
             "/svg",
             "/favicon.ico"
