@@ -65,6 +65,12 @@ namespace RMIS.Repositories
                     process.CreatedAt = DateTime.Now;
                     process.ProcessId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
+                    var project = await _mapDBContext.RoadProjects
+                        .Where(p => p.ProjectId == process.ProjectId)
+                        .Select(p => new { p.ProjectName, p.StartEndLocation })
+                        .FirstOrDefaultAsync();
+                    process.ProjectName = project?.ProjectName ?? project?.StartEndLocation;
+
                     if (process.OrderIndex <= 0)
                     {
                         var maxOrder = await _mapDBContext.RoadProjectProcesses
@@ -407,10 +413,15 @@ namespace RMIS.Repositories
                 var existing = await _mapDBContext.RoadProjectProcesses.FindAsync(process.Id);
                 if (existing == null) return "錯誤：找不到該記錄。";
 
+                var project = await _mapDBContext.RoadProjects
+                    .Where(p => p.ProjectId == existing.ProjectId)
+                    .Select(p => new { p.ProjectName, p.StartEndLocation })
+                    .FirstOrDefaultAsync();
+
                 existing.District = process.District;
                 existing.RecordType = process.RecordType;
                 existing.RecordTitle = process.RecordTitle;
-                existing.ProjectName = process.ProjectName;
+                existing.ProjectName = project?.ProjectName ?? project?.StartEndLocation;
                 existing.ExecutionUnit = process.ExecutionUnit;
                 existing.ConstructionUnit = process.ConstructionUnit;
                 existing.Category = process.Category;

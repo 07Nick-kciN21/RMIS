@@ -2,6 +2,7 @@ namespace RMIS.Models.API
 {
     public class SupplementWordInput
     {
+        public string? ProjectId { get; set; }
         public string ProjectName { get; set; } = "";
         public string ExecutionUnit { get; set; } = "";
         public string Proposer { get; set; } = "";

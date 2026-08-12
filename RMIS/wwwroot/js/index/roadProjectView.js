@@ -625,7 +625,7 @@ const RoadProjectView = {
         const self = this;
         const projectData = {
             id: self.currentProject.projectId || self.currentProject.id,
-            name: self.currentProject.startEndLocation || self.currentProject.projectName,
+            name: self.currentProject.projectName || self.currentProject.startEndLocation,
             createDate: self.formatDate(self.currentProject.createTime),
             budget: self.formatBudget(self.currentProject.totalBudget),
             pm: self.currentProject.proposer,

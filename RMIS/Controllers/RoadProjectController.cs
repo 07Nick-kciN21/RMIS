@@ -803,10 +803,19 @@ namespace RMIS.Controllers
         }
 
         [HttpPost("ExportSupplementWord")]
-        public IActionResult ExportSupplementWord([FromBody] SupplementWordInput input)
+        public async Task<IActionResult> ExportSupplementWord([FromBody] SupplementWordInput input)
         {
             try
             {
+                if (!string.IsNullOrEmpty(input.ProjectId))
+                {
+                    var project = await _mapDBContext.RoadProjects
+                        .Where(p => p.ProjectId == input.ProjectId)
+                        .Select(p => new { p.ProjectName, p.StartEndLocation })
+                        .FirstOrDefaultAsync();
+                    input.ProjectName = project?.ProjectName ?? project?.StartEndLocation ?? input.ProjectName;
+                }
+
                 var ms = new MemoryStream();
                 BuildSupplementWord(ms, input);
                 var fileName = $"局長補充資料_{input.ProjectName}_{DateTime.Now:yyyyMMdd}.docx";

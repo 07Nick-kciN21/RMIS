@@ -1103,6 +1103,7 @@ const ProcessBox = {
             closeModal();
 
             const payload = {
+                projectId: self.projectId,
                 projectName,
                 executionUnit,
                 proposer,
