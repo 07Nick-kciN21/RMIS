@@ -230,6 +230,8 @@ namespace RMIS.Controllers
             {
                 // 道路資料的行政區(Town)、道路名稱(RoadID) 存放在每個 Area 第一個點(Index == 0)的 Property JSON 中。
                 // 用 SQL Server 的 JSON_VALUE 直接在資料庫端過濾，避免把整個道路PA圖層（3萬多筆）撈到記憶體逐筆解析。
+                // 同一條路實際上會拆成多個 Area（路段），所以依 Town+RoadID 分組，把所有路段的 AreaId 用逗號串起來放進 Id，
+                // 前端點選一筆時可以一次把整條路的所有路段查回來畫在地圖上。
                 var districtParam = district ?? "";
                 var nameParam = name ?? "";
                 var namePattern = "%" + EscapeLike(nameParam) + "%";
@@ -237,8 +239,8 @@ namespace RMIS.Controllers
 
                 var result = await _mapDBContext.Database.SqlQuery<RoadbyName>($@"
                     SELECT
-                        CAST(a.Id AS NVARCHAR(20)) AS Id,
-                        ISNULL(JSON_VALUE(p.Property, '$.RoadID'), N'') + N'(' + ISNULL(JSON_VALUE(p.Property, '$.Town'), N'') + N')' AS Name
+                        STRING_AGG(CAST(a.Id AS NVARCHAR(20)), ',') AS Id,
+                        MAX(ISNULL(JSON_VALUE(p.Property, '$.RoadID'), N'') + N'(' + ISNULL(JSON_VALUE(p.Property, '$.Town'), N'') + N')') AS Name
                     FROM Points p
                     JOIN Areas a ON p.AreaId = a.Id
                     JOIN Layers l ON a.LayerId = l.Id
@@ -247,6 +249,7 @@ namespace RMIS.Controllers
                       AND pl.Name = N'道路PA'
                       AND ({districtParam} = N'' OR JSON_VALUE(p.Property, '$.Town') = {districtParam})
                       AND ({nameParam} = N'' OR JSON_VALUE(p.Property, '$.RoadID') LIKE {namePattern} ESCAPE '\')
+                    GROUP BY JSON_VALUE(p.Property, '$.Town'), JSON_VALUE(p.Property, '$.RoadID')
                     ORDER BY JSON_VALUE(p.Property, '$.Town'), JSON_VALUE(p.Property, '$.RoadID')
                 ").ToListAsync();
 
@@ -297,6 +300,44 @@ namespace RMIS.Controllers
             {
                 ModelState.AddModelError("", "Error: " + e.Message);
                 return new PointsbyId();
+            }
+        }
+
+        // 給道路快搜使用：一條路可能拆成多個 Area（路段），一次把所有路段的座標點都查回來，
+        // 前端再逐段畫成 polyline，才能呈現整條路而不是單一路段。
+        [HttpPost("GetPointsbyLayerIds")]
+        public async Task<List<PointsbyId>> GetPointsbyLayerIds(string areaIds)
+        {
+            try
+            {
+                var ids = (areaIds ?? "")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => int.Parse(s.Trim()))
+                    .ToList();
+
+                var areas = await _mapDBContext.Areas
+                    .Where(a => ids.Contains(a.Id))
+                    .Select(a => new PointsbyId
+                    {
+                        Id = a.Id.ToString(),
+                        Points = a.Points
+                            .OrderBy(p => p.Index)
+                            .Select(p => new PointDto
+                            {
+                                Index = p.Index,
+                                Latitude = p.Latitude,
+                                Longitude = p.Longitude
+                            })
+                            .ToList()
+                    })
+                    .ToListAsync();
+
+                return areas;
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", "Error: " + e.Message);
+                return new List<PointsbyId>();
             }
         }
 

@@ -50,8 +50,9 @@
 
     enablePanelDrag();
 
-    // 防止事件穿透到地圖（滾動、點擊、拖曳）
-    $panel.on('wheel mousedown pointerdown dblclick', (e) => {
+    // 防止事件穿透到地圖（滾動、點擊、拖曳、右鍵選單）
+    // 少了 contextmenu 的話，在面板內按右鍵仍會冒泡到地圖，觸發地圖本身的座標資訊彈窗
+    $panel.on('wheel mousedown pointerdown dblclick contextmenu', (e) => {
         e.stopPropagation();
     });
 
