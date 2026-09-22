@@ -10,8 +10,56 @@ let accTimelineCluster = null;
 let accTimelineTimer = null;
 let accCmpMap1 = null;
 let accCmpMap2 = null;
-const accCmpCluster1 = { group: null };
-const accCmpCluster2 = { group: null };
+const accCmpCluster1 = { group: null, viewportDetach: null };
+const accCmpCluster2 = { group: null, viewportDetach: null };
+let accClusterViewportDetach = null;
+let accTimelineViewportDetach = null;
+
+// 「叢集模組」開關：控制查詢結果／熱區時間軸／前後期比對這三處事故點圖層要不要用 markercluster 聚合顯示。
+// 預設開啟(對應 #accCluster 預設 checked)：簡易查詢沒有筆數上限，一次可能回傳上千筆事故點，
+// 不聚合時會用沒有視窗裁切(removeOutsideVisibleBounds)的 L.layerGroup，全部點位都是常駐 DOM 節點，
+// 資料量大時會拖慢渲染，所以預設仍走有效能保護的聚合模式，使用者需要看逐點分佈時才自行關閉。
+let accClusterEnabled = true;
+
+function createAccidentLayerGroup(clusterOptions) {
+    return accClusterEnabled ? L.markerClusterGroup(clusterOptions) : L.layerGroup();
+}
+
+// 跟業務圖資 point 圖層(layers.js 的 viewport 模式)同樣的縮放門檻：
+// 城市尺度(zoom<15)看逐點分佈本來就沒有意義，只會白白增加 DOM 節點
+const ACC_VIEWPORT_MIN_ZOOM = 15;
+
+// 依可視範圍動態渲染事故點。
+// 只有「叢集模組」關閉(看逐點分佈)時才套用這層 zoom+viewport 篩選：
+// 開啟叢集時 L.markerClusterGroup 本身在任何縮放層級都能把大量點位聚合成熱區圓圈──
+// 這正是「熱區時間軸／前後期比對」想呈現的城市級總覽，若無條件套用 zoom<15 隱藏，
+// 反而會讓最需要總覽的縮小畫面看不到任何東西；只有沒有視窗裁切保護的未聚合模式，
+// 才是真正需要靠這層篩選來避免大量常駐 DOM 節點的地方。
+// points 是已經下載好、快取在記憶體裡的資料，篩選只在前端做，不會重新打 API。
+// 回傳值：viewport 模式下回傳一個「解除監聽」函式(換月份/關閉圖層時要呼叫)，聚合模式下回傳 null。
+function attachViewportRendering(mapRef, layerGroup, points, buildMarker) {
+    if (accClusterEnabled) {
+        points.forEach(p => layerGroup.addLayer(buildMarker(p)));
+        return null;
+    }
+
+    let timer = null;
+    const render = () => {
+        layerGroup.clearLayers();
+        if (mapRef.getZoom() < ACC_VIEWPORT_MIN_ZOOM) return;
+        const bounds = mapRef.getBounds();
+        points.forEach(p => {
+            if (bounds.contains([p.lat, p.lng])) layerGroup.addLayer(buildMarker(p));
+        });
+    };
+    const scheduleRender = () => {
+        clearTimeout(timer);
+        timer = setTimeout(render, 300);
+    };
+    mapRef.on('moveend zoomend', scheduleRender);
+    render();
+    return () => mapRef.off('moveend zoomend', scheduleRender);
+}
 
 // ── 前後期比對 ────────────────────────────────────────────────────
 function createOsmTile() {
@@ -84,19 +132,19 @@ function createCmpMonthControl(mapRef, clusterRef, defaultYear, defaultMonth) {
 }
 
 function loadCmpCluster(mapRef, clusterRef, year, month) {
+    if (clusterRef.viewportDetach) { clusterRef.viewportDetach(); clusterRef.viewportDetach = null; }
     if (clusterRef.group) { mapRef.removeLayer(clusterRef.group); clusterRef.group = null; }
     fetch(`/api/MapAPI/GetAccidentPointsByMonth?year=${year}&month=${month}`)
         .then(res => res.json())
         .then(result => {
             if (!result.success) return;
             const dotIcon = L.divIcon({ html: '<div class="acc-dot"></div>', className: '', iconSize: [8, 8], iconAnchor: [4, 4] });
-            clusterRef.group = L.markerClusterGroup({ disableClusteringAtZoom: 18 });
-            result.data.forEach(p => {
-                const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
-                if (!isNaN(lat) && !isNaN(lng))
-                    clusterRef.group.addLayer(L.marker([lat, lng], { icon: dotIcon }));
-            });
+            clusterRef.group = createAccidentLayerGroup({ disableClusteringAtZoom: 18 });
+            const points = result.data
+                .map(p => ({ lat: parseFloat(p.lat), lng: parseFloat(p.lng) }))
+                .filter(p => !isNaN(p.lat) && !isNaN(p.lng));
             mapRef.addLayer(clusterRef.group);
+            clusterRef.viewportDetach = attachViewportRendering(mapRef, clusterRef.group, points, p => L.marker([p.lat, p.lng], { icon: dotIcon }));
         });
 }
 
@@ -131,10 +179,14 @@ function openCmpOverlay() {
 }
 
 function closeCmpOverlay() {
+    // map.remove() 會自動清掉綁在該 map 上的事件監聽(含 attachViewportRendering 加的 moveend/zoomend)，
+    // 這裡只是同步歸零參照，避免留著指向已銷毀地圖的解除函式
     if (accCmpMap1) { accCmpMap1.remove(); accCmpMap1 = null; }
     if (accCmpMap2) { accCmpMap2.remove(); accCmpMap2 = null; }
     accCmpCluster1.group = null;
+    accCmpCluster1.viewportDetach = null;
     accCmpCluster2.group = null;
+    accCmpCluster2.viewportDetach = null;
     const el = document.getElementById('accCmpOverlay');
     if (el) el.remove();
     $('#accTowCmp').prop('checked', false);
@@ -238,6 +290,7 @@ function createTimelineControl() {
 
 function loadTimelineCluster(year, month) {
     const map = Map.getIndexMap();
+    if (accTimelineViewportDetach) { accTimelineViewportDetach(); accTimelineViewportDetach = null; }
     if (accTimelineCluster) {
         map.removeLayer(accTimelineCluster);
         accTimelineCluster = null;
@@ -252,17 +305,17 @@ function loadTimelineCluster(year, month) {
                 iconSize: [8, 8],
                 iconAnchor: [4, 4]
             });
-            accTimelineCluster = L.markerClusterGroup({ disableClusteringAtZoom: 18 });
-            result.data.forEach(p => {
-                const lat = parseFloat(p.lat), lng = parseFloat(p.lng);
-                if (!isNaN(lat) && !isNaN(lng))
-                    accTimelineCluster.addLayer(L.marker([lat, lng], { icon: dotIcon }));
-            });
+            accTimelineCluster = createAccidentLayerGroup({ disableClusteringAtZoom: 18 });
+            const points = result.data
+                .map(p => ({ lat: parseFloat(p.lat), lng: parseFloat(p.lng) }))
+                .filter(p => !isNaN(p.lat) && !isNaN(p.lng));
             map.addLayer(accTimelineCluster);
+            accTimelineViewportDetach = attachViewportRendering(map, accTimelineCluster, points, p => L.marker([p.lat, p.lng], { icon: dotIcon }));
         });
 }
 
 function clearAccidentMarkers() {
+    if (accClusterViewportDetach) { accClusterViewportDetach(); accClusterViewportDetach = null; }
     if (accClusterGroup) {
         Map.getIndexMap().removeLayer(accClusterGroup);
         accClusterGroup = null;
@@ -281,15 +334,39 @@ function renderAccidentMarkers() {
         iconSize: [24, 32],
         iconAnchor: [12, 32]
     });
-    accClusterGroup = L.markerClusterGroup();
-    accidentData.forEach(r => {
-        if (!r.latitude || !r.longitude || r.latitude === '' || r.longitude === '') return;
-        const lat = parseFloat(r.latitude);
-        const lng = parseFloat(r.longitude);
-        if (isNaN(lat) || isNaN(lng)) return;
-        accClusterGroup.addLayer(L.marker([lat, lng], { icon }));
-    });
+    accClusterGroup = createAccidentLayerGroup();
+    const points = accidentData
+        .filter(r => r.latitude && r.longitude && r.latitude !== '' && r.longitude !== '')
+        .map(r => ({ lat: parseFloat(r.latitude), lng: parseFloat(r.longitude) }))
+        .filter(p => !isNaN(p.lat) && !isNaN(p.lng));
     $indexMap.addLayer(accClusterGroup);
+    accClusterViewportDetach = attachViewportRendering($indexMap, accClusterGroup, points, p => L.marker([p.lat, p.lng], { icon }));
+}
+
+// 切換「叢集模組」時，把目前畫面上已經開啟的事故點圖層依新設定重新載入一次，
+// 讓開關能立即生效，而不用等使用者重新查詢/切換月份才套用
+function refreshAccidentClustering() {
+    // 簡易查詢結果
+    if (accClusterGroup) {
+        renderAccidentMarkers();
+    }
+    // 熱區時間軸：從目前的滑桿位置讀出年月
+    if (accTimelineCluster) {
+        const slider = document.querySelector('.acc-timeline-slider');
+        if (slider) {
+            const ym = indexToYearMonth(parseInt(slider.value));
+            loadTimelineCluster(ym.year, ym.month);
+        }
+    }
+    // 前後期比對：分別從兩張比對地圖目前選的年月重新載入
+    if (accCmpMap1 && accCmpCluster1.group) {
+        const [yearSel, monthSel] = document.querySelectorAll('#accCmpMap1 .acc-cmp-select');
+        if (yearSel && monthSel) loadCmpCluster(accCmpMap1, accCmpCluster1, parseInt(yearSel.value), parseInt(monthSel.value));
+    }
+    if (accCmpMap2 && accCmpCluster2.group) {
+        const [yearSel, monthSel] = document.querySelectorAll('#accCmpMap2 .acc-cmp-select');
+        if (yearSel && monthSel) loadCmpCluster(accCmpMap2, accCmpCluster2, parseInt(yearSel.value), parseInt(monthSel.value));
+    }
 }
 
 export function initAccidentPanel() {
@@ -310,6 +387,14 @@ export function initAccidentPanel() {
             $('#acc3').css('display', 'block');
         }
     });
+    // 叢集模組：切換查詢結果／熱區時間軸／前後期比對這三處事故點圖層要不要用 markercluster 聚合顯示，
+    // 初始值以 DOM 目前的勾選狀態為準（例如瀏覽器重新整理後保留表單狀態的情況）
+    accClusterEnabled = $('#accCluster').is(':checked');
+    $('#accCluster').on('change', function () {
+        accClusterEnabled = this.checked;
+        refreshAccidentClustering();
+    });
+
     // 前後期比對
     $('#accTowCmp').on('change', function () {
         if (this.checked) openCmpOverlay();
@@ -336,6 +421,7 @@ export function initAccidentPanel() {
             );
         } else {
             clearTimeout(accTimelineTimer);
+            if (accTimelineViewportDetach) { accTimelineViewportDetach(); accTimelineViewportDetach = null; }
             if (accTimelineCluster) {
                 Map.getIndexMap().removeLayer(accTimelineCluster);
                 accTimelineCluster = null;

@@ -707,12 +707,25 @@ namespace RMIS.Controllers
         {
             try
             {
-                var cacheKey = $"vtile:{layerId}:{z}:{x}:{y}";
+                // 版本號隨 Points/Areas 異動遞增（見 MapDBContext.SaveChangesAsync），
+                // 編進 cache key／ETag，讓資料一變舊磚片就不會再被命中或被瀏覽器沿用
+                var tileVersion = _tileCache.TryGetValue(MapDBContext.TileVersionCacheKey(layerId), out int v) ? v : 0;
+                var cacheKey = $"vtile:{layerId}:{tileVersion}:{z}:{x}:{y}";
+                var etag = $"\"{cacheKey}\"";
+
+                // 瀏覽器帶著舊 ETag 來確認：版本沒變就直接回 304，省頻寬
+                if (Request.Headers.TryGetValue("If-None-Match", out var inm) && inm == etag)
+                {
+                    Response.Headers["Cache-Control"] = "public, no-cache";
+                    Response.Headers["ETag"] = etag;
+                    return StatusCode(StatusCodes.Status304NotModified);
+                }
 
                 // 後端記憶體快取命中：直接回傳，不查 DB
                 if (_tileCache.TryGetValue(cacheKey, out byte[]? cached))
                 {
-                    Response.Headers["Cache-Control"] = "public, max-age=3600";
+                    Response.Headers["Cache-Control"] = "public, no-cache";
+                    Response.Headers["ETag"] = etag;
                     return cached!.Length == 0
                         ? NoContent()
                         : File(cached!, "application/x-protobuf");
@@ -811,11 +824,12 @@ namespace RMIS.Controllers
                 vectorTile.Write(ms, minLinealExtent: 0, minPolygonalExtent: 0);
                 var tileBytes = ms.ToArray();
 
-                // 寫入後端快取（1 小時）
+                // 寫入後端快取（1 小時內同版本重複請求可直接命中；版本一變 key 就不會再被用到）
                 _tileCache.Set(cacheKey, tileBytes, TimeSpan.FromHours(1));
 
-                // 通知瀏覽器快取（1 小時）
-                Response.Headers["Cache-Control"] = "public, max-age=3600";
+                // 瀏覽器每次都帶 ETag 來問過，版本沒變才沿用本地快取
+                Response.Headers["Cache-Control"] = "public, no-cache";
+                Response.Headers["ETag"] = etag;
 
                 return File(tileBytes, "application/x-protobuf");
             }

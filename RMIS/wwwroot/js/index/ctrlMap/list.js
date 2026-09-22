@@ -164,6 +164,7 @@ function closeLayer(id, layersId) {
                 if (sub instanceof L.Marker) sub.setOpacity(0);
                 else if (sub instanceof L.Polygon) sub.setStyle({ opacity: 0, fillOpacity: 0 });
                 else if (sub instanceof L.Polyline) sub.setStyle({ opacity: 0 });
+                else if (sub instanceof L.CircleMarker) sub.setStyle({ opacity: 0, fillOpacity: 0 });
             });
         }
     });
@@ -188,6 +189,7 @@ function displayLayer(id, layersId) {
                 if (sub instanceof L.Marker) sub.setOpacity(subOpacity);
                 else if (sub instanceof L.Polygon) sub.setStyle({ opacity: subOpacity, fillOpacity: subOpacity });
                 else if (sub instanceof L.Polyline) sub.setStyle({ opacity: subOpacity });
+                else if (sub instanceof L.CircleMarker) sub.setStyle({ opacity: subOpacity, fillOpacity: subOpacity });
             });
         }
     });

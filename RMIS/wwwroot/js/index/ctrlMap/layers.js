@@ -67,6 +67,7 @@ function _ensureGlobalListeners() {
                     if (sub instanceof L.Marker) sub.setOpacity(op);
                     else if (sub instanceof L.Polygon) sub.setStyle({ opacity: op, fillOpacity: op });
                     else if (sub instanceof L.Polyline) sub.setStyle({ opacity: op });
+                    else if (sub instanceof L.CircleMarker) sub.setStyle({ opacity: op, fillOpacity: op });
                 });
             }
         });
@@ -99,7 +100,10 @@ function _onMapViewChanged() {
             return;
         }
         Object.keys(_viewportLayers).forEach(layerId => {
-            if (_indexMap.hasLayer(_viewportLayers[layerId].leafletLayer)) {
+            const vl = _viewportLayers[layerId];
+            // 圖層已被眼睛圖示關閉時不重新載入，避免覆蓋掉隱藏狀態
+            if (vl.leafletLayer._isVisible === false) return;
+            if (_indexMap.hasLayer(vl.leafletLayer)) {
                 _loadViewportPoints(layerId);
             }
         });

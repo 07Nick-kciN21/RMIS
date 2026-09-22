@@ -1,14 +1,88 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Caching.Memory;
 using RMIS.Models.sql;
 
 namespace RMIS.Data
 {
     public class MapDBContext : DbContext
     {
-        public MapDBContext(DbContextOptions<MapDBContext> options) : base(options)
+        private readonly IMemoryCache _cache;
+
+        public MapDBContext(DbContextOptions<MapDBContext> options, IMemoryCache cache) : base(options)
         {
+            _cache = cache;
+        }
+
+        /// <summary>
+        /// vtile 圖磚快取的版本號 cache key。GetVectorTile 把版本號編進磚片的快取 key／ETag，
+        /// 版本一變舊的 key 就再也不會被命中，藉此讓 Points/Areas 異動後地圖能立刻看到最新資料，
+        /// 不必等伺服器端記憶體快取或瀏覽器快取的 1 小時 TTL 過期。
+        /// </summary>
+        public static string TileVersionCacheKey(int layerId) => $"vtile-version:{layerId}";
+
+        /// <summary>
+        /// SaveChanges 前先記錄本次異動牽涉到哪些 LayerId 的 Points/Areas，
+        /// 存完之後再統一 bump 版本號，讓對應 layer 的 vtile 快取失效。
+        /// </summary>
+        private async Task<HashSet<int>> CollectAffectedLayerIdsAsync()
+        {
+            var layerIds = new HashSet<int>();
+            var areaEntries = ChangeTracker.Entries<Area>()
+                .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                .ToList();
+            foreach (var e in areaEntries)
+                layerIds.Add(e.Entity.LayerId);
+
+            var pointAreaIds = ChangeTracker.Entries<Point>()
+                .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                .Select(e => e.Entity.AreaId)
+                .Distinct()
+                .Where(areaId => !areaEntries.Any(ae => ae.Entity.Id == areaId))
+                .ToList();
+
+            if (pointAreaIds.Count > 0)
+            {
+                var resolvedLayerIds = await Areas
+                    .Where(a => pointAreaIds.Contains(a.Id))
+                    .Select(a => a.LayerId)
+                    .Distinct()
+                    .ToListAsync();
+                foreach (var layerId in resolvedLayerIds)
+                    layerIds.Add(layerId);
+            }
+
+            return layerIds;
+        }
+
+        private void BumpTileVersions(HashSet<int> layerIds)
+        {
+            foreach (var layerId in layerIds)
+            {
+                var key = TileVersionCacheKey(layerId);
+                var current = _cache.TryGetValue(key, out int v) ? v : 0;
+                _cache.Set(key, current + 1);
+            }
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var hasPendingPointOrAreaChanges =
+                ChangeTracker.Entries<Point>().Any(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted) ||
+                ChangeTracker.Entries<Area>().Any(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted);
+
+            var affectedLayerIds = hasPendingPointOrAreaChanges
+                ? await CollectAffectedLayerIdsAsync()
+                : null;
+
+            var result = await base.SaveChangesAsync(cancellationToken);
+
+            if (affectedLayerIds != null)
+                BumpTileVersions(affectedLayerIds);
+
+            return result;
         }
         public DbSet<Area> Areas { get; set; }
         public DbSet<Point> Points { get; set; }

@@ -80,7 +80,7 @@ namespace RMIS.Repositories
                     UserName = user.Account,
                     PhoneNumber = user.Phone,
                     Email = user.Email,
-                    EmailConfirmed = false, // ✅ 預設 Email 已確認
+                    EmailConfirmed = false,
                     Status = false,
                     DepartmentId = user.DepartmentId,
                     Order = maxOrder + 1,
