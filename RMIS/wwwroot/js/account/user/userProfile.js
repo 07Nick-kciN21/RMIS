@@ -4,9 +4,21 @@ $(document).ready(function () {
       // 保證傳入的東西轉成 jQuery 物件
       $img = $($img);
       const type = $img.data("type");
-      const url = "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime();
-      console.log("Refreshing captcha:", url);
-      $img.attr("src", url);
+      const el = $img.get(0);
+      return new Promise(function (resolve) {
+        if (!el) { resolve(); return; }
+        el.onload = el.onerror = function () { resolve(); };
+        const url = "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime();
+        console.log("Refreshing captcha:", url);
+        $img.attr("src", url);
+      });
+    }
+
+    // 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
+    function refreshCaptchasSequentially($imgs) {
+      return $imgs.toArray().reduce(function (chain, img) {
+        return chain.then(function () { return refreshCaptcha($(img)); });
+      }, Promise.resolve());
     }
 
     // 點擊圖片刷新（用匿名函式包裝）
@@ -16,16 +28,16 @@ $(document).ready(function () {
 
     $(".captchaImage").each(function () {
         const $this = $(this);
-        
+
         // 綁定點擊事件 (只需綁定一次)
         // 這裡先解除綁定再綁定，可防止重複載入導致的事件堆疊
         $this.off("click").on("click", function () {
             refreshCaptcha($this);
         });
-
-        // 執行初始刷新
-        refreshCaptcha($this);
     });
+
+    // 依序刷新所有驗證碼圖片（同時對同一個 Session 送出多個請求會互相覆蓋，須序列化）
+    refreshCaptchasSequentially($(".captchaImage"));
 
     $('#resetPasswordForm').on('submit', function (e) {
         e.preventDefault(); // 阻止預設提交行為

@@ -4,9 +4,21 @@ $(document).ready(function () {
       // 保證傳入的東西轉成 jQuery 物件
       $img = $($img);
       const type = $img.data("type");
-      const url = "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime();
-      console.log("Refreshing captcha:", url);
-      $img.attr("src", url);
+      const el = $img.get(0);
+      return new Promise(function (resolve) {
+        if (!el) { resolve(); return; }
+        el.onload = el.onerror = function () { resolve(); };
+        const url = "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime();
+        console.log("Refreshing captcha:", url);
+        $img.attr("src", url);
+      });
+    }
+
+    // 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
+    function refreshCaptchasSequentially($imgs) {
+      return $imgs.toArray().reduce(function (chain, img) {
+        return chain.then(function () { return refreshCaptcha($(img)); });
+      }, Promise.resolve());
     }
 
     // 點擊圖片刷新（用匿名函式包裝）
@@ -14,7 +26,7 @@ $(document).ready(function () {
       refreshCaptcha($(this)); // 確保傳入的是 jQuery 物件
     });
 
-    $(".captchaImage").each(function () { refreshCaptcha($(this)); });
+    refreshCaptchasSequentially($(".captchaImage"));
 
 
     $('#updateUserForm').on('submit', function (e) {

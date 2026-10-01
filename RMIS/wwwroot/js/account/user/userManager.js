@@ -175,7 +175,19 @@ $(document).ready(function () {
 function refreshCaptcha($img) {
     $img = $($img);
     const type = $img.data("type");
-    $img.attr("src", "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime());
+    const el = $img.get(0);
+    return new Promise(function (resolve) {
+        if (!el) { resolve(); return; }
+        el.onload = el.onerror = function () { resolve(); };
+        $img.attr("src", "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime());
+    });
+}
+
+// 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
+function refreshCaptchasSequentially($imgs) {
+    return $imgs.toArray().reduce(function (chain, img) {
+        return chain.then(function () { return refreshCaptcha($(img)); });
+    }, Promise.resolve());
 }
 
 function validateForm($container) {
@@ -244,7 +256,7 @@ function openEditModal(user) {
     $('#resetPasswordForm').find('input[type="password"], input[type="text"]').val('');
     $('#resetEmailForm').find('input[type="email"], input[type="text"]').val('');
     $('#resetPasswordForm, #resetEmailForm').find('.form-control').removeClass('is-valid is-invalid');
-    $('.captchaImage').each(function () { refreshCaptcha($(this)); });
+    refreshCaptchasSequentially($('.captchaImage'));
 
     $('#updateUserModal').modal('show');
 }

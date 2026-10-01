@@ -14,6 +14,10 @@
                     <div class="alert alert-success" role="alert">
                         <h4 class="alert-heading">❌ 信箱驗證失敗！</h4>
                         <p>驗證連結可能已過期或無效。</p>
+                        @if (ViewBag.ResendMessage != null)
+                        {
+                            <div class="alert alert-info text-center">@ViewBag.ResendMessage</div>
+                        }
                         <form id="resendForm" method="post" action="@Url.Action("ResendConfirmationEmail", "Portal")">
                             <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
                                 <label for="accountInput" class="form-label">請輸入帳號重新寄送驗證信</label>

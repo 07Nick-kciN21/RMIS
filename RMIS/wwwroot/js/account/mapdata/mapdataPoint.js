@@ -84,9 +84,8 @@ function initMap(mapdataArea) {
     const svg   = getQueryParam("svg");
     const color = getQueryParam("color") || '#3388ff';
 
-    const map = L.map('map').setView([23.5, 121], 17);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
+    const map = L.map('map', { attributionControl: false }).setView([23.5, 121], 17);
+    L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
         maxZoom: 20
     }).addTo(map);
 

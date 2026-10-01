@@ -140,8 +140,8 @@ function openProfileModal() {
                 .find('input').val('');
             $('#userProfileModal').find('.form-control').removeClass('is-valid is-invalid');
 
-            // 刷新所有驗證碼
-            $('#userProfileModal .captchaImage').each(function () { refreshCaptcha($(this)); });
+            // 依序刷新所有驗證碼（同一個 Session 若同時送出多個請求會互相覆蓋，須序列化）
+            refreshCaptchasSequentially($('#userProfileModal .captchaImage'));
 
             $('#userProfileModal').modal('show');
         },
@@ -170,7 +170,19 @@ function profileValidate($container) {
 function refreshCaptcha($img) {
     $img = $($img);
     const type = $img.data('type');
-    $img.attr('src', '/Portal/Captcha?type=' + type + '&_=' + new Date().getTime());
+    const el = $img.get(0);
+    return new Promise(function (resolve) {
+        if (!el) { resolve(); return; }
+        el.onload = el.onerror = function () { resolve(); };
+        $img.attr('src', '/Portal/Captcha?type=' + type + '&_=' + new Date().getTime());
+    });
+}
+
+// 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
+function refreshCaptchasSequentially($imgs) {
+    return $imgs.toArray().reduce(function (chain, img) {
+        return chain.then(function () { return refreshCaptcha($(img)); });
+    }, Promise.resolve());
 }
 
 function injectProfileModal() {

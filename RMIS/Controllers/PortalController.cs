@@ -145,6 +145,7 @@ namespace RMIS.Controllers
             // 3. 尚未驗證信箱
             if (!user.EmailConfirmed)
             {
+                await _signInManager.SignOutAsync();
                 _logger?.LogOperation("登入", false, "尚未驗證信箱", model.UserName, clientIp);
                 ModelState.AddModelError(string.Empty, "此帳號尚未通過信箱驗證");
                 return View(model);
@@ -154,6 +155,7 @@ namespace RMIS.Controllers
             var statusCheck = await _accountInterface.CheckStatus(user);
             if (!statusCheck)
             {
+                await _signInManager.SignOutAsync();
                 _logger?.LogOperation("登入", false, "帳號未啟用", model.UserName, clientIp);
                 ModelState.AddModelError(string.Empty, "此帳號尚未啟用，請聯繫管理員");
                 return View(model);
@@ -222,17 +224,18 @@ namespace RMIS.Controllers
 
             if (!ModelState.IsValid)
             {
+                var errorMessages = new List<string>();
                 foreach (var kvp in ModelState)
                 {
                     var key = kvp.Key;
                     foreach (var error in kvp.Value.Errors)
                     {
                         _logger?.LogOperation("註冊", false, $"ModelState錯誤 - Field={key}, Error={error.ErrorMessage}", user?.Account ?? "Unknown", clientIp);
+                        errorMessages.Add(error.ErrorMessage);
                     }
                 }
 
-                ViewData["ShowRegisterModal"] = "True";
-                return View("Login", new LoginView());
+                return Json(new { Success = false, Message = string.Join("; ", errorMessages) });
             }
 
             var result = await _portalInterface.RegisterAsync(user);
@@ -369,6 +372,14 @@ namespace RMIS.Controllers
         [HttpPost]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
+            var storedCaptcha = HttpContext.Session.GetString("CaptchaCode_resetpassword");
+            if (string.IsNullOrEmpty(storedCaptcha) || !string.Equals(storedCaptcha, model?.Captcha, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger?.LogOperation("重設密碼", false, "驗證碼錯誤", model?.Account ?? "Unknown");
+                ModelState.AddModelError(string.Empty, "驗證碼錯誤");
+                return View(model);
+            }
+
             if (!ModelState.IsValid)
             {
                 _logger?.LogOperation("重設密碼", false, "ModelState驗證失敗", model?.Account ?? "Unknown");
@@ -483,12 +494,12 @@ namespace RMIS.Controllers
                 return View("ConfirmEmailFailed");
             }
 
-            string? storedCode = HttpContext.Session.GetString("CaptchaCode_login");
+            string? storedCode = HttpContext.Session.GetString("CaptchaCode_email");
             if (storedCode == null || emailCaptcha.ToUpper() != storedCode.ToUpper())
             {
                 _logger?.LogOperation("ResendConfirmationEmail", false, "驗證碼錯誤", account);
                 ModelState.AddModelError("", "驗證碼錯誤");
-                return View();
+                return View("ConfirmEmailFailed");
             }
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);

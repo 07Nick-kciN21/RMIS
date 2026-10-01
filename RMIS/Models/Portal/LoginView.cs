@@ -20,16 +20,16 @@ namespace RMIS.Models.Portal
         public string DisplayName { get; set; }
 
         [Required(ErrorMessage = "帳號是必填欄位")]
-        [StringLength(20, MinimumLength = 6, ErrorMessage = "帳號長度不合規定(6~20)")]
-        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$",
-            ErrorMessage = "帳號必須包含至少 1 個英文字母和 1 個數字，長度 6~20 位")]
+        [StringLength(20, MinimumLength = 8, ErrorMessage = "帳號長度不合規定(8~20)")]
+        [RegularExpression(@"^[A-Za-z\d]{8,20}$",
+            ErrorMessage = "帳號只能包含英文字母與數字，長度 8~20 位")]
         public string Account { get; set; }
 
         [Required(ErrorMessage = "密碼是必填欄位")]
-        [StringLength(20, MinimumLength = 6, ErrorMessage = "密碼長度不合規定(6~20)")]
+        [StringLength(20, MinimumLength = 8, ErrorMessage = "密碼長度不合規定(8~20)")]
         [PasswordNotSameAsAccount("Account", ErrorMessage = "密碼不能與帳號相同")]
-        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$",
-            ErrorMessage = "密碼必須包含至少 1 個英文字母和 1 個數字，長度 6~20 位")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$",
+            ErrorMessage = "密碼必須包含大小寫英文字母與數字，長度 8~20 位")]
         public string Password { get; set; }
 
         public int DepartmentId { get; set; }

@@ -344,7 +344,6 @@ namespace RMIS.Repositories
                     DepartmentId = user.DepartmentId,
                     Status = user.Status,
                     Order = maxOrder + 1,
-                    CitizenCardNo = string.Empty,
                 };
 
                 var result = await _userManager.CreateAsync(createUser, user.Password);
