@@ -31,13 +31,13 @@ namespace RMIS.Repositories
         {
             // 取得部門清單
             var departments = await _authDbContext.Departments
-                .Where(d => d.Status)
+                .Where(d => d.Status && d.IsSystemProtected == false)
                 .OrderBy(d => d.Order)
                 .Select(d => new { d.Id, d.Name })
                 .ToListAsync();
             // 取得角色清單
             var roles = await _roleManager.Roles
-                .Where(r => r.Status)
+                .Where(r => r.Status && r.IsSystemProtected == false)
                 .OrderBy(r => r.Order)
                 .Select(r => new { r.Id, r.Name })
                 .ToListAsync();
