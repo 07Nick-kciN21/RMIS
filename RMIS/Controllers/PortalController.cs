@@ -47,7 +47,7 @@ namespace RMIS.Controllers
         {
             string code = GenerateRandomCode(5);
             HttpContext.Session.SetString($"CaptchaCode_{type}", code);
-            Console.WriteLine($"CaptchaCode_{type}");
+            _logger?.LogOperation("Captcha_Debug", true, $"[產生] type={type}, code={code}, sessionId={HttpContext.Session.Id}");
             using var bmp = new Bitmap(120, 40);
             using var graphics = Graphics.FromImage(bmp);
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -84,6 +84,10 @@ namespace RMIS.Controllers
 
             using var ms = new MemoryStream();
             bmp.Save(ms, ImageFormat.Png);
+
+            Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+            Response.Headers["Pragma"] = "no-cache";
+            Response.Headers["Expires"] = "0";
             return File(ms.ToArray(), "image/png");
         }
 

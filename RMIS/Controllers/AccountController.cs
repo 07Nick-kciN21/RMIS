@@ -284,6 +284,7 @@ namespace RMIS.Controllers
         {
             var code = HttpContext.Session.GetString("CaptchaCode_adminUpdate_newPassword")
                     ?? HttpContext.Session.GetString("CaptchaCode_userProfile_newPassword");
+            LogOp("Captcha_Debug", true, $"[驗證-密碼] 輸入={NewPasswordCaptcha}, Session內的值={code ?? "(null)"}, sessionId={HttpContext.Session.Id}");
             if (string.IsNullOrEmpty(code) || !string.Equals(code, NewPasswordCaptcha, StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "驗證碼錯誤" });
 
@@ -319,6 +320,7 @@ namespace RMIS.Controllers
 
             var code = HttpContext.Session.GetString("CaptchaCode_newEmail")
                     ?? HttpContext.Session.GetString("CaptchaCode_userProfile_newEmail");
+            LogOp("Captcha_Debug", true, $"[驗證-信箱] 輸入={newEmailCaptcha}, Session內的值={code ?? "(null)"}, sessionId={HttpContext.Session.Id}");
             if (string.IsNullOrEmpty(code) || !string.Equals(code, newEmailCaptcha, StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "驗證碼錯誤" });
             var user = await _userManager.FindByIdAsync(updateUserEmail.UserId);
@@ -375,6 +377,7 @@ namespace RMIS.Controllers
         public async Task<IActionResult> UpdateCitizenCardNoAsync(UpdateCitizenCardNo updateCitizenCardNo, string newCitizenCardNoCaptcha)
         {
             var code = HttpContext.Session.GetString("CaptchaCode_userProfile_newCitizenCardNo");
+            LogOp("Captcha_Debug", true, $"[驗證-憑證] 輸入={newCitizenCardNoCaptcha}, Session內的值={code ?? "(null)"}, sessionId={HttpContext.Session.Id}");
             if (string.IsNullOrEmpty(code) || !string.Equals(code, newCitizenCardNoCaptcha, StringComparison.OrdinalIgnoreCase))
                 return Json(new { success = false, message = "驗證碼錯誤" });
             var updated = await _accountInterface.UpdateCitizenCardNoAsync(updateCitizenCardNo);
