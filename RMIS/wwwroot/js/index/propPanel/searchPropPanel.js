@@ -222,23 +222,29 @@ function updateSelect(featSelect) {
     $propSelect.trigger('change');
 }
 
-const countablePoint = ["作業區分", "設施長度", "孔蓋種類", "尺寸單位", "蓋部寬度", "蓋部長度", "地盤高", "孔深", "孔蓋型態", "設施寬度", "設施高度", "設施型態", "使用狀態", "使用資料", "QualityLV"];
-const countableLine = [ "管徑寬度", "管徑高度", "涵管條數", "管線長度", "管線型態", "使用狀態", " 資料狀態", "起點埋設深度", "終點埋設深度", "前一次Status_XY"];
-const countablePlane = ["段號", "地號", "子地號", "開闢年度", "公園面積", "地籍面積", "Shape.STArea()", "Shape.STLength()"];
-// 合併 三個陣列
-const countableTypes = countablePoint.concat(countableLine, countablePlane);
+// 結構性欄位（非業務屬性），統計欄位清單要排除
+const nonStatFields = ['座標', 'Instance', 'AreaId', 'Kind'];
 
-// 統計頁面設定
+// 統計頁面設定：可統計欄位改為動態判斷（掃描篩選結果中值為數字的欄位），
+// 各業務圖資的屬性欄位是依圖層動態設定的（跟 propQueryBuilder.js 建查詢條件同一套邏輯），
+// 不能像先前那樣用寫死的欄位名稱清單比對，否則清單沒收錄到的圖層欄位就完全不會顯示
 function updateAnalysisList() {
     const $anaFieldList = $('#anaFieldList');
     const $anaSelList = $('#anaSelList');
     $anaFieldList.empty();
     $anaSelList.empty();
-    Object.keys(filteredProps[0]).forEach(key => {
-        if (countableTypes.includes(key)) {
-            $anaFieldList.append($('<li class="panelResult anaField"></li>').text(key));
-        }
-        // $anaFieldList.append($('<li class="panelResult anaField"></li>').text(key));
+
+    const numericFields = new Set();
+    filteredProps.forEach(item => {
+        Object.keys(item).forEach(key => {
+            if (nonStatFields.includes(key)) return;
+            if (typeof item[key] === 'number' && !Number.isNaN(item[key])) {
+                numericFields.add(key);
+            }
+        });
+    });
+    numericFields.forEach(key => {
+        $anaFieldList.append($('<li class="panelResult anaField"></li>').text(key));
     });
     $anaFieldList.off('click', '.anaField').on('click', '.anaField', function () {
         $anaSelList.append($('<li class="panelResult anaSelect"></li>').text($(this).text()));

@@ -72,6 +72,13 @@ function getObjectsInBounds(bounds, gselectedId) {
     let filteredProps = [];
 
     function processPopupContent(subLayer) {
+        // point marker 建立時就已把解析好的屬性物件存在 marker.feature（含座標、Instance），
+        // 且 point 並未 bindPopup，不能像 line/plane 一樣反解析 popup 的 .popupData
+        if (subLayer.feature) {
+            filteredProps.push({ ...subLayer.feature, Instance: subLayer });
+            return;
+        }
+
         var popup = subLayer.getPopup();
         if (!popup) return;
 
@@ -126,7 +133,7 @@ function getObjectsInBounds(bounds, gselectedId) {
                                 if (subLayer instanceof L.Polygon && bounds.intersects(subLayer.getBounds())) {
                                     count++;
                                     processPopupContent(subLayer);
-                                } else if (subLayer instanceof L.Marker && bounds.contains(subLayer.getLatLng())) {
+                                } else if ((subLayer instanceof L.Marker || subLayer instanceof L.CircleMarker) && bounds.contains(subLayer.getLatLng())) {
                                     count++;
                                     processPopupContent(subLayer);
                                 } else if (subLayer instanceof L.Polyline && bounds.intersects(subLayer.getBounds())) {
@@ -199,6 +206,13 @@ async function getObjectsInCircle(circle, gselectedId) {
 
     // 改良的 processPopupContent 函數
     function processPopupContent(subLayer) {
+        // point marker 建立時就已把解析好的屬性物件存在 marker.feature（含座標、Instance），
+        // 且 point 並未 bindPopup，不能像 line/plane 一樣反解析 popup 的 .popupData
+        if (subLayer.feature) {
+            filteredProps.push({ ...subLayer.feature, Instance: subLayer });
+            return;
+        }
+
         var popup = subLayer.getPopup();
         if (!popup) return;
 
@@ -256,7 +270,7 @@ async function getObjectsInCircle(circle, gselectedId) {
                                         if (!isIntersecting && subLayer.getBounds().contains(circle.getLatLng())) isIntersecting = true;
                                         if (isIntersecting) { processPopupContent(subLayer, filteredProps); count++; }
                                     }
-                                } else if (subLayer instanceof L.Marker) {
+                                } else if (subLayer instanceof L.Marker || subLayer instanceof L.CircleMarker) {
                                     if (center.distanceTo(subLayer.getLatLng()) <= radius) { processPopupContent(subLayer, filteredProps); count++; }
                                 } else if (subLayer instanceof L.Polyline) {
                                     const hit = subLayer.getLatLngs().some(pt => center.distanceTo(pt) <= radius);
