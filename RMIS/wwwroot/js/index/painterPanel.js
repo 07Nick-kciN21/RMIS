@@ -13,6 +13,14 @@ let importJsonData = null;
 export function initPainterPanel() {
     $indexMap = Map.getIndexMap();
 
+    // painterPanel 為了 position:absolute 定位，DOM 上直接放在 Leaflet 地圖容器內，
+    // 面板上的按鈕點擊若不攔截冒泡，會被 Leaflet 當成地圖點擊（例如繪製文字會立刻誤判成已點選座標）
+    const painterPanelElement = document.getElementById('painterPanel');
+    if (painterPanelElement && typeof L !== 'undefined' && L.DomEvent) {
+        L.DomEvent.disableClickPropagation(painterPanelElement);
+        L.DomEvent.disableScrollPropagation(painterPanelElement);
+    }
+
     initDraw();
 
     // 監聽編輯開始
@@ -138,6 +146,11 @@ function initDraw() {
         }
         selectTool = $(this);
         let drawItem = selectTool.attr('id');
+        // 切到其他工具時收起匯入/匯出選單；原本是靠這次點擊冒泡到 document 觸發 hideMenu，
+        // 但面板現在會攔截冒泡避免誤觸地圖點擊，改成切換工具時直接關閉，不依賴冒泡
+        if (drawItem !== "drawIO") {
+            $('#ptbInOut').hide();
+        }
         if (drawItem == "drawIO") {
             console.log("drawIO click");
             event.stopPropagation();
