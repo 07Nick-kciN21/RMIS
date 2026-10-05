@@ -114,9 +114,9 @@ namespace RMIS.Models.Account.Users
         public string DisplayName { get; set; }
 
         [Required(ErrorMessage = "帳號是必填欄位")]
-        [StringLength(20, MinimumLength = 6, ErrorMessage = "帳號長度不合規定(6~20)")]
-        [RegularExpression(@"^[A-Za-z\d]{6,20}$",
-            ErrorMessage = "帳號只能包含英文字母與數字，長度 6~20 位")]
+        [StringLength(20, MinimumLength = 5, ErrorMessage = "帳號長度不合規定(5~20)")]
+        [RegularExpression(@"^[A-Za-z\d]{5,20}$",
+            ErrorMessage = "帳號只能包含英文字母與數字，長度 5~20 位")]
         public string Account { get; set; }
 
         [Required(ErrorMessage = "密碼是必填欄位")]
@@ -153,7 +153,7 @@ namespace RMIS.Models.Account.Users
         public string DisplayName { get; set; }
 
         [Required(ErrorMessage = "帳號是必填欄位")]
-        [StringLength(20, MinimumLength = 8, ErrorMessage = "帳號長度不合規定(8~20)")]
+        [StringLength(20, MinimumLength = 5, ErrorMessage = "帳號長度不合規定(5~20)")]
         [RegularExpression(@"^[a-zA-Z0-9]+$", ErrorMessage = "帳號只能包含英文字母、數字")]
         public string Account { get; set; }
 
