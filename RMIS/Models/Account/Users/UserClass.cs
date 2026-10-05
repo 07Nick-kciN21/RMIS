@@ -115,8 +115,8 @@ namespace RMIS.Models.Account.Users
 
         [Required(ErrorMessage = "帳號是必填欄位")]
         [StringLength(20, MinimumLength = 6, ErrorMessage = "帳號長度不合規定(6~20)")]
-        [RegularExpression(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$",
-            ErrorMessage = "帳號必須包含至少 1 個英文字母和 1 個數字，長度 6~20 位")]
+        [RegularExpression(@"^[A-Za-z\d]{6,20}$",
+            ErrorMessage = "帳號只能包含英文字母與數字，長度 6~20 位")]
         public string Account { get; set; }
 
         [Required(ErrorMessage = "密碼是必填欄位")]
