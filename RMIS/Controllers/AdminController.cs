@@ -420,7 +420,23 @@ namespace RMIS.Controllers
             try
             {
                 var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("匯入道路專案(Excel)", false, "使用者未登入，拒絕匯入");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var result = await _adminInterface.ImportRoadProjectByExcelAsync(input, currentUser?.Id);
+
+                if (result.Success)
+                {
+                    LogOp("匯入道路專案(Excel)", true, $"已新增 {result.ImportedCount} 筆、更新 {result.UpdatedCount} 筆專案資料");
+                }
+                else
+                {
+                    LogOp("匯入道路專案(Excel)", false, result.Message);
+                }
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -455,6 +471,12 @@ namespace RMIS.Controllers
             try
             {
                 var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("新增道路專案", false, "使用者未登入，拒絕新增");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var rowsAffected = await _adminInterface.AddRoadProjectAsync(input, currentUser?.Id);
 
                 if (rowsAffected > 0)
@@ -480,6 +502,13 @@ namespace RMIS.Controllers
         {
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("刪除道路專案", false, "使用者未登入，拒絕刪除");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var ownershipError = await CheckProjectOwnershipAsync(input.Id);
                 if (ownershipError != null) return ownershipError;
 
@@ -508,6 +537,13 @@ namespace RMIS.Controllers
         {
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("更新道路專案", false, "使用者未登入，拒絕更新");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var ownershipError = await CheckProjectOwnershipAsync(input.Id);
                 if (ownershipError != null) return ownershipError;
 

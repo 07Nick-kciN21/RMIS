@@ -1506,6 +1506,21 @@ namespace RMIS.Repositories
                     _mapDBContext.RoadProjectProcesses.RemoveRange(processList);
                 }
 
+                // 刪除專案備註附件及相關文件
+                var remarkFiles = await _mapDBContext.RoadProjectRemarkFiles
+                    .Where(f => f.ProjectId == projectId)
+                    .ToListAsync();
+
+                if (remarkFiles.Any())
+                {
+                    _mapDBContext.RoadProjectRemarkFiles.RemoveRange(remarkFiles);
+
+                    // 刪除磁碟上的備註附件目錄 ({RemarkFile}/{ProjectId}/)
+                    var remarkFolder = Path.Combine(ResolvePath(_filePaths.RemarkFile), projectId.ToString());
+                    if (Directory.Exists(remarkFolder))
+                        Directory.Delete(remarkFolder, recursive: true);
+                }
+
                 // 刪除專案
                 _mapDBContext.RoadProjects.Remove(project);
 

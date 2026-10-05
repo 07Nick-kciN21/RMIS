@@ -285,11 +285,13 @@ namespace RMIS.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(string account, string email, string forgetCaptcha)
         {
+            var clientIp = HttpContext.GetClientIpAddress();
+
             // 1. 驗證 Captcha
             var code = HttpContext.Session.GetString("CaptchaCode_forget");
             if (string.IsNullOrEmpty(code) || !string.Equals(code, forgetCaptcha, StringComparison.OrdinalIgnoreCase))
             {
-                _logger?.LogOperation("ForgotPassword", false, "驗證碼錯誤", account ?? "Unknown");
+                _logger?.LogOperation("ForgotPassword", false, "驗證碼錯誤", account ?? "Unknown", clientIp);
                 return Json(new { success = false, message = "驗證碼錯誤" });
             }
 
@@ -297,7 +299,7 @@ namespace RMIS.Controllers
             var user = await _userManager.FindByNameAsync(account);
             if (user == null || !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
             {
-                _logger?.LogOperation("ForgotPassword", false, "帳號不存在或信箱不符", account);
+                _logger?.LogOperation("ForgotPassword", false, "帳號不存在或信箱不符", account, clientIp);
                 return Json(new { success = true, message = "若帳號與信箱正確，重設連結已寄送，請於 5 分鐘內完成操作" });
             }
 
@@ -306,7 +308,7 @@ namespace RMIS.Controllers
 
             if (!result.Success)
             {
-                _logger?.LogOperation("ForgotPassword", false, $"產生Token失敗: {result.Message}", account);
+                _logger?.LogOperation("ForgotPassword", false, $"產生Token失敗: {result.Message}", account, clientIp);
                 return Json(new { success = false, message = result.Message });
             }
 
@@ -322,7 +324,7 @@ namespace RMIS.Controllers
             // 6. 處理 Email 遮罩
             var maskedEmail = MaskEmail(user.Email);
 
-            _logger?.LogOperation("ForgotPassword", true, "重設密碼連結已寄送", account);
+            _logger?.LogOperation("ForgotPassword", true, "重設密碼連結已寄送", account, clientIp);
             return Json(new
             {
                 success = true,
@@ -356,16 +358,18 @@ namespace RMIS.Controllers
         [HttpGet]
         public async Task<IActionResult> ResetPassword(string token, string email, string account)
         {
+            var clientIp = HttpContext.GetClientIpAddress();
+
             if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(account))
             {
-                _logger?.LogOperation("ResetPassword-GET", false, "缺少必要參數", account ?? "Unknown");
+                _logger?.LogOperation("ResetPassword-GET", false, "缺少必要參數", account ?? "Unknown", clientIp);
                 return View("ResetPasswordInvalid");
             }
 
             var user = await _userManager.FindByNameAsync(account);
             if (user == null || !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
             {
-                _logger?.LogOperation("ResetPassword-GET", false, $"使用者不存在或Email不匹配", account);
+                _logger?.LogOperation("ResetPassword-GET", false, $"使用者不存在或Email不匹配", account, clientIp);
                 return View("ResetPasswordInvalid");
             }
 
@@ -378,7 +382,7 @@ namespace RMIS.Controllers
 
             if (!isValid)
             {
-                _logger?.LogOperation("ResetPassword-GET", false, "Token無效或已過期", account);
+                _logger?.LogOperation("ResetPassword-GET", false, "Token無效或已過期", account, clientIp);
                 return View("ResetPasswordExpired");
             }
 
@@ -393,24 +397,26 @@ namespace RMIS.Controllers
         [HttpPost]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
+            var clientIp = HttpContext.GetClientIpAddress();
+
             var storedCaptcha = HttpContext.Session.GetString("CaptchaCode_resetpassword");
             if (string.IsNullOrEmpty(storedCaptcha) || !string.Equals(storedCaptcha, model?.Captcha, StringComparison.OrdinalIgnoreCase))
             {
-                _logger?.LogOperation("重設密碼", false, "驗證碼錯誤", model?.Account ?? "Unknown");
+                _logger?.LogOperation("重設密碼", false, "驗證碼錯誤", model?.Account ?? "Unknown", clientIp);
                 ModelState.AddModelError(string.Empty, "驗證碼錯誤");
                 return View(model);
             }
 
             if (!ModelState.IsValid)
             {
-                _logger?.LogOperation("重設密碼", false, "ModelState驗證失敗", model?.Account ?? "Unknown");
+                _logger?.LogOperation("重設密碼", false, "ModelState驗證失敗", model?.Account ?? "Unknown", clientIp);
                 return View(model);
             }
 
             var user = await _userManager.FindByNameAsync(model.Account);
             if (user == null || !string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase))
             {
-                _logger?.LogOperation("重設密碼", false, "使用者不存在或Email不匹配", model.Account);
+                _logger?.LogOperation("重設密碼", false, "使用者不存在或Email不匹配", model.Account, clientIp);
                 ModelState.AddModelError(string.Empty, "使用者資料不正確");
                 return View(model);
             }
@@ -419,7 +425,7 @@ namespace RMIS.Controllers
             var passwordCheck = await _userManager.CheckPasswordAsync(user, model.Password);
             if (passwordCheck)
             {
-                _logger?.LogOperation("重設密碼T", false, "新密碼與舊密碼相同", model.Account);
+                _logger?.LogOperation("重設密碼T", false, "新密碼與舊密碼相同", model.Account, clientIp);
                 ModelState.AddModelError(string.Empty, "新密碼不可與目前密碼相同");
                 return View(model);
             }
@@ -428,13 +434,13 @@ namespace RMIS.Controllers
 
             if (result.Succeeded)
             {
-                _logger?.LogOperation("重設密碼", true, "密碼重設成功", model.Account);
+                _logger?.LogOperation("重設密碼", true, "密碼重設成功", model.Account, clientIp);
                 return RedirectToAction("ResetPasswordConfirmation");
             }
 
             foreach (var error in result.Errors)
             {
-                _logger?.LogOperation("重設密碼", false, $"密碼重設失敗: {error.Code}, {error.Description}", model.Account);
+                _logger?.LogOperation("重設密碼", false, $"密碼重設失敗: {error.Code}, {error.Description}", model.Account, clientIp);
 
                 if (error.Code == "InvalidToken")
                     return View("ResetPasswordExpired");
@@ -454,6 +460,8 @@ namespace RMIS.Controllers
         [HttpPost]
         public async Task<IActionResult> ExtendSession()
         {
+            var clientIp = HttpContext.GetClientIpAddress();
+
             if (User.Identity.IsAuthenticated)
             {
                 var newExpireTime = DateTime.UtcNow.AddMinutes(30); // 設定新的過期時間
@@ -462,42 +470,43 @@ namespace RMIS.Controllers
                 var currentUser = await _userManager.GetUserAsync(User);
                 _signInManager.SignInAsync(currentUser, isPersistent: true).Wait(); // 重新設定身份驗證
 
-                var clientIp = HttpContext.GetClientIpAddress();
                 _logger?.LogOperation("登入延長", true, "Session已延長", currentUser?.UserName ?? "Unknown", clientIp);
                 return Ok(new { expiresUtc = newExpireTime });
             }
 
-            _logger?.LogOperation("ExtendSession", false, "使用者未驗證", "Unknown");
+            _logger?.LogOperation("ExtendSession", false, "使用者未驗證", "Unknown", clientIp);
             return Unauthorized();
         }
 
         [HttpGet]
         public async Task<IActionResult> ConfirmEmail(string userId, string token)
         {
+            var clientIp = HttpContext.GetClientIpAddress();
+
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
             {
-                _logger?.LogOperation("ConfirmEmail", false, "缺少必要參數", userId ?? "Unknown");
+                _logger?.LogOperation("ConfirmEmail", false, "缺少必要參數", userId ?? "Unknown", clientIp);
                 return View("ConfirmEmailFailed");
             }
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                _logger?.LogOperation("ConfirmEmail", false, "找不到使用者", userId);
+                _logger?.LogOperation("ConfirmEmail", false, "找不到使用者", userId, clientIp);
                 return View("ConfirmEmailFailed");
             }
 
             var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
-                _logger?.LogOperation("ConfirmEmail", true, "使用者信箱驗證成功", user.UserName);
+                _logger?.LogOperation("ConfirmEmail", true, "使用者信箱驗證成功", user.UserName, clientIp);
                 return View();
             }
             else
             {
                 foreach (var error in result.Errors)
                 {
-                    _logger?.LogOperation("ConfirmEmail", false, $"驗證失敗: {error.Description}", user.UserName);
+                    _logger?.LogOperation("ConfirmEmail", false, $"驗證失敗: {error.Description}", user.UserName, clientIp);
                 }
 
                 return View("ConfirmEmailFailed");
@@ -507,10 +516,12 @@ namespace RMIS.Controllers
         [HttpPost]
         public async Task<IActionResult> ResendConfirmationEmail(string account, string emailCaptcha)
         {
+            var clientIp = HttpContext.GetClientIpAddress();
+
             var user = await _userManager.FindByNameAsync(account);
             if (user == null || user.EmailConfirmed)
             {
-                _logger?.LogOperation("ResendConfirmationEmail", false, "帳號已通過信箱認證或不存在", account ?? "Unknown");
+                _logger?.LogOperation("ResendConfirmationEmail", false, "帳號已通過信箱認證或不存在", account ?? "Unknown", clientIp);
                 ModelState.AddModelError("", "帳號已通過信箱認證");
                 return View("ConfirmEmailFailed");
             }
@@ -518,7 +529,7 @@ namespace RMIS.Controllers
             string? storedCode = HttpContext.Session.GetString("CaptchaCode_email");
             if (storedCode == null || emailCaptcha.ToUpper() != storedCode.ToUpper())
             {
-                _logger?.LogOperation("ResendConfirmationEmail", false, "驗證碼錯誤", account);
+                _logger?.LogOperation("ResendConfirmationEmail", false, "驗證碼錯誤", account, clientIp);
                 ModelState.AddModelError("", "驗證碼錯誤");
                 return View("ConfirmEmailFailed");
             }
@@ -531,7 +542,7 @@ namespace RMIS.Controllers
             await _emailSender.SendEmailAsync(user.Email, "請驗證您的電子郵件",
                     $"請點擊以下連結完成信箱驗證：<a href='{confirmLink}'>驗證信箱</a>");
 
-            _logger?.LogOperation("ResendConfirmationEmail", true, "已重新寄送驗證信", account);
+            _logger?.LogOperation("ResendConfirmationEmail", true, "已重新寄送驗證信", account, clientIp);
             ViewBag.ResendMessage = "已重新寄送驗證信至您的信箱，請查看信件。";
             return View("ConfirmEmailFailed");
         }

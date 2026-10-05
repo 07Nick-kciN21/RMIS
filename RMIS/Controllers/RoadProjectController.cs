@@ -114,10 +114,15 @@ namespace RMIS.Controllers
 
             try
             {
-                project.CreateTime = DateTime.Now;
-
                 var currentUser = await _userManager.GetUserAsync(User);
-                project.CreatedByUserId = currentUser?.Id;
+                if (currentUser == null)
+                {
+                    LogOp("新增專案", false, "使用者未登入，拒絕新增");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
+                project.CreateTime = DateTime.Now;
+                project.CreatedByUserId = currentUser.Id;
 
                 // 如果沒有提供 ProjectId，自動產生
                 if (string.IsNullOrEmpty(project.ProjectId))
@@ -327,6 +332,13 @@ namespace RMIS.Controllers
         {
             if (process == null) return BadRequest(new { success = false, message = "接收不到資料" });
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                LogOp("新增歷程", false, "使用者未登入，拒絕新增");
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             process.Id = 0;
             var (result, processId) = await _roadProjectInterface.AddAllProcessRecordAsync(process);
 
@@ -346,6 +358,13 @@ namespace RMIS.Controllers
         {
             if (process == null || process.Id <= 0) return BadRequest(new { success = false, message = "接收不到資料" });
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                LogOp("更新歷程", false, "使用者未登入，拒絕更新");
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             var result = await _roadProjectInterface.UpdateAllProcessRecordAsync(process);
             if (result == "success")
             {
@@ -362,6 +381,13 @@ namespace RMIS.Controllers
         [HttpDelete("DeleteAllProcessRecord/{id}")]
         public async Task<IActionResult> DeleteAllProcessRecord(int id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                LogOp("刪除歷程", false, "使用者未登入，拒絕刪除");
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             var (result, projectName, recordTitle) = await _roadProjectInterface.DeleteAllProcessRecordAsync(id);
             if (result == "success")
             {
@@ -384,6 +410,11 @@ namespace RMIS.Controllers
                 return BadRequest("未收到檔案");
             }
 
+            if (string.IsNullOrEmpty(User.Identity?.Name))
+            {
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             try
             {
                 // 讀取檔案內容轉為 Base64
@@ -398,7 +429,7 @@ namespace RMIS.Controllers
                 var fileSize = FormatFileSize(file.Length);
 
                 // 取得當前使用者
-                var uploadUser = User.Identity?.Name ?? "Unknown";
+                var uploadUser = User.Identity.Name;
 
                 var processFile = new RoadProjectProcessFile
                 {
@@ -435,8 +466,13 @@ namespace RMIS.Controllers
                 return BadRequest("未收到檔案");
             }
 
+            if (string.IsNullOrEmpty(User.Identity?.Name))
+            {
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             var results = new List<object>();
-            var uploadUser = User.Identity?.Name ?? "Unknown";
+            var uploadUser = User.Identity.Name;
 
             foreach (var file in files)
             {
@@ -523,6 +559,11 @@ namespace RMIS.Controllers
         [HttpDelete("DeleteProcessFile/{fileId}")]
         public async Task<IActionResult> DeleteProcessFile(int fileId)
         {
+            if (string.IsNullOrEmpty(User.Identity?.Name))
+            {
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             var result = await _roadProjectInterface.DeleteProcessFileAsync(fileId);
 
             if (result == "success")
@@ -541,8 +582,13 @@ namespace RMIS.Controllers
                 return BadRequest("未收到檔案");
             }
 
+            if (string.IsNullOrEmpty(User.Identity?.Name))
+            {
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             var results = new List<object>();
-            var uploadUser = User.Identity?.Name ?? "Unknown";
+            var uploadUser = User.Identity.Name;
 
             foreach (var file in files)
             {
@@ -628,6 +674,11 @@ namespace RMIS.Controllers
         [HttpDelete("DeleteRemarkFile/{fileId}")]
         public async Task<IActionResult> DeleteRemarkFile(int fileId)
         {
+            if (string.IsNullOrEmpty(User.Identity?.Name))
+            {
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
             var result = await _roadProjectInterface.DeleteRemarkFileAsync(fileId);
 
             if (result == "success")
@@ -700,6 +751,12 @@ namespace RMIS.Controllers
             try
             {
                 var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("更新專案", false, "使用者未登入，拒絕更新");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "專案查詢");
 
                 if (!currentUserPermission.Update)
@@ -739,6 +796,13 @@ namespace RMIS.Controllers
         {
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("確認座標", false, "使用者未登入，拒絕確認");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var ownershipError = await CheckProjectOwnershipAsync(projectId);
                 if (ownershipError != null) return ownershipError;
 
@@ -758,6 +822,13 @@ namespace RMIS.Controllers
         {
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("更新座標點", false, "使用者未登入，拒絕更新");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var ownershipError = await CheckProjectOwnershipAsync(input.ProjectId);
                 if (ownershipError != null) return ownershipError;
 
@@ -780,6 +851,12 @@ namespace RMIS.Controllers
             try
             {
                 var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    LogOp("更新專案照片", false, "使用者未登入，拒絕更新");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
                 var currentUserPermission = await _accountInterface.GetUserPermission(currentUser.Id, "專案查詢");
 
                 if (!currentUserPermission.Update)
