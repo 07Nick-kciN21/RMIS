@@ -217,21 +217,21 @@ function injectProfileModal() {
                 <div class="form-group row mb-2">
                   <label class="col-sm-3 col-form-label">原密碼</label>
                   <div class="col-sm-9">
-                    <input type="password" id="profile-OriginPassword" class="form-control"
+                    <input type="password" id="profile-OriginPassword" class="form-control" autocomplete="off"
                            pattern="^(?=.*[A-Za-z])(?=.*\\d).{6,20}$" required>
                   </div>
                 </div>
                 <div class="form-group row mb-2">
                   <label class="col-sm-3 col-form-label">新密碼</label>
                   <div class="col-sm-9">
-                    <input type="password" id="profile-NewPassword" class="form-control"
+                    <input type="password" id="profile-NewPassword" class="form-control" autocomplete="off"
                            pattern="^(?=.*[A-Za-z])(?=.*\\d).{6,20}$" required>
                   </div>
                 </div>
                 <div class="form-group row mb-2">
                   <label class="col-sm-3 col-form-label">確認新密碼</label>
                   <div class="col-sm-9">
-                    <input type="password" id="profile-CheckPassword" class="form-control" required>
+                    <input type="password" id="profile-CheckPassword" class="form-control" autocomplete="off" required>
                   </div>
                 </div>
                 <p class="text-danger small mb-2">密碼規格：6字元以上、包含英文字母與數字且不可與帳號相同。</p>

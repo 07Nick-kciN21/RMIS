@@ -35,7 +35,7 @@
                                     <input type="password" class="form-control br25 w-100"
                                         placeholder="&emsp;&nbsp;密碼" data-val="true"
                                         data-val-required="&#x8ACB;&#x8F38;&#x5165;&#x5BC6;&#x78BC;" id="Password"
-                                        name="Password" />
+                                        name="Password" autocomplete="off" />
                                 </div>
                                 <span class="text-danger field-validation-valid" data-valmsg-for="Password"
                                     data-valmsg-replace="true"></span>
@@ -102,7 +102,7 @@
                         <label for="registerPassword" class="col-sm-3 col-form-label">密碼</label>
                         <div class="col-sm-9">
                             <input id="registerPassword" class="form-control" type="password" name="Password"
-                                required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$">
+                                autocomplete="off" required pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,20}$">
                             <div class="invalid-feedback">
                                 密碼需包含大小寫英文字母與數字，長度 8~20。
                             </div>
@@ -112,7 +112,7 @@
                         <label for="registerConfirmPassword" class="col-sm-3 col-form-label">確認密碼</label>
                         <div class="col-sm-9">
                             <input id="registerConfirmPassword" class="form-control" type="password"
-                                name="ConfirmPassword" required>
+                                name="ConfirmPassword" autocomplete="off" required>
                             <div class="invalid-feedback">
                                 請再次輸入密碼。
                             </div>
