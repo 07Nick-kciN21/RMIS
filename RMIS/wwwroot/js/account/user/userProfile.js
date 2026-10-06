@@ -1,43 +1,5 @@
 $(document).ready(function () {
     hideModalOverlay();
-    function refreshCaptcha($img) {
-      // 保證傳入的東西轉成 jQuery 物件
-      $img = $($img);
-      const type = $img.data("type");
-      const el = $img.get(0);
-      return new Promise(function (resolve) {
-        if (!el) { resolve(); return; }
-        el.onload = el.onerror = function () { resolve(); };
-        const url = "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime();
-        console.log("Refreshing captcha:", url);
-        $img.attr("src", url);
-      });
-    }
-
-    // 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
-    function refreshCaptchasSequentially($imgs) {
-      return $imgs.toArray().reduce(function (chain, img) {
-        return chain.then(function () { return refreshCaptcha($(img)); });
-      }, Promise.resolve());
-    }
-
-    // 點擊圖片刷新（用匿名函式包裝）
-    $(".captchaImage").on("click", function () {
-      refreshCaptcha($(this)); // 確保傳入的是 jQuery 物件
-    });
-
-    $(".captchaImage").each(function () {
-        const $this = $(this);
-
-        // 綁定點擊事件 (只需綁定一次)
-        // 這裡先解除綁定再綁定，可防止重複載入導致的事件堆疊
-        $this.off("click").on("click", function () {
-            refreshCaptcha($this);
-        });
-    });
-
-    // 依序刷新所有驗證碼圖片（同時對同一個 Session 送出多個請求會互相覆蓋，須序列化）
-    refreshCaptchasSequentially($(".captchaImage"));
 
     $('#resetPasswordForm').on('submit', function (e) {
         e.preventDefault(); // 阻止預設提交行為
@@ -88,7 +50,6 @@ $(document).ready(function () {
         formData.append("UserId", $('input[name="Id"]').val());
         formData.append("OriginPassword", originPassword);
         formData.append("NewPassword", newPassword);
-        formData.append("NewPasswordCaptcha", $('input[name="userProfile_newPasswordCaptcha"]').val());
         $.ajax({
             url: '/Account/User/UpdatePassword',
             type: 'POST',
@@ -108,7 +69,6 @@ $(document).ready(function () {
           $("#resetPassword").modal('hide');
           hideModalOverlay();
           form.reset();
-          refreshCaptcha($(".captchaImage[data-type='userProfile_newPassword']"));
           $(form).find('.form-control').removeClass('is-valid is-invalid');
         });
     });
@@ -149,9 +109,7 @@ $(document).ready(function () {
         // 添加基本欄位
         formData.append("UserId", $('input[name="Id"]').val());
         formData.append("NewEmail", $('input[name="newEmail"]').val());
-        formData.append("NewEmailCaptcha", $('input[name="userProfile_newEmailCaptcha"]').val());
-        console.log("Send email captcha clicked", formData);
-        
+
         $.ajax({
             url: '/Account/User/UpdateEmail',
             type: 'POST',
@@ -171,7 +129,6 @@ $(document).ready(function () {
             hideModalOverlay();
             $("#resetEmail").modal('hide');
             form.reset();
-            refreshCaptcha($(".captchaImage[data-type='userProfile_newEmail']"));
             $(form).find('.form-control').removeClass('is-valid is-invalid');
         });
     });
@@ -207,7 +164,6 @@ function updateCitizenCardNo($btn) {
         let formData = new FormData();
         formData.append("UserId", $('input[name="Id"]').val());
         formData.append("NewCitizenCardNo", serialNumber);
-        formData.append("NewCitizenCardNoCaptcha", $('input[name="userProfile_newCitizenCardNoCaptcha"]').val()); 
         // 2. 呼叫後端進行綁定
         $.ajax({
             url: '/Account/User/UpdateCitizenCardNo', // 這是我們要補全的後端 Action

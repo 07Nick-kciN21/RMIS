@@ -11,9 +11,6 @@ namespace RMIS.Models.Portal
         [Required]
         public string Token { get; set; }
 
-        [Required(ErrorMessage = "請輸入驗證碼")]
-        public string Captcha { get; set; }
-
         [Required]
         [StringLength(100, MinimumLength = 6)]
         [DataType(DataType.Password)]

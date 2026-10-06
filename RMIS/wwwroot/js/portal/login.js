@@ -1,26 +1,6 @@
 $(document).ready(function () {
     initRegisterModal();
     hideModalOverlay();
-    function refreshCaptcha($img) {
-      // 保證傳入的東西轉成 jQuery 物件
-      $img = $($img);
-      const type = $img.data("type");
-      const url = "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime();
-      console.log("Refreshing captcha:", url);
-      $img.attr("src", url);
-    }
-
-    // 點擊圖片刷新（用匿名函式包裝）
-    $(".captchaImage").on("click", function () {
-      refreshCaptcha($(this)); // 確保傳入的是 jQuery 物件
-    });
-
-    // Modal 開啟時刷新該 Modal 裡的圖片
-    $('#registerModal, #forgetModal').on('shown.bs.modal', function () {
-        $(this).find(".captchaImage").each(function () {
-            refreshCaptcha($(this)); // 同樣確保傳入 jQuery 物件
-        });
-    });
 
     $('#certificateLoginBtn').on('click', function (e) {
         e.preventDefault();
@@ -32,10 +12,6 @@ $(document).ready(function () {
         // 開始憑證登入流程
         certificateLogin($btn);
     });
-    // 頁面載入自動刷新登入用的驗證碼
-    refreshCaptcha($(".captchaImage"));
-
-
     $('#registerForm').on('submit', function (e) {
         e.preventDefault();
         showModalOverlay('#registerModal');
@@ -143,7 +119,6 @@ $(document).ready(function () {
           hideModalOverlay();
           form.reset();
           $(form).find('.form-control').removeClass('is-valid');
-          refreshCaptcha($(".captchaImage[data-type='register']"));
         });
         
     });

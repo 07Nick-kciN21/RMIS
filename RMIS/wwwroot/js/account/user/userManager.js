@@ -21,10 +21,6 @@ $(document).ready(function () {
         openCreateModal();
     });
 
-    $(document).on('click', '.captchaImage', function () {
-        refreshCaptcha($(this));
-    });
-
     $('#createUserForm').on('submit', function (e) {
         e.preventDefault();
         const $form = $(this);
@@ -128,7 +124,6 @@ $(document).ready(function () {
         let formData = new FormData();
         formData.append("UserId", $('#edit-pwd-UserId').val());
         formData.append("NewPassword", $('#NewPassword').val());
-        formData.append("NewPasswordCaptcha", $('#adminUpdate_newPasswordCaptcha').val());
         $.ajax({
             url: '/Account/User/UpdatePassword',
             type: 'POST',
@@ -142,7 +137,6 @@ $(document).ready(function () {
             $('#resetPasswordSection').collapse('hide');
             $container.find('input[type="password"], input[type="text"]').val('');
             $container.find('.form-control').removeClass('is-valid is-invalid');
-            refreshCaptcha($(".captchaImage[data-type='adminUpdate_newPassword']"));
         });
     });
 
@@ -153,7 +147,6 @@ $(document).ready(function () {
         let formData = new FormData();
         formData.append("UserId", $('#edit-email-UserId').val());
         formData.append("NewEmail", $('#newEmail').val());
-        formData.append("NewEmailCaptcha", $('#adminUpdate_newEmailCaptcha').val());
         $.ajax({
             url: '/Account/User/UpdateEmail',
             type: 'POST',
@@ -167,28 +160,9 @@ $(document).ready(function () {
             $('#resetEmailSection').collapse('hide');
             $container.find('input[type="email"], input[type="text"]').val('');
             $container.find('.form-control').removeClass('is-valid is-invalid');
-            refreshCaptcha($(".captchaImage[data-type='newEmail']"));
         });
     });
 });
-
-function refreshCaptcha($img) {
-    $img = $($img);
-    const type = $img.data("type");
-    const el = $img.get(0);
-    return new Promise(function (resolve) {
-        if (!el) { resolve(); return; }
-        el.onload = el.onerror = function () { resolve(); };
-        $img.attr("src", "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime());
-    });
-}
-
-// 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
-function refreshCaptchasSequentially($imgs) {
-    return $imgs.toArray().reduce(function (chain, img) {
-        return chain.then(function () { return refreshCaptcha($(img)); });
-    }, Promise.resolve());
-}
 
 function validateForm($container) {
     let isValid = true;
@@ -256,7 +230,6 @@ function openEditModal(user) {
     $('#resetPasswordForm').find('input[type="password"], input[type="text"]').val('');
     $('#resetEmailForm').find('input[type="email"], input[type="text"]').val('');
     $('#resetPasswordForm, #resetEmailForm').find('.form-control').removeClass('is-valid is-invalid');
-    refreshCaptchasSequentially($('.captchaImage'));
 
     $('#updateUserModal').modal('show');
 }

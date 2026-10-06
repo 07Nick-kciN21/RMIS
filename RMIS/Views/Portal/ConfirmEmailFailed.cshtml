@@ -25,20 +25,6 @@
                                     <input type="text" class="form-control" id="accountInput" name="account" placeholder="請輸入您的帳號" required>
                                 </div>
                             </div>
-                            <div class="form-group row d-flex justify-content-center" style="margin-bottom: 20px">
-                                <div class="col-sm-8">
-                                    <div class="input-group">
-                                        <input id="emailCaptcha" type="text" name="emailCaptcha" class="form-control" placeholder="輸入驗證碼" required>
-                                        <span class="input-group-text p-0" style="background: transparent; border:none;">
-                                            <img class="captchaImage"
-                                                    data-type="email"
-                                                    alt="驗證碼"
-                                                    title="點擊更新驗證碼"
-                                                    style="cursor:pointer; border:1px solid #ccc; height:40px;" />
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
                             @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ContainsKey(string.Empty))
                             {
                                 var globalErrors = ViewData.ModelState[string.Empty].Errors;

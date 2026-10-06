@@ -8,10 +8,7 @@ using RMIS.Models.Portal;
 using RMIS.Repositories;
 using RMIS.Helpers; // 新增：引入 LogHelper
 using System.Data;
-using System.Drawing.Imaging;
-using System.Drawing;
 using System.Security;
-using System.Drawing.Drawing2D;
 using RMIS.Models.Account.Users;
 using Microsoft.AspNetCore.Identity.UI.Services;
 
@@ -43,81 +40,16 @@ namespace RMIS.Controllers
         }
 
         [HttpGet]
-        public IActionResult Captcha(string type)
-        {
-            string code = GenerateRandomCode(5);
-            HttpContext.Session.SetString($"CaptchaCode_{type}", code);
-            _logger?.LogOperation("Captcha_Debug", true, $"[產生] type={type}, code={code}, sessionId={HttpContext.Session.Id}");
-            using var bmp = new Bitmap(120, 40);
-            using var graphics = Graphics.FromImage(bmp);
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            graphics.Clear(Color.White);
-
-            // 隨機旋轉每個字母
-            var rand = new Random();
-            using var font = new Font("Arial", 20, FontStyle.Bold);
-            for (int i = 0; i < code.Length; i++)
-            {
-                float angle = rand.Next(-20, 20); // -20~20度
-                graphics.TranslateTransform(20 * i + 15, 20); // 移動到字母位置
-                graphics.RotateTransform(angle);
-                graphics.DrawString(code[i].ToString(), font, Brushes.Black, -10, -10);
-                graphics.ResetTransform();
-            }
-
-            // 加干擾線
-            for (int i = 0; i < 3; i++)
-            {
-                Pen pen = new Pen(Color.FromArgb(rand.Next(50, 150), rand.Next(50, 150), rand.Next(50, 150)), 1);
-                graphics.DrawLine(pen,
-                    rand.Next(bmp.Width), rand.Next(bmp.Height),
-                    rand.Next(bmp.Width), rand.Next(bmp.Height));
-            }
-
-            // 加一些雜點
-            for (int i = 0; i < 30; i++)
-            {
-                int x = rand.Next(bmp.Width);
-                int y = rand.Next(bmp.Height);
-                bmp.SetPixel(x, y, Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256)));
-            }
-
-            using var ms = new MemoryStream();
-            bmp.Save(ms, ImageFormat.Png);
-
-            Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
-            Response.Headers["Pragma"] = "no-cache";
-            Response.Headers["Expires"] = "0";
-            return File(ms.ToArray(), "image/png");
-        }
-
-        private string GenerateRandomCode(int length)
-        {
-            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var random = new Random();
-            return new string(Enumerable.Range(0, length)
-                .Select(_ => chars[random.Next(chars.Length)]).ToArray());
-        }
-
-
-        [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginView model, string loginCaptcha, string returnUrl = null)
+        public async Task<IActionResult> Login(LoginView model, string returnUrl = null)
         {
             var clientIp = HttpContext.GetClientIpAddress();
-            string? storedCode = HttpContext.Session.GetString("CaptchaCode_login");
 
-            if (storedCode == null || loginCaptcha.ToUpper() != storedCode.ToUpper())
-            {
-                _logger?.LogOperation("Login-POST", false, "驗證碼錯誤", model?.UserName ?? "Unknown", clientIp);
-                ModelState.AddModelError("", "驗證碼錯誤");
-                return View();
-            }
             if (!ModelState.IsValid)
             {
                 foreach (var kvp in ModelState)
@@ -233,15 +165,9 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterView user, string registerCaptcha)
+        public async Task<IActionResult> Register(RegisterView user)
         {
             var clientIp = HttpContext.GetClientIpAddress();
-            var code = HttpContext.Session.GetString("CaptchaCode_register");
-            if (string.IsNullOrEmpty(code) || !string.Equals(code, registerCaptcha, StringComparison.OrdinalIgnoreCase))
-            {
-                _logger?.LogOperation("註冊", false, "驗證碼錯誤", user?.Account ?? "Unknown", clientIp);
-                return Json(new { success = false, message = "驗證碼錯誤" });
-            }
 
             if (!ModelState.IsValid)
             {
@@ -283,19 +209,11 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ForgotPassword(string account, string email, string forgetCaptcha)
+        public async Task<IActionResult> ForgotPassword(string account, string email)
         {
             var clientIp = HttpContext.GetClientIpAddress();
 
-            // 1. 驗證 Captcha
-            var code = HttpContext.Session.GetString("CaptchaCode_forget");
-            if (string.IsNullOrEmpty(code) || !string.Equals(code, forgetCaptcha, StringComparison.OrdinalIgnoreCase))
-            {
-                _logger?.LogOperation("ForgotPassword", false, "驗證碼錯誤", account ?? "Unknown", clientIp);
-                return Json(new { success = false, message = "驗證碼錯誤" });
-            }
-
-            // 2. 用 UserName 找使用者，並比對信箱（不透露帳號是否存在）
+            // 1. 用 UserName 找使用者，並比對信箱（不透露帳號是否存在）
             var user = await _userManager.FindByNameAsync(account);
             if (user == null || !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
             {
@@ -303,7 +221,7 @@ namespace RMIS.Controllers
                 return Json(new { success = true, message = "若帳號與信箱正確，重設連結已寄送，請於 5 分鐘內完成操作" });
             }
 
-            // 3. 產生 Token
+            // 2. 產生 Token
             var result = await _portalInterface.GenerateResetPasswordTokenAsync(account);
 
             if (!result.Success)
@@ -312,16 +230,16 @@ namespace RMIS.Controllers
                 return Json(new { success = false, message = result.Message });
             }
 
-            // 4. 建立 Reset URL（在 Controller 使用 Url.Action）
+            // 3. 建立 Reset URL（在 Controller 使用 Url.Action）
             var resetLink = Url.Action("ResetPassword", "Portal",
                 new { token = result.Token, email = user.Email, account = user.UserName },
                 protocol: Request.Scheme);
 
-            // 5. 寄信
+            // 4. 寄信
             await _emailSender.SendEmailAsync(user.Email, "重設密碼",
                 $"請點擊以下連結重設密碼：<a href='{resetLink}'>重設密碼</a>");
 
-            // 6. 處理 Email 遮罩
+            // 5. 處理 Email 遮罩
             var maskedEmail = MaskEmail(user.Email);
 
             _logger?.LogOperation("ForgotPassword", true, "重設密碼連結已寄送", account, clientIp);
@@ -398,14 +316,6 @@ namespace RMIS.Controllers
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             var clientIp = HttpContext.GetClientIpAddress();
-
-            var storedCaptcha = HttpContext.Session.GetString("CaptchaCode_resetpassword");
-            if (string.IsNullOrEmpty(storedCaptcha) || !string.Equals(storedCaptcha, model?.Captcha, StringComparison.OrdinalIgnoreCase))
-            {
-                _logger?.LogOperation("重設密碼", false, "驗證碼錯誤", model?.Account ?? "Unknown", clientIp);
-                ModelState.AddModelError(string.Empty, "驗證碼錯誤");
-                return View(model);
-            }
 
             if (!ModelState.IsValid)
             {
@@ -514,7 +424,7 @@ namespace RMIS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ResendConfirmationEmail(string account, string emailCaptcha)
+        public async Task<IActionResult> ResendConfirmationEmail(string account)
         {
             var clientIp = HttpContext.GetClientIpAddress();
 
@@ -523,14 +433,6 @@ namespace RMIS.Controllers
             {
                 _logger?.LogOperation("ResendConfirmationEmail", false, "帳號已通過信箱認證或不存在", account ?? "Unknown", clientIp);
                 ModelState.AddModelError("", "帳號已通過信箱認證");
-                return View("ConfirmEmailFailed");
-            }
-
-            string? storedCode = HttpContext.Session.GetString("CaptchaCode_email");
-            if (storedCode == null || emailCaptcha.ToUpper() != storedCode.ToUpper())
-            {
-                _logger?.LogOperation("ResendConfirmationEmail", false, "驗證碼錯誤", account, clientIp);
-                ModelState.AddModelError("", "驗證碼錯誤");
                 return View("ConfirmEmailFailed");
             }
 

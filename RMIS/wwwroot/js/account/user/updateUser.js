@@ -1,33 +1,5 @@
 $(document).ready(function () {
     hideOverlay();
-    function refreshCaptcha($img) {
-      // 保證傳入的東西轉成 jQuery 物件
-      $img = $($img);
-      const type = $img.data("type");
-      const el = $img.get(0);
-      return new Promise(function (resolve) {
-        if (!el) { resolve(); return; }
-        el.onload = el.onerror = function () { resolve(); };
-        const url = "/Portal/Captcha?type=" + type + "&_=" + new Date().getTime();
-        console.log("Refreshing captcha:", url);
-        $img.attr("src", url);
-      });
-    }
-
-    // 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
-    function refreshCaptchasSequentially($imgs) {
-      return $imgs.toArray().reduce(function (chain, img) {
-        return chain.then(function () { return refreshCaptcha($(img)); });
-      }, Promise.resolve());
-    }
-
-    // 點擊圖片刷新（用匿名函式包裝）
-    $(".captchaImage").on("click", function () {
-      refreshCaptcha($(this)); // 確保傳入的是 jQuery 物件
-    });
-
-    refreshCaptchasSequentially($(".captchaImage"));
-
 
     $('#updateUserForm').on('submit', function (e) {
         e.preventDefault(); // 阻止預設提交行為
@@ -113,7 +85,6 @@ $(document).ready(function () {
         let formData = new FormData();
         formData.append("UserId", $('input[name="UserId"]').val());
         formData.append("NewPassword", $('input[name="NewPassword"]').val());
-        formData.append("NewPasswordCaptcha", $('input[name="adminUpdate_newPasswordCaptcha"]').val());
         $.ajax({
             url: '/Account/User/UpdatePassword',
             type: 'POST',
@@ -132,7 +103,6 @@ $(document).ready(function () {
             hideOverlay();
             $('#resetPasswordSection').collapse('hide');
             form.reset();
-            refreshCaptcha($(".captchaImage[data-type='adminUpdate_newPassword']"));
             $(form).find('.form-control').removeClass('is-valid is-invalid');
         });
     });
@@ -163,7 +133,6 @@ $(document).ready(function () {
         let formData = new FormData();
         formData.append("UserId", $('input[name="UserId"]').val());
         formData.append("NewEmail", $('input[name="newEmail"]').val());
-        formData.append("NewEmailCaptcha", $('input[name="adminUpdate_newEmailCaptcha"]').val());
         $.ajax({
             url: '/Account/User/UpdateEmail',
             type: 'POST',
@@ -182,7 +151,6 @@ $(document).ready(function () {
             hideOverlay();
             $('#resetEmailSection').collapse('hide');
             form.reset();
-            refreshCaptcha($(".captchaImage[data-type='newEmail']"));
             $(form).find('.form-control').removeClass('is-valid is-invalid');
         });
     });

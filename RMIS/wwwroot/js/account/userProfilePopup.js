@@ -3,11 +3,6 @@ $(document).ready(function () {
 
     $('#profileBtn').on('click', openProfileModal);
 
-    // 驗證碼點擊刷新（委派，modal 動態注入後也有效）
-    $(document).on('click', '#userProfileModal .captchaImage', function () {
-        refreshCaptcha($(this));
-    });
-
     // ── 儲存個人資料 ──────────────────────────────
     $(document).on('submit', '#profileForm', function (e) {
         e.preventDefault();
@@ -40,7 +35,6 @@ $(document).ready(function () {
         formData.append('UserId',             $('#profile-UserId').val());
         formData.append('OriginPassword',     $('#profile-OriginPassword').val());
         formData.append('NewPassword',        $('#profile-NewPassword').val());
-        formData.append('NewPasswordCaptcha', $('#profile-pwdCaptcha').val());
         $.ajax({
             url: '/Account/User/UpdatePassword',
             type: 'POST',
@@ -54,7 +48,6 @@ $(document).ready(function () {
             $('#profile-pwdCollapse').collapse('hide');
             $container.find('input').val('');
             $container.find('.form-control').removeClass('is-valid is-invalid');
-            refreshCaptcha($('#userProfileModal .captchaImage[data-type="userProfile_newPassword"]'));
         });
     });
 
@@ -65,7 +58,6 @@ $(document).ready(function () {
         const formData = new FormData();
         formData.append('UserId',          $('#profile-UserId').val());
         formData.append('NewEmail',        $('#profile-NewEmail').val());
-        formData.append('NewEmailCaptcha', $('#profile-emailCaptcha').val());
         $.ajax({
             url: '/Account/User/UpdateEmail',
             type: 'POST',
@@ -79,7 +71,6 @@ $(document).ready(function () {
             $('#profile-emailCollapse').collapse('hide');
             $container.find('input').val('');
             $container.find('.form-control').removeClass('is-valid is-invalid');
-            refreshCaptcha($('#userProfileModal .captchaImage[data-type="userProfile_newEmail"]'));
         });
     });
 
@@ -95,7 +86,6 @@ $(document).ready(function () {
                 const formData = new FormData();
                 formData.append('UserId',                $('#profile-UserId').val());
                 formData.append('NewCitizenCardNo',      serialNumber);
-                formData.append('NewCitizenCardNoCaptcha', $('#profile-cardCaptcha').val());
                 return $.ajax({
                     url: '/Account/User/UpdateCitizenCardNo',
                     type: 'POST',
@@ -114,7 +104,6 @@ $(document).ready(function () {
             .catch(err => { alert('讀取卡片失敗：' + err.message); })
             .always(() => {
                 $btn.prop('disabled', false);
-                refreshCaptcha($('#userProfileModal .captchaImage[data-type="userProfile_newCitizenCardNo"]'));
             });
     });
 });
@@ -140,9 +129,6 @@ function openProfileModal() {
                 .find('input').val('');
             $('#userProfileModal').find('.form-control').removeClass('is-valid is-invalid');
 
-            // 依序刷新所有驗證碼（同一個 Session 若同時送出多個請求會互相覆蓋，須序列化）
-            refreshCaptchasSequentially($('#userProfileModal .captchaImage'));
-
             $('#userProfileModal').modal('show');
         },
         error: function () { alert('無法載入個人資料'); }
@@ -165,24 +151,6 @@ function profileValidate($container) {
         }
     });
     return isValid;
-}
-
-function refreshCaptcha($img) {
-    $img = $($img);
-    const type = $img.data('type');
-    const el = $img.get(0);
-    return new Promise(function (resolve) {
-        if (!el) { resolve(); return; }
-        el.onload = el.onerror = function () { resolve(); };
-        $img.attr('src', '/Portal/Captcha?type=' + type + '&_=' + new Date().getTime());
-    });
-}
-
-// 依序刷新多張驗證碼圖片，避免同時對同一個 Session 送出請求時彼此覆蓋對方寫入的驗證碼
-function refreshCaptchasSequentially($imgs) {
-    return $imgs.toArray().reduce(function (chain, img) {
-        return chain.then(function () { return refreshCaptcha($(img)); });
-    }, Promise.resolve());
 }
 
 function injectProfileModal() {
@@ -266,19 +234,6 @@ function injectProfileModal() {
                     <input type="password" id="profile-CheckPassword" class="form-control" required>
                   </div>
                 </div>
-                <div class="form-group row mb-2">
-                  <label class="col-sm-3 col-form-label">驗證碼</label>
-                  <div class="col-sm-9">
-                    <div class="input-group">
-                      <input id="profile-pwdCaptcha" type="text" class="form-control" placeholder="輸入驗證碼" required>
-                      <span class="input-group-text p-0" style="background:transparent;border:none;">
-                        <img class="captchaImage" data-type="userProfile_newPassword"
-                             alt="驗證碼" title="點擊更新驗證碼"
-                             style="cursor:pointer;border:1px solid #ccc;height:40px;" />
-                      </span>
-                    </div>
-                  </div>
-                </div>
                 <p class="text-danger small mb-2">密碼規格：6字元以上、包含英文字母與數字且不可與帳號相同。</p>
                 <button type="button" id="profile-btn-pwd-submit" class="btn btn-primary btn-sm">儲存</button>
               </div>
@@ -304,20 +259,7 @@ function injectProfileModal() {
                            pattern="^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$" required>
                   </div>
                 </div>
-                <div class="form-group row mb-2">
-                  <label class="col-sm-3 col-form-label">驗證碼</label>
-                  <div class="col-sm-9">
-                    <div class="input-group">
-                      <input id="profile-emailCaptcha" type="text" class="form-control" placeholder="輸入驗證碼" required>
-                      <span class="input-group-text p-0" style="background:transparent;border:none;">
-                        <img class="captchaImage" data-type="userProfile_newEmail"
-                             alt="驗證碼" title="點擊更新驗證碼"
-                             style="cursor:pointer;border:1px solid #ccc;height:40px;" />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <button type="button" id="profile-btn-email-submit" class="btn btn-primary btn-sm">送出驗證碼</button>
+                <button type="button" id="profile-btn-email-submit" class="btn btn-primary btn-sm">送出</button>
               </div>
             </div>
           </div>
@@ -338,19 +280,6 @@ function injectProfileModal() {
                   <label class="col-sm-3 col-form-label">目前卡號</label>
                   <div class="col-sm-9">
                     <span id="profile-CitizenCardNo" class="form-control-plaintext"></span>
-                  </div>
-                </div>
-                <div class="form-group row mb-2">
-                  <label class="col-sm-3 col-form-label">驗證碼</label>
-                  <div class="col-sm-9">
-                    <div class="input-group">
-                      <input id="profile-cardCaptcha" type="text" class="form-control" placeholder="輸入驗證碼" required>
-                      <span class="input-group-text p-0" style="background:transparent;border:none;">
-                        <img class="captchaImage" data-type="userProfile_newCitizenCardNo"
-                             alt="驗證碼" title="點擊更新驗證碼"
-                             style="cursor:pointer;border:1px solid #ccc;height:40px;" />
-                      </span>
-                    </div>
                   </div>
                 </div>
                 <button type="button" id="profile-btn-card-submit" class="btn btn-primary btn-sm">插卡並綁定</button>
