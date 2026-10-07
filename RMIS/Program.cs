@@ -42,6 +42,13 @@ builder.Services.AddHsts(options =>
     options.IncludeSubDomains = true;
     options.MaxAge = TimeSpan.FromDays(365);
 });
+
+// ✅ 明確指定 HTTPS 對外埠號：站台前面由 Cloudflare 終止 TLS，Kestrel 本身沒有 HTTPS endpoint 可供自動推斷，
+// 若不指定 HttpsPort，UseHttpsRedirection() 會無法產生跳轉網址而直接放棄跳轉
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.HttpsPort = 443;
+});
 var mvcBuilder = builder.Services.AddControllersWithViews();
 if (builder.Environment.IsDevelopment())
 {
