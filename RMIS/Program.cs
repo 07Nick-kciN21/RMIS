@@ -33,6 +33,14 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true; // GDPR 相關，確保 Cookie 總是可用
 });
 builder.Services.AddMemoryCache();
+
+// ✅ HSTS 設定：延長有效期並納入子網域，降低 SSL-stripping / 降級攻擊風險
+builder.Services.AddHsts(options =>
+{
+    options.Preload = true;
+    options.IncludeSubDomains = true;
+    options.MaxAge = TimeSpan.FromDays(365);
+});
 var mvcBuilder = builder.Services.AddControllersWithViews();
 if (builder.Environment.IsDevelopment())
 {
@@ -132,6 +140,14 @@ builder.Services.Configure<RMIS.Models.FilePathSettings>(builder.Configuration.G
 
 var app = builder.Build();
 
+// ✅ 防止 Clickjacking：所有回應一律禁止被其他網站以 frame/iframe 嵌入
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Content-Security-Policy"] = "frame-ancestors 'none'";
+    await next();
+});
+
 app.UseSession();
 // ✅ 正確的 Middleware 執行順序
 app.UseRouting(); // 🔹 必須先執行 Routing
@@ -146,8 +162,10 @@ app.UseMiddleware<LoggingMiddleware>(); // ✅ 確保日誌記錄中間件啟動
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
 }
+
+// ✅ HSTS 不分環境一律套用，避免依賴伺服器上 ASPNETCORE_ENVIRONMENT 的實際設定值
+app.UseHsts();
 
 app.UseHttpsRedirection();
 
