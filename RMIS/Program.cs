@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -139,6 +140,14 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.Configure<RMIS.Models.FilePathSettings>(builder.Configuration.GetSection("FilePaths"));
 
 var app = builder.Build();
+
+// ✅ 站前有 Cloudflare 代理：信任 X-Forwarded-Proto，讓 Request.IsHttps 能正確反映使用者端的原始連線協定
+// 否則即使使用者是用 https 連線，UseHsts() 仍會因為判斷成 http 而不加上 Strict-Transport-Security 標頭
+// 注意：若來源伺服器未限制僅接受 Cloudflare IP 的連線，此標頭理論上可被偽造，建議搭配防火牆白名單 Cloudflare IP 範圍
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto
+});
 
 // ✅ 防止 Clickjacking：所有回應一律禁止被其他網站以 frame/iframe 嵌入
 app.Use(async (context, next) =>
