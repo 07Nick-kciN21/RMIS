@@ -19,6 +19,13 @@ using RMIS.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 將 FilePaths 中的 {RootPath} 替換為 FilePaths:RootPath 的值，統一管理根目錄
+var rootPath = builder.Configuration["FilePaths:RootPath"] ?? "C:/RMIS/";
+var expandedFilePaths = builder.Configuration.GetSection("FilePaths").GetChildren()
+    .Where(c => c.Value != null)
+    .ToDictionary(c => c.Path, c => (string?)c.Value!.Replace("{RootPath}", rootPath));
+builder.Configuration.AddInMemoryCollection(expandedFilePaths);
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
@@ -66,7 +73,7 @@ builder.Host.UseSerilog((context, services, configuration) =>
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
         )
         .WriteTo.File(
-            path: context.Configuration["FilePaths:Log"] ?? "C:/RMIS/Logs/log-.log",
+            path: context.Configuration["FilePaths:Log"] ?? Path.Combine(rootPath, "Logs/log-.log"),
             rollingInterval: RollingInterval.Day,
             shared: true,
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] UserId: {UserId} | IP: {IP} | Operation: {Operation} | Status: {Status} | Reason: {Reason}{NewLine}{Exception}"
