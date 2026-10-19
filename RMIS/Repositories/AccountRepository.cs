@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using RMIS.Models;
 using RMIS.Controllers;
 using RMIS.Data;
 using RMIS.Models.Account.Departments;
@@ -30,8 +32,11 @@ namespace RMIS.Repositories
         private readonly ILogger<AccountRepository> _logger;
 
 
-        public AccountRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext)
+        private readonly FilePathSettings _filePaths;
+
+        public AccountRepository(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, AuthDbContext authDbContext, MapDBContext mapDBContext, IOptions<FilePathSettings> filePaths)
         {
+            _filePaths = filePaths.Value;
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
@@ -1410,7 +1415,7 @@ namespace RMIS.Repositories
         public async Task<List<LogRecord>> GetLogRecordAsync(LogQuery query)
         {
             var logRecords = new List<LogRecord>();
-            var _logDirectory = "C:/RMIS/Logs";
+            var _logDirectory = Path.GetDirectoryName(Path.GetFullPath(_filePaths.Log))!;
             try
             {
                 if (!Directory.Exists(_logDirectory))

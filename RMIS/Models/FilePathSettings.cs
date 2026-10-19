@@ -2,6 +2,7 @@ namespace RMIS.Models;
 
 public class FilePathSettings
 {
+    public string RootPath { get; set; } = "";
     public string RoadProjectPhoto { get; set; } = "";
     public string ConstructNoticePhoto { get; set; } = "";
     public string ProcessFile { get; set; } = "";
