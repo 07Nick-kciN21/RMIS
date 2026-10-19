@@ -910,16 +910,19 @@ namespace RMIS.Controllers
         }
 
         /// <summary>
-        /// 匯出專案列表 Excel（NPOI 產生，比較用：同時產生「頁尾浮水印」與「儲存格浮水印」兩種版本）
+        /// 匯出專案列表 Excel（NPOI 產生，第一行為跨欄合併、靠右對齊的匯出時間/匯出人資訊）
         /// </summary>
         [HttpPost("ExportProjectExcel")]
-        public IActionResult ExportProjectExcel([FromBody] List<ExportRoadProjectExcelRow> rows)
+        public async Task<IActionResult> ExportProjectExcel([FromBody] List<ExportRoadProjectExcelRow> rows)
         {
             if (rows == null || rows.Count == 0)
                 return BadRequest(new { success = false, message = "沒有可匯出的資料" });
 
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var exportUser = currentUser?.DisplayName ?? User.Identity?.Name ?? "";
+
                 string[] headers = { "項次", "提案人", "行政區", "起訖位置", "道路長度", "目前路寬", "計畫路寬", "公有土地", "私有土地", "公私土地", "工程經費", "用地經費", "補償經費", "總經費", "備註" };
 
                 var dataRows = rows.Select((p, idx) => new[]
@@ -941,10 +944,10 @@ namespace RMIS.Controllers
                     p.Remarks ?? ""
                 }).ToList();
 
-                var bytes = BuildWatermarkComparisonWorkbook(headers, dataRows, out var exportTime);
+                var bytes = BuildExportWorkbook(headers, dataRows, exportUser, out var exportTime);
 
                 LogOp("匯出專案列表(Excel)", true, $"已匯出 {rows.Count} 筆專案資料");
-                var fileName = $"專案列表比較_{exportTime:yyyyMMdd}.xlsx";
+                var fileName = $"專案列表_{exportTime:yyyyMMdd}.xlsx";
                 return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
@@ -955,21 +958,24 @@ namespace RMIS.Controllers
         }
 
         /// <summary>
-        /// 匯出任意表格資料 Excel（NPOI 產生，比較用：同時產生「頁尾浮水印」與「儲存格浮水印」兩種版本）
+        /// 匯出任意表格資料 Excel（NPOI 產生，第一行為跨欄合併、靠右對齊的匯出時間/匯出人資訊）
         /// 供歷程匯出等欄位可自選的匯出功能共用
         /// </summary>
         [HttpPost("ExportGenericExcel")]
-        public IActionResult ExportGenericExcel([FromBody] ExportGenericExcelInput input)
+        public async Task<IActionResult> ExportGenericExcel([FromBody] ExportGenericExcelInput input)
         {
             if (input?.Headers == null || input.Headers.Count == 0 || input.Rows == null || input.Rows.Count == 0)
                 return BadRequest(new { success = false, message = "沒有可匯出的資料" });
 
             try
             {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var exportUser = currentUser?.DisplayName ?? User.Identity?.Name ?? "";
+
                 var headers = input.Headers.ToArray();
                 var dataRows = input.Rows.Select(r => r.ToArray()).ToList();
 
-                var bytes = BuildWatermarkComparisonWorkbook(headers, dataRows, out var exportTime);
+                var bytes = BuildExportWorkbook(headers, dataRows, exportUser, out var exportTime);
 
                 LogOp("匯出資料(Excel)", true, $"已匯出 {dataRows.Count} 筆資料");
                 var fileName = $"{(string.IsNullOrWhiteSpace(input.FileLabel) ? "匯出資料" : input.FileLabel)}_{exportTime:yyyyMMdd}.xlsx";
@@ -983,77 +989,99 @@ namespace RMIS.Controllers
         }
 
         /// <summary>
-        /// 用 NPOI 建立含「頁尾浮水印」與「儲存格浮水印」兩個工作表的比較用 Excel
+        /// 用 NPOI 建立 Excel：第一行跨欄合併並靠右對齊顯示「匯出時間/匯出人」，第二行為標題列，其後為資料列
         /// </summary>
-        private static byte[] BuildWatermarkComparisonWorkbook(string[] headers, List<string[]> dataRows, out DateTime exportTime)
+        private static byte[] BuildExportWorkbook(string[] headers, List<string[]> dataRows, string exportUser, out DateTime exportTime)
         {
             exportTime = DateTime.Now;
-            var watermarkText = $"匯出時間：{exportTime:yyyy-MM-dd HH:mm:ss}";
+            var metaText = $"匯出時間:{exportTime:yyyy-MM-dd HH:mm:ss} 匯出人:{exportUser}";
 
-            // 欄寬改用純字元長度估算（而非 AutoSizeColumn），避免依賴 NPOI 用於量測字型的 SkiaSharp
+            // 欄寬改用字元顯示寬度估算（而非 AutoSizeColumn），避免依賴 NPOI 用於量測字型的 SkiaSharp
             // （SkiaSharp 的 Runtime 資產在 NPOI 的 nuspec 裡被標記 exclude，不會自動複製到輸出目錄，
             //  呼叫 AutoSizeColumn 會丟出 FileNotFoundException: 無法載入 SkiaSharp 組件）
+            // 中文等全形字元約佔半形字元的 2 倍寬度，計算時加權，避免中文欄位被估得過窄
             const int maxWidthChars = 40;
             var columnWidthChars = new int[headers.Length];
             for (int i = 0; i < headers.Length; i++)
-                columnWidthChars[i] = headers[i]?.Length ?? 0;
+                columnWidthChars[i] = GetDisplayWidth(headers[i]);
             foreach (var values in dataRows)
             {
                 for (int c = 0; c < values.Length && c < columnWidthChars.Length; c++)
                 {
-                    var len = values[c]?.Length ?? 0;
+                    var len = GetDisplayWidth(values[c]);
                     if (len > columnWidthChars[c])
                         columnWidthChars[c] = len;
                 }
             }
 
-            void FillSheet(NPOI.SS.UserModel.ISheet sheet)
+            using var workbook = new XSSFWorkbook();
+            var sheet = workbook.CreateSheet("Sheet1");
+
+            // 第一行（鎖定、不可編輯）：跨欄合併，靠右對齊的匯出時間/匯出人
+            var metaStyle = workbook.CreateCellStyle();
+            metaStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Right;
+            metaStyle.IsLocked = true;
+            var metaRow = sheet.CreateRow(0);
+            for (int i = 0; i < headers.Length; i++)
+                metaRow.CreateCell(i).CellStyle = metaStyle;
+            metaRow.GetCell(0).SetCellValue(metaText);
+            if (headers.Length > 1)
+                sheet.AddMergedRegion(new NPOI.SS.Util.CellRangeAddress(0, 0, 0, headers.Length - 1));
+
+            // 第二行起（維持可編輯）：標題與資料
+            var unlockedStyle = workbook.CreateCellStyle();
+            unlockedStyle.IsLocked = false;
+
+            var headerRow = sheet.CreateRow(1);
+            for (int i = 0; i < headers.Length; i++)
             {
-                var headerRow = sheet.CreateRow(0);
-                for (int i = 0; i < headers.Length; i++)
-                    headerRow.CreateCell(i).SetCellValue(headers[i]);
-
-                for (int r = 0; r < dataRows.Count; r++)
-                {
-                    var row = sheet.CreateRow(r + 1);
-                    var values = dataRows[r];
-                    for (int c = 0; c < values.Length; c++)
-                        row.CreateCell(c).SetCellValue(values[c] ?? "");
-                }
-
-                for (int i = 0; i < headers.Length; i++)
-                    sheet.SetColumnWidth(i, (Math.Min(columnWidthChars[i], maxWidthChars) + 2) * 256);
+                var cell = headerRow.CreateCell(i);
+                cell.SetCellValue(headers[i]);
+                cell.CellStyle = unlockedStyle;
             }
 
-            using var workbook = new XSSFWorkbook();
+            for (int r = 0; r < dataRows.Count; r++)
+            {
+                var row = sheet.CreateRow(r + 2);
+                var values = dataRows[r];
+                for (int c = 0; c < values.Length; c++)
+                {
+                    var cell = row.CreateCell(c);
+                    cell.SetCellValue(values[c] ?? "");
+                    cell.CellStyle = unlockedStyle;
+                }
+            }
 
-            // 版本一：工作表頁尾浮水印（僅列印/列印預覽時顯示於每頁右下角）
-            var footerSheet = workbook.CreateSheet("頁尾浮水印版");
-            FillSheet(footerSheet);
-            footerSheet.Footer.Right = watermarkText;
+            for (int i = 0; i < headers.Length; i++)
+                sheet.SetColumnWidth(i, (Math.Min(columnWidthChars[i], maxWidthChars) + 2) * 256);
 
-            // 版本二：資料表右下角儲存格浮水印（平常開啟即可見）
-            var cellSheet = workbook.CreateSheet("儲存格浮水印版");
-            FillSheet(cellSheet);
-
-            var watermarkFont = workbook.CreateFont();
-            watermarkFont.IsItalic = true;
-            watermarkFont.Color = NPOI.SS.UserModel.IndexedColors.Grey50Percent.Index;
-            var watermarkStyle = workbook.CreateCellStyle();
-            watermarkStyle.SetFont(watermarkFont);
-            watermarkStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Right;
-
-            int watermarkRowIndex = dataRows.Count + 2; // 資料下方空一行
-            int watermarkColIndex = headers.Length - 1; // 最後一欄，對齊右下角
-            var watermarkRow = cellSheet.CreateRow(watermarkRowIndex);
-            var watermarkCell = watermarkRow.CreateCell(watermarkColIndex);
-            watermarkCell.SetCellValue(watermarkText);
-            watermarkCell.CellStyle = watermarkStyle;
+            // 啟用工作表保護，鎖定的第一行才會真正生效、無法被編輯（不設密碼，其餘儲存格仍可自由編輯）
+            sheet.ProtectSheet("");
 
             using var ms = new MemoryStream();
             workbook.Write(ms, leaveOpen: true);
             return ms.ToArray();
         }
+
+        /// <summary>
+        /// 計算文字的顯示寬度：中文、全形符號等 CJK 字元視為半形字元的 2 倍寬度
+        /// </summary>
+        private static int GetDisplayWidth(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return 0;
+            int width = 0;
+            foreach (var ch in text)
+                width += IsWideChar(ch) ? 2 : 1;
+            return width;
+        }
+
+        private static bool IsWideChar(char c) =>
+            (c >= 0x1100 && c <= 0x115F) ||  // Hangul Jamo
+            (c >= 0x2E80 && c <= 0xA4CF) ||  // CJK 部首、符號、假名、CJK 統一表意文字等
+            (c >= 0xAC00 && c <= 0xD7A3) ||  // Hangul 音節
+            (c >= 0xF900 && c <= 0xFAFF) ||  // CJK 相容表意文字
+            (c >= 0xFF00 && c <= 0xFF60) ||  // 全形字元
+            (c >= 0xFFE0 && c <= 0xFFE6);    // 全形符號
 
         private static void BuildSupplementWord(MemoryStream ms, SupplementWordInput input)
         {

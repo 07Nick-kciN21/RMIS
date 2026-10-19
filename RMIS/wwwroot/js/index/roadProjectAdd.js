@@ -40,6 +40,27 @@ const RoadProjectAdd = {
     // 點圖新增街景照片模式開關
     addingPhotoPoint: false,
 
+    // 備註附件（File 物件），專案新增成功後才上傳
+    remarkFiles: [],
+
+    // 單一附件檔案大小上限（5MB）
+    MAX_REMARK_FILE_SIZE: 5 * 1024 * 1024,
+
+    fileIcons: {
+        'pdf': 'fa-file-pdf-o',
+        'doc': 'fa-file-word-o',
+        'docx': 'fa-file-word-o',
+        'xls': 'fa-file-excel-o',
+        'xlsx': 'fa-file-excel-o',
+        'ppt': 'fa-file-powerpoint-o',
+        'pptx': 'fa-file-powerpoint-o',
+        'jpg': 'fa-file-image-o',
+        'jpeg': 'fa-file-image-o',
+        'png': 'fa-file-image-o',
+        'gif': 'fa-file-image-o',
+        'default': 'fa-file-o'
+    },
+
     /**
      * 初始化新增模組
      */
@@ -160,6 +181,17 @@ const RoadProjectAdd = {
             self.toggleAddPhotoPoint();
         });
 
+        // 備註附件：新增 / 選取 / 移除
+        $(document).on('click', '#btn-add-remark-file', function() {
+            $('#add-remark-file-input').trigger('click');
+        });
+        $(document).on('change', '#add-remark-file-input', function() {
+            self.handleRemarkFileSelect(this);
+        });
+        $(document).on('click', '.add-btn-remove-remark-file', function() {
+            self.removeRemarkFile(parseInt($(this).data('index'), 10));
+        });
+
         // 監聽來自彈出視窗的訊息
         window.addEventListener('message', function(event) {
             if (event.origin !== window.location.origin) return;
@@ -177,9 +209,6 @@ const RoadProjectAdd = {
 
         // 重置表單
         self.resetForm();
-
-        // 產生專案編號
-        self.generateProjectId();
 
         // 開啟頁面
         BoxManager.openRightBoxPage('page-project-add', '新增專案');
@@ -221,21 +250,13 @@ const RoadProjectAdd = {
         this.photoList = [];
         $('#street-photo-list').html('<div class="empty-photo-hint">尚無照片，請點擊「新增一筆」或「從地圖選取」</div>');
 
+        // 重置備註附件
+        this.remarkFiles = [];
+        $('#add-remark-file-input').val('');
+        this.renderRemarkFileList();
+
         // 清除預覽地圖上的圖層
         this.updatePreviewMap();
-    },
-
-    /**
-     * 產生專案編號
-     */
-    generateProjectId: function() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        const projectId = `RP${year}${month}${day}${random}`;
-        $('#add-project-id').val(projectId);
     },
 
     /**
@@ -542,10 +563,7 @@ const RoadProjectAdd = {
             doubleClickZoom: false
         }).setView([24.993, 121.301], 14);
 
-        L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
-            attribution: '© 國土測繪中心',
-            maxZoom: 20
-        }).addTo(this.previewMap);
+        this.initPreviewBasemapCtrl();
 
         this.previewRangeLayer = L.layerGroup().addTo(this.previewMap);
         this.previewPhotoLayer = L.layerGroup().addTo(this.previewMap);
@@ -569,6 +587,159 @@ const RoadProjectAdd = {
                 self.renderPhotoList();
                 self.toggleAddPhotoPoint();
                 self.scrollToSection('#street-photo-list');
+            }
+        });
+    },
+
+    /**
+     * 建立預覽地圖底圖切換控制（參考主地圖 #map-basemapCtrl）：
+     * 基本圖層單選、疊加圖層多選；圖層來源同主地圖（內建圖層 + GetMapSources）
+     */
+    initPreviewBasemapCtrl: function() {
+        const self = this;
+        const googleOpts = { maxZoom: 22, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] };
+        const defaultName = '臺灣通用電子地圖';
+
+        // 基本圖層 (單選)
+        const baseMaps = {
+            [defaultName]: L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
+                attribution: '© 國土測繪中心',
+                maxZoom: 22,
+                maxNativeZoom: 20
+            }),
+            'Open Street地圖': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 22,
+                attribution: '&copy; OpenStreetMap contributors'
+            }),
+            'Google 街景地圖': L.tileLayer('https://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}&hl=zh_TW', googleOpts),
+            'Google 衛星地圖': L.tileLayer('https://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}&hl=zh_TW', googleOpts),
+            'Google 地形圖':   L.tileLayer('https://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}&hl=zh_TW', googleOpts),
+            'Google 混和地圖': L.tileLayer('https://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}&hl=zh_TW', googleOpts)
+        };
+        // 疊加圖層 (多選)
+        const overlayMaps = {};
+
+        let currentBaseLayer = baseMaps[defaultName].addTo(this.previewMap);
+
+        const BasemapCtrl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function() {
+                const div = L.DomUtil.create('div', 'preview-basemap-ctrl');
+                div.innerHTML = `
+                    <div class="preview-basemap-current">
+                        <i class="fa fa-map"></i>
+                        <span class="preview-basemap-name"></span>
+                        <i class="fa fa-caret-down"></i>
+                    </div>
+                    <div class="preview-basemap-select">
+                        <span class="preview-basemap-title">基本圖層</span>
+                        <ul class="preview-baseMapSelector"></ul>
+                        <span class="preview-basemap-title preview-overlay-title">疊加圖層</span>
+                        <ul class="preview-overlayMapSelector"></ul>
+                    </div>`;
+                // 避免點擊/滾動控制項時觸發地圖事件（如點圖新增模式）
+                L.DomEvent.disableClickPropagation(div);
+                L.DomEvent.disableScrollPropagation(div);
+                return div;
+            }
+        });
+        const $ctrl = $(new BasemapCtrl().addTo(this.previewMap).getContainer());
+        $ctrl.find('.preview-basemap-name').text(defaultName);
+
+        const renderSelectors = function() {
+            const $base = $ctrl.find('.preview-baseMapSelector').empty();
+            Object.keys(baseMaps).forEach(name => {
+                $('<li class="preview-basemap-item"></li>')
+                    .text(name).attr('data-name', name)
+                    .toggleClass('selected', baseMaps[name] === currentBaseLayer)
+                    .appendTo($base);
+            });
+
+            const $overlay = $ctrl.find('.preview-overlayMapSelector').empty();
+            const overlayNames = Object.keys(overlayMaps);
+            overlayNames.forEach(name => {
+                $('<li class="preview-basemap-item"></li>')
+                    .text(name).attr('data-name', name)
+                    .toggleClass('selected', self.previewMap.hasLayer(overlayMaps[name]))
+                    .appendTo($overlay);
+            });
+            $ctrl.find('.preview-overlay-title, .preview-overlayMapSelector').toggle(overlayNames.length > 0);
+        };
+        renderSelectors();
+
+        $ctrl.on('click', '.preview-basemap-current', function() {
+            $ctrl.toggleClass('open');
+        });
+
+        // 基本圖層切換
+        $ctrl.on('click', '.preview-baseMapSelector .preview-basemap-item', function() {
+            const name = $(this).attr('data-name');
+            const layer = baseMaps[name];
+            if (!layer || layer === currentBaseLayer) return;
+
+            self.previewMap.removeLayer(currentBaseLayer);
+            currentBaseLayer = layer.addTo(self.previewMap);
+            currentBaseLayer.bringToBack();
+
+            $ctrl.find('.preview-basemap-name').text(name);
+            $(this).addClass('selected').siblings().removeClass('selected');
+            $ctrl.removeClass('open');
+        });
+
+        // 疊加圖層複選
+        $ctrl.on('click', '.preview-overlayMapSelector .preview-basemap-item', function() {
+            const layer = overlayMaps[$(this).attr('data-name')];
+            if (!layer) return;
+
+            if (self.previewMap.hasLayer(layer)) {
+                self.previewMap.removeLayer(layer);
+                $(this).removeClass('selected');
+            } else {
+                layer.addTo(self.previewMap);
+                $(this).addClass('selected');
+            }
+        });
+
+        // 點擊地圖時收合選單
+        this.previewMap.on('click', function() {
+            $ctrl.removeClass('open');
+        });
+
+        // 從 API 取得地圖來源資料（同主地圖）
+        $.ajax({
+            url: '/api/MapAPI/GetMapSources',
+            type: 'POST',
+            success: function(mapSources) {
+                const addSource = function(source, layer) {
+                    const target = source.type === 'basePane' ? baseMaps : overlayMaps;
+                    if (!target[source.name]) target[source.name] = layer;
+                };
+
+                (mapSources.wms || []).forEach(source => {
+                    addSource(source, L.tileLayer.wms(source.url, {
+                        layers: source.sourceId,
+                        format: source.imageFormat || 'image/png',
+                        transparent: true,
+                        opacity: source.type === 'basePane' ? 1 : 0.5,
+                        attribution: source.attribution,
+                        maxZoom: 22
+                    }));
+                });
+
+                (mapSources.wmts || []).forEach(source => {
+                    addSource(source, L.tileLayer(`${source.url}${source.sourceId}/default/EPSG:3857/{z}/{y}/{x}.png`, {
+                        attribution: source.attribution,
+                        opacity: source.type === 'basePane' ? 1 : 0.5,
+                        // 超過 18 級時放大第 18 級圖磚顯示，避免圖層消失
+                        maxZoom: 22,
+                        maxNativeZoom: 18
+                    }));
+                });
+
+                renderSelectors();
+            },
+            error: function(error) {
+                console.error('預覽地圖取得地圖來源失敗:', error);
             }
         });
     },
@@ -956,23 +1127,147 @@ const RoadProjectAdd = {
             }
             return response.json();
         })
-        .then(result => {
+        .then(async result => {
             console.log('新增結果:', result);
             if (result.success) {
-                alert('專案新增成功！');
+                // 專案已建立，再上傳備註附件；附件失敗不影響專案本身，提示至編輯頁補傳
+                let remarkError = null;
+                if (self.remarkFiles.length > 0) {
+                    showLoading('上傳備註附件中...', '#right-box');
+                    try {
+                        await self.uploadRemarkFiles(result.id);
+                    } catch (err) {
+                        console.error('備註附件上傳失敗:', err);
+                        remarkError = err.message || '備註附件上傳失敗';
+                    }
+                }
+
+                if (remarkError) {
+                    alert(`專案新增成功，但備註附件上傳失敗：\n${remarkError}\n\n請至編輯頁面重新上傳附件。`);
+                } else {
+                    alert('專案新增成功！');
+                }
                 self.closeAdd();
-                $(document).trigger('projectAdded', { projectId: result.projectId });
+                $(document).trigger('projectAdded', { projectId: result.id });
             } else {
                 alert(`新增失敗：${result.message}`);
             }
         })
         .catch(error => {
+            // 失敗時不關閉頁面、不重置表單，保留使用者已填寫的資料以便再次新增
             console.error('新增專案失敗:', error);
-            alert(`新增失敗：${error.message || '請稍後再試'}`);
+            if (error.code === 'PROJECT_ID_UNAVAILABLE') {
+                alert(error.message);
+            } else {
+                alert(`新增失敗：${error.message || '請稍後再試'}`);
+            }
         })
         .finally(() => {
             hideLoading('#right-box');
         });
+    },
+
+    /**
+     * 處理備註附件檔案選擇（可複選），暫存於畫面上，專案新增成功後才上傳
+     */
+    handleRemarkFileSelect: function(input) {
+        const files = input.files;
+        if (!files || files.length === 0) return;
+
+        const oversized = [];
+        Array.from(files).forEach(file => {
+            if (file.size > this.MAX_REMARK_FILE_SIZE) {
+                oversized.push(file.name);
+                return;
+            }
+            this.remarkFiles.push(file);
+        });
+
+        if (oversized.length > 0) {
+            alert(`以下檔案超過 5MB 上限，未加入附件：\n${oversized.join('\n')}`);
+        }
+
+        input.value = '';
+        this.renderRemarkFileList();
+    },
+
+    /**
+     * 移除尚未上傳的備註附件
+     */
+    removeRemarkFile: function(index) {
+        this.remarkFiles.splice(index, 1);
+        this.renderRemarkFileList();
+    },
+
+    /**
+     * 渲染備註附件清單
+     */
+    renderRemarkFileList: function() {
+        const self = this;
+        const $list = $('#add-remark-file-list');
+        $list.empty();
+
+        if (this.remarkFiles.length === 0) {
+            $list.html('<div class="empty-file-hint">尚無附件，請點擊「新增附件」</div>');
+            return;
+        }
+
+        this.remarkFiles.forEach(function(file, index) {
+            const parts = file.name.split('.');
+            const ext = parts.length > 1 ? parts.pop().toLowerCase() : 'default';
+            const iconClass = self.fileIcons[ext] || self.fileIcons['default'];
+
+            const $item = $(`
+                <div class="file-list-item">
+                    <div class="file-info">
+                        <i class="fa ${iconClass} file-icon"></i>
+                        <span class="file-name"></span>
+                        <span class="file-size"></span>
+                    </div>
+                    <div class="file-actions">
+                        <button type="button" class="add-btn-remove-remark-file" data-index="${index}" title="移除">
+                            <img src="/svg/remove_0.svg" alt="刪除">
+                        </button>
+                    </div>
+                </div>
+            `);
+            $item.find('.file-name').text(file.name);
+            $item.find('.file-size').text(`(${self.formatFileSize(file.size)})`);
+            $list.append($item);
+        });
+    },
+
+    /**
+     * 上傳備註附件至指定專案（沿用編輯頁的 UploadRemarkFiles API）
+     * @param {number} projectId - 新專案的 Id
+     */
+    uploadRemarkFiles: async function(projectId) {
+        const formData = new FormData();
+        formData.append('projectId', projectId);
+        this.remarkFiles.forEach(file => formData.append('files', file, file.name));
+
+        const response = await fetch('/api/RoadProject/UploadRemarkFiles', {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || '備註附件上傳失敗');
+        }
+
+        const data = await response.json();
+        const failed = (data.results || []).filter(r => !r.success);
+        if (failed.length > 0) {
+            throw new Error(`以下附件上傳失敗：${failed.map(f => f.fileName).join('、')}`);
+        }
+    },
+
+    formatFileSize: function(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
 
     /**

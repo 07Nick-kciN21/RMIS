@@ -1310,9 +1310,21 @@ namespace RMIS.Repositories
                     throw new InvalidOperationException($"找不到行政區「{roadProjectInput.AdminDistrict}」，請確認行政區名稱");
                 var startEndLocation = roadProjectInput.StartPoint + "至" + roadProjectInput.EndPoint;
 
-                // 產生 ProjectId (使用時間戳確保唯一性)
+                // 產生 ProjectId（時間戳），若已存在（如匯入的同編號專案）則重新取時間戳直到可用
                 var now = DateTime.Now;
                 var projectId = $"RP{now:yyyyMMddHHmmss}";
+                const int maxAttempts = 50;
+                var attempts = 1;
+                while (await _mapDBContext.RoadProjects.AnyAsync(rp => rp.ProjectId == projectId))
+                {
+                    if (attempts++ >= maxAttempts)
+                        throw new ProjectIdUnavailableException();
+
+                    // 時間戳精度為秒，稍候再取以免重複產生同一編號
+                    await Task.Delay(200);
+                    now = DateTime.Now;
+                    projectId = $"RP{now:yyyyMMddHHmmss}";
+                }
 
                 var roadProject = new RoadProject
                 {
@@ -1412,9 +1424,9 @@ namespace RMIS.Repositories
                 roadProject.PlannedExpansionId = expansionArea.Id;
                 roadProject.StreetViewId = photoArea.Id;
                 await _mapDBContext.RoadProjects.AddAsync(roadProject);
-                var rowsAffected = await _mapDBContext.SaveChangesAsync();
+                await _mapDBContext.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return rowsAffected;
+                return roadProject.Id; // 回傳新專案 Id（供前端後續上傳備註附件）
             }
             catch (Exception ex)
             {
@@ -1569,16 +1581,7 @@ namespace RMIS.Repositories
                 if (input.ExcelFile != null && input.ExcelFile.Length > 0)
                 {
                     // 1. 解析 Excel
-                    using (var stream = new MemoryStream())
-                    {
-                        await input.ExcelFile.CopyToAsync(stream);
-                        using (var package = new ExcelPackage(stream))
-                        {
-                            var worksheet = package.Workbook.Worksheets[0];
-                            rows = ParseRoadProjectExcel(worksheet, errors);
-                        }
-                    }
-
+                    rows = await ReadRoadProjectExcelAsync(input.ExcelFile, errors);
 
                     if (rows.Count == 0)
                     {
@@ -1588,12 +1591,34 @@ namespace RMIS.Repositories
                         return result;
                     }
 
+                    // 1.1 Excel 內不可有重複的專案編號（否則會建立多筆同編號專案）
+                    var duplicateIds = FindDuplicateProjectIds(rows);
+                    if (duplicateIds.Count > 0)
+                    {
+                        result.Success = false;
+                        result.Message = "Excel 中有重複的專案編號，匯入已中止";
+                        result.Errors = duplicateIds
+                            .Select(d => $"專案編號 {d.ProjectId} 重複出現於第 {string.Join("、", d.RowNumbers)} 列")
+                            .ToList();
+                        return result;
+                    }
+
                     // 2. 區分新增 / 更新
                     var projectIds = rows.Select(r => r.ProjectId).Where(id => !string.IsNullOrEmpty(id)).ToList();
-                    existingIdSet = (await _mapDBContext.RoadProjects
-                        .Where(rp => projectIds.Contains(rp.ProjectId))
-                        .Select(rp => rp.ProjectId)
-                        .ToListAsync()).ToHashSet();
+                    var existingProjects = await GetExistingRoadProjectsAsync(projectIds);
+                    existingIdSet = existingProjects.Select(e => e.ProjectId).ToHashSet();
+
+                    // 2.1 既有專案僅建立者本人可更新（須在清除舊照片目錄之前檢查）
+                    var noPermission = FindNoPermissionProjects(existingProjects, currentUserId);
+                    if (noPermission.Count > 0)
+                    {
+                        result.Success = false;
+                        result.Message = "未具有現存專案更新權限，匯入已中止";
+                        result.Errors = noPermission
+                            .Select(p => $"專案 {p.ProjectId}{(string.IsNullOrEmpty(p.ProjectName) ? "" : $"（{p.ProjectName}）")}: 非本人建立的專案，無法更新")
+                            .ToList();
+                        return result;
+                    }
 
                     // 3. 解壓縮照片 ZIP（如果有）
                     // 更新的專案先清除舊照片目錄，確保解壓後為全新內容
@@ -1706,6 +1731,104 @@ namespace RMIS.Repositories
         }
 
         /// <summary>
+        /// 匯入前檢查：列出 Excel 中已存在於系統的專案編號，以及 Excel 內重複的專案編號
+        /// </summary>
+        public async Task<CheckRoadProjectImportResult> CheckRoadProjectImportAsync(IFormFile excelFile, string? currentUserId)
+        {
+            var result = new CheckRoadProjectImportResult();
+
+            if (excelFile == null || excelFile.Length == 0)
+            {
+                result.Success = false;
+                result.Message = "請上傳道路專案 Excel";
+                return result;
+            }
+
+            var rows = await ReadRoadProjectExcelAsync(excelFile, result.Errors);
+            if (rows.Count == 0)
+            {
+                result.Success = false;
+                result.Message = "道路專案 Excel 中無有效資料";
+                return result;
+            }
+
+            result.TotalCount = rows.Count;
+            result.DuplicateInFile = FindDuplicateProjectIds(rows);
+
+            var projectIds = rows.Select(r => r.ProjectId).Distinct().ToList();
+            var existing = await GetExistingRoadProjectsAsync(projectIds);
+
+            // 依 Excel 中的順序排列，同編號只列一次
+            result.ExistingProjects = existing
+                .GroupBy(e => e.ProjectId)
+                .Select(g => g.First())
+                .OrderBy(e => projectIds.IndexOf(e.ProjectId))
+                .ToList();
+
+            result.NoPermissionProjects = FindNoPermissionProjects(existing, currentUserId)
+                .OrderBy(e => projectIds.IndexOf(e.ProjectId))
+                .ToList();
+
+            return result;
+        }
+
+        /// <summary>
+        /// 查詢系統中已存在的道路專案（含建立者）
+        /// </summary>
+        private async Task<List<ExistingRoadProjectInfo>> GetExistingRoadProjectsAsync(List<string> projectIds)
+        {
+            return await _mapDBContext.RoadProjects
+                .Where(rp => projectIds.Contains(rp.ProjectId))
+                .Select(rp => new ExistingRoadProjectInfo
+                {
+                    ProjectId = rp.ProjectId!,
+                    ProjectName = rp.ProjectName,
+                    CreatedByUserId = rp.CreatedByUserId
+                })
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// 找出建立者非目前使用者的既有專案（同 CheckProjectOwnershipAsync：未記錄建立者的舊資料不攔截）
+        /// </summary>
+        private static List<ExistingRoadProjectInfo> FindNoPermissionProjects(List<ExistingRoadProjectInfo> existing, string? currentUserId)
+        {
+            return existing
+                .Where(e => e.CreatedByUserId != null && e.CreatedByUserId != currentUserId)
+                .GroupBy(e => e.ProjectId)
+                .Select(g => g.First())
+                .ToList();
+        }
+
+        /// <summary>
+        /// 讀取上傳的道路專案 Excel（第一個工作表）
+        /// </summary>
+        private async Task<List<ExcelRoadProjectRow>> ReadRoadProjectExcelAsync(IFormFile excelFile, List<string> errors)
+        {
+            using var stream = new MemoryStream();
+            await excelFile.CopyToAsync(stream);
+            using var package = new ExcelPackage(stream);
+            var worksheet = package.Workbook.Worksheets[0];
+            return ParseRoadProjectExcel(worksheet, errors);
+        }
+
+        /// <summary>
+        /// 找出 Excel 內重複出現的專案編號（含列號）
+        /// </summary>
+        private static List<DuplicateProjectIdInfo> FindDuplicateProjectIds(List<ExcelRoadProjectRow> rows)
+        {
+            return rows
+                .GroupBy(r => r.ProjectId, StringComparer.OrdinalIgnoreCase)
+                .Where(g => g.Count() > 1)
+                .Select(g => new DuplicateProjectIdInfo
+                {
+                    ProjectId = g.Key,
+                    RowNumbers = g.Select(r => r.RowNumber).ToList()
+                })
+                .ToList();
+        }
+
+        /// <summary>
         /// 解析 Excel 工作表
         /// </summary>
         private List<ExcelRoadProjectRow> ParseRoadProjectExcel(ExcelWorksheet worksheet, List<string> errors)
@@ -1724,6 +1847,7 @@ namespace RMIS.Repositories
                     var excelRow = new ExcelRoadProjectRow
                     {
                         ProjectId = projectId,
+                        RowNumber = row,
                         Proposer = worksheet.Cells[row, 2].Text?.Trim() ?? "",
                         AdministrativeDistrict = worksheet.Cells[row, 3].Text?.Trim() ?? "",
                         StartPoint = worksheet.Cells[row, 4].Text?.Trim() ?? "",

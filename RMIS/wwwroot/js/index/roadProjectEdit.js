@@ -1017,7 +1017,7 @@ const RoadProjectEdit = {
                     </div>
                     <div class="file-actions">
                         <button type="button" class="edit-btn-remove-remark-file" data-id="${file.id}" title="刪除">
-                            <i class="fa fa-trash"></i>
+                            <img src="/svg/remove_0.svg" alt="刪除">
                         </button>
                     </div>
                 </div>
@@ -1036,7 +1036,7 @@ const RoadProjectEdit = {
                     </div>
                     <div class="file-actions">
                         <button type="button" class="edit-btn-remove-new-remark-file" data-index="${index}" title="移除">
-                            <i class="fa fa-trash"></i>
+                            <img src="/svg/remove_0.svg" alt="刪除">
                         </button>
                     </div>
                 </div>

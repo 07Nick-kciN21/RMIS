@@ -93,4 +93,12 @@ namespace RMIS.Models.Admin
         public double Latitude { get; set; } // 經度
         public double Longitude { get; set; } // 緯度
     }
+
+    /// <summary>
+    /// 重試多次仍無法產生未使用的專案編號
+    /// </summary>
+    public class ProjectIdUnavailableException : Exception
+    {
+        public ProjectIdUnavailableException() : base("網路錯誤，請稍後再次新增") { }
+    }
 }

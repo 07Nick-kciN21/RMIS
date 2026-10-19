@@ -446,6 +446,30 @@ namespace RMIS.Controllers
             }
         }
 
+        /// <summary>
+        /// 匯入前檢查 Excel 中的專案編號（是否已存在 / 是否重複）
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> CheckRoadProjectImport([FromForm] ImportRoadProjectByExcelInput input)
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
+                }
+
+                var result = await _adminInterface.CheckRoadProjectImportAsync(input.ExcelFile!, currentUser.Id);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                LogOp("匯入道路專案(Excel)檢查", false, ex.Message, ex);
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet]
         public IActionResult DownloadImportTemplate()
         {
@@ -477,18 +501,23 @@ namespace RMIS.Controllers
                     return Unauthorized(new { success = false, message = "請重新登入後再試" });
                 }
 
-                var rowsAffected = await _adminInterface.AddRoadProjectAsync(input, currentUser?.Id);
+                var newId = await _adminInterface.AddRoadProjectAsync(input, currentUser?.Id);
 
-                if (rowsAffected > 0)
+                if (newId > 0)
                 {
-                    LogOp("新增道路專案", true, $"已新增 {rowsAffected} 筆專案資料");
-                    return Ok(new { success = true, message = $"已新增 {rowsAffected} 筆專案資料到資料庫" });
+                    LogOp("新增道路專案", true, $"已新增專案資料 (Id: {newId})");
+                    return Ok(new { success = true, message = "已新增專案資料到資料庫", id = newId });
                 }
                 else
                 {
                     LogOp("新增道路專案", false, "未對資料庫進行任何變更");
                     return BadRequest(new { success = false, message = "未對資料庫進行任何變更" });
                 }
+            }
+            catch (ProjectIdUnavailableException ex)
+            {
+                LogOp("新增道路專案", false, "重試多次仍無法產生未使用的專案編號", ex);
+                return StatusCode(503, new { success = false, code = "PROJECT_ID_UNAVAILABLE", message = ex.Message });
             }
             catch (Exception ex)
             {

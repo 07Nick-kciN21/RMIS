@@ -29,10 +29,6 @@
                     <div class="section-body">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">專案編號</label>
-                                <input type="text" id="add-project-id" name="projectId" class="form-control" placeholder="系統自動產生" readonly>
-                            </div>
-                            <div class="form-group">
                                 <label class="form-label required">提案人</label>
                                 <input type="text" id="add-proposer" name="proposer" class="form-control" required>
                             </div>
@@ -335,7 +331,29 @@
                             <textarea id="add-remarks" name="remarks" class="form-control form-textarea" rows="3" placeholder="請輸入備註內容..."></textarea>
                         </div>
                     </div>
-                </div>               
+                </div>
+
+                @* ===== 2.12 備註附件 ===== *@
+                <div class="add-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fa fa-paperclip"></i> 備註附件
+                        </h3>
+                        <div class="section-header-actions">
+                            <button type="button" id="btn-add-remark-file" class="btn btn-sm btn-outline-primary section-action-btn">
+                                <i class="fa fa-plus"></i> 新增附件
+                            </button>
+                            <input type="file" id="add-remark-file-input" class="hidden" multiple>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="file-size-hint">單一檔案大小上限 5MB，附件於專案新增成功後上傳</div>
+                        <div id="add-remark-file-list" class="file-list">
+                            <div class="empty-file-hint">尚無附件，請點擊「新增附件」</div>
+                        </div>
+                    </div>
+                </div>
+
             </form>
         </div>
 

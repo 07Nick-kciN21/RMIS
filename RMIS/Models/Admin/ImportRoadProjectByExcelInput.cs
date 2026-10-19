@@ -63,6 +63,54 @@ namespace RMIS.Models.Admin
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public bool GeocodedByApi { get; set; } = false;
+
+        /// <summary>
+        /// Excel 中的列號（用於錯誤訊息）
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public int RowNumber { get; set; }
+    }
+
+    /// <summary>
+    /// 匯入前檢查結果（專案編號是否已存在 / Excel 內是否重複）
+    /// </summary>
+    public class CheckRoadProjectImportResult
+    {
+        public bool Success { get; set; } = true;
+        public string Message { get; set; } = "";
+        public int TotalCount { get; set; }
+
+        /// <summary>
+        /// 系統中已存在的專案（匯入時將被更新覆蓋）
+        /// </summary>
+        public List<ExistingRoadProjectInfo> ExistingProjects { get; set; } = new List<ExistingRoadProjectInfo>();
+
+        /// <summary>
+        /// Excel 內重複出現的專案編號
+        /// </summary>
+        public List<DuplicateProjectIdInfo> DuplicateInFile { get; set; } = new List<DuplicateProjectIdInfo>();
+
+        /// <summary>
+        /// 已存在但建立者非目前使用者的專案（無更新權限）
+        /// </summary>
+        public List<ExistingRoadProjectInfo> NoPermissionProjects { get; set; } = new List<ExistingRoadProjectInfo>();
+
+        public List<string> Errors { get; set; } = new List<string>();
+    }
+
+    public class ExistingRoadProjectInfo
+    {
+        public string ProjectId { get; set; } = "";
+        public string? ProjectName { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string? CreatedByUserId { get; set; }
+    }
+
+    public class DuplicateProjectIdInfo
+    {
+        public string ProjectId { get; set; } = "";
+        public List<int> RowNumbers { get; set; } = new List<int>();
     }
 
     /// <summary>

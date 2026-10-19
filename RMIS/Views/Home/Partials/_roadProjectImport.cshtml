@@ -40,7 +40,21 @@
                     </button>
                 </div>
             </div>
-
+            <div class="import-section">
+                <h4 class="section-title">上傳須知</h4>
+                <div class="import-warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <ul class="warning-text">
+                        <li>
+                            <strong>若專案編號（A 欄位）已存在於系統中，匯入時會以 Excel 內容覆蓋舊專案資料（X 欄留空則保留原有拓寬範圍座標）；
+                            若同時上傳照片壓縮檔，該專案原有照片將全部清除，改以壓縮檔內容取代。</strong>
+                        </li>
+                        <li>
+                            <strong>僅能更新本人建立的專案：</strong>若 Excel 中有任一既有專案非本人建立，將顯示「未具有現存專案更新權限」並中止整批匯入。
+                        </li>
+                    </ul>
+                </div>
+            </div>
             @* ══ 欄位說明 ══ *@
             <div class="import-section">
                 <h4 class="section-title">Excel 欄位說明</h4>
@@ -51,7 +65,7 @@
                                 <tr><th>欄位</th><th>名稱</th><th>必填</th><th>說明</th></tr>
                             </thead>
                             <tbody>
-                                <tr><td>A</td><td>專案編號</td><td>是</td><td>唯一識別碼，照片目錄名稱</td></tr>
+                                <tr><td>A</td><td>專案編號</td><td>是</td><td>唯一識別碼，照片目錄名稱，格式：RPYYYYMMDD+6位數流水號，例如: RP20010101000001</td></tr>
                                 <tr><td>B</td><td>提案人</td><td>是</td><td></td></tr>
                                 <tr><td>C</td><td>行政區</td><td>是</td><td>如: 桃園區、中壢區</td></tr>
                                 <tr><td>D</td><td>起點</td><td>否</td><td></td></tr>
@@ -79,8 +93,28 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </div>                
+            </div>
 
+            @* ══ 照片壓縮檔目錄結構說明 ══ *@
+            <div class="import-section">
+                <h4 class="section-title">照片壓縮檔目錄結構說明</h4>
+                <div class="zip-doc-panel">
+                <pre class="zip-tree">照片.zip
+                ├── RP20010101000001/        ← 第一層目錄 = 專案編號（A 欄）
+                │   ├── photo1.jpg           ← 檔名 = 街景照片座標（Y 欄）的 photoName
+                │   └── photo2.jpg
+                └── RP20010101000002/
+                    └── photo1.jpg</pre>
+                    <ul class="zip-doc-rules">
+                        <li>支援 ZIP、RAR、7z 格式。</li>
+                        <li>壓縮檔<strong>第一層</strong>必須直接是各專案編號目錄，請勿再包一層外層資料夾（例如「照片/RP2001.../」會被誤判為專案「照片」）。</li>
+                        <li>放在壓縮檔根目錄的檔案及以「.」開頭的隱藏檔會被略過。</li>
+                        <li>專案目錄下若有子資料夾，其中的照片會一併歸入該專案（僅保留檔名）。</li>
+                        <li>照片檔名需與 Y 欄 photoName <strong>完全相符</strong>（含副檔名、大小寫），找不到對應目錄或照片時整批匯入失敗。</li>
+                        <li>已存在的專案若有上傳壓縮檔，原有照片目錄會先清除後再以壓縮檔內容取代。</li>
+                    </ul>
+                </div>
             </div>
 
             <div class="import-section">

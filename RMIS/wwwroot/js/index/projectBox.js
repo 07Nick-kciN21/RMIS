@@ -30,10 +30,13 @@ const ProjectBox = {
 
     // 儲存全域查詢結果
     filterProject: [],
-    
+
     // 分頁相關設定
     pageSize: 10,
     currentPage: 1,
+
+    // 已勾選的專案 ID（跨頁保留，換頁不會遺失）
+    selectedProjectIds: new Set(),
 
     // 地圖相關
     $indexMap: null,
@@ -69,9 +72,30 @@ const ProjectBox = {
             self.exportProcessData();
         });
 
-        // 全選 checkbox
+        // 全選 checkbox（僅套用在目前頁面顯示的列，並同步記錄進跨頁勾選清單）
         $(document).on('change', '#selectAllProjects', function() {
-            $('.project-row-check').prop('checked', this.checked);
+            const checked = this.checked;
+            $('.project-row-check').each(function() {
+                $(this).prop('checked', checked);
+                if (checked) {
+                    self.selectedProjectIds.add(this.value);
+                } else {
+                    self.selectedProjectIds.delete(this.value);
+                }
+            });
+        });
+
+        // 單列 checkbox：同步跨頁勾選清單，並反映全選框狀態
+        $(document).on('change', '.project-row-check', function() {
+            if (this.checked) {
+                self.selectedProjectIds.add(this.value);
+            } else {
+                self.selectedProjectIds.delete(this.value);
+            }
+
+            const $rowChecks = $('.project-row-check');
+            const allChecked = $rowChecks.length > 0 && $rowChecks.length === $rowChecks.filter(':checked').length;
+            $('#selectAllProjects').prop('checked', allChecked);
         });
 
         // 綁定分頁大小改變事件
@@ -200,6 +224,9 @@ const ProjectBox = {
             self.filterProject = data['roadProjects'] || [];
             $("#projectTotalCount").text(`(總數:${self.filterProject.length})`);
 
+            // 新查詢結果與先前的勾選無關，清空跨頁勾選清單
+            self.selectedProjectIds.clear();
+
             // 重置分頁到第一頁
             self.currentPage = 1;
 
@@ -225,6 +252,7 @@ const ProjectBox = {
 
         if (self.filterProject.length === 0) {
             $tbody.html('<tr><td colspan="6">查無資料</td></tr>');
+            $('#selectAllProjects').prop('checked', false);
             self.updatePagination(0);
             return;
         }
@@ -248,10 +276,11 @@ const ProjectBox = {
             const isUnchecked = item.coordinateChecked === false;
             const isPending  = item.coordinateChecked === null || item.coordinateChecked === undefined;
             const colCount = hasUpdatePermission ? 7 : 6;
+            const isRowChecked = self.selectedProjectIds.has(item.projectId);
             let row = `
                 <tr data-project-index="${startIndex + currentPageData.indexOf(item)}" class="${isUnchecked ? 'coord-unchecked-row' : ''}">
                     <td style="text-align:center;">
-                        <input type="checkbox" class="project-row-check" value="${self.escapeHtml(item.projectId)}">
+                        <input type="checkbox" class="project-row-check" value="${self.escapeHtml(item.projectId)}" ${isRowChecked ? 'checked' : ''}>
                     </td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary btn-locate" data-id="${item.id}">
@@ -288,6 +317,9 @@ const ProjectBox = {
             $tbody.append(row);
         });
 
+        // 依跨頁勾選清單，同步目前頁面的「全選」框狀態
+        $('#selectAllProjects').prop('checked',
+            currentPageData.length > 0 && currentPageData.every(item => self.selectedProjectIds.has(item.projectId)));
 
         // 綁定定位事件
         $('.btn-locate').on('click', function() {
@@ -667,53 +699,64 @@ const ProjectBox = {
     },
 
     /**
-     * 匯出 Excel（使用前端 XLSX 處理）
+     * 匯出 Excel（改為後端 NPOI 產生，第一行跨欄合併並靠右對齊顯示匯出時間/匯出人）
      */
-    exportData: function() {
+    exportData: async function() {
         const self = this;
-        
+
         if (self.filterProject.length === 0) {
             alert('目前沒有可匯出的資料');
             return;
         }
 
-        // 根據 panel 的格式整理資料
-        const data = self.filterProject.map((project, idx) => {
-            return {
-                '項次': idx + 1,
-                '提案人': project['proposer'],
-                '行政區': project['administrativeDistrict'],
-                '起訖位置': project['startEndLocation'],
-                '道路長度': project['roadLength'] + '公尺',
-                '目前路寬': project['currentRoadWidth'] + '公尺',
-                '計畫路寬': project['plannedRoadWidth'] + '公尺',
-                '公有土地': project['publicLand'] + '筆',
-                '私有土地': project['privateLand'] + '筆',
-                '公私土地': project['publicPrivateLand'] + '筆',
-                '工程經費': project['constructionBudget'] / 10000 + '萬',
-                '用地經費': project['landAcquisitionBudget'] / 10000 + '萬',
-                '補償經費': project['compensationBudget'] / 10000 + '萬',
-                '總經費': project['totalBudget'] / 10000 + '萬',
-                '備註': project['remarks']
-            };
-        });
+        const rows = self.filterProject.map(project => ({
+            proposer: project['proposer'],
+            administrativeDistrict: project['administrativeDistrict'],
+            startEndLocation: project['startEndLocation'],
+            roadLength: project['roadLength'],
+            currentRoadWidth: project['currentRoadWidth'],
+            plannedRoadWidth: project['plannedRoadWidth'],
+            publicLand: project['publicLand'],
+            privateLand: project['privateLand'],
+            publicPrivateLand: project['publicPrivateLand'],
+            constructionBudget: project['constructionBudget'],
+            landAcquisitionBudget: project['landAcquisitionBudget'],
+            compensationBudget: project['compensationBudget'],
+            totalBudget: project['totalBudget'],
+            remarks: project['remarks']
+        }));
 
-        // 使用 XLSX 產生 Excel 檔案
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+        try {
+            showLoading('匯出中...');
+            const response = await fetch('/api/RoadProject/ExportProjectExcel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rows)
+            });
+            if (!response.ok) throw new Error('伺服器回傳錯誤');
 
-        // 產生檔名：專案列表_yyyyMMdd.xlsx
-        const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
-        XLSX.writeFile(wb, `專案列表_${today}.xlsx`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            a.download = `專案列表_${today}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('匯出失敗:', err);
+            alert('匯出失敗，請稍後再試');
+        } finally {
+            hideLoading();
+        }
     },
 
     exportProcessData: function() {
         const self = this;
 
-        const selectedIds = $('.project-row-check:checked').map(function() {
-            return $(this).val();
-        }).get();
+        const selectedIds = Array.from(self.selectedProjectIds);
 
         if (selectedIds.length === 0) {
             alert('請先勾選要匯出的專案');
@@ -816,17 +859,37 @@ const ProjectBox = {
                 return;
             }
 
-            const data = records.map((r, idx) => {
-                const row = { '項次': idx + 1 };
-                selectedCols.forEach(col => { row[col.label] = col.getValue(r); });
-                return row;
-            });
+            const headers = ['項次', ...selectedCols.map(col => col.label)];
+            const rows = records.map((r, idx) => [
+                String(idx + 1),
+                ...selectedCols.map(col => String(col.getValue(r) ?? ''))
+            ]);
 
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '最新歷程');
-            const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
-            XLSX.writeFile(wb, `${presetName || '快速套用'}_${today}.xlsx`);
+            try {
+                showLoading('匯出中...');
+                const response = await fetch('/api/RoadProject/ExportGenericExcel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ headers, rows, fileLabel: presetName || '快速套用' })
+                });
+                if (!response.ok) throw new Error('伺服器回傳錯誤');
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                a.download = `${presetName || '快速套用'}_${today}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error('匯出失敗:', err);
+                alert('匯出失敗，請稍後再試');
+            } finally {
+                hideLoading();
+            }
         });
     },
 

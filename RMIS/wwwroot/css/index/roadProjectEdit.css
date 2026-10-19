@@ -724,6 +724,12 @@
     color: #fff;
 }
 
+#page-project-edit .edit-btn-remove-remark-file img,
+#page-project-edit .edit-btn-remove-new-remark-file img {
+    width: 18px;
+    height: 18px;
+}
+
 #page-project-edit .autocomplete-item:hover {
     background-color: #eff6ff;
     color: #2563eb;

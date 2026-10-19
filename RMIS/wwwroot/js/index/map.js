@@ -397,7 +397,10 @@ function createBaseLayers() {
                 const layer = L.tileLayer(`${source.url}${source.sourceId}/default/EPSG:3857/{z}/{y}/{x}.png`, {
                     attribution: source.attribution,
                     opacity: source.type === 'basePane' ? 1 : 0.5,
-                    pane: source.type
+                    pane: source.type,
+                    // 超過 18 級時放大第 18 級圖磚顯示，避免圖層消失
+                    maxZoom: 22,
+                    maxNativeZoom: 18
                 });
                 if (source.type === 'basePane') {
                     baseMaps[source.name] = layer;

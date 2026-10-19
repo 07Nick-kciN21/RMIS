@@ -177,9 +177,9 @@ const RoadProjectImport = {
     },
 
     /**
-     * 提交匯入
+     * 提交匯入：先檢查 Excel 中的專案編號，再執行匯入
      */
-    submitImport: function() {
+    submitImport: async function() {
         const self = this;
 
         if (!self.excelFile) {
@@ -198,37 +198,106 @@ const RoadProjectImport = {
 
         const $submitBtn = $('#btn-submit-project-import');
         const originalText = $submitBtn.text();
-        $submitBtn.text('匯入中...').addClass('btn-loading').prop('disabled', true);
-        showLoading('匯入中...', '#right-box');
+        $submitBtn.addClass('btn-loading').prop('disabled', true);
+        $('#importResultSection').addClass('hidden');
 
-        const formData = new FormData();
-        if (self.excelFile) formData.append('ExcelFile',    self.excelFile);
-        if (self.zipFile)   formData.append('PhotoZipFile', self.zipFile);
+        try {
+            // 1. 匯入前檢查專案編號
+            $submitBtn.text('檢查中...');
+            showLoading('檢查專案編號中...', '#right-box');
+            const proceed = await self.checkProjectIds();
+            hideLoading('#right-box');
+            if (!proceed) return;
 
-        fetch('/Admin/ImportRoadProjectByExcel', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(result => {
+            // 2. 執行匯入
+            $submitBtn.text('匯入中...');
+            showLoading('匯入中...', '#right-box');
+
+            const formData = new FormData();
+            formData.append('ExcelFile', self.excelFile);
+            if (self.zipFile) formData.append('PhotoZipFile', self.zipFile);
+
+            const response = await fetch('/Admin/ImportRoadProjectByExcel', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
             self.showResult(result);
             if (result.success) {
                 $(document).trigger('projectAdded');
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('匯入失敗:', error);
             self.showResult({
                 success: false,
                 message: '匯入發生錯誤: ' + error.message,
                 errors: []
             });
-        })
-        .finally(() => {
+        } finally {
             self.isImporting = false;
             $submitBtn.text(originalText).removeClass('btn-loading').prop('disabled', false);
             hideLoading('#right-box');
+        }
+    },
+
+    /**
+     * 匯入前檢查 Excel 中的專案編號：
+     * - Excel 內有重複編號 → 顯示錯誤並中止
+     * - 既有專案的建立者非本人 → 顯示無更新權限並中止
+     * - 編號已存在於系統 → 詢問是否更新（覆蓋）舊專案
+     * @returns {Promise<boolean>} 是否繼續匯入
+     */
+    checkProjectIds: async function() {
+        const formData = new FormData();
+        formData.append('ExcelFile', this.excelFile);
+
+        const response = await fetch('/Admin/CheckRoadProjectImport', {
+            method: 'POST',
+            body: formData
         });
+        const check = await response.json();
+
+        if (!check.success) {
+            this.showResult({ success: false, message: check.message, errors: check.errors || [] });
+            return false;
+        }
+
+        if (check.duplicateInFile && check.duplicateInFile.length > 0) {
+            this.showResult({
+                success: false,
+                message: 'Excel 中有重複的專案編號，請修正後再匯入',
+                errors: check.duplicateInFile.map(d => `專案編號 ${d.projectId} 重複出現於第 ${d.rowNumbers.join('、')} 列`)
+            });
+            return false;
+        }
+
+        if (check.noPermissionProjects && check.noPermissionProjects.length > 0) {
+            this.showResult({
+                success: false,
+                message: '未具有現存專案更新權限，以下專案非本人建立，無法更新',
+                errors: check.noPermissionProjects.map(p => `專案 ${p.projectId}${p.projectName ? `（${p.projectName}）` : ''}`)
+            });
+            return false;
+        }
+
+        const existing = check.existingProjects || [];
+        if (existing.length > 0) {
+            const maxShow = 15;
+            const lines = existing.slice(0, maxShow)
+                .map(p => `・${p.projectId}${p.projectName ? `（${p.projectName}）` : ''}`);
+            if (existing.length > maxShow) lines.push(`…等共 ${existing.length} 筆`);
+
+            const newCount = check.totalCount - existing.length;
+            let msg = `Excel 共 ${check.totalCount} 筆，其中 ${existing.length} 筆專案編號已存在於系統：\n\n`
+                    + lines.join('\n')
+                    + `\n\n是否以 Excel 內容更新（覆蓋）這些舊專案？`;
+            if (this.zipFile) msg += '\n※ 這些專案原有的照片將被壓縮檔內容取代。';
+            if (newCount > 0) msg += `\n（另有 ${newCount} 筆為新增專案）`;
+
+            return confirm(msg);
+        }
+
+        return true;
     },
 
     /**
