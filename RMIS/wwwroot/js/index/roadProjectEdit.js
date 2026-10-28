@@ -2,6 +2,7 @@ import BoxManager from './box.js';
 import RoadProjectView from './roadProjectView.js';
 import { showLoading, hideLoading } from '../loading.js';
 import { MAX_FILE_MB, MAX_FILE_BYTES, checkUploadSize, readErrorResponse, getErrorMessage } from '../uploadLimit.js';
+import { initPreviewBasemapCtrl } from './previewBasemapCtrl.js';
 
 /**
  * 道路專案編輯模組
@@ -643,10 +644,8 @@ const RoadProjectEdit = {
             doubleClickZoom: false
         }).setView([24.993, 121.301], 14);
 
-        L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
-            attribution: '© 國土測繪中心',
-            maxZoom: 20
-        }).addTo(this.previewMap);
+        // 底圖切換（與新增專案共用）
+        initPreviewBasemapCtrl(this.previewMap);
 
         this.previewRangeLayer = L.layerGroup().addTo(this.previewMap);
         this.previewPhotoLayer = L.layerGroup().addTo(this.previewMap);

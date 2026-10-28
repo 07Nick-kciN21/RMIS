@@ -1,0 +1,72 @@
+/* 新增 / 編輯專案預覽地圖的底圖切換控制（樣式參考主地圖 #map-basemapCtrl / .footerSelect）*/
+.preview-basemap-ctrl {
+    position: relative;
+    width: 220px;
+    font-size: 13px;
+    color: #43413d;
+}
+
+.preview-basemap-current {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background-color: #e4b867;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    user-select: none;
+}
+
+.preview-basemap-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preview-basemap-select {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    width: 100%;
+    padding: 10px;
+    padding-bottom: 0;
+    background-color: #e4b867;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.preview-basemap-ctrl.open .preview-basemap-select {
+    display: block;
+}
+
+.preview-basemap-title {
+    font-weight: bold;
+    color: white;
+}
+
+.preview-basemap-select > ul {
+    margin: 4px 0 10px;
+    padding-left: 0;
+    overflow-y: auto;
+    max-height: 135px;
+    background-color: #f8f8f8;
+}
+
+.preview-basemap-item {
+    list-style-type: none;
+    padding: 3px 8px;
+    cursor: pointer;
+}
+
+.preview-basemap-item:hover {
+    background-color: #e4b867;
+    border-radius: 5px;
+}
+
+.preview-basemap-item.selected {
+    font-weight: bold;
+    background-color: #f3dcae;
+}
