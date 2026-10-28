@@ -11,6 +11,10 @@ namespace RMIS.Repositories
         public Task<string> UpdateAllProcessRecordAsync(RoadProjectProcess process);
         public Task<(string result, string? ProjectName, string? RecordTitle)> DeleteAllProcessRecordAsync(int id);
         public Task<string> AddProcessFileAsync(RoadProjectProcessFile file);
+        public Task<(string result, string processId)> AddProcessRecordWithFilesAsync(
+            RoadProjectProcess process, List<(string FileName, byte[] Content)> files, string uploadUser);
+        public Task<(string result, string processId)> UpdateProcessRecordWithFilesAsync(
+            RoadProjectProcess process, List<(string FileName, byte[] Content)> files, string uploadUser);
         public Task<List<RoadProjectProcessFile>> GetProcessFilesByProcessIdAsync(string processId);
         public Task<RoadProjectProcessFile?> GetProcessFileByIdAsync(int fileId);
         public Task<string> GetProcessFilePathAsync(string processId, string fileName);

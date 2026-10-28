@@ -61,24 +61,7 @@ namespace RMIS.Repositories
                     if (process == null)
                         return ("錯誤：資料為空。", string.Empty);
 
-                    process.Id = 0;
-                    process.CreatedAt = DateTime.Now;
-                    process.ProcessId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
-
-                    var project = await _mapDBContext.RoadProjects
-                        .Where(p => p.ProjectId == process.ProjectId)
-                        .Select(p => new { p.ProjectName, p.StartEndLocation })
-                        .FirstOrDefaultAsync();
-                    process.ProjectName = project?.ProjectName ?? project?.StartEndLocation;
-
-                    if (process.OrderIndex <= 0)
-                    {
-                        var maxOrder = await _mapDBContext.RoadProjectProcesses
-                            .Where(p => p.ProjectId == process.ProjectId)
-                            .Select(p => (int?)p.OrderIndex)
-                            .MaxAsync() ?? 0;
-                        process.OrderIndex = maxOrder + 1;
-                    }
+                    await PrepareNewProcessAsync(process);
 
                     _mapDBContext.RoadProjectProcesses.Add(process);
                     await TouchProjectUpdateTimeAsync(process.ProjectId);
@@ -97,6 +80,205 @@ namespace RMIS.Repositories
                     return ($"伺服器發生非預期錯誤：{ex.Message}", string.Empty);
                 }
             });
+        }
+
+        /// <summary>
+        /// 新歷程記錄的共用初始化：ProcessId、建立時間、專案名稱（以專案資料為準）、項次
+        /// </summary>
+        private async Task PrepareNewProcessAsync(RoadProjectProcess process)
+        {
+            process.Id = 0;
+            process.CreatedAt = DateTime.Now;
+            process.ProcessId = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+
+            var project = await _mapDBContext.RoadProjects
+                .Where(p => p.ProjectId == process.ProjectId)
+                .Select(p => new { p.ProjectName, p.StartEndLocation })
+                .FirstOrDefaultAsync();
+            process.ProjectName = project?.ProjectName ?? project?.StartEndLocation;
+
+            if (process.OrderIndex <= 0)
+            {
+                var maxOrder = await _mapDBContext.RoadProjectProcesses
+                    .Where(p => p.ProjectId == process.ProjectId)
+                    .Select(p => (int?)p.OrderIndex)
+                    .MaxAsync() ?? 0;
+                process.OrderIndex = maxOrder + 1;
+            }
+        }
+
+        /// <summary>
+        /// 在同一個交易中建立歷程記錄、編輯紀錄與佐證檔案；任一步驟失敗即全部回滾並刪除已寫入的實體檔案
+        /// </summary>
+        public async Task<(string result, string processId)> AddProcessRecordWithFilesAsync(
+            RoadProjectProcess process, List<(string FileName, byte[] Content)> files, string uploadUser)
+        {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+                var written = new WrittenProcessFiles();
+
+                try
+                {
+                    await PrepareNewProcessAsync(process);
+
+                    _mapDBContext.RoadProjectProcesses.Add(process);
+                    _mapDBContext.ProcessEditLogs.Add(new ProcessEditLog
+                    {
+                        ProcessId = process.ProcessId,
+                        RecordTime = DateTime.Now,
+                        OperationType = "建立"
+                    });
+                    await TouchProjectUpdateTimeAsync(process.ProjectId);
+
+                    await WriteProcessFilesAsync(process.ProcessId, files, uploadUser, written);
+
+                    await _mapDBContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return ("success", process.ProcessId);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _mapDBContext.ChangeTracker.Clear();
+                    written.Cleanup();
+                    return (DescribeSaveError(ex), string.Empty);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 在同一個交易中更新歷程記錄、寫入編輯紀錄並新增佐證檔案；任一步驟失敗即全部回滾並刪除本次寫入的實體檔案
+        /// </summary>
+        public async Task<(string result, string processId)> UpdateProcessRecordWithFilesAsync(
+            RoadProjectProcess process, List<(string FileName, byte[] Content)> files, string uploadUser)
+        {
+            var strategy = _mapDBContext.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _mapDBContext.Database.BeginTransactionAsync();
+                var written = new WrittenProcessFiles();
+
+                try
+                {
+                    var existing = await _mapDBContext.RoadProjectProcesses.FindAsync(process.Id);
+                    if (existing == null) return ("錯誤：找不到該記錄。", string.Empty);
+
+                    await ApplyProcessUpdateAsync(existing, process);
+                    _mapDBContext.ProcessEditLogs.Add(new ProcessEditLog
+                    {
+                        ProcessId = existing.ProcessId,
+                        RecordTime = DateTime.Now,
+                        OperationType = "修改"
+                    });
+                    await TouchProjectUpdateTimeAsync(existing.ProjectId);
+
+                    await WriteProcessFilesAsync(existing.ProcessId, files, uploadUser, written);
+
+                    await _mapDBContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return ("success", existing.ProcessId);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _mapDBContext.ChangeTracker.Clear();
+                    written.Cleanup();
+                    return (DescribeSaveError(ex), string.Empty);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 記錄本次交易寫入的實體檔案，以便失敗時回滾
+        /// </summary>
+        private sealed class WrittenProcessFiles
+        {
+            public List<string> Paths { get; } = new();
+            public string? CreatedFolder { get; set; }
+
+            public void Cleanup()
+            {
+                foreach (var path in Paths)
+                {
+                    try { if (File.Exists(path)) File.Delete(path); } catch { /* 盡力清除 */ }
+                }
+                try
+                {
+                    if (CreatedFolder != null && Directory.Exists(CreatedFolder)
+                        && !Directory.EnumerateFileSystemEntries(CreatedFolder).Any())
+                    {
+                        Directory.Delete(CreatedFolder);
+                    }
+                }
+                catch { /* 盡力清除 */ }
+            }
+        }
+
+        /// <summary>
+        /// 寫入佐證檔案至 {ProcessFile}/{ProcessId}/ 並加入 RoadProjectProcessFiles（尚未 SaveChanges）
+        /// </summary>
+        private async Task WriteProcessFilesAsync(string processId, List<(string FileName, byte[] Content)> files,
+            string uploadUser, WrittenProcessFiles written)
+        {
+            if (files.Count == 0) return;
+
+            var processFolder = await GetProcessFolderAsync(processId);
+            if (!Directory.Exists(processFolder))
+            {
+                Directory.CreateDirectory(processFolder);
+                written.CreatedFolder = processFolder;
+            }
+
+            foreach (var (fileName, content) in files)
+            {
+                var safeName = SanitizeFileName(fileName);
+                var filePath = Path.Combine(processFolder, safeName);
+                if (File.Exists(filePath))
+                {
+                    var timestamp = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+                    safeName = $"{Path.GetFileNameWithoutExtension(safeName)}_{timestamp}{Path.GetExtension(safeName)}";
+                    filePath = Path.Combine(processFolder, safeName);
+                }
+
+                await File.WriteAllBytesAsync(filePath, content);
+                written.Paths.Add(filePath);
+
+                _mapDBContext.RoadProjectProcessFiles.Add(new RoadProjectProcessFile
+                {
+                    ProcessId = processId,
+                    FileName = safeName,
+                    FileType = Path.GetExtension(safeName).TrimStart('.').ToLower(),
+                    Base64String = "",
+                    FileSize = FormatFileSize(content.LongLength),
+                    UploadUser = uploadUser
+                });
+            }
+        }
+
+        private static string DescribeSaveError(Exception ex) => ex is DbUpdateException dbEx
+            ? $"資料庫儲存失敗：{dbEx.InnerException?.Message ?? dbEx.Message}"
+            : $"伺服器發生非預期錯誤：{ex.Message}";
+
+        /// <summary>
+        /// 將 Windows 檔名不允許的字元（如 / \ : * ? " &lt; &gt; |）替換為底線，並只保留純檔名
+        /// </summary>
+        private static string SanitizeFileName(string fileName)
+        {
+            var invalid = Path.GetInvalidFileNameChars();
+            var cleaned = new string(fileName.Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();
+            cleaned = Path.GetFileName(cleaned);
+            return string.IsNullOrWhiteSpace(cleaned) ? "file" : cleaned;
+        }
+
+        // 與 RoadProjectController.FormatFileSize 相同格式
+        private static string FormatFileSize(long bytes)
+        {
+            if (bytes == 0) return "0 Bytes";
+            string[] sizes = { "Bytes", "KB", "MB", "GB" };
+            int i = (int)Math.Floor(Math.Log(bytes) / Math.Log(1024));
+            return Math.Round(bytes / Math.Pow(1024, i), 2) + " " + sizes[i];
         }
 
         public async Task<string> AddProcessFileAsync(RoadProjectProcessFile file)
@@ -125,6 +307,8 @@ namespace RMIS.Repositories
 
                 // 將 Base64 解碼並儲存為實體檔案
                 var fileBytes = Convert.FromBase64String(file.Base64String);
+                // 只保留純檔名並替換非法字元，避免路徑跳脫或寫檔失敗
+                file.FileName = SanitizeFileName(file.FileName);
                 var filePath = Path.Combine(processFolder, file.FileName);
 
                 // 如果檔案已存在，加上時間戳避免覆蓋
@@ -283,6 +467,8 @@ namespace RMIS.Repositories
                 }
 
                 var fileBytes = Convert.FromBase64String(file.Base64String);
+                // 只保留純檔名並替換非法字元，避免路徑跳脫或寫檔失敗
+                file.FileName = SanitizeFileName(file.FileName);
                 var filePath = Path.Combine(remarkFolder, file.FileName);
 
                 // 如果檔案已存在，加上時間戳避免覆蓋
@@ -406,6 +592,46 @@ namespace RMIS.Repositories
             }); // end strategy
         }
 
+        /// <summary>
+        /// 將編輯內容套用到既有歷程記錄（專案名稱以專案資料為準）
+        /// </summary>
+        private async Task ApplyProcessUpdateAsync(RoadProjectProcess existing, RoadProjectProcess process)
+        {
+            var project = await _mapDBContext.RoadProjects
+                .Where(p => p.ProjectId == existing.ProjectId)
+                .Select(p => new { p.ProjectName, p.StartEndLocation })
+                .FirstOrDefaultAsync();
+
+            existing.District = process.District;
+            existing.RecordType = process.RecordType;
+            existing.RecordTitle = process.RecordTitle;
+            existing.ProjectName = project?.ProjectName ?? project?.StartEndLocation;
+            existing.ExecutionUnit = process.ExecutionUnit;
+            existing.ConstructionUnit = process.ConstructionUnit;
+            existing.Category = process.Category;
+            existing.PublicHearing = process.PublicHearing;
+            existing.MarketPriceReview = process.MarketPriceReview;
+            existing.NegotiatedPurchaseMeeting = process.NegotiatedPurchaseMeeting;
+            existing.ExpropriationPlanPreReview = process.ExpropriationPlanPreReview;
+            existing.ExpropriationPlanSubmission = process.ExpropriationPlanSubmission;
+            existing.ExpropriationApproval = process.ExpropriationApproval;
+            existing.BudgetFiscalYearApprovedAmount = process.BudgetFiscalYearApprovedAmount;
+            existing.ContractType = process.ContractType;
+            existing.ConstructionPeriod = process.ConstructionPeriod;
+            existing.AnnouncementCommencementDate = process.AnnouncementCommencementDate;
+            existing.AwardCompletionDate = process.AwardCompletionDate;
+            existing.DesignDispatch = process.DesignDispatch;
+            existing.BasicDesignApproval = process.BasicDesignApproval;
+            existing.DetailedDesignApproval = process.DetailedDesignApproval;
+            existing.ConstructionExecution = process.ConstructionExecution;
+            existing.PreviousMeetingStatus = process.PreviousMeetingStatus;
+            existing.PreviousMeetingResolution = process.PreviousMeetingResolution;
+            existing.CurrentStatus = process.CurrentStatus;
+            existing.CurrentMeetingResolution = process.CurrentMeetingResolution;
+            existing.LandAcquisitionBudget = process.LandAcquisitionBudget;
+            existing.ConstructionBudget = process.ConstructionBudget;
+        }
+
         public async Task<string> UpdateAllProcessRecordAsync(RoadProjectProcess process)
         {
             try
@@ -413,39 +639,7 @@ namespace RMIS.Repositories
                 var existing = await _mapDBContext.RoadProjectProcesses.FindAsync(process.Id);
                 if (existing == null) return "錯誤：找不到該記錄。";
 
-                var project = await _mapDBContext.RoadProjects
-                    .Where(p => p.ProjectId == existing.ProjectId)
-                    .Select(p => new { p.ProjectName, p.StartEndLocation })
-                    .FirstOrDefaultAsync();
-
-                existing.District = process.District;
-                existing.RecordType = process.RecordType;
-                existing.RecordTitle = process.RecordTitle;
-                existing.ProjectName = project?.ProjectName ?? project?.StartEndLocation;
-                existing.ExecutionUnit = process.ExecutionUnit;
-                existing.ConstructionUnit = process.ConstructionUnit;
-                existing.Category = process.Category;
-                existing.PublicHearing = process.PublicHearing;
-                existing.MarketPriceReview = process.MarketPriceReview;
-                existing.NegotiatedPurchaseMeeting = process.NegotiatedPurchaseMeeting;
-                existing.ExpropriationPlanPreReview = process.ExpropriationPlanPreReview;
-                existing.ExpropriationPlanSubmission = process.ExpropriationPlanSubmission;
-                existing.ExpropriationApproval = process.ExpropriationApproval;
-                existing.BudgetFiscalYearApprovedAmount = process.BudgetFiscalYearApprovedAmount;
-                existing.ContractType = process.ContractType;
-                existing.ConstructionPeriod = process.ConstructionPeriod;
-                existing.AnnouncementCommencementDate = process.AnnouncementCommencementDate;
-                existing.AwardCompletionDate = process.AwardCompletionDate;
-                existing.DesignDispatch = process.DesignDispatch;
-                existing.BasicDesignApproval = process.BasicDesignApproval;
-                existing.DetailedDesignApproval = process.DetailedDesignApproval;
-                existing.ConstructionExecution = process.ConstructionExecution;
-                existing.PreviousMeetingStatus = process.PreviousMeetingStatus;
-                existing.PreviousMeetingResolution = process.PreviousMeetingResolution;
-                existing.CurrentStatus = process.CurrentStatus;
-                existing.CurrentMeetingResolution = process.CurrentMeetingResolution;
-                existing.LandAcquisitionBudget = process.LandAcquisitionBudget;
-                existing.ConstructionBudget = process.ConstructionBudget;
+                await ApplyProcessUpdateAsync(existing, process);
 
                 await TouchProjectUpdateTimeAsync(existing.ProjectId);
                 await _mapDBContext.SaveChangesAsync();

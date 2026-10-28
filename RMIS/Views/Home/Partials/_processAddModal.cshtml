@@ -1,3 +1,8 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Config
+@{
+    var maxUploadMB = Config["UploadLimits:MaxRequestBodyMB"] ?? "100";
+    var maxFileMB = Config["UploadLimits:MaxFileMB"] ?? "20";
+}
 <link rel="stylesheet" href="~/css/index/processAddModal.css" />
 
 @* ===== 總階段新增記錄 Modal ===== *@
@@ -299,10 +304,11 @@
                         <div class="form-group col-12">
                             <label for="sa-files">佐證文件</label>
                             <div class="file-upload-area" id="sa-file-upload">
-                                <input type="file" id="sa-files" name="files" multiple class="file-input">
+                                <input type="file" id="sa-files" name="files" multiple class="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip">
                                 <div class="file-upload-hint">
                                     <p>點擊或拖曳檔案至此處上傳</p>
                                     <span>支援 PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、JPG、PNG、ZIP</span>
+                                    <span class="file-upload-limit">單一檔案大小上限 @(maxFileMB) MB</span>
                                 </div>
                             </div>
                             <div class="file-list" id="sa-file-list"></div>

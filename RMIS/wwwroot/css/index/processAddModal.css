@@ -342,6 +342,12 @@
     color: #94a3b8;
 }
 
+#all-process-add-modal .file-upload-hint .file-upload-limit {
+    display: block;
+    margin-top: 4px;
+    color: #d97706;
+}
+
 /* 檔案列表 */
 #process-add-modal .file-list,
 #all-process-add-modal .file-list {

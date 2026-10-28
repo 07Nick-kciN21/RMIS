@@ -1,5 +1,6 @@
 import BoxManager from './box.js';
 import { showLoading, hideLoading } from '../loading.js';
+import { MAX_SUPPLEMENT_IMAGE_MB, MAX_SUPPLEMENT_IMAGE_BYTES, MAX_SUPPLEMENT_SOURCE_MB, MAX_SUPPLEMENT_SOURCE_BYTES,checkUploadSize, checkFileSizes, getErrorMessage } from '../uploadLimit.js';
 
 /**
  * 專案歷程詳情業務邏輯模組
@@ -376,67 +377,60 @@ const ProcessBox = {
         const fileInput = document.getElementById('sa-files');
         const filesArray = fileInput?.files ? Array.from(fileInput.files) : [];
 
+        const allowedExt = /\.(pdf|docx?|xlsx?|pptx?|jpe?g|png|zip)$/i;
+        const invalidFiles = filesArray.filter(f => !allowedExt.test(f.name)).map(f => f.name);
+        if (invalidFiles.length) {
+            alert(`以下檔案格式不支援：${invalidFiles.join('、')}\n僅支援 PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、JPG、PNG、ZIP`);
+            return;
+        }
+
+        const sizeError = checkFileSizes(filesArray) || checkUploadSize(filesArray);
+        if (sizeError) {
+            alert(sizeError);
+            return;
+        }
+
         if (!confirm(isEdit ? '確定要儲存修改嗎？' : '確定要新增此記錄嗎？')) return;
 
-        self.closeAllProcessAddModal();
+        // 記錄與附件於後端同一交易儲存：任一步驟失敗即全部回滾，不會留下缺附件的記錄。
+        // 成功才關閉視窗；失敗時保留表單內容與已選檔案，可直接重試。
+        const $submitBtn = $('#btn-submit-all-process');
+        if ($submitBtn.prop('disabled')) return;
+        $submitBtn.prop('disabled', true);
         showLoading(isEdit ? '更新中...' : '新增中...');
 
-        const apiUrl    = isEdit ? '/api/RoadProject/UpdateAllProcessRecord' : '/api/RoadProject/AddAllProcessRecord';
-        const apiMethod = isEdit ? 'PUT' : 'POST';
+        const payload = new FormData();
+        payload.append('record', JSON.stringify(data));
+        filesArray.forEach(file => payload.append('files', file, file.name));
 
-        fetch(apiUrl, {
-            method: apiMethod,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+        fetch('/api/RoadProject/SaveProcessRecordWithFiles', {
+            method: 'POST',
+            body: payload
         })
-        .then(res => res.json())
+        .then(async res => res.ok
+            ? res.json()
+            : { success: false, message: await getErrorMessage(res) })
         .then(result => {
-            if (result.success) {
-                const processId = result.processId || (isEdit ? self.currentDetailRecord?.processId : null);
-                const uploadDone = (filesArray.length > 0 && processId)
-                    ? self.uploadProcessFiles(processId, filesArray)
-                    : Promise.resolve();
-
-                uploadDone
-                    .catch(err => console.error('檔案上傳失敗:', err))
-                    .finally(() => {
-                        alert(isEdit ? '記錄更新成功！' : '記錄新增成功！');
-                        self._editingRecordId = null;
-                        self.allProcessData = null;
-                        BoxManager.openRightBoxPage('page-process', '專案歷程');
-                        self.fetchAllProcessData(self.projectId);
-                        hideLoading();
-                    });
-            } else {
-                alert(`${isEdit ? '更新' : '新增'}失敗: ${result.message}`);
-                hideLoading();
+            if (!result.success) {
+                alert(`${isEdit ? '更新' : '新增'}失敗：${result.message || '請稍後再試'}`);
+                return;
             }
+
+            self.closeAllProcessAddModal();
+            alert(isEdit ? '記錄更新成功！' : '記錄新增成功！');
+            self._editingRecordId = null;
+            self.allProcessData = null;
+            BoxManager.openRightBoxPage('page-process', '專案歷程');
+            self.fetchAllProcessData(self.projectId);
         })
         .catch(err => {
             console.error(`${isEdit ? '更新' : '新增'}失敗:`, err);
             alert(`${isEdit ? '更新' : '新增'}記錄失敗，請稍後再試`);
+        })
+        .finally(() => {
+            $submitBtn.prop('disabled', false);
             hideLoading();
         });
-    },
-
-    uploadProcessFiles: function(processId, files) {
-        const uploadPromises = Array.from(files).map(file => {
-            const formData = new FormData();
-            formData.append('processId', processId);
-            formData.append('file', file);
-
-            return fetch('/api/RoadProject/UploadProcessFile', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(result => {
-                console.log(`檔案 ${file.name} 上傳結果:`, result);
-                return result;
-            });
-        });
-
-        return Promise.all(uploadPromises);
     },
 
     formatDateField: function(type, dateValue) {
@@ -935,13 +929,14 @@ const ProcessBox = {
 
     exportProcessData: function() {
         const self = this;
-        if (!self.allProcessData || self.allProcessData.length === 0) {
-            alert('尚無歷程記錄可匯出');
+        if (!self.projectId) {
+            alert('請先選擇專案');
             return;
         }
 
+        // 沒有歷程（或只有局長補充格式記錄）時仍可匯出：專案層級欄位照常帶入，歷程相關欄位留空
         const raw = self.currentProject?._raw || {};
-        const last = [...self.allProcessData].reverse().find(r => r.recordType !== '局長補充格式') || {};
+        const last = [...(self.allProcessData || [])].reverse().find(r => r.recordType !== '局長補充格式') || {};
 
         const projectName = last.projectName || self.currentProject?.name || '';
         const executionUnit = last.executionUnit || '';
@@ -1021,6 +1016,7 @@ const ProcessBox = {
                                 color:#94a3b8;text-align:center;gap:6px;min-height:110px;">
                                 <span style="font-size:28px;line-height:1;">+</span>
                                 <span>點擊上傳圖片</span>
+                                <span style="font-size:11px;color:#d97706;">原圖上限 ${MAX_SUPPLEMENT_SOURCE_MB} MB，將自動壓縮（長邊 2000 px 內，壓縮後上限 ${MAX_SUPPLEMENT_IMAGE_MB} MB）</span>
                                 <input type="file" id="sep-img-input" accept="image/*" style="display:none;">
                             </label>
                             <img id="sep-img-thumb" style="display:none;width:100%;border-radius:6px;border:1px solid #e2e8f0;object-fit:contain;max-height:140px;">
@@ -1070,17 +1066,35 @@ const ProcessBox = {
 
         let imageDataUrl = null;
 
-        modal.on('change', '#sep-img-input', function() {
-            const file = this.files[0];
+        modal.on('change', '#sep-img-input', async function() {
+            const input = this;
+            const file = input.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                imageDataUrl = e.target.result;
-                $('#sep-img-thumb').attr('src', imageDataUrl).show();
-                $('#sep-clear-img').show();
-                $('#sep-preview-img-zone').html(`<img src="${imageDataUrl}" style="max-width:100%;max-height:220px;object-fit:contain;">`);
-            };
-            reader.readAsDataURL(file);
+            if (file.size > MAX_SUPPLEMENT_SOURCE_BYTES) {
+                alert(`原始圖片超過大小上限 ${MAX_SUPPLEMENT_SOURCE_MB} MB（${file.name}，約 ${(file.size / 1024 / 1024).toFixed(1)} MB），請縮小圖片後再試`);
+                input.value = '';
+                return;
+            }
+
+            let dataUrl;
+            try {
+                dataUrl = await self.toWordCompatibleImage(file);
+            } catch (err) {
+                alert(err.message);
+                input.value = '';
+                return;
+            }
+            // data URL 的 Base64 長度 × 3/4 ≈ 實際圖片位元組數（後端以解碼後大小檢查）
+            const imageBytes = Math.floor((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4);
+            if (imageBytes > MAX_SUPPLEMENT_IMAGE_BYTES) {
+                alert(`附圖壓縮後仍超過大小上限 ${MAX_SUPPLEMENT_IMAGE_MB} MB（約 ${(imageBytes / 1024 / 1024).toFixed(1)} MB），請縮小圖片後再試`);
+                input.value = '';
+                return;
+            }
+            imageDataUrl = dataUrl;
+            $('#sep-img-thumb').attr('src', imageDataUrl).show();
+            $('#sep-clear-img').show();
+            $('#sep-preview-img-zone').html(`<img src="${imageDataUrl}" style="max-width:100%;max-height:220px;object-fit:contain;">`);
         });
 
         modal.on('click', '#sep-clear-img', function() {
@@ -1100,8 +1114,6 @@ const ProcessBox = {
         modal.on('click', function(e) { if (e.target === this) closeModal(); });
 
         modal.on('click', '#sep-confirm', async () => {
-            closeModal();
-
             const payload = {
                 projectId: self.projectId,
                 projectName,
@@ -1124,6 +1136,19 @@ const ProcessBox = {
                 imageBase64: imageDataUrl || null
             };
 
+            // 後端在同一交易中產生 Word、建立「局長補充格式」歷程並存入佐證文件，全部成功才回傳 Word；
+            // 失敗時不會留下任何記錄，視窗保留以便直接重試
+            const $confirm = $('#sep-confirm');
+            if ($confirm.prop('disabled')) return;
+
+            // 附圖以 Base64 放在 JSON 內送出，字串長度即約略的請求大小
+            const sizeError = checkUploadSize([], imageDataUrl ? imageDataUrl.length : 0);
+            if (sizeError) {
+                alert(sizeError);
+                return;
+            }
+            $confirm.prop('disabled', true).text('匯出中...');
+
             try {
                 showLoading();
                 const response = await fetch('/api/RoadProject/ExportSupplementWord', {
@@ -1131,64 +1156,106 @@ const ProcessBox = {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!response.ok) throw new Error('伺服器回傳錯誤');
+                if (!response.ok) {
+                    throw new Error(await getErrorMessage(response, '伺服器回傳錯誤'));
+                }
+
                 const blob = await response.blob();
+                const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                const fileName = self.getDownloadFileName(response) || `局長補充資料_${projectName}_${today}.docx`;
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
-                a.download = `局長補充資料_${projectName}_${today}.docx`;
+                a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
 
-                // 儲存匯出記錄至專案歷程
-                const fileName = `局長補充資料_${projectName}_${today}.docx`;
-                const recordRes = await fetch('/api/RoadProject/AddAllProcessRecord', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ProjectId: self.projectId,
-                        RecordType: '局長補充格式',
-                        RecordTitle: fileName.replace('.docx', ''),
-                        ProjectName: projectName,
-                        ExecutionUnit: executionUnit,
-                        CurrentStatus: currentStatus,
-                        CreatedAt: new Date().toISOString()
-                    })
-                });
-                const recordResult = await recordRes.json();
-
-                // 將 Word 檔上傳為佐證文件
-                if (recordResult.success && recordResult.processId) {
-                    const wordFile = new File([blob], fileName, {
-                        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                    });
-                    const formData = new FormData();
-                    formData.append('processId', recordResult.processId);
-                    formData.append('file', wordFile);
-                    await fetch('/api/RoadProject/UploadProcessFile', { method: 'POST', body: formData });
-
-                    // 一併上傳開瓶計畫附圖
-                    if (imageDataUrl) {
-                        const mimeType = imageDataUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
-                        const ext = mimeType === 'image/png' ? 'png' : 'jpg';
-                        const imgBytes = Uint8Array.from(atob(imageDataUrl.split(',')[1]), c => c.charCodeAt(0));
-                        const imgFile = new File([imgBytes], `開瓶計畫附圖_${projectName}_${today}.${ext}`, { type: mimeType });
-                        const imgFormData = new FormData();
-                        imgFormData.append('processId', recordResult.processId);
-                        imgFormData.append('file', imgFile);
-                        await fetch('/api/RoadProject/UploadProcessFile', { method: 'POST', body: imgFormData });
-                    }
-                }
+                closeModal();
                 self.fetchAllProcessData(self.projectId);
             } catch (e) {
-                alert('匯出 Word 失敗：' + e.message);
+                alert('匯出 Word 失敗（未建立歷程記錄）：' + e.message);
+                $confirm.prop('disabled', false).text('確認匯出');
             } finally {
                 hideLoading();
             }
         });
+    },
+
+    /**
+     * 將圖片壓縮並轉為 Word 可嵌入的 data URL：
+     * 附圖在 Word 中寬 14 cm，長邊縮至 SUPPLEMENT_IMAGE_MAX_EDGE px（約 300 dpi）已足夠清晰，
+     * 以白底重繪後輸出 JPEG（品質 SUPPLEMENT_IMAGE_QUALITY）；若原檔為 PNG / JPEG / BMP、尺寸未超過上限且比壓縮結果小，則保留原檔。
+     * 不接受 GIF；瀏覽器無法解碼的格式（如 Windows/Chrome 上的 HEIC）會丟出錯誤。
+     * @param {File} file
+     * @returns {Promise<string>}
+     */
+    toWordCompatibleImage: function(file) {
+        const SUPPLEMENT_IMAGE_MAX_EDGE = 2000;
+        const SUPPLEMENT_IMAGE_QUALITY = 0.85;
+        const nativeTypes = ['image/png', 'image/jpeg', 'image/bmp'];
+
+        const readAsDataUrl = f => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = () => reject(new Error('圖片讀取失敗'));
+            reader.readAsDataURL(f);
+        });
+
+        if (file.type === 'image/gif' || /\.gif$/i.test(file.name)) {
+            return Promise.reject(new Error('不支援 GIF 圖片，請改用 JPG 或 PNG'));
+        }
+
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = async () => {
+                try {
+                    const srcW = img.naturalWidth || 1024;
+                    const srcH = img.naturalHeight || 768;
+                    const scale = Math.min(1, SUPPLEMENT_IMAGE_MAX_EDGE / Math.max(srcW, srcH));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(srcW * scale));
+                    canvas.height = Math.max(1, Math.round(srcH * scale));
+                    const ctx = canvas.getContext('2d');
+                    // JPEG 不支援透明，先鋪白底避免透明區域變黑
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressed = canvas.toDataURL('image/jpeg', SUPPLEMENT_IMAGE_QUALITY);
+
+                    if (scale === 1 && nativeTypes.includes(file.type)) {
+                        const original = await readAsDataUrl(file);
+                        resolve(original.length <= compressed.length ? original : compressed);
+                    } else {
+                        resolve(compressed);
+                    }
+                } catch (e) {
+                    reject(new Error('圖片轉換失敗：' + e.message));
+                } finally {
+                    URL.revokeObjectURL(url);
+                }
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error(`瀏覽器無法讀取此圖片格式（${file.type || file.name}），請先轉存為 JPG 或 PNG 後再上傳`));
+            };
+            img.src = url;
+        });
+    },
+
+    /**
+     * 從回應的 Content-Disposition 取得後端指定的檔名（優先 filename*=UTF-8''）
+     */
+    getDownloadFileName: function(response) {
+        const cd = response.headers.get('Content-Disposition') || '';
+        const utf8 = cd.match(/filename\*=UTF-8''([^;]+)/i);
+        if (utf8) {
+            try { return decodeURIComponent(utf8[1]); } catch { /* 改用 filename= */ }
+        }
+        const plain = cd.match(/filename="?([^";]+)"?/i);
+        return plain ? plain[1] : null;
     },
 
 };

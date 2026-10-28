@@ -1,3 +1,8 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Config
+@{
+    var maxUploadMB = Config["UploadLimits:MaxRequestBodyMB"] ?? "100";
+    var maxFileMB = Config["UploadLimits:MaxFileMB"] ?? "20";
+}
 @* 道路專案匯入 Box 版本 *@
 <link rel="stylesheet" href="~/css/index/roadProjectImport.css" />
 
@@ -15,7 +20,7 @@
                 <div class="file-upload-area" id="excelUploadArea">
                     <div class="upload-icon"><i class="fa fa-file-excel-o"></i></div>
                     <p class="upload-text">拖曳 Excel 檔案至此處或點擊選擇</p>
-                    <p class="upload-hint">支援 .xlsx 格式</p>
+                    <p class="upload-hint">支援 .xlsx 格式，與照片壓縮檔合計上限 @(maxUploadMB) MB</p>
                 </div>
                 <div id="excelFileInfo" class="file-info hidden">
                     <span class="file-name"></span>
@@ -32,6 +37,7 @@
                     <div class="upload-icon"><i class="fa fa-file-archive-o"></i></div>
                     <p class="upload-text">拖曳 ZIP 檔案至此處或點擊選擇</p>
                     <p class="upload-hint">目錄結構: {ProjectId}/photo1.jpg, photo2.jpg...</p>
+                    <p class="upload-hint">與 Excel 合計上限 @(maxUploadMB) MB</p>
                 </div>
                 <div id="zipFileInfo" class="file-info hidden">
                     <span class="file-name"></span>
@@ -51,6 +57,9 @@
                         </li>
                         <li>
                             <strong>僅能更新本人建立的專案：</strong>若 Excel 中有任一既有專案非本人建立，將顯示「未具有現存專案更新權限」並中止整批匯入。
+                        </li>
+                        <li>
+                            <strong>檔案大小上限：</strong>Excel 與照片壓縮檔合計不可超過 @(maxUploadMB) MB，照片較多時請分批匯入。
                         </li>
                     </ul>
                 </div>

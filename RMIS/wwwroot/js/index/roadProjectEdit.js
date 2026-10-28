@@ -1,6 +1,7 @@
 import BoxManager from './box.js';
 import RoadProjectView from './roadProjectView.js';
 import { showLoading, hideLoading } from '../loading.js';
+import { MAX_FILE_MB, MAX_FILE_BYTES, checkUploadSize, readErrorResponse, getErrorMessage } from '../uploadLimit.js';
 
 /**
  * 道路專案編輯模組
@@ -947,8 +948,8 @@ const RoadProjectEdit = {
         this.renderRemarkFileList();
     },
 
-    // 單一附件檔案大小上限（5MB）
-    MAX_REMARK_FILE_SIZE: 5 * 1024 * 1024,
+    // 單一附件檔案大小上限（同 uploadLimit.js MAX_FILE_MB）
+    MAX_REMARK_FILE_SIZE: MAX_FILE_BYTES,
 
     /**
      * 處理備註附件檔案選擇（可複選），選取後暫存於畫面上，儲存時才上傳
@@ -967,7 +968,7 @@ const RoadProjectEdit = {
         });
 
         if (oversized.length > 0) {
-            alert(`以下檔案超過 5MB 上限，未加入附件：\n${oversized.join('\n')}`);
+            alert(`以下檔案超過 ${MAX_FILE_MB} MB 上限，未加入附件：\n${oversized.join('\n')}`);
         }
 
         input.value = '';
@@ -1071,8 +1072,7 @@ const RoadProjectEdit = {
                 body: formData
             });
             if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err.message || '備註附件上傳失敗');
+                throw new Error(await getErrorMessage(response, '備註附件上傳失敗'));
             }
 
             const data = await response.json();
@@ -1155,6 +1155,18 @@ const RoadProjectEdit = {
             remarks: $('#edit-remarks').val()
         };
 
+        // 送出前檢查大小：備註附件與街景照片分屬不同請求，分別檢查（任一超過即不送出任何資料）
+        const remarkSizeError = checkUploadSize(self.newRemarkFiles);
+        if (remarkSizeError) {
+            alert(`備註附件：${remarkSizeError}`);
+            return;
+        }
+        const photoSizeError = checkUploadSize(self.photoList.map(p => p.Photo));
+        if (photoSizeError) {
+            alert(`街景照片：${photoSizeError}`);
+            return;
+        }
+
         showLoading('更新中...', '#right-box');
 
         // 第一步：先送出備註附件的新增與刪除。若失敗就整個中止，
@@ -1169,7 +1181,7 @@ const RoadProjectEdit = {
             });
         })
         .then(function(response) {
-            if (!response.ok) return response.json().then(function(err) { throw err; });
+            if (!response.ok) return readErrorResponse(response).then(function(err) { throw err; });
             return response.json();
         })
         .then(function(result) {
@@ -1233,7 +1245,7 @@ const RoadProjectEdit = {
             body: formData
         })
         .then(function(response) {
-            if (!response.ok) return response.json().then(function(err) { throw err; });
+            if (!response.ok) return readErrorResponse(response).then(function(err) { throw err; });
             return response.json();
         })
         .then(function(result) {

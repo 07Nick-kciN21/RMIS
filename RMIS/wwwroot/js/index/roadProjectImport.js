@@ -1,5 +1,6 @@
 import BoxManager from './box.js';
 import { showLoading, hideLoading } from '../loading.js';
+import { MAX_UPLOAD_BYTES, oversizeMessage, getErrorMessage } from '../uploadLimit.js';
 
 /**
  * 道路專案匯入模組
@@ -131,8 +132,8 @@ const RoadProjectImport = {
      */
     _checkSize: function(override) {
         const totalSize = this.getTotalSize(override);
-        if (totalSize > 100 * 1024 * 1024) {
-            alert(`檔案總大小超過限制（100 MB），目前合計 ${(totalSize / 1024 / 1024).toFixed(1)} MB`);
+        if (totalSize > MAX_UPLOAD_BYTES) {
+            alert(oversizeMessage(totalSize));
             const key = Object.keys(override)[0];
             const inputMap = {
                 excel: '#excelFileInput',
@@ -188,8 +189,8 @@ const RoadProjectImport = {
         }
 
         const totalSize = self.getTotalSize();
-        if (totalSize > 100 * 1024 * 1024) {
-            alert(`檔案總大小超過限制（100 MB），目前合計 ${(totalSize / 1024 / 1024).toFixed(1)} MB`);
+        if (totalSize > MAX_UPLOAD_BYTES) {
+            alert(oversizeMessage(totalSize));
             return;
         }
 
@@ -221,7 +222,9 @@ const RoadProjectImport = {
                 method: 'POST',
                 body: formData
             });
-            const result = await response.json();
+            const result = response.ok
+                ? await response.json()
+                : { success: false, message: await getErrorMessage(response), errors: [] };
             self.showResult(result);
             if (result.success) {
                 $(document).trigger('projectAdded');
@@ -255,7 +258,9 @@ const RoadProjectImport = {
             method: 'POST',
             body: formData
         });
-        const check = await response.json();
+        const check = response.ok
+            ? await response.json()
+            : { success: false, message: await getErrorMessage(response), errors: [] };
 
         if (!check.success) {
             this.showResult({ success: false, message: check.message, errors: check.errors || [] });

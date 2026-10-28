@@ -379,6 +379,67 @@ namespace RMIS.Controllers
             return BadRequest(new { success = false, message = result });
         }
 
+        /// <summary>
+        /// 新增或更新歷程記錄並一併存入佐證檔案（同一交易；任一步驟失敗即全部回滾，不會留下缺檔案的記錄）。
+        /// record：歷程記錄 JSON（Id &gt; 0 為更新，否則新增）；files：要新增的佐證檔案
+        /// </summary>
+        [HttpPost("SaveProcessRecordWithFiles")]
+        public async Task<IActionResult> SaveProcessRecordWithFiles([FromForm] string record, [FromForm] List<IFormFile>? files)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                LogOp("新增歷程", false, "使用者未登入，拒絕儲存");
+                return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
+            var sizeError = CheckProcessFileExtensions(files ?? new List<IFormFile>())
+                ?? CheckFileSizes(files ?? new List<IFormFile>());
+            if (sizeError != null)
+            {
+                return BadRequest(new { success = false, message = sizeError });
+            }
+
+            RoadProjectProcess? process;
+            try
+            {
+                var jsonOptions = HttpContext.RequestServices
+                    .GetRequiredService<IOptions<Microsoft.AspNetCore.Mvc.JsonOptions>>().Value.JsonSerializerOptions;
+                process = System.Text.Json.JsonSerializer.Deserialize<RoadProjectProcess>(record, jsonOptions);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                process = null;
+            }
+            if (process == null) return BadRequest(new { success = false, message = "接收不到資料" });
+
+            var isEdit = process.Id > 0;
+            var operation = isEdit ? "更新歷程" : "新增歷程";
+
+            var fileList = new List<(string FileName, byte[] Content)>();
+            foreach (var file in files ?? new List<IFormFile>())
+            {
+                if (file.Length == 0) continue;
+                using var fileMs = new MemoryStream();
+                await file.CopyToAsync(fileMs);
+                fileList.Add((file.FileName, fileMs.ToArray()));
+            }
+
+            var uploadUser = User.Identity?.Name ?? currentUser.UserName ?? "";
+            var (result, processId) = isEdit
+                ? await _roadProjectInterface.UpdateProcessRecordWithFilesAsync(process, fileList, uploadUser)
+                : await _roadProjectInterface.AddProcessRecordWithFilesAsync(process, fileList, uploadUser);
+
+            if (result == "success")
+            {
+                LogOp(operation, true, $"專案:{process.ProjectName}, 記錄標題:{process.RecordTitle}, 附件:{fileList.Count} 個");
+                return Ok(new { success = true, processId });
+            }
+
+            LogOp(operation, false, $"專案:{process.ProjectName}, 記錄標題:{process.RecordTitle}, {result}");
+            return BadRequest(new { success = false, message = result });
+        }
+
         [HttpDelete("DeleteAllProcessRecord/{id}")]
         public async Task<IActionResult> DeleteAllProcessRecord(int id)
         {
@@ -414,6 +475,12 @@ namespace RMIS.Controllers
             if (string.IsNullOrEmpty(User.Identity?.Name))
             {
                 return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
+            var sizeError = CheckProcessFileExtensions(new[] { file }) ?? CheckFileSizes(new[] { file });
+            if (sizeError != null)
+            {
+                return BadRequest(new { success = false, message = sizeError });
             }
 
             try
@@ -470,6 +537,12 @@ namespace RMIS.Controllers
             if (string.IsNullOrEmpty(User.Identity?.Name))
             {
                 return Unauthorized(new { success = false, message = "請重新登入後再試" });
+            }
+
+            var sizeError = CheckProcessFileExtensions(files) ?? CheckFileSizes(files);
+            if (sizeError != null)
+            {
+                return BadRequest(new { success = false, message = sizeError });
             }
 
             var results = new List<object>();
@@ -588,6 +661,18 @@ namespace RMIS.Controllers
                 return Unauthorized(new { success = false, message = "請重新登入後再試" });
             }
 
+            // 僅專案建立者可上傳備註附件
+            if (await CheckProjectOwnershipAsync(projectId) != null)
+            {
+                return StatusCode(403, new { success = false, message = "僅建立者本人可編輯此專案的備註附件" });
+            }
+
+            var sizeError = CheckFileSizes(files);
+            if (sizeError != null)
+            {
+                return BadRequest(new { success = false, message = sizeError });
+            }
+
             var results = new List<object>();
             var uploadUser = User.Identity.Name;
 
@@ -680,6 +765,13 @@ namespace RMIS.Controllers
                 return Unauthorized(new { success = false, message = "請重新登入後再試" });
             }
 
+            // 僅專案建立者可刪除備註附件
+            var remarkFile = await _roadProjectInterface.GetRemarkFileByIdAsync(fileId);
+            if (remarkFile != null && await CheckProjectOwnershipAsync(remarkFile.ProjectId) != null)
+            {
+                return StatusCode(403, new { success = false, message = "僅建立者本人可編輯此專案的備註附件" });
+            }
+
             var result = await _roadProjectInterface.DeleteRemarkFileAsync(fileId);
 
             if (result == "success")
@@ -734,6 +826,49 @@ namespace RMIS.Controllers
             return contentTypes.TryGetValue(fileType?.ToLower() ?? "", out var type)
                 ? type
                 : "application/octet-stream";
+        }
+
+        /// <summary>
+        /// 歷程佐證文件、備註附件的單一檔案大小檢查（UploadLimits:MaxFileMB）。
+        /// 有檔案超過上限時回傳錯誤訊息（列出檔名），否則回傳 null
+        /// </summary>
+        private string? CheckFileSizes(IEnumerable<IFormFile?> files)
+        {
+            var maxMB = HttpContext.RequestServices.GetRequiredService<IConfiguration>()
+                .GetValue<int?>("UploadLimits:MaxFileMB") ?? 20;
+            var maxBytes = maxMB * 1024L * 1024L;
+
+            var oversized = files
+                .Where(f => f != null && f.Length > maxBytes)
+                .Select(f => $"{f!.FileName}（{f.Length / 1024d / 1024d:0.#} MB）")
+                .ToList();
+
+            return oversized.Count == 0
+                ? null
+                : $"以下檔案超過單一檔案大小上限 {maxMB} MB：{string.Join("、", oversized)}";
+        }
+
+        /// <summary>
+        /// 歷程佐證文件允許的副檔名（與新增歷程視窗的提示一致）
+        /// </summary>
+        private static readonly HashSet<string> AllowedProcessFileExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png", ".zip"
+        };
+
+        /// <summary>
+        /// 歷程佐證文件的格式檢查。有不允許的檔案時回傳錯誤訊息（列出檔名），否則回傳 null
+        /// </summary>
+        private static string? CheckProcessFileExtensions(IEnumerable<IFormFile?> files)
+        {
+            var invalid = files
+                .Where(f => f != null && !AllowedProcessFileExtensions.Contains(Path.GetExtension(f.FileName ?? "")))
+                .Select(f => f!.FileName)
+                .ToList();
+
+            return invalid.Count == 0
+                ? null
+                : $"以下檔案格式不支援：{string.Join("、", invalid)}（僅支援 PDF、DOC、DOCX、XLS、XLSX、PPT、PPTX、JPG、PNG、ZIP）";
         }
 
         private string FormatFileSize(long bytes)
@@ -880,25 +1015,85 @@ namespace RMIS.Controllers
             }
         }
 
+        /// <summary>
+        /// 匯出局長補充格式：產生 Word → 在同一交易中建立「局長補充格式」歷程記錄並存入 Word（及開瓶計畫附圖）為佐證文件
+        /// → 全部成功才回傳 Word 檔；任一步驟失敗則不留下任何記錄或檔案
+        /// </summary>
         [HttpPost("ExportSupplementWord")]
         public async Task<IActionResult> ExportSupplementWord([FromBody] SupplementWordInput input)
         {
             try
             {
-                if (!string.IsNullOrEmpty(input.ProjectId))
+                if (string.IsNullOrEmpty(User.Identity?.Name))
                 {
-                    var project = await _mapDBContext.RoadProjects
-                        .Where(p => p.ProjectId == input.ProjectId)
-                        .Select(p => new { p.ProjectName, p.StartEndLocation })
-                        .FirstOrDefaultAsync();
-                    input.ProjectName = project?.ProjectName ?? project?.StartEndLocation ?? input.ProjectName;
+                    LogOp("匯出歷程補充資料", false, "使用者未登入，拒絕匯出");
+                    return Unauthorized(new { success = false, message = "請重新登入後再試" });
                 }
 
+                if (input == null || string.IsNullOrEmpty(input.ProjectId))
+                {
+                    return BadRequest(new { success = false, message = "缺少專案編號" });
+                }
+
+                var project = await _mapDBContext.RoadProjects
+                    .Where(p => p.ProjectId == input.ProjectId)
+                    .Select(p => new { p.ProjectName, p.StartEndLocation })
+                    .FirstOrDefaultAsync();
+                input.ProjectName = project?.ProjectName ?? project?.StartEndLocation ?? input.ProjectName;
+
+                // 開瓶計畫附圖：依檔頭判斷實際格式，不支援的格式在建立任何記錄前即擋下
+                SupplementImage? image = null;
+                if (!string.IsNullOrEmpty(input.ImageBase64))
+                {
+                    image = DecodeSupplementImage(input.ImageBase64);
+                    if (image == null)
+                    {
+                        return BadRequest(new { success = false, message = "附圖格式不支援，請使用 PNG、JPEG 或 BMP 圖片" });
+                    }
+
+                    var maxImageMB = HttpContext.RequestServices.GetRequiredService<IConfiguration>()
+                        .GetValue<int?>("UploadLimits:SupplementImageMB") ?? 5;
+                    if (image.Bytes.LongLength > maxImageMB * 1024L * 1024L)
+                    {
+                        return BadRequest(new { success = false, message = $"附圖超過大小上限 {maxImageMB} MB（本次約 {image.Bytes.LongLength / 1024d / 1024d:0.#} MB），請縮小圖片後再試" });
+                    }
+                }
+
+                // 1. 產生 Word
                 var ms = new MemoryStream();
-                BuildSupplementWord(ms, input);
-                var fileName = $"局長補充資料_{input.ProjectName}_{DateTime.Now:yyyyMMdd}.docx";
-                LogOp("匯出歷程補充資料", true, $"專案:{input.ProjectName}");
-                return File(ms.ToArray(),
+                BuildSupplementWord(ms, input, image);
+                var wordBytes = ms.ToArray();
+                var today = DateTime.Now.ToString("yyyyMMdd");
+                var fileName = $"局長補充資料_{input.ProjectName}_{today}.docx";
+
+                var files = new List<(string FileName, byte[] Content)> { (fileName, wordBytes) };
+
+                // 開瓶計畫附圖一併存為佐證文件
+                if (image != null)
+                {
+                    files.Add(($"開瓶計畫附圖_{input.ProjectName}_{today}.{image.Extension}", image.Bytes));
+                }
+
+                // 2. 同一交易建立歷程記錄 + 存檔
+                var process = new RoadProjectProcess
+                {
+                    ProjectId = input.ProjectId,
+                    RecordType = "局長補充格式",
+                    RecordTitle = Path.GetFileNameWithoutExtension(fileName),
+                    ExecutionUnit = input.ExecutionUnit,
+                    CurrentStatus = input.CurrentStatus
+                };
+                var (result, processId) = await _roadProjectInterface.AddProcessRecordWithFilesAsync(
+                    process, files, User.Identity.Name);
+
+                if (result != "success")
+                {
+                    LogOp("匯出歷程補充資料", false, $"專案:{input.ProjectName}，{result}");
+                    return StatusCode(500, new { success = false, message = result });
+                }
+
+                LogOp("匯出歷程補充資料", true, $"專案:{input.ProjectName}，歷程:{processId}");
+                return File(wordBytes,
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     fileName);
             }
@@ -1083,7 +1278,40 @@ namespace RMIS.Controllers
             (c >= 0xFF00 && c <= 0xFF60) ||  // 全形字元
             (c >= 0xFFE0 && c <= 0xFFE6);    // 全形符號
 
-        private static void BuildSupplementWord(MemoryStream ms, SupplementWordInput input)
+        /// <summary>
+        /// 已解碼的開瓶計畫附圖（格式依檔頭判斷）
+        /// </summary>
+        private sealed record SupplementImage(byte[] Bytes, PartTypeInfo PartType, string Extension);
+
+        /// <summary>
+        /// 解碼 data URL / Base64 圖片，並依檔頭（magic bytes）判斷實際格式。
+        /// 支援 Word 可直接嵌入的 PNG、JPEG、BMP；無法解碼或其他格式回傳 null。
+        /// （WebP、AVIF、SVG 等格式由前端先轉成 PNG 再送出）
+        /// </summary>
+        private static SupplementImage? DecodeSupplementImage(string dataUrl)
+        {
+            byte[] bytes;
+            try
+            {
+                var base64Str = dataUrl;
+                var comma = base64Str.IndexOf(',');
+                if (comma >= 0) base64Str = base64Str[(comma + 1)..];
+                bytes = Convert.FromBase64String(base64Str);
+            }
+            catch (FormatException)
+            {
+                return null;
+            }
+
+            bool StartsWith(params byte[] sig) => bytes.Length >= sig.Length && bytes.AsSpan(0, sig.Length).SequenceEqual(sig);
+
+            if (StartsWith(0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)) return new(bytes, ImagePartType.Png, "png");
+            if (StartsWith(0xFF, 0xD8, 0xFF))                                return new(bytes, ImagePartType.Jpeg, "jpg");
+            if (StartsWith(0x42, 0x4D))                                      return new(bytes, ImagePartType.Bmp, "bmp"); // BM
+            return null;
+        }
+
+        private static void BuildSupplementWord(MemoryStream ms, SupplementWordInput input, SupplementImage? image)
         {
             using var doc = WordprocessingDocument.Create(ms, WordprocessingDocumentType.Document);
             var mainPart = doc.AddMainDocumentPart();
@@ -1277,18 +1505,12 @@ namespace RMIS.Controllers
             }
 
             // 3. 開瓶計畫附圖
-            if (!string.IsNullOrEmpty(input.ImageBase64))
+            if (image != null)
             {
                 try
                 {
-                    var base64Str = input.ImageBase64;
-                    var comma = base64Str.IndexOf(',');
-                    if (comma >= 0) base64Str = base64Str[(comma + 1)..];
-                    var imgBytes = Convert.FromBase64String(base64Str);
-
-                    var imgType = input.ImageBase64.Contains("image/png") ? ImagePartType.Png : ImagePartType.Jpeg;
-                    var imgPart = mainPart.AddImagePart(imgType);
-                    using (var imgMs = new MemoryStream(imgBytes))
+                    var imgPart = mainPart.AddImagePart(image.PartType);
+                    using (var imgMs = new MemoryStream(image.Bytes))
                         imgPart.FeedData(imgMs);
 
                     var imgId = mainPart.GetIdOfPart(imgPart);

@@ -1,3 +1,8 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Config
+@{
+    var maxUploadMB = Config["UploadLimits:MaxRequestBodyMB"] ?? "100";
+    var maxFileMB = Config["UploadLimits:MaxFileMB"] ?? "20";
+}
 @* ==========================================================================
    _roadProjectAdd.cshtml - 道路專案新增頁面
    功能：新增道路專案資料
@@ -165,6 +170,7 @@
                         </div>
                     </div>
                     <div class="section-body">
+                        <div class="file-size-hint">照片總大小上限 @(maxUploadMB) MB</div>
                         <div id="street-photo-list" class="photo-list">
                             <div class="empty-photo-hint">尚無照片，請點擊「新增一筆」或「從地圖選取」</div>
                         </div>
@@ -347,7 +353,7 @@
                         </div>
                     </div>
                     <div class="section-body">
-                        <div class="file-size-hint">單一檔案大小上限 5MB，附件於專案新增成功後上傳</div>
+                        <div class="file-size-hint">單一檔案大小上限 @(maxFileMB) MB，附件於專案新增成功後上傳</div>
                         <div id="add-remark-file-list" class="file-list">
                             <div class="empty-file-hint">尚無附件，請點擊「新增附件」</div>
                         </div>

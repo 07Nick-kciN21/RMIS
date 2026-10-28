@@ -1,5 +1,6 @@
 import BoxManager from './box.js';
 import { showLoading, hideLoading } from '../loading.js';
+import { MAX_FILE_MB, MAX_FILE_BYTES, checkUploadSize, readErrorResponse, getErrorMessage } from '../uploadLimit.js';
 
 /**
  * 道路專案新增模組
@@ -43,8 +44,8 @@ const RoadProjectAdd = {
     // 備註附件（File 物件），專案新增成功後才上傳
     remarkFiles: [],
 
-    // 單一附件檔案大小上限（5MB）
-    MAX_REMARK_FILE_SIZE: 5 * 1024 * 1024,
+    // 單一附件檔案大小上限（同 uploadLimit.js MAX_FILE_MB）
+    MAX_REMARK_FILE_SIZE: MAX_FILE_BYTES,
 
     fileIcons: {
         'pdf': 'fa-file-pdf-o',
@@ -1104,6 +1105,18 @@ const RoadProjectAdd = {
             formData.append(`StreetViewPhoto[${index}].PhotoName`, item.PhotoName || '');
         });
 
+        // 送出前檢查大小：街景照片隨專案一起送出、備註附件於新增成功後另外送出，分別檢查
+        const photoSizeError = checkUploadSize(self.photoList.map(p => p.Photo));
+        if (photoSizeError) {
+            alert(`街景照片：${photoSizeError}`);
+            return;
+        }
+        const remarkSizeError = checkUploadSize(self.remarkFiles);
+        if (remarkSizeError) {
+            alert(`備註附件：${remarkSizeError}`);
+            return;
+        }
+
         console.log('提交專案資料:', ...formData.entries());
         showLoading('新增中...', '#right-box');
 
@@ -1114,7 +1127,7 @@ const RoadProjectAdd = {
         })
         .then(response => {
             if (!response.ok) {
-                return response.json().then(err => { throw err; });
+                return readErrorResponse(response).then(err => { throw err; });
             }
             return response.json();
         })
@@ -1175,7 +1188,7 @@ const RoadProjectAdd = {
         });
 
         if (oversized.length > 0) {
-            alert(`以下檔案超過 5MB 上限，未加入附件：\n${oversized.join('\n')}`);
+            alert(`以下檔案超過 ${MAX_FILE_MB} MB 上限，未加入附件：\n${oversized.join('\n')}`);
         }
 
         input.value = '';
@@ -1242,8 +1255,7 @@ const RoadProjectAdd = {
             body: formData
         });
         if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.message || '備註附件上傳失敗');
+            throw new Error(await getErrorMessage(response, '備註附件上傳失敗'));
         }
 
         const data = await response.json();

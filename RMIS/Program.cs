@@ -26,9 +26,22 @@ var expandedFilePaths = builder.Configuration.GetSection("FilePaths").GetChildre
     .ToDictionary(c => c.Path, c => (string?)c.Value!.Replace("{RootPath}", rootPath));
 builder.Configuration.AddInMemoryCollection(expandedFilePaths);
 
+// 上傳大小上限（單一請求總大小）：Kestrel / IIS in-process / 表單解析統一使用同一個值，
+// 超過時由 RequestSizeLimitMiddleware 回傳 413 JSON 與明確錯誤訊息
+var maxRequestBodyMB = builder.Configuration.GetValue<int?>("UploadLimits:MaxRequestBodyMB") ?? 100;
+long maxRequestBodyBytes = maxRequestBodyMB * 1024L * 1024L;
+
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+    options.Limits.MaxRequestBodySize = maxRequestBodyBytes;
+});
+builder.Services.Configure<Microsoft.AspNetCore.Builder.IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = maxRequestBodyBytes;
+});
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = maxRequestBodyBytes;
 });
 
 // 圖形驗證用
@@ -170,6 +183,9 @@ app.Use(async (context, next) =>
     context.Response.Headers["Content-Security-Policy"] = "frame-ancestors 'none'";
     await next();
 });
+
+// ✅ 上傳大小超過上限時回傳 413 JSON 明確錯誤訊息（需在讀取請求內容的 Middleware 之前）
+app.UseMiddleware<RequestSizeLimitMiddleware>();
 
 app.UseSession();
 // ✅ 正確的 Middleware 執行順序
