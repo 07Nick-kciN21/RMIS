@@ -105,9 +105,3 @@
     font-size:large
 }
 
-@media (max-width: 899px) {
-    .dropdown-content{
-        width: 100%;
-        left: 0px;
-    }
-}

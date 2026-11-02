@@ -91,9 +91,50 @@ a:hover{
         border-color: #b7a591;
 }
 
-/* 手機和平板模式下隱藏自然人憑證登入 */
-@media (max-width: 1024px) {
-    #certificateLoginBtn {
-        display: none !important;
-    }
+/* 顯示 / 隱藏密碼 */
+.pwd-wrapper {
+    position: relative;
+}
+
+.pwd-wrapper .form-control {
+    padding-right: 2.75rem;
+}
+
+/* 驗證圖示往左移，避免被眼睛按鈕蓋住 */
+.pwd-wrapper .form-control.is-valid,
+.pwd-wrapper .form-control.is-invalid {
+    padding-right: 4.5rem;
+    background-position: right 2.5rem center;
+}
+
+.pwd-toggle {
+    position: absolute;
+    top: 0;
+    right: 0.5rem;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0 0.5rem;
+    border: none;
+    background: transparent;
+    color: #A7937B;
+    display: flex;
+    align-items: center;
+}
+
+.pwd-toggle:hover {
+    color: #89855c;
+}
+
+.pwd-toggle .icon-eye-slash,
+.pwd-toggle.is-shown .icon-eye {
+    display: none;
+}
+
+.pwd-toggle.is-shown .icon-eye-slash {
+    display: inline;
+}
+
+/* 隱藏 Edge / IE 內建的顯示密碼按鈕，避免出現兩個 */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
 }

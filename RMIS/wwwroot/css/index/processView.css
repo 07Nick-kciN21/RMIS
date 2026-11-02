@@ -184,7 +184,7 @@
 
 .info-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
 
@@ -690,45 +690,6 @@
 /* ==========================================================================
    11. 響應式調整
    ========================================================================== */
-
-@media (max-width: 768px) {
-    .view-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-    
-    .view-header-right {
-        width: 100%;
-        justify-content: flex-end;
-    }
-    
-    .info-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .attachment-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .view-title {
-        font-size: 1.15rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .view-header-right .btn span {
-        display: none;
-    }
-    
-    .view-header-right .btn {
-        padding: 8px 12px;
-    }
-}
 
 /* ==========================================================================
    12. 動畫效果

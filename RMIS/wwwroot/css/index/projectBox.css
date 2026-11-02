@@ -93,6 +93,16 @@
     text-decoration: underline;
 }
 
+/* 操作按鈕外框：桌機不產生盒子，子元素照舊排在 .box-result-header 內 */
+.box-result-actions {
+    display: contents;
+}
+
+/* 操作選單按鈕：只在手機顯示（responsive/index.css） */
+.box-actions-toggle {
+    display: none;
+}
+
 /* 5.5 座標未確認警示（行內） */
 .box-data-table .coord-unchecked-row {
     border-left: 3px solid #f59e0b;

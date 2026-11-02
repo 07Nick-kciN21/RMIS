@@ -1,0 +1,338 @@
+/*
+ * 首頁地圖 — 響應式規則
+ * 斷點定義見 responsive/base.css；桌機（≥1441px）沿用原本樣式，這裡不寫。
+ * 此檔在 _Layout.cshtml 的 </body> 前載入，晚於頁面與 Partial 的 CSS，
+ * 同樣權重的選擇器即可覆蓋。
+ *
+ * 版面區塊：
+ *   .div0                主版面 grid
+ *   .div1                頂部導覽列（header / #head-nav / #navbar-menu）
+ *   .div2.map-controls   左側地圖工具列
+ *   .div3 #indexMap      地圖
+ *   .map-footer          地圖底部資訊列
+ *   .div4 #layerListBlock 右側圖資清單
+ *   面板                 #searchPanel、#painterPanel、#focusPanel …（panel.css）
+ */
+
+/* 工具列收合按鈕：只在手機顯示（.div0.tools-collapsed 也只在手機生效） */
+.tools-toggle-btn {
+    display: none;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+ * 筆電  1025 – 1440px
+ * ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1440px) {
+    /* 主版面 .div0 */
+
+    /* 頂部導覽列 .div1 */
+
+    /* 地圖工具列 .map-controls */
+    .map-controls span {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        margin: 6px 0;
+    }
+
+    /* 地圖 .div3 / .map-footer */
+
+    /* 圖資清單 .div4 */
+
+    /* 面板 */
+}
+
+/* ════════════════════════════════════════════════════════════════════
+ * 平板  768 – 1024px
+ * ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+    /* 主版面 .div0 */
+
+    /* 頂部導覽列 .div1 */
+
+    /* 地圖工具列 .map-controls */
+
+    /* 地圖 .div3 / .map-footer：高度覆蓋 Index.cshtml 內的 87vh；底部列只留底圖切換 */
+    #indexMap {
+        height: 82vh;
+    }
+
+    .map-footer > div:not(#map-basemapCtrl),
+    .map-footer > .title-divider {
+        display: none;
+    }
+
+    /* 圖資清單 .div4 */
+
+    /* 面板：預設貼齊地圖左上（手機一併套用）；拖曳後由 panel.js 寫入 inline 位置 */
+    .panel {
+        top: 0;
+        left: 0;
+    }
+
+    /* 專案查詢 #left-box：分頁區拆兩行（每頁筆數 / 頁碼），頁碼過多時再換行 */
+    #left-box .box-page-controls {
+        flex-wrap: wrap;
+    }
+
+    #left-box .box-page-list {
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        margin-left: 0;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+ * 手機  ≤ 767px
+ * ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+    body {
+        padding: 0;
+    }
+
+    /* 主版面 .div0：工具列欄改固定 45px，收合時為 0
+     * 欄寬可能為 0，欄間距一律 0，避免收合後留下空白 */
+    .div0 {
+        column-gap: 0;
+        grid-template-columns: 45px 1fr minmax(270px, 18%);
+    }
+
+    .div0.sidebar-collapsed {
+        column-gap: 0;
+        grid-template-columns: 45px 1fr 0px;
+    }
+
+    .div0.tools-collapsed {
+        grid-template-columns: 0px 1fr minmax(270px, 18%);
+    }
+
+    .div0.tools-collapsed.sidebar-collapsed {
+        grid-template-columns: 0px 1fr 0px;
+    }
+
+    /* 頂部導覽列 .div1 */
+
+    /* 地圖工具列 .map-controls：預設收合（Index.cshtml 的 .div0 帶 tools-collapsed） */
+    .div0.tools-collapsed .div2 {
+        padding: 0;
+        margin: 0;
+        border: none;
+        overflow: hidden;
+        min-width: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* 收合按鈕：位置與樣式比照 .sidebar-toggle-btn，放在地圖左上 */
+    .tools-toggle-btn {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        z-index: 1000;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border: 1px solid var(--bordergray);
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        color: var(--brown);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .tools-toggle-btn:hover {
+        background: var(--lightgray);
+    }
+
+    .tools-collapsed .tools-toggle-btn {
+        transform: rotate(180deg);
+    }
+
+    /* 專案查詢 #left-box：滿版 */
+    #left-box {
+        width: 100%;
+    }
+
+    /* 結果列表標題列：標題+筆數，右側漢堡選單收納 新增 / 匯入 / 匯出歷程 / 匯出Excel */
+    #left-box .box-result-header {
+        position: relative;
+    }
+
+    #left-box .box-actions-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        margin-left: auto;
+        padding: 0;
+        background: #fff;
+        border: 1px solid var(--bordergray);
+        border-radius: 4px;
+        color: var(--brown);
+    }
+
+    #left-box .box-actions-toggle[aria-expanded="true"] {
+        background: var(--lightgray);
+    }
+
+    #left-box .box-result-actions {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 1001;
+        min-width: 140px;
+        padding: 6px;
+        flex-direction: column;
+        gap: 4px;
+        background: #fff;
+        border: 1px solid var(--bordergray);
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #left-box .box-result-actions.open {
+        display: flex;
+    }
+
+    /* 按鈕有 inline 的 float 與 margin-left，需用 !important 覆蓋 */
+    #left-box .box-result-actions > * {
+        float: none !important;
+        margin: 0 !important;
+        width: 100%;
+        text-align: left;
+    }
+
+    #left-box .box-result-actions > .box-export-link {
+        padding: 4px 8px;
+    }
+
+    /* 只用來存權限資料的空 div */
+    #left-box .box-result-header > #projectExport {
+        display: none;
+    }
+
+    /* 專案檢視 / 歷程等 #right-box：滿版 */
+    #right-box {
+        width: 100%;
+    }
+
+    /* 頁首拆兩行：標題資訊 / 操作按鈕（靠右，放不下再換行）
+     * 適用專案檢視 #page-project-view 與歷程檢視 */
+    #right-box .view-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    #right-box .view-header-right {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    /* 決策儀表板 #dashboard-page（dashboardBox.css）：全部改單欄堆疊 */
+    .dashboard-container {
+        padding: 12px;
+    }
+
+    /* minmax(0, 1fr)：避免不換行的長專案名稱把欄位撐出螢幕 */
+    .dashboard-top-section {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    /* KPI 一排一個，高度隨內容 */
+    .kpi-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .kpi-card {
+        height: auto;
+        min-height: 100px;
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .kpi-card-value {
+        font-size: 22px;
+    }
+
+    /* 最新立案：堆疊後不再跟 KPI 同高，限制高度改內部捲動 */
+    .latest-projects-card {
+        width: 100%;
+        min-width: 0;
+        max-height: 320px;
+    }
+
+    /* 手機無法 hover 看 title，專案名稱改最多兩行，超過才截斷 */
+    .latest-projects-card .project-name {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        word-break: break-all;
+    }
+
+    /* 篩選列：一行一個條件，標籤固定寬、下拉選單填滿 */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .filter-label {
+        padding: 0 0 8px;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .filter-group label {
+        width: 48px;
+        flex-shrink: 0;
+    }
+
+    /* iOS Safari 字級小於 16px 時，聚焦會自動放大頁面 */
+    .filter-group select {
+        flex: 1;
+        min-width: 0;
+        font-size: 16px;
+    }
+
+    .filter-btn {
+        margin-left: 0;
+        justify-content: center;
+    }
+
+    /* 圖表：單欄，固定高度（Chart.js 設 maintainAspectRatio: false，高度由容器決定） */
+    .charts-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .chart-body {
+        padding: 12px;
+        min-height: 0;
+    }
+
+    .chart-canvas-container {
+        height: 280px;
+    }
+
+    /* 地圖 .div3 / .map-footer */
+    #indexMap {
+        height: 90vh;
+    }
+
+    /* 圖資清單 .div4 */
+
+    /* 面板 */
+}

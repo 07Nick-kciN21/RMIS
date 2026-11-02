@@ -67,36 +67,3 @@ header .dropdown-button {
     background-color: #ccb9af;
     color: #2f1a0c;
 }
-@media (max-width: 992px) {
-    .div0 {
-        grid-template-columns: 5% auto minmax(270px, 29%);
-    }
-}
-
-@media (max-width: 762px) {
-    .div0 {
-        grid-template-columns: 45px auto;
-        position: relative;
-    }
-
-    .div1 {
-        grid-column-end: 3;
-    }
-
-    .div3 {
-        grid-column-end: 3;
-
-    }
-
-    .div4 {
-        width: 302px;
-        right: 0;
-        /* display: none; */
-        position: absolute;
-    }
-}
-
-@media (max-width: 576px) {
-
-
-}

@@ -1,0 +1,152 @@
+/*
+ * 響應式框架 — 共用斷點與工具類別
+ * ────────────────────────────────────────────────────────────────────────
+ *  裝置   │ 寬度範圍          │ 寫法（桌機優先，max-width 由大到小覆蓋）
+ * ────────┼──────────────────┼──────────────────────────────────────────
+ *  桌機   │ ≥ 1441px          │ 不寫 @media，即目前的基本樣式
+ *  筆電   │ 1025 – 1440px     │ @media (max-width: 1440px)
+ *  平板   │ 768 – 1024px      │ @media (max-width: 1024px)
+ *  手機   │ ≤ 767px           │ @media (max-width: 767px)
+ * ────────────────────────────────────────────────────────────────────────
+ *  注意：max-width 會往下累加，手機同時會套用筆電與平板的規則。
+ *  只想影響單一裝置時，請用範圍寫法，例如平板限定：
+ *      @media (min-width: 768px) and (max-width: 1024px) { ... }
+ *
+ *  各頁面的響應式規則：
+ *      responsive/index.css   — 首頁地圖（_Layout）
+ *      responsive/account.css — 帳號管理（_AccountLayout）
+ *      responsive/portal.css  — 登入頁（_PortalLayout）
+ */
+
+/* ── 頂部導覽列：平板以下收成漢堡選單 ───────────────────────────────
+ * 按鈕 #menu-toggle 切換 #col2.is-open，邏輯見 js/responsive/navToggle.js
+ * #col2、#navbar-menu 有 inline style（margin-left / float），需用 !important 覆蓋
+ */
+
+.rwd-nav-toggle {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .rwd-nav-toggle {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        width: 40px;
+        height: 40px;
+        margin-left: auto;
+        padding: 8px;
+        background: transparent;
+        border: 1px solid #D6D6D3;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .rwd-nav-toggle > span {
+        display: block;
+        height: 2px;
+        background: #615649;
+        border-radius: 1px;
+        transition: transform 0.2s, opacity 0.2s;
+    }
+
+    /* 展開時變成 X */
+    .rwd-nav-toggle[aria-expanded="true"] > span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .rwd-nav-toggle[aria-expanded="true"] > span:nth-child(2) { opacity: 0; }
+    .rwd-nav-toggle[aria-expanded="true"] > span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* 選單面板：從導覽列右下方展開 */
+    #col2 {
+        display: none !important;
+        position: absolute;
+        top: 100%;
+        right: 8px;
+        margin: 4px 0 0 !important;
+        min-width: 240px;
+        max-width: calc(100vw - 16px);
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: var(--z-overlay, 1000);
+    }
+
+    #col2.is-open {
+        display: block !important;
+    }
+
+    #col2 #head-nav,
+    #col2 #head-nav > .container-fluid {
+        display: block !important;
+        height: auto;
+        padding: 0;
+        background: transparent;
+    }
+
+    /* 選單項目改直排，子選單在面板內展開 */
+    #navbar-menu {
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+        float: none !important;
+        padding: 8px 0;
+    }
+
+    #navbar-menu > .nav-item {
+        display: block;
+        width: 100%;
+    }
+
+    #navbar-menu .dropdown-button {
+        width: 100%;
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 1.25rem;
+        background: transparent;
+    }
+
+    #navbar-menu .dropdown-button:hover,
+    #navbar-menu .dropdown-button.open {
+        background: #f5f5f5;
+    }
+
+    #navbar-menu .dropdown-content {
+        position: static;
+        width: 100%;
+        border-radius: 0;
+        background-color: transparent;
+    }
+
+    #navbar-menu .user-logo-box {
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        border-radius: 0;
+    }
+
+    #navbar-menu .user-dropdown {
+        position: static;
+        flex-basis: 100%;
+        margin-top: 8px;
+        box-shadow: none;
+    }
+}
+
+/* ── 顯示 / 隱藏工具類別（只作用於單一裝置） ─────────────────────── */
+
+@media (min-width: 1441px) {
+    .rwd-hide-desktop { display: none !important; }
+}
+
+@media (min-width: 1025px) and (max-width: 1440px) {
+    .rwd-hide-laptop { display: none !important; }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .rwd-hide-tablet { display: none !important; }
+}
+
+@media (max-width: 767px) {
+    .rwd-hide-mobile { display: none !important; }
+}

@@ -350,31 +350,6 @@
 }
 
 /* 響應式設計 */
-@media (max-width: 768px) {
-    .advanced-module {
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .image-preview-container {
-        gap: 10px;
-        padding: 10px;
-    }
-    
-    .image-preview {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .sync-layer-item {
-        padding: 12px;
-    }
-    
-    #advancedContainer {
-        padding: 15px 0;
-    }
-}
-
 /* 載入動畫 */
 .module-loading {
     opacity: 0.6;

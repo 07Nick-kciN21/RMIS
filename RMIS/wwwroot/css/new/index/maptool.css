@@ -162,15 +162,6 @@
     background-color: gray;
 }
 
-@media (max-width: 1600px) {
-    .map-controls span {
-        width: 30px;
-        height: 30px;
-        line-height: 30px;
-        margin: 6px 0;
-    }
-}
-
 .map-controls span.active {
     background-color: gray;
 }
@@ -266,38 +257,4 @@
 .leaflet-control-attribution {
     display: none;
     /* 隱藏地圖底部的版權信息 */
-}
-
-@media (max-width: 1000px) {
-    .map-controls {
-        /* position: fixed; */
-    }
-
-    .map-controls>span:not(.mobileTool) {
-        display: none;
-        /* 隱藏非手機工具 */
-    }
-
-    .map-footer>div:not(#map-basemapCtrl) {
-        display: none;
-        /* 隐藏其他元素 */
-    }
-
-    .map-footer>.title-divider {
-        display: none;
-        /* 隐藏分隔线 */
-    }
-
-    .map-footer {
-        justify-content: flex-end;
-        /* 工具栏移动到右侧 */
-        width: auto;
-        /* 宽度自适应内容 */
-    }
-
-
-    #tb-sidebar {
-        display: none;
-        /* 隐藏地图控件 */
-    }
 }

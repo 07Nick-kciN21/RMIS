@@ -534,38 +534,6 @@
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 600px) {
-    #page-project-view .info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    #page-project-view .info-grid-3col {
-        grid-template-columns: 1fr;
-    }
-
-    #page-project-view .info-item-wide {
-        grid-column: span 1;
-    }
-
-    #page-project-view .budget-grid {
-        grid-template-columns: 1fr;
-    }
-
-    #page-project-view .budget-item-total {
-        grid-column: span 1;
-    }
-
-    #page-project-view .view-header {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    #page-project-view .view-header-right {
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
-
 /* ===== 備註附件 ===== */
 #page-project-view .file-list {
     display: flex;

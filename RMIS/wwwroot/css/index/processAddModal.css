@@ -500,51 +500,6 @@
    8. 響應式調整
    ========================================================================== */
 
-@media (max-width: 768px) {
-    #process-add-modal .process-modal-container,
-    #all-process-add-modal .process-modal-container {
-        width: 95%;
-        max-height: 95vh;
-        margin: 10px;
-    }
-
-    #process-add-modal .process-modal-header,
-    #all-process-add-modal .process-modal-header {
-        padding: 16px 20px;
-    }
-
-    #process-add-modal .process-modal-body,
-    #all-process-add-modal .process-modal-body {
-        padding: 20px;
-    }
-
-    #process-add-modal .form-row,
-    #all-process-add-modal .form-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    #process-add-modal .form-group.col-4,
-    #process-add-modal .form-group.col-6,
-    #process-add-modal .form-group.col-12,
-    #all-process-add-modal .form-group.col-4,
-    #all-process-add-modal .form-group.col-6,
-    #all-process-add-modal .form-group.col-12 {
-        flex: 0 0 100%;
-    }
-
-    #process-add-modal .process-modal-footer,
-    #all-process-add-modal .process-modal-footer {
-        padding: 12px 20px;
-    }
-
-    #process-add-modal .process-modal-footer .btn,
-    #all-process-add-modal .process-modal-footer .btn {
-        padding: 10px 16px;
-        font-size: 0.9rem;
-    }
-}
-
 /* ==========================================================================
    9. 記錄類別為「檔案上傳」時，只保留記錄標題與附件上傳欄位
    ========================================================================== */

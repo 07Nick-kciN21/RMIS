@@ -31,16 +31,6 @@
 </style>
 
 <!-- ✅ 本地樣式 -->
-@* <link rel="stylesheet" href="~/css/index/dropdown.css" />
-<link rel="stylesheet" href="~/css/index/offcanvas.css" />
-<link rel="stylesheet" href="~/css/index/menu.css" />
-<link rel="stylesheet" href="~/css/index/svg_list.css" />
-<link rel="stylesheet" href="~/css/index/popup.css" />
-<link rel="stylesheet" href="~/css/index/drawtool.css" />
-<link rel="stylesheet" href="~/css/index/panel.css" />
-<link rel="stylesheet" href="~/css/index/maptool.css" />
-<link rel="stylesheet" href="~/css/index/modal.css" />
-<link rel="stylesheet" href="~/css/index/pointEdit.css" /> *@
 <link rel="stylesheet" href="~/css/index/menu.css" />
 <link rel="stylesheet" href="~/css/index/modal.css" />
 <link rel="stylesheet" href="~/css/index/pointEdit.css" />
@@ -69,16 +59,11 @@
 
 
 
-<div class="div0 sidebar-collapsed">
+<div class="div0 sidebar-collapsed tools-collapsed">
     <div class="div1">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <a class="navbar-brand head-logo" href="#">桃園市工務局道路專案整合平台</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
                 <div id="col2" style="margin-left:auto">
                     <nav id="head-nav" class="navbar-toggle">
                         <div class="container-fluid ">
@@ -222,6 +207,10 @@
                         </div>
                     </nav>
                 </div>
+                <button id="menu-toggle" class="rwd-nav-toggle" type="button"
+                        aria-label="選單" aria-controls="col2" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </nav>
     </div>
@@ -278,6 +267,10 @@
 
         <div id="tb-sidebar-toggle" class="sidebar-toggle-btn" title="收合/展開側欄">
             <span>▶</span>
+        </div>
+        @* 手機限定：收合/展開左側工具列（樣式見 responsive/index.css） *@
+        <div id="tb-tools-toggle" class="tools-toggle-btn" title="收合/展開工具列">
+            <span>◀</span>
         </div>
         <div id="left-box" class="map-fixed-container hidden">
             <div class="box-header">

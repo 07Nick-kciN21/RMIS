@@ -565,29 +565,6 @@
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 600px) {
-    #page-project-edit .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    #page-project-edit .form-grid-3col {
-        grid-template-columns: 1fr;
-    }
-
-    #page-project-edit .form-group-wide {
-        grid-column: span 1;
-    }
-
-    #page-project-edit .edit-footer {
-        flex-direction: column;
-    }
-
-    #page-project-edit .edit-footer .btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
 /* ===== Autocomplete Dropdown ===== */
 #page-project-edit .autocomplete-wrapper {
     position: relative;

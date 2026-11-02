@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"]</title>
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -64,6 +65,10 @@
         @RenderBody()
 
     </div>
+    @* 響應式規則放最後載入，才能覆蓋頁面與 Partial 的樣式 *@
+    <link rel="stylesheet" href="~/css/responsive/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/responsive/index.css" asp-append-version="true" />
+    <script src="~/js/responsive/navToggle.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <div class="modal fade modal-session" id="extendSessionModal" tabindex="-1" aria-labelledby="extendSessionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

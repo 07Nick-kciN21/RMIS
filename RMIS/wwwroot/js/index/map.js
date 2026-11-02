@@ -54,12 +54,6 @@ export function initMap(mapId) {
 
     defaultOffCanvas();
 
-    $('#menu-toggle').on('click', function () {
-        console.log('menu-toggle');
-        // 移除id="navbar-menu"的toggle
-        $('#head-nav').toggleClass('navbar-toggle');
-    });
-    
     $('.map-controls').on('click', function (e) {
         e.stopPropagation();
     });

@@ -643,52 +643,6 @@
    10. 響應式調整
    ========================================================================== */
 
-@media (max-width: 768px) {
-    .process-info-main {
-        flex-direction: column;
-    }
-    
-    .process-info-right {
-        margin-left: 0;
-        margin-top: 15px;
-        align-self: flex-end;
-    }
-    
-    .process-tags {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .process-tag {
-        width: fit-content;
-    }
-    
-    .stage-tab {
-        padding: 10px 4px;
-        font-size: 0.75rem;
-        gap: 3px;
-    }
-    
-    .card-header {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .record-date {
-        align-self: flex-start;
-    }
-    
-    .process-stage-header {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-    }
-    
-    .btn-add-record {
-        justify-content: center;
-    }
-}
-
 /* ==========================================================================
    processBox.css - 補充樣式
    新增：record-desc-wrapper 與 btn-view-more 樣式
@@ -782,17 +736,6 @@
 /* ==========================================================================
    響應式調整
    ========================================================================== */
-
-@media (max-width: 768px) {
-    .record-desc-wrapper {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .btn-view-more {
-        align-self: flex-end;
-    }
-}
 
 /* ==========================================================================
    11. 動畫效果

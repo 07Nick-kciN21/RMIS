@@ -1,43 +1,52 @@
 ﻿#metaDataPanel{
-    width: 500px;
+    width: 100%;
+    max-width: 500px;
     height: 500px;
 }
 
 #searchPanel {
-    width: 200px;
+    width: 100%;
+    max-width: 200px;
     height: 300px;
 }
 
 #painterPanel {
-    width: 400px;
+    width: 100%;
+    max-width: 400px;
 }
 
 #searchPropPanel {
-    width: 500px;
+    width: 100%;
+    max-width: 500px;
 }
 
 #photoPanel {
-    width: 300px;
+    width: 100%;
+    max-width: 300px;
     height:100px;
 }
 
 #measurePanel {
-    width: 130px;
+    width: 100%;
+    max-width: 130px;
     height: 150px;
 }
 
 #flagPanel {
-    width: 500px;
+    width: 100%;
+    max-width: 500px;
     height: 500px;
 }
 
 #focusPanel {
-    width: 450px;
+    width: 100%;
+    max-width: 450px;
     height: 500px;
 }
 
 #accidentPanel {
-    width: 450px;
+    width: 100%;
+    max-width: 450px;
     height: 450px;
 }
 
@@ -63,6 +72,7 @@
     color: #43413d;
     padding: 5px 5px 5px 10px;
     cursor: move;
+    touch-action: none; /* 觸控拖曳時不讓瀏覽器捲動頁面 */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -193,28 +203,3 @@
     text-decoration: none;
 }
 
-@media (max-width: 1440px) {
-    #metaDataPanel  { width: 420px; height: 420px; }
-    #searchPropPanel { width: 420px; }
-    #flagPanel      { width: 420px; height: 420px; }
-    #focusPanel     { width: 380px; height: 440px; }
-    #accidentPanel  { width: 380px; height: 380px; }
-    #painterPanel   { width: 340px; }
-}
-
-@media (max-width:899px){
-    #searchPanel{
-        top:50%;
-        left: 0%;
-    }
-
-    #searchPanel li{
-        font-size: 16px;
-    }
-
-    #focusPanel{
-        top:51.5px;
-        left: 0%;
-        width: 100%;
-    }
-}

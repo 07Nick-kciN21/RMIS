@@ -38,21 +38,12 @@
     });
 
 
-    // 檢查螢幕尺寸條件
-    function enablePanelDrag() {
-        const isSmallScreen = window.matchMedia("(max-width: 899px)").matches; // 設定特定寬度條件
-        if (!isSmallScreen) {
-            $(document).on('pointermove', handlePanelMove); // 啟用拖移
-        } else {
-            $(document).off('pointermove', handlePanelMove); // 禁用拖移
-        }
-    }
-
-    enablePanelDrag();
+    $(document).on('pointermove', handlePanelMove);
 
     // 防止事件穿透到地圖（滾動、點擊、拖曳、右鍵選單）
     // 少了 contextmenu 的話，在面板內按右鍵仍會冒泡到地圖，觸發地圖本身的座標資訊彈窗
-    $panel.on('wheel mousedown pointerdown dblclick contextmenu', (e) => {
+    // 少了 touchstart 的話，支援原生觸控的平板（iPad 等）上，Leaflet 以 touchstart 起始拖移，在面板內滑動會拖動地圖
+    $panel.on('wheel mousedown pointerdown touchstart dblclick contextmenu', (e) => {
         e.stopPropagation();
     });
 

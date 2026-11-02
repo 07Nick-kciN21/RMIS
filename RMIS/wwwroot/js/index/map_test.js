@@ -26,11 +26,10 @@ const Map = {
         let coordinateSwitch = 0;
 
         const $container = $('.div0'); // 取得 Grid 容器
-        const $toggleBtn = $('#tb-sidebar-toggle');
 
-        // 側欄切換功能
-        $toggleBtn.on('click', () => {
-            $container.toggleClass('sidebar-collapsed');
+        // 切換 Grid 欄位收合狀態，並在動畫後重繪地圖
+        const toggleGridClass = (className) => {
+            $container.toggleClass(className);
 
             // 當 CSS 動畫結束後，呼叫 invalidateSize 確保地圖不會破圖
             // 'transitionend' 會在 grid-template-columns 改變完成後觸發
@@ -42,11 +41,26 @@ const Map = {
             setTimeout(() => {
                 this.indexMap.invalidateSize();
             }, 450);
+        };
+
+        // 側欄切換功能
+        $('#tb-sidebar-toggle').on('click', () => toggleGridClass('sidebar-collapsed'));
+
+        // 工具列切換功能（僅手機版有效，見 responsive/index.css）
+        $('#tb-tools-toggle').on('click', () => toggleGridClass('tools-collapsed'));
+
+        $('.map-controls').on('click', e => e.stopPropagation());
+
+        // 以下元素位於地圖容器內，滾輪、拖曳、點擊不傳給地圖
+        // （否則 footer 的圖層清單無法用滾輪/手指捲動，點收合按鈕也會觸發地圖點擊）
+        $('.map-footer, #tb-sidebar-toggle, #tb-tools-toggle').each(function () {
+            L.DomEvent.disableScrollPropagation(this);
+            L.DomEvent.disableClickPropagation(this);
         });
 
-        $('#menu-toggle').on('click', () => $('#head-nav').toggleClass('navbar-toggle'));
-
-        $('.map-controls, .map-footer').on('click', e => e.stopPropagation());
+        // disableClickPropagation 只攔 Leaflet 的地圖點擊，DOM click 仍會冒泡，
+        // footer 維持原本的 stopPropagation，避免觸發 document 上的點擊處理
+        $('.map-footer').on('click', e => e.stopPropagation());
 
         $('#tb-zoomIn').on('click', () => this.indexMap.zoomIn());
         $('#tb-zoomOut').on('click', () => this.indexMap.zoomOut());

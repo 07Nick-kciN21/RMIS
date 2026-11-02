@@ -31,24 +31,13 @@
     
 }
 
-@media (min-width: 900px) {
-    header{
-        display: flex;
-    }
-    .head-logo-box {
-        width: 300px;
-    }
-    .head-logo{
-        text-align: center;
-    }
+header{
+    display: flex;
+}
+.head-logo-box {
+    width: 300px;
+}
+.head-logo{
+    text-align: center;
 }
 
-@media (max-width: 899px) {
-    header{
-        display: block;
-    }
-
-    .head-logo-box {
-        width: 50%;
-    }
-}

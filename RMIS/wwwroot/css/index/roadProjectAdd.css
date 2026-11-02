@@ -210,79 +210,6 @@
     border: 1px solid #e2e8f0;
 }
 
-/* 預覽地圖底圖切換（樣式參考主地圖 #map-basemapCtrl / .footerSelect） */
-#page-project-add .preview-basemap-ctrl {
-    position: relative;
-    width: 220px;
-    font-size: 13px;
-    color: #43413d;
-}
-
-#page-project-add .preview-basemap-current {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background-color: #e4b867;
-    border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    user-select: none;
-}
-
-#page-project-add .preview-basemap-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#page-project-add .preview-basemap-select {
-    display: none;
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    width: 100%;
-    padding: 10px;
-    padding-bottom: 0;
-    background-color: #e4b867;
-    border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
-
-#page-project-add .preview-basemap-ctrl.open .preview-basemap-select {
-    display: block;
-}
-
-#page-project-add .preview-basemap-title {
-    font-weight: bold;
-    color: white;
-}
-
-#page-project-add .preview-basemap-select > ul {
-    margin: 4px 0 10px;
-    padding-left: 0;
-    overflow-y: auto;
-    max-height: 135px;
-    background-color: #f8f8f8;
-}
-
-#page-project-add .preview-basemap-item {
-    list-style-type: none;
-    padding: 3px 8px;
-    cursor: pointer;
-}
-
-#page-project-add .preview-basemap-item:hover {
-    background-color: #e4b867;
-    border-radius: 5px;
-}
-
-#page-project-add .preview-basemap-item.selected {
-    font-weight: bold;
-    background-color: #f3dcae;
-}
-
 #page-project-add .preview-map-legend {
     display: flex;
     gap: 16px;
@@ -641,29 +568,6 @@
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 600px) {
-    #page-project-add .form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    #page-project-add .form-grid-3col {
-        grid-template-columns: 1fr;
-    }
-
-    #page-project-add .form-group-wide {
-        grid-column: span 1;
-    }
-
-    #page-project-add .add-footer {
-        flex-direction: column;
-    }
-
-    #page-project-add .add-footer .btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
 /* ===== 備註附件 ===== */
 #page-project-add .file-size-hint {
     font-size: 12px;

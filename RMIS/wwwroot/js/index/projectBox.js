@@ -105,6 +105,30 @@ const ProjectBox = {
             self.updateProjectTable();
         });
 
+        // 手機：結果列表操作選單（漢堡）開關
+        const $resultActions = $('#projectResultActions');
+        const $resultActionsToggle = $('#btnResultActions');
+        const setResultActionsOpen = function(open) {
+            $resultActions.toggleClass('open', open);
+            $resultActionsToggle.attr('aria-expanded', open);
+        };
+
+        $resultActionsToggle.on('click', function(e) {
+            e.stopPropagation();
+            setResultActionsOpen(!$resultActions.hasClass('open'));
+        });
+
+        // 點選項目或選單外側時收起
+        $resultActions.on('click', '.btn, .box-export-link', function() {
+            setResultActionsOpen(false);
+        });
+
+        $(document).on('click', function(e) {
+            if ($resultActions.hasClass('open') && !$(e.target).closest('#projectResultActions').length) {
+                setResultActionsOpen(false);
+            }
+        });
+
         // 綁定新增專案按鈕
         $('#btnAddProject').on('click', function() {
             RoadProjectAdd.openAdd();

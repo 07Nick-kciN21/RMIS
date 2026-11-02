@@ -1,6 +1,21 @@
 $(document).ready(function () {
     initRegisterModal();
     hideModalOverlay();
+
+    // 顯示 / 隱藏密碼
+    $(".pwd-toggle").on("click", function () {
+      const $btn = $(this);
+      const $input = $btn.siblings("input");
+      const show = $input.attr("type") === "password";
+      $input.attr("type", show ? "text" : "password");
+      $btn.toggleClass("is-shown", show)
+          .attr({ "aria-label": show ? "隱藏密碼" : "顯示密碼", "title": show ? "隱藏密碼" : "顯示密碼" });
+    });
+
+    // 關閉 Modal 時恢復遮擋
+    $('#registerModal').on('hidden.bs.modal', function () {
+      $(this).find(".pwd-toggle.is-shown").trigger("click");
+    });
     function refreshCaptcha($img) {
       // 保證傳入的東西轉成 jQuery 物件
       $img = $($img);
@@ -73,12 +88,11 @@ $(document).ready(function () {
 
         let passwordValid = true;
         let passwordMessage = "";
-        console.log("Account:", account, "Password:", password);
         // 密碼格式檢查
         const passwordPattern = new RegExp($passwordInput.attr('pattern'));
         if (!password || !passwordPattern.test(password)) {
           passwordValid = false;
-          passwordMessage += "密碼需為 6~20 位，且包含英文字母與數字<br>";
+          passwordMessage += "密碼需包含大小寫英文字母與數字，長度 8~20<br>";
         }
 
         // 帳號與密碼相同檢查
@@ -120,7 +134,6 @@ $(document).ready(function () {
   
         // 所有欄位驗證通過 → 使用 Ajax 送出
         const formData = $(form).serialize();
-        console.log(formData);
 
         $.ajax({
           url: '/Portal/Register',
