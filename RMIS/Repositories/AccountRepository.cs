@@ -46,46 +46,42 @@ namespace RMIS.Repositories
 
         public async Task<bool> CheckStatus(ApplicationUser user)
         {
-            var userStatus = user.Status;
+            var status = await _authDbContext.UserAuthViews
+                .Where(v => v.UserId == user.Id)
+                .Select(v => new { v.UserStatus, v.RoleStatus, v.DeptStatus })
+                .FirstOrDefaultAsync();
 
-            var roles = await _userManager.GetRolesAsync(user);
-            var roleName = roles.First();
-            var role = await _roleManager.FindByNameAsync(roleName);
-            var roleStatus = role.Status;
-
-            var department = await _authDbContext.Departments.FindAsync(user.DepartmentId);
-            var deptStatus = department.Status;
-            return (userStatus && roleStatus && deptStatus);
+            return status != null && status.UserStatus
+                && (status.RoleStatus ?? false) && (status.DeptStatus ?? false);
         }
 
         public async Task<Dictionary<string, PermissionDetail>> GetUserPermissions(string roleId)
         {
-            var rolePermissions = await _authDbContext.RolePermissions
-                .Include(rp => rp.Permission)
-                .Where(rp => rp.RoleId == roleId)
-                .ToListAsync();
+            // 檢視表已是「角色 × 全部權限」矩陣，未指派的權限 CRUD 皆為 false，
+            // 畫面上 Model["權限名稱"] 直接索引時不會因找不到 key 而拋出例外
+            var result = await _authDbContext.RolePermissionViews
+                .Where(v => v.RoleId == roleId)
+                .ToDictionaryAsync(
+                    v => v.PermissionName,
+                    v => new PermissionDetail
+                    {
+                        // 未指派時維持原本預設值（Status = false）
+                        Status = v.IsAssigned && v.PermissionStatus,
+                        Read = v.Read,
+                        Create = v.Create,
+                        Update = v.Update,
+                        Delete = v.Delete,
+                        Export = v.Export
+                    });
 
-            var result = rolePermissions.ToDictionary(
-                p => p.Permission.Name,
-                p => new PermissionDetail
-                {
-                    Status = p.Permission.Status,
-                    Read = p.Read,
-                    Create = p.Create,
-                    Update = p.Update,
-                    Delete = p.Delete,
-                    Export = p.Export
-                });
-
-            // 該角色沒有被明確指派的權限類別，一律補上「全部無權限」的預設值，
-            // 避免畫面上 Model["權限名稱"] 直接索引時因找不到 key 而拋出例外
-            var allPermissionNames = await _authDbContext.Permissions
-                .Select(p => p.Name)
-                .ToListAsync();
-
-            foreach (var name in allPermissionNames)
+            // 角色不存在（例如使用者未指派角色）時檢視表沒有資料，仍需補上所有權限的預設值
+            if (result.Count == 0)
             {
-                if (!result.ContainsKey(name))
+                var allPermissionNames = await _authDbContext.Permissions
+                    .Select(p => p.Name)
+                    .ToListAsync();
+
+                foreach (var name in allPermissionNames)
                 {
                     result[name] = new PermissionDetail();
                 }
@@ -96,41 +92,27 @@ namespace RMIS.Repositories
 
         public async Task<UserAuthInfo> GetUserAuthInfo(ApplicationUser user)
         {
-            var department = await _authDbContext.Departments
-                .Where(d => d.Id == user.DepartmentId)
+            return await _authDbContext.UserAuthViews
+                .Where(v => v.UserId == user.Id)
+                .Select(v => new UserAuthInfo
+                {
+                    departmentId = v.DepartmentId ?? 0,
+                    departmentName = v.DepartmentName,
+                    deptStatus = v.DeptStatus ?? false,
+                    roleId = v.RoleId,
+                    roleName = v.RoleName,
+                    roleStatus = v.RoleStatus ?? false
+                })
                 .FirstAsync();
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var roleName = roles.First();
-            var role = await _roleManager.FindByNameAsync(roleName);
-            var result = new UserAuthInfo
-            {
-                departmentId = department.Id,
-                departmentName = department.Name,
-                deptStatus = department.Status,
-                roleId = role.Id,
-                roleName = role.Name,
-                roleStatus = role.Status
-            };
-            
-            return result;
         }
         public async Task<RolePermission> GetUserPermission(string userId, string permissionName)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            var roles = await _userManager.GetRolesAsync(user);
-            var roleName = roles.First();
-            var role = await _roleManager.FindByNameAsync(roleName);
-            if (roleName == null)
-            {
-                return new RolePermission { Read = false, Create = false, Delete = false, Export = false, Update = false }; // 默認無權限
-            }
-            // 取得該role對應的permissionName
-            var permission = await _authDbContext.RolePermissions
-                .Include(rp => rp.Permission)
-                .Include(rp => rp.Role)
-                .FirstAsync(rp => rp.Role.Name == roleName &&
-                             rp.Permission.Name == permissionName);
+            var permission = await (
+                from v in _authDbContext.UserAuthViews
+                join rp in _authDbContext.RolePermissions on v.RoleId equals rp.RoleId
+                where v.UserId == userId && rp.Permission.Name == permissionName
+                select rp)
+                .FirstOrDefaultAsync();
 
             return permission ?? new RolePermission { Read = false, Create = false, Delete = false, Export = false, Update = false }; // 默認無權限
         }
@@ -392,24 +374,28 @@ namespace RMIS.Repositories
 
         public async Task<ReadRolePermission> GetRolePermissionsAsync(string id)
         {
-            var role = await _authDbContext.Roles.FindAsync(id);
-            var updatePermission = _authDbContext.RolePermissions
-                                .Include(rp => rp.Permission)
-                                .Where(rp => rp.RoleId == id)
-                                .OrderBy(rp => rp.Permission.Order)
-                                .Select(rp => new ReadPermission
-                                {
-                                    PermissionName = rp.Permission.Name,
-                                    Create = rp.Create,
-                                    Read = rp.Read,
-                                    Delete = rp.Delete,
-                                    Update = rp.Update,
-                                    Export = rp.Export
-                                }).ToList();
+            var rows = await _authDbContext.RolePermissionViews
+                .Where(v => v.RoleId == id)
+                .OrderBy(v => v.PermissionOrder)
+                .ToListAsync();
+            // 尚無任何權限類別時檢視表沒有資料，改由 Roles 取得角色名稱
+            var roleName = rows.Count > 0
+                ? rows[0].RoleName
+                : (await _authDbContext.Roles.FindAsync(id)).Name;
             var updateRole = new ReadRolePermission
             {
-                RoleName = role.Name,
-                Permissions = updatePermission
+                RoleName = roleName,
+                Permissions = rows
+                    .Where(v => v.IsAssigned)
+                    .Select(v => new ReadPermission
+                    {
+                        PermissionName = v.PermissionName,
+                        Create = v.Create,
+                        Read = v.Read,
+                        Delete = v.Delete,
+                        Update = v.Update,
+                        Export = v.Export
+                    }).ToList()
             };
             return updateRole;
         }
@@ -513,54 +499,45 @@ namespace RMIS.Repositories
 
         public async Task<List<DepartmentUser>> GetAllUser()
         {
-            var users = await _authDbContext.Users
-                .OrderBy(u => u.Order)
-                .Select(u => new DepartmentUser
+            return await _authDbContext.UserAuthViews
+                .OrderBy(v => v.UserOrder)
+                .Select(v => new DepartmentUser
                 {
-                    Id = u.Id,
-                    Name = u.UserName,
-                    DepartmentId = u.DepartmentId,
-                    Department = u.Department.Name,
-                    Role = _userManager.GetRolesAsync(u).Result.First(),
-                    Status = u.Status,
-                    CreateAt = u.CreatedAt
-                }
-                ).ToListAsync();
-            return users;
+                    Id = v.UserId,
+                    Name = v.UserName,
+                    DepartmentId = v.DepartmentId,
+                    Department = v.DepartmentName,
+                    Role = v.RoleName,
+                    Status = v.UserStatus,
+                    CreateAt = v.CreatedAt
+                })
+                .ToListAsync();
         }
 
         public async Task<UserManager> GetUserManagerDataAsync()
         {
-            var userList = await _authDbContext.Users
-                .OrderBy(u => u.Department != null ? u.Department.Order : 0)
-                .ThenBy(u => _authDbContext.UserRoles
-                    .Where(ur => ur.UserId == u.Id)
-                    .Join(_authDbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => (int?)r.Order)
-                    .FirstOrDefault() ?? 0)
-                .ThenBy(u => u.Order)
-                .Select(u => new UserData
-                { 
-                    Id = u.Id,
-                    DepartmentId = u.DepartmentId,
-                    Department = u.Department != null ? u.Department.Name : "",
-                    UserName = u.UserName,
-                    DisplayName = u.DisplayName,
-                    Email = u.Email,
-                    Phone = u.PhoneNumber,
-                    RoleId = _authDbContext.UserRoles
-                        .Where(ur => ur.UserId == u.Id)
-                        .Select(ur => ur.RoleId)
-                        .FirstOrDefault(),
-                    Role = _authDbContext.UserRoles
-                        .Where(ur => ur.UserId == u.Id)
-                        .Join(_authDbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
-                        .FirstOrDefault() ?? "No Role",
-                    CitizenCardNo = u.CitizenCardNo,
-                    Order = u.Order,
-                    Status = u.Status,
-                    EmailConfirm = u.EmailConfirmed,
-                    CreateAt = u.CreatedAt
-                }).ToListAsync();
+            var userList = await _authDbContext.UserAuthViews
+                .OrderBy(v => v.DeptOrder ?? 0)
+                .ThenBy(v => v.RoleOrder ?? 0)
+                .ThenBy(v => v.UserOrder)
+                .Select(v => new UserData
+                {
+                    Id = v.UserId,
+                    DepartmentId = v.DepartmentId,
+                    Department = v.DepartmentName ?? "",
+                    UserName = v.UserName,
+                    DisplayName = v.DisplayName,
+                    Email = v.Email,
+                    Phone = v.PhoneNumber,
+                    RoleId = v.RoleId,
+                    Role = v.RoleName ?? "No Role",
+                    CitizenCardNo = v.CitizenCardNo,
+                    Order = v.UserOrder,
+                    Status = v.UserStatus,
+                    EmailConfirm = v.EmailConfirmed,
+                    CreateAt = v.CreatedAt
+                })
+                .ToListAsync();
 
             // 2. 獲取部門列表
             var departments = await _authDbContext.Departments
@@ -765,28 +742,34 @@ namespace RMIS.Repositories
 
         public async Task<GetRolePermission> GetRolePermissionAsync(string roleName)
         {
-            var role = await _authDbContext.Roles.Where(r => r.Name == roleName).FirstOrDefaultAsync();
-            if (role == null)
-            {
-                return null;
-            }
-            var permissions = await _authDbContext.RolePermissions
-                .Where(rp => rp.RoleId == role.Id)
-                .Select(rp => new GetPermission
-                {
-                    PermissionName = rp.Permission.Name,
-                    Read = rp.Read,
-                    Create = rp.Create,
-                    Update = rp.Update,
-                    Delete = rp.Delete,
-                    Export = rp.Export
-                })
+            var rows = await _authDbContext.RolePermissionViews
+                .Where(v => v.RoleName == roleName)
                 .ToListAsync();
+            if (rows.Count == 0)
+            {
+                // 尚無任何權限類別時檢視表沒有資料，改由 Roles 確認角色是否存在
+                var role = await _authDbContext.Roles.Where(r => r.Name == roleName).FirstOrDefaultAsync();
+                if (role == null)
+                {
+                    return null;
+                }
+                return new GetRolePermission { RoleId = role.Id, RoleName = role.Name, Permissions = new List<GetPermission>() };
+            }
             var rolePermissions = new GetRolePermission
             {
-                RoleId = role.Id,
-                RoleName = role.Name,
-                Permissions = permissions
+                RoleId = rows[0].RoleId,
+                RoleName = rows[0].RoleName,
+                Permissions = rows
+                    .Where(v => v.IsAssigned)
+                    .Select(v => new GetPermission
+                    {
+                        PermissionName = v.PermissionName,
+                        Read = v.Read,
+                        Create = v.Create,
+                        Update = v.Update,
+                        Delete = v.Delete,
+                        Export = v.Export
+                    }).ToList()
             };
             return rolePermissions;
         }
@@ -822,27 +805,30 @@ namespace RMIS.Repositories
 
         public async Task<UpdateRoleView> UpdateRoleViewAsync(string id)
         {
-            var role = _authDbContext.Roles.Find(id);
-            var permissions = await _authDbContext.RolePermissions
-                .Include(rp => rp.Permission)
-                .Where(rp => rp.RoleId == id)
-                .OrderBy(rp => rp.Permission.Order)
-                .Select(rp => new UpdatePermission
-                {
-                    PermissionId = rp.PermissionId,
-                    PermissionName = rp.Permission.Name,
-                    Create = rp.Create,
-                    Read = rp.Read,
-                    Delete = rp.Delete,
-                    Update = rp.Update,
-                    Export = rp.Export
-                }).ToListAsync();
+            var rows = await _authDbContext.RolePermissionViews
+                .Where(v => v.RoleId == id)
+                .OrderBy(v => v.PermissionOrder)
+                .ToListAsync();
+            // 尚無任何權限類別時檢視表沒有資料，改由 Roles 取得角色資料
+            var role = rows.Count > 0 ? null : await _authDbContext.Roles.FindAsync(id);
             var roleData = new UpdateRoleView
             {
                 RoleId = id,
-                RoleName = role.Name,
-                Status = role.Status,
-                Permissions = permissions
+                RoleName = rows.Count > 0 ? rows[0].RoleName : role.Name,
+                Status = rows.Count > 0 ? rows[0].RoleStatus : role.Status,
+                // 只列出已指派的權限：UpdateRoleAsync 只會更新既有的 RolePermissions 資料列
+                Permissions = rows
+                    .Where(v => v.IsAssigned)
+                    .Select(v => new UpdatePermission
+                    {
+                        PermissionId = v.PermissionId,
+                        PermissionName = v.PermissionName,
+                        Create = v.Create,
+                        Read = v.Read,
+                        Delete = v.Delete,
+                        Update = v.Update,
+                        Export = v.Export
+                    }).ToList()
             };
 
             return roleData;
@@ -893,21 +879,20 @@ namespace RMIS.Repositories
         }
         public async Task<UserProfileView> GetUserProfileDataAsync(string id)
         {
-            var user = await _authDbContext.Users.Include(u => u.Department).FirstAsync(u => u.Id == id);
-            var roles = await _authDbContext.Roles.ToListAsync();
-            var departments = await _authDbContext.Departments.ToListAsync();
-            var userData = new UserProfileView
-            {
-                Id = user.Id,
-                UserName = user.UserName,
-                DisplayName = user.DisplayName,
-                Email = user.Email,
-                Phone = user.PhoneNumber,
-                Role = _userManager.GetRolesAsync(user).Result.First(),
-                Department = user.Department.Name,
-                CitizenCardNo = user.CitizenCardNo
-            };
-            return userData;
+            return await _authDbContext.UserAuthViews
+                .Where(v => v.UserId == id)
+                .Select(v => new UserProfileView
+                {
+                    Id = v.UserId,
+                    UserName = v.UserName,
+                    DisplayName = v.DisplayName,
+                    Email = v.Email,
+                    Phone = v.PhoneNumber,
+                    Role = v.RoleName,
+                    Department = v.DepartmentName,
+                    CitizenCardNo = v.CitizenCardNo
+                })
+                .FirstAsync();
         }
 
         public async Task<UpdateUserView> UpdateUserViewAsync(string id)

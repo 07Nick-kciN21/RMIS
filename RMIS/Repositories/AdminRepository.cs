@@ -3278,65 +3278,46 @@ namespace RMIS.Repositories
 
         public async Task<List<AccidentRecord>> GetAccidentDataAsync(AccidentQueryInput input)
         {
-            var yearsToQuery = AccidentYearRidMap.Keys
-                .Where(y => y >= input.StartYear && y <= input.EndYear)
-                .OrderBy(y => y)
-                .ToList();
-
-            if (yearsToQuery.Count == 0)
-                return new List<AccidentRecord>();
-
             int startYearAD = input.StartYear + 1911;
-            int endYearAD   = input.EndYear   + 1911;
+            int endYearAD = input.EndYear + 1911;
             string startDate = $"{startYearAD}{input.StartMonth:D2}01";
-            string endDate   = $"{endYearAD}{input.EndMonth:D2}31";
+            string endDate = $"{endYearAD}{input.EndMonth:D2}31";
 
-            var allRecords = new List<AccidentRecord>();
+            IQueryable<AccidentAll> query = _mapDBContext.AccidentAll
+                .Where(r => r.Minguo >= input.StartYear && r.Minguo <= input.EndYear &&
+                            string.Compare(r.Date, startDate) >= 0 &&
+                            string.Compare(r.Date, endDate) <= 0 &&
+                            r.Area == input.Area);
 
-            foreach (var year in yearsToQuery)
-            {
-                var dbSet = _mapDBContext.GetAccidentSet(year);
+            if (!string.IsNullOrWhiteSpace(input.Road))
+                query = query.Where(r => r.Road.Contains(input.Road));
 
-                IQueryable<Accident> query = dbSet
-                    .Where(r => string.Compare(r.Date, startDate) >= 0 &&
-                                string.Compare(r.Date, endDate)   <= 0 &&
-                                r.Area == input.Area);
+            if (!string.IsNullOrWhiteSpace(input.AccidentType))
+                query = query.Where(r => r.AccidentType == input.AccidentType);
 
-                if (!string.IsNullOrWhiteSpace(input.Road))
-                    query = query.Where(r => r.Road.Contains(input.Road));
-
-                if (!string.IsNullOrWhiteSpace(input.AccidentType))
-                    query = query.Where(r => r.AccidentType == input.AccidentType);
-
-                var records = await query
-                    .Select(r => new AccidentRecord
-                    {
-                        Year                = r.Year,
-                        Date                = r.Date,
-                        Time                = r.Time,
-                        Area                = r.Area,
-                        Road                = r.Road,
-                        Section             = r.Section,
-                        Lane                = r.Lane,
-                        Alley               = r.Alley,
-                        IntersectionRoad    = r.IntersectionRoad,
-                        IntersectionSection = r.IntersectionSection,
-                        IntersectionLane    = r.IntersectionLane,
-                        IntersectionAlley   = r.IntersectionAlley,
-                        RoadOther           = r.RoadOther,
-                        Type                = r.AccidentType,
-                        Latitude            = r.Latitude  ?? "",
-                        Longitude           = r.Longitude ?? "",
-                    })
-                    .ToListAsync();
-
-                allRecords.AddRange(records);
-            }
-
-            return allRecords
+            return await query
                 .OrderBy(r => r.Date)
                 .ThenBy(r => r.Time)
-                .ToList();
+                .Select(r => new AccidentRecord
+                {
+                    Year = r.Year,
+                    Date = r.Date,
+                    Time = r.Time,
+                    Area = r.Area,
+                    Road = r.Road,
+                    Section = r.Section,
+                    Lane = r.Lane,
+                    Alley = r.Alley,
+                    IntersectionRoad = r.IntersectionRoad,
+                    IntersectionSection = r.IntersectionSection,
+                    IntersectionLane = r.IntersectionLane,
+                    IntersectionAlley = r.IntersectionAlley,
+                    RoadOther = r.RoadOther,
+                    Type = r.AccidentType,
+                    Latitude = r.Latitude ?? "",
+                    Longitude = r.Longitude ?? "",
+                })
+                .ToListAsync();
         }
         public async Task<List<AccidentRecord>> ExportAccidentDataAsync(int year, string area)
         {

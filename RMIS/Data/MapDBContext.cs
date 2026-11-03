@@ -105,7 +105,7 @@ namespace RMIS.Data
         /// </summary>
         public DbSet<Accident> GetAccidentSet(int minguo) =>
             Set<Accident>($"Accident{minguo}");
-
+        public DbSet<AccidentAll> AccidentAll { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
@@ -149,6 +149,11 @@ namespace RMIS.Data
                 modelBuilder.SharedTypeEntity<Accident>($"Accident{year}")
                     .ToTable($"accident_{year}");
             }
+
+            modelBuilder.Entity<AccidentAll>()
+                .HasNoKey()
+                .ToView("vw_AccidentAll");
+
         }
     }
 }

@@ -358,6 +358,119 @@ namespace RMIS.Migrations.AuthDb
                     b.ToTable("RolePermissions");
                 });
 
+            modelBuilder.Entity("RMIS.Models.Auth.RolePermissionView", b =>
+                {
+                    b.Property<bool>("Create")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Delete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Export")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAssigned")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PermissionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PermissionOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("PermissionStatus")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Read")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("RoleStatus")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Update")
+                        .HasColumnType("bit");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("vw_RolePermissionDetail", (string)null);
+                });
+
+            modelBuilder.Entity("RMIS.Models.Auth.UserAuthView", b =>
+                {
+                    b.Property<string>("CitizenCardNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DepartmentName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DeptOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("DeptStatus")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("RoleOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("RoleStatus")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("UserStatus")
+                        .HasColumnType("bit");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("vw_UserAuthInfo", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("RMIS.Models.Auth.ApplicationRole", null)

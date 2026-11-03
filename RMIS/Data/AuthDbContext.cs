@@ -14,6 +14,9 @@ public class AuthDbContext : IdentityDbContext<ApplicationUser, ApplicationRole,
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<Department> Departments { get; set; }
+    public DbSet<UserAuthView> UserAuthViews { get; set; }
+    public DbSet<RolePermissionView> RolePermissionViews { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -54,5 +57,13 @@ public class AuthDbContext : IdentityDbContext<ApplicationUser, ApplicationRole,
         builder.Entity<RolePermission>()
             .Property(rp => rp.Export)
             .HasDefaultValue(false);
+
+        builder.Entity<UserAuthView>()
+            .HasNoKey()
+            .ToView("vw_UserAuthInfo");
+
+        builder.Entity<RolePermissionView>()
+            .HasNoKey()
+            .ToView("vw_RolePermissionDetail");
     }
 }
