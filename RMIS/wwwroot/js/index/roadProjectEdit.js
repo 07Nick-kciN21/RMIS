@@ -3,6 +3,7 @@ import RoadProjectView from './roadProjectView.js';
 import { showLoading, hideLoading } from '../loading.js';
 import { MAX_FILE_MB, MAX_FILE_BYTES, checkUploadSize, readErrorResponse, getErrorMessage } from '../uploadLimit.js';
 import { initPreviewBasemapCtrl } from './previewBasemapCtrl.js';
+import { checkStreetPhotos } from './streetPhotoCheck.js';
 
 /**
  * 道路專案編輯模組
@@ -15,9 +16,8 @@ const RoadProjectEdit = {
 
     // ── 拓寬範圍 ──
     rangeList: [],
-    startCoord: null,
-    endCoord: null,
-    middleRangePoints: [],
+    // 拓寬範圍點（依多邊形順序排列）：{ lat, lng, role: 'start' | 'end' | 'middle' }
+    rangePoints: [],
 
     // ── 街景照片 ──
     // 每筆：{ Id, Latitude, Longitude, Photo (base64|null), PhotoName, existingUrl }
@@ -87,15 +87,13 @@ const RoadProjectEdit = {
 
         // 綁定起點路名搜尋
         $(document).on('input', '#edit-start-point', function() {
-            self.startCoord = null;
-            self.syncRangeTable();
+            self.setRolePoint('start', null);
             self.scheduleSearch('start', $(this).val().trim());
         });
 
         // 綁定終點路名搜尋
         $(document).on('input', '#edit-end-point', function() {
-            self.endCoord = null;
-            self.syncRangeTable();
+            self.setRolePoint('end', null);
             self.scheduleSearch('end', $(this).val().trim());
         });
 
@@ -125,21 +123,22 @@ const RoadProjectEdit = {
             self.onRangeInputChange(this);
         });
 
-        // 綁定範圍點刪除按鈕（起點、終點、中間點）
+        // 綁定範圍點刪除按鈕
         $(document).on('click', '.edit-btn-delete-range-point', function() {
-            const pointType = $(this).data('point-type');
-            if (pointType === 'start') {
-                self.deleteStartPoint();
-            } else if (pointType === 'end') {
-                self.deleteEndPoint();
-            } else if (pointType === 'middle') {
-                self.deleteMiddlePoint(parseInt($(this).data('middle-index')));
-            }
+            self.deleteRangePoint(parseInt($(this).data('row-index')));
         });
+
 
         // 綁定點圖新增範圍點切換按鈕
         $(document).on('click', '#btn-edit-toggle-add-range-point', function() {
             self.toggleAddRangePoint();
+        });
+
+        // 連續新增範圍點時按 Esc 結束
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && self.addingRangePoint && !$('#page-project-edit').hasClass('hidden')) {
+                self.toggleAddRangePoint();
+            }
         });
 
         // 綁定新增街景照片按鈕
@@ -222,9 +221,7 @@ const RoadProjectEdit = {
      * 重置地圖相關狀態與 DOM
      */
     resetMapState: function() {
-        this.startCoord = null;
-        this.endCoord = null;
-        this.middleRangePoints = [];
+        this.rangePoints = [];
         this.rangeList = [];
         this.photoList = [];
         this.remarkFileList = [];
@@ -235,7 +232,7 @@ const RoadProjectEdit = {
         this.searchResults = { start: [], end: [] };
         $('#edit-start-point-dropdown').addClass('hidden').empty();
         $('#edit-end-point-dropdown').addClass('hidden').empty();
-        $('#btn-edit-toggle-add-range-point').removeClass('active');
+        $('#btn-edit-toggle-add-range-point').removeClass('active').html('<i class="fa fa-plus"></i> 點圖新增範圍點');
         $('#btn-edit-toggle-add-photo-point').removeClass('active');
         $('#edit-preview-map').removeClass('adding-point');
         $('#edit-expansion-range-tbody').html('<tr class="empty-row"><td colspan="4">尚無資料，請點圖新增範圍點</td></tr>');
@@ -257,23 +254,13 @@ const RoadProjectEdit = {
             if (!response.ok) return;
             const data = await response.json();
 
-            // 解析範圍點：第一個 = startCoord，最後一個 = endCoord，中間 = middleRangePoints
+            // 解析範圍點：依儲存順序載入；資料庫未記錄起訖角色，沿用「第一個 = 起點、最後一個 = 終點」
             // 注意：API 使用 camelCase 序列化，所以屬性名是 latitude/longitude（小駝峰）
-            if (data.rangePoints && data.rangePoints.length > 0) {
-                if (data.rangePoints.length >= 2) {
-                    this.startCoord = { lat: data.rangePoints[0].latitude, lng: data.rangePoints[0].longitude };
-                    this.endCoord = {
-                        lat: data.rangePoints[data.rangePoints.length - 1].latitude,
-                        lng: data.rangePoints[data.rangePoints.length - 1].longitude
-                    };
-                    this.middleRangePoints = data.rangePoints.slice(1, -1).map(function(p) {
-                        return { lat: p.latitude, lng: p.longitude };
-                    });
-                } else {
-                    // 只有一個點視為起點
-                    this.startCoord = { lat: data.rangePoints[0].latitude, lng: data.rangePoints[0].longitude };
-                }
-            }
+            const savedPoints = data.rangePoints || [];
+            this.rangePoints = savedPoints.map(function(p, i) {
+                const role = i === 0 ? 'start' : (i === savedPoints.length - 1 ? 'end' : 'middle');
+                return { lat: p.latitude, lng: p.longitude, role: role };
+            });
             this.syncRangeTable();
 
             // 解析照片點：Property 為 JSON {"url":"projectId/photoName"}
@@ -433,35 +420,72 @@ const RoadProjectEdit = {
         const [lng, lat] = item.location.split(',').map(Number);
         const coord = { lat, lng };
 
-        if (type === 'start') {
-            $('#edit-start-point-dropdown').addClass('hidden');
-            this.startCoord = coord;
-        } else {
-            $('#edit-end-point-dropdown').addClass('hidden');
-            this.endCoord = coord;
-        }
-        this.syncRangeTable();
+        $(type === 'start' ? '#edit-start-point-dropdown' : '#edit-end-point-dropdown').addClass('hidden');
+        this.setRolePoint(type, coord);
         this.combineLocation();
     },
 
     // ──── 拓寬範圍 ────
 
     /**
-     * 從三個來源組合 rangeList（資料層，不觸及 DOM）
+     * 設定起點 / 終點座標（coord 為 null 時移除）：
+     * 已存在則原位更新，不改變其在多邊形中的順序；新增時起點放最前、終點放最後
+     */
+    setRolePoint: function(role, coord) {
+        const idx = this.rangePoints.findIndex(p => p.role === role);
+        if (!coord) {
+            if (idx >= 0) this.rangePoints.splice(idx, 1);
+        } else if (idx >= 0) {
+            this.rangePoints[idx] = { lat: coord.lat, lng: coord.lng, role };
+        } else if (role === 'start') {
+            this.rangePoints.unshift({ lat: coord.lat, lng: coord.lng, role });
+        } else {
+            this.rangePoints.push({ lat: coord.lat, lng: coord.lng, role });
+        }
+        this.syncRangeTable();
+    },
+
+    /**
+     * 點圖新增範圍點：插入到使多邊形周長增加最少的邊上（含首尾相接的閉合邊），
+     * 讓點擊順序不影響形狀。例：起訖點 A、C，依序點 B、D → A B C D（而非 A B D C 的交叉形）
+     */
+    insertRangePoint: function(coord) {
+        const pts = this.rangePoints;
+        const point = { lat: coord.lat, lng: coord.lng, role: 'middle' };
+        if (pts.length < 2) {
+            pts.push(point);
+            return;
+        }
+
+        // 以平面近似計算距離（經度依緯度縮放），範圍小時足夠準確
+        const kx = Math.cos(coord.lat * Math.PI / 180);
+        const dist = (a, b) => Math.hypot((a.lng - b.lng) * kx, a.lat - b.lat);
+
+        let bestIdx = pts.length;
+        let bestCost = Infinity;
+        for (let i = 0; i < pts.length; i++) {
+            const a = pts[i];
+            const b = pts[(i + 1) % pts.length];
+            const cost = dist(a, point) + dist(point, b) - dist(a, b);
+            if (cost < bestCost) {
+                bestCost = cost;
+                bestIdx = i + 1;
+            }
+        }
+        pts.splice(bestIdx, 0, point);
+    },
+
+    /**
+     * 由 rangePoints 產生送出用的 rangeList（資料層，不觸及 DOM）
      */
     rebuildRangeList: function() {
-        const combined = [];
-        if (this.startCoord) combined.push(this.startCoord);
-        this.middleRangePoints.forEach(function(p) { combined.push(p); });
-        if (this.endCoord) combined.push(this.endCoord);
-
-        this.rangeList = combined.map(function(item, index) {
+        this.rangeList = this.rangePoints.map(function(item, index) {
             return { Id: index, Latitude: item.lat, Longitude: item.lng };
         });
     },
 
     /**
-     * 渲染拓寬範圍表格（含可編輯緯經度輸入、所有點均可刪除）
+     * 渲染拓寬範圍表格（含可編輯緯經度輸入、刪除鈕）
      */
     renderRangeTable: function() {
         const $tbody = $('#edit-expansion-range-tbody');
@@ -472,35 +496,14 @@ const RoadProjectEdit = {
             return;
         }
 
-        let middleIdx = 0;
-        this.rangeList.forEach((item, index) => {
-            const isStart  = (index === 0 && this.startCoord);
-            const isEnd    = (index === this.rangeList.length - 1 && this.endCoord);
-            const isMiddle = !isStart && !isEnd;
-
-            const currentMiddleIdx = isMiddle ? middleIdx : -1;
-            if (isMiddle) middleIdx++;
-
-            let label = '';
-            if (isStart) label = ' (起點)';
-            else if (isEnd) label = ' (終點)';
-
-            // 所有點都可刪除，透過不同的 data 屬性區分類型
-            let deleteBtn = '';
-            if (isStart) {
-                deleteBtn = `<button type="button" class="edit-btn-delete-range-point" data-point-type="start"><i class="fa fa-trash">刪除</i></button>`;
-            } else if (isEnd) {
-                deleteBtn = `<button type="button" class="edit-btn-delete-range-point" data-point-type="end"><i class="fa fa-trash">刪除</i></button>`;
-            } else {
-                deleteBtn = `<button type="button" class="edit-btn-delete-range-point" data-point-type="middle" data-middle-index="${currentMiddleIdx}"><i class="fa fa-trash">刪除</i></button>`;
-            }
-
+        this.rangePoints.forEach((item, index) => {
+            const label = item.role === 'start' ? ' (起點)' : item.role === 'end' ? ' (終點)' : '';
             $tbody.append(`
                 <tr>
                     <td>${index + 1}${label}</td>
-                    <td><input type="text" class="form-control edit-range-lat-input" data-row-index="${index}" value="${Number(item.Latitude).toFixed(6)}"></td>
-                    <td><input type="text" class="form-control edit-range-lng-input" data-row-index="${index}" value="${Number(item.Longitude).toFixed(6)}"></td>
-                    <td>${deleteBtn}</td>
+                    <td><input type="text" class="form-control edit-range-lat-input" data-row-index="${index}" value="${Number(item.lat).toFixed(6)}"></td>
+                    <td><input type="text" class="form-control edit-range-lng-input" data-row-index="${index}" value="${Number(item.lng).toFixed(6)}"></td>
+                    <td><button type="button" class="edit-btn-delete-range-point" data-row-index="${index}"><i class="fa fa-trash">刪除</i></button></td>
                 </tr>
             `);
         });
@@ -520,82 +523,43 @@ const RoadProjectEdit = {
      */
     onRangeInputChange: function(inputEl) {
         const $input = $(inputEl);
-        const rowIndex = parseInt($input.data('row-index'));
-        const isLat    = $input.hasClass('edit-range-lat-input');
-        const value    = parseFloat($input.val());
-        if (isNaN(value)) return;
+        const point = this.rangePoints[parseInt($input.data('row-index'))];
+        const value = parseFloat($input.val());
+        if (!point || isNaN(value)) return;
 
-        const isStart = (rowIndex === 0 && this.startCoord);
-        const isEnd   = (rowIndex === this.rangeList.length - 1 && this.endCoord);
-
-        if (isStart) {
-            if (isLat) this.startCoord.lat = value; else this.startCoord.lng = value;
-        } else if (isEnd) {
-            if (isLat) this.endCoord.lat = value; else this.endCoord.lng = value;
-        } else {
-            const middleIdx = rowIndex - (this.startCoord ? 1 : 0);
-            if (this.middleRangePoints[middleIdx]) {
-                if (isLat) this.middleRangePoints[middleIdx].lat = value;
-                else       this.middleRangePoints[middleIdx].lng = value;
-            }
-        }
+        if ($input.hasClass('edit-range-lat-input')) point.lat = value;
+        else point.lng = value;
 
         this.rebuildRangeList();
         this.updatePreviewMap();
     },
 
     /**
-     * 刪除起點
+     * 刪除指定範圍點（rangePoints 索引）
      */
-    deleteStartPoint: function() {
-        // 如果有中間點，將第一個中間點升級為新起點
-        if (this.middleRangePoints.length > 0) {
-            this.startCoord = this.middleRangePoints.shift();
-        } else if (this.endCoord) {
-            // 沒有中間點但有終點，將終點變成起點
-            this.startCoord = this.endCoord;
-            this.endCoord = null;
-        } else {
-            // 只剩起點，直接清空
-            this.startCoord = null;
-        }
+    deleteRangePoint: function(index) {
+        if (isNaN(index) || !this.rangePoints[index]) return;
+        this.rangePoints.splice(index, 1);
         this.syncRangeTable();
     },
 
     /**
-     * 刪除終點
-     */
-    deleteEndPoint: function() {
-        // 如果有中間點，將最後一個中間點升級為新終點
-        if (this.middleRangePoints.length > 0) {
-            this.endCoord = this.middleRangePoints.pop();
-        } else {
-            // 沒有中間點，直接清空終點
-            this.endCoord = null;
-        }
-        this.syncRangeTable();
-    },
-
-    /**
-     * 刪除指定中間範圍點
-     */
-    deleteMiddlePoint: function(middleIndex) {
-        this.middleRangePoints.splice(middleIndex, 1);
-        this.syncRangeTable();
-    },
-
-    /**
-     * 切換「點圖新增範圍點」模式（與照片點模式互斥）
+     * 切換「點圖新增範圍點」模式（與照片點模式互斥）：
+     * 開啟後每次點擊地圖即新增一個範圍點（自動插入到最適合的邊），
+     * 再按一次按鈕（「完成新增」）或按 Esc 結束
      */
     toggleAddRangePoint: function() {
         this.addingRangePoint = !this.addingRangePoint;
+        const $btn = $('#btn-edit-toggle-add-range-point');
         if (this.addingRangePoint) {
             this.addingPhotoPoint = false;
             $('#btn-edit-toggle-add-photo-point').removeClass('active');
-            $('#btn-edit-toggle-add-range-point').addClass('active');
+            $btn.addClass('active').html('<i class="fa fa-check"></i> 完成新增');
             this.scrollToPreviewMap();
         } else {
-            $('#btn-edit-toggle-add-range-point').removeClass('active');
+            $btn.removeClass('active').html('<i class="fa fa-plus"></i> 點圖新增範圍點');
+            // 結束後補做一次自動縮放（新增期間不縮放，避免地圖跳動）
+            this.updatePreviewMap();
         }
         $('#edit-preview-map').toggleClass('adding-point', this.addingRangePoint || this.addingPhotoPoint);
     },
@@ -607,7 +571,7 @@ const RoadProjectEdit = {
         this.addingPhotoPoint = !this.addingPhotoPoint;
         if (this.addingPhotoPoint) {
             this.addingRangePoint = false;
-            $('#btn-edit-toggle-add-range-point').removeClass('active');
+            $('#btn-edit-toggle-add-range-point').removeClass('active').html('<i class="fa fa-plus"></i> 點圖新增範圍點');
             $('#btn-edit-toggle-add-photo-point').addClass('active');
             this.scrollToPreviewMap();
         } else {
@@ -650,14 +614,14 @@ const RoadProjectEdit = {
         this.previewRangeLayer = L.layerGroup().addTo(this.previewMap);
         this.previewPhotoLayer = L.layerGroup().addTo(this.previewMap);
 
-        // 點圖新增模式：點擊地圖插入範圍點或街景照片並退出模式
+        // 點圖新增模式：
+        //   範圍點 → 連續新增，模式保持開啟直到按「完成新增」或 Esc
+        //   街景照片 → 新增一筆後關閉模式並捲回照片區塊
         const self = this;
         this.previewMap.on('click', function(e) {
             if (self.addingRangePoint) {
-                self.middleRangePoints.push({ lat: e.latlng.lat, lng: e.latlng.lng });
+                self.insertRangePoint(e.latlng);
                 self.syncRangeTable();
-                self.toggleAddRangePoint();
-                self.scrollToSection('#edit-expansion-range-table');
             } else if (self.addingPhotoPoint) {
                 self.photoList.push({
                     Id: self.photoList.length,
@@ -728,47 +692,15 @@ const RoadProjectEdit = {
         // 取得路名
         const roadName = $('#edit-location').val() || '';
 
-        // ── 起點標記（可拖曳）──
-        if (this.startCoord) {
-            const startPopup = `
+        // ── 範圍點標記（可拖曳）：起點綠色、終點紅色、其餘藍色 ──
+        let middleNo = 0;
+        this.rangePoints.forEach(function(p, idx) {
+            const style = p.role === 'start' ? { cls: 'range-marker-start', color: '#22c55e', title: '起點' }
+                : p.role === 'end' ? { cls: 'range-marker-end', color: '#ef4444', title: '終點' }
+                : { cls: 'range-marker-middle', color: '#3b82f6', title: `範圍點 ${++middleNo}` };
+            const popup = `
                 <div style="min-width:120px;">
-                    <div style="font-weight:bold;color:#22c55e;margin-bottom:4px;">起點</div>
-                    ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
-                    <div style="font-size:12px;color:#666;">
-                        <div>緯度：${this.startCoord.lat.toFixed(6)}</div>
-                        <div>經度：${this.startCoord.lng.toFixed(6)}</div>
-                    </div>
-                </div>`;
-            this.createDraggableMarker(
-                [this.startCoord.lat, this.startCoord.lng],
-                'range-marker-start', startPopup,
-                function(ll) { self.startCoord = { lat: ll.lat, lng: ll.lng }; self.syncRangeTable(); }
-            ).addTo(this.previewRangeLayer);
-        }
-
-        // ── 終點標記（可拖曳）──
-        if (this.endCoord) {
-            const endPopup = `
-                <div style="min-width:120px;">
-                    <div style="font-weight:bold;color:#ef4444;margin-bottom:4px;">終點</div>
-                    ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
-                    <div style="font-size:12px;color:#666;">
-                        <div>緯度：${this.endCoord.lat.toFixed(6)}</div>
-                        <div>經度：${this.endCoord.lng.toFixed(6)}</div>
-                    </div>
-                </div>`;
-            this.createDraggableMarker(
-                [this.endCoord.lat, this.endCoord.lng],
-                'range-marker-end', endPopup,
-                function(ll) { self.endCoord = { lat: ll.lat, lng: ll.lng }; self.syncRangeTable(); }
-            ).addTo(this.previewRangeLayer);
-        }
-
-        // ── 中間範圍點標記（可拖曳）──
-        this.middleRangePoints.forEach(function(p, idx) {
-            const middlePopup = `
-                <div style="min-width:120px;">
-                    <div style="font-weight:bold;color:#3b82f6;margin-bottom:4px;">範圍點 ${idx + 1}</div>
+                    <div style="font-weight:bold;color:${style.color};margin-bottom:4px;">${style.title}</div>
                     ${roadName ? `<div style="font-size:12px;margin-bottom:4px;">${roadName}</div>` : ''}
                     <div style="font-size:12px;color:#666;">
                         <div>緯度：${p.lat.toFixed(6)}</div>
@@ -776,9 +708,11 @@ const RoadProjectEdit = {
                     </div>
                 </div>`;
             self.createDraggableMarker(
-                [p.lat, p.lng],
-                'range-marker-middle', middlePopup,
-                function(ll) { self.middleRangePoints[idx] = { lat: ll.lat, lng: ll.lng }; self.syncRangeTable(); }
+                [p.lat, p.lng], style.cls, popup,
+                function(ll) {
+                    self.rangePoints[idx] = { lat: ll.lat, lng: ll.lng, role: p.role };
+                    self.syncRangeTable();
+                }
             ).addTo(self.previewRangeLayer);
         });
 
@@ -820,7 +754,8 @@ const RoadProjectEdit = {
             }
         });
 
-        // ── 自動縮放範圍 ──
+        // ── 自動縮放範圍（連續新增範圍點期間不縮放，避免地圖跳動）──
+        if (this.addingRangePoint) return;
         if (allCoords.length > 1) {
             this.previewMap.fitBounds(L.latLngBounds(allCoords), { padding: [20, 20] });
         } else if (allCoords.length === 1) {
@@ -1153,6 +1088,18 @@ const RoadProjectEdit = {
             reviewResult: $('#edit-review-result').val(),
             remarks: $('#edit-remarks').val()
         };
+
+        // 街景照片：每筆都要有圖檔（新選或既有）與有效緯經度；
+        // 必須在送出任何資料前檢查，否則基本資料存了、座標點卻被後端擋下，會只存一半
+        const photoError = checkStreetPhotos(self.photoList, index => ({
+            lat: $(`.edit-photo-lat-input[data-index="${index}"]`).val(),
+            lng: $(`.edit-photo-lng-input[data-index="${index}"]`).val()
+        }));
+        if (photoError) {
+            alert(photoError);
+            self.scrollToSection('#edit-street-photo-list');
+            return;
+        }
 
         // 送出前檢查大小：備註附件與街景照片分屬不同請求，分別檢查（任一超過即不送出任何資料）
         const remarkSizeError = checkUploadSize(self.newRemarkFiles);

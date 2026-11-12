@@ -2,7 +2,7 @@
 import { removePipeline, addPipeline } from './pipeline.js';
 import { layers } from './layers.js';
 // import { getIndexMap } from '../map.js';
-import { Map } from '../map_test.js';
+import { Map } from '../map.js';
 import { layerEditor } from './layerEdit/layerEditor.js';
 import { opacityLayer } from './opacityCtrl.js';
 import { openPanel } from '../metaDataPanel.js';

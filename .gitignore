@@ -368,6 +368,7 @@ MigrationBackup/
 FodyWeavers.xsd
 /Photo
 /RMIS/Sample
+/RMIS/測試資料
 /RMIS/測試資料/sql_output
 /RMIS/測試資料/管線資料
 /RMIS/測試資料/道路專案匯入範本/002_101/PROJ002
@@ -375,3 +376,7 @@ FodyWeavers.xsd
 /RMIS/測試資料/道路專案匯入範本/道路專案匯入範本
 /工作日誌
 /測試資料/地圖圖層
+/RMIS/Sample/專案歷程匯入範本.zip
+/RMIS/Sample/道路專案匯入範本.zip
+/RMIS/測試資料/道路專案匯入範本/道路專案匯入範本.xlsx
+/RMIS/測試資料/道路專案匯入範本/PROJ001.rar

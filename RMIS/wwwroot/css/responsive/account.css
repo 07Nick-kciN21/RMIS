@@ -1,0 +1,170 @@
+/*
+ * 帳號管理 — 響應式規則
+ * 斷點定義見 responsive/base.css；桌機（≥1441px）沿用原本樣式，這裡不寫。
+ * 此檔在 _AccountLayout.cshtml 的 </body> 前載入，晚於各頁面的 CSS。
+ *
+ * 版面區塊：
+ *   .Accessdiv0   主版面
+ *   .Accessdiv1   頂部導覽列
+ *   .Accessdiv2   左側選單
+ *   .Accessdiv3   內容區（表格、分頁、表單）
+ */
+
+/* ════════════════════════════════════════════════════════════════════
+ * 筆電  1025 – 1440px
+ * ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1440px) {
+    /* 主版面 .Accessdiv0 */
+
+    /* 頂部導覽列 .Accessdiv1 */
+
+    /* 左側選單 .Accessdiv2 */
+
+    /* 內容區 .Accessdiv3 */
+}
+
+/* ════════════════════════════════════════════════════════════════════
+ * 平板  768 – 1024px
+ * ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+    body {
+        padding: 16px;
+    }
+
+    /* 主版面 .Accessdiv0：改單欄，由上而下 導覽列 / 選單 / 內容
+     * 原本兩欄設定寫在 _AccountLayout.cshtml 的 <style>，內容欄最小 100vw - 280px，窄螢幕會被擠到幾乎沒寬度 */
+    .Accessdiv0 {
+        gap: 12px;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: 60px auto minmax(calc(100vh - 180px), auto);
+    }
+
+    /* 頂部導覽列 .Accessdiv1 */
+    .Accessdiv1 {
+        grid-row: 1;
+        grid-column: 1 / -1;
+    }
+
+    /* 左側選單 .Accessdiv2：改成橫向一排，放不下時左右滑動 */
+    .Accessdiv2 {
+        grid-row: 2;
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+
+    /* 右側空白佔位 div（width: calc(100% - 300px)） */
+    .Accessdiv2 > div:not(:first-child) {
+        display: none;
+    }
+
+    /* ul 有 inline 的 margin-top，需用 !important 覆蓋 */
+    .Accessdiv2 ul {
+        display: flex;
+        gap: 4px;
+        margin: 0 !important;
+        padding: 6px;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+    }
+
+    .Accessdiv2 li {
+        flex: 0 0 auto;
+    }
+
+    .Accessdiv2 .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+
+    .Accessdiv2 .account-menu-icon {
+        float: none;
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+    }
+
+    .Accessdiv2 a > span {
+        font-size: 16px;
+    }
+
+    /* 內容區 .Accessdiv3 */
+    .Accessdiv3 {
+        grid-row: 3;
+        grid-column: 1 / -1;
+        min-width: 0;
+        padding: 16px;
+    }
+
+    /* 清單表格：表頭與資料是兩張分開的 table（資料那張包在 .tbody-scroll 內垂直捲動）
+     * 1. 兩者給同一個最小寬度，放不下時由 .table-container 一起橫向捲動
+     * 2. table-layout: fixed 讓兩張表都照 th / td 上的 *-cell 寬度分欄，欄位才會對齊 */
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .table-container > table,
+    .table-container .tbody-scroll table {
+        table-layout: fixed;
+    }
+
+    .user-page .table-container > table,
+    .user-page .tbody-scroll {
+        min-width: 970px;
+    }
+
+    .role-page .table-container > table,
+    .role-page .tbody-scroll {
+        min-width: 820px;
+    }
+
+    .permission-page .table-container > table,
+    .permission-page .tbody-scroll,
+    .department-page .table-container > table,
+    .department-page .tbody-scroll {
+        min-width: 720px;
+    }
+
+    /* 操作記錄欄寬是桌機寬螢幕抓的（合計約 1390px），這裡縮成合理寬度 */
+    .log-page .table-container > table,
+    .log-page .tbody-scroll {
+        min-width: 920px;
+    }
+
+    .log-page .time-cell    { width: 180px; }
+    .log-page .ip-cell      { width: 150px; }
+    .log-page .user-cell    { width: 150px; }
+    .log-page .type-cell    { width: 120px; }
+    .log-page .success-cell { width: 80px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+ * 手機  ≤ 767px
+ * ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+    body {
+        padding: 0;
+    }
+
+    /* 主版面 .Accessdiv0 */
+    .Accessdiv0 {
+        gap: 8px;
+        grid-template-rows: 60px auto minmax(calc(100vh - 140px), auto);
+    }
+
+    /* 頂部導覽列 .Accessdiv1 */
+
+    /* 左側選單 .Accessdiv2 */
+
+    /* 內容區 .Accessdiv3 */
+    .Accessdiv3 {
+        padding: 12px;
+    }
+
+    .permissionTable {
+        font-size: 15px;
+    }
+}

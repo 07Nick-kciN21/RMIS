@@ -1,6 +1,6 @@
 ﻿// Import required modules
 import { loadLayerProps } from '../ctrlMap/layers.js';
-import { Map } from '../map_test.js';
+import { Map } from '../map.js';
 import { updatePropQuery, filterPropsByRules, parseRules } from './propQueryBuilder.js';
 import { handleDrawShape, filterPropsByShape, clearShape, getShape } from './shapeSearch.js';
 import { showLoading, hideLoading } from '../../loading.js';

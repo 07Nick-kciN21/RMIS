@@ -2,7 +2,7 @@ import BoxManager from './box.js';
 import RoadProjectView from './roadProjectView.js';
 import RoadProjectAdd from './roadProjectAdd.js';
 import RoadProjectImport from './roadProjectImport.js';
-import { Map } from './map_test.js';
+import { Map } from './map.js';
 import { showLoading, hideLoading } from '../loading.js';
 
 
@@ -49,7 +49,7 @@ const ProjectBox = {
     init: function() {
         const self = this;
 
-        // 初始化地圖圖層（從 map_test.js 取得）
+        // 初始化地圖圖層（從 map.js 取得）
         self.$indexMap = Map.getIndexMap();
         self.projectLayer = L.layerGroup();
         self.projectLayer.addTo(self.$indexMap);

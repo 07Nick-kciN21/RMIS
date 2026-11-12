@@ -2547,8 +2547,8 @@ namespace RMIS.Repositories
                     var newPoint = new Point
                     {
                         Index = i,
-                        Latitude = photoList[i].Latitude,
-                        Longitude = photoList[i].Longitude,
+                        Latitude = photoList[i].Latitude ?? 0,   // 呼叫前已由 StreetPhotoValidator 檢查
+                        Longitude = photoList[i].Longitude ?? 0,
                         AreaId = areaId,
                         Property = photoProperty
                     };

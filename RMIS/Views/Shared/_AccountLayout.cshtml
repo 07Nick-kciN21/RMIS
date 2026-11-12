@@ -18,12 +18,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    @* <link rel="stylesheet" href="~/css/_layout.css" />
-    <link rel="stylesheet" href="~/css/account/_accountLayout.css" />
-    <link rel="stylesheet" href="~/css/account/_sidebar.css" />
-    <link rel="stylesheet" href="~/css/index/dropdown.css" />
-    <link rel="stylesheet" href="~/css/index/menu.css" /> *@
     <link rel="stylesheet" href="~/css/_layout.css" />
     <link rel="stylesheet" href="~/css/new/account/_sidebar.css">
     <link rel="stylesheet" href="~/css/index/dropdown.css" />
@@ -147,11 +143,6 @@
         <nav class="Accessdiv1 navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <a class="navbar-brand head-logo">桃園市工務局道路專案整合平台</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
                 <div id="col2" style="margin-left:auto">
                     <nav id="head-nav" class="navbar-toggle">
                         <div class="container-fluid ">
@@ -169,6 +160,10 @@
                         </div>
                     </nav>
                 </div>
+                <button id="menu-toggle" class="rwd-nav-toggle" type="button"
+                        aria-label="選單" aria-controls="col2" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </nav>
         <div class="Accessdiv2">
@@ -231,6 +226,10 @@
             @RenderBody()
         </div>
     </div>
+    @* 響應式規則放最後載入，才能覆蓋頁面的樣式 *@
+    <link rel="stylesheet" href="~/css/responsive/base.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/responsive/account.css" asp-append-version="true" />
+    <script src="~/js/responsive/navToggle.js" asp-append-version="true"></script>
     <div class="modal fade modal-session" id="extendSessionModal" tabindex="-1" aria-labelledby="extendSessionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

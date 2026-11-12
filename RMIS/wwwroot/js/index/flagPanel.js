@@ -1,7 +1,7 @@
 import { addPipeline, removePipeline } from './ctrlMap/pipeline.js';
 import { getLayerProps, deleteLayerProps, addLayer2Map } from './ctrlMap/layers.js';
 import { add2List } from './ctrlMap/list.js';
-import { Map } from './map_test.js';
+import { Map } from './map.js';
 
 
 const adminDists = [

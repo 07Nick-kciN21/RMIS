@@ -335,4 +335,69 @@
     /* 圖資清單 .div4 */
 
     /* 面板 */
+
+    /* 屬性搜尋：內容比地圖高時在面板內捲動，避免底部被地圖容器切掉 */
+    #searchPropPanel {
+        max-height: 100%;
+        overflow-y: auto;
+    }
+
+    /* 屬性搜尋 › 統計 #prop4（_searchPropPanel.cshtml 有大量 inline style，需用 !important 覆蓋） */
+    #searchPropPanel #prop4 .propResultTitle {
+        font-size: 16px;
+    }
+
+    /* 屬性欄位 / 已選欄位：維持左右並排（點左邊加入右邊），各佔一半 */
+    #searchPropPanel #analysisContent > .form-group:nth-child(1),
+    #searchPropPanel #analysisContent > .form-group:nth-child(2) {
+        width: calc(50% - 4px) !important;
+        margin-left: 0 !important;
+    }
+
+    #searchPropPanel #analysisContent > .form-group > label {
+        font-size: 14px;
+    }
+
+    #searchPropPanel #prop4 .panelResult {
+        font-size: 16px;
+        padding: 4px 6px;
+        word-break: break-all;
+    }
+
+    /* 統計方式：一排三個 */
+    #searchPropPanel #prop4 .d-flex.flex-wrap {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px 8px;
+    }
+
+    #searchPropPanel #prop4 .d-flex.flex-wrap > .form-check {
+        margin: 0 !important;
+    }
+
+    #searchPropPanel #prop4 .form-check label {
+        font-size: 16px;
+    }
+
+    #searchPropPanel #prop4 #anaGoResult {
+        width: 100%;
+        font-size: 18px;
+    }
+
+    /* 數值統計結果 */
+    #searchPropPanel #prop4 .resultListTitle span,
+    #searchPropPanel #prop4 .resultListTitle a {
+        font-size: 16px;
+    }
+
+    #searchPropPanel #prop4 #anaResultDiv .propResultDiv {
+        max-height: 200px !important;
+        overflow: auto !important;
+    }
+
+    #searchPropPanel #prop4 .propTable th,
+    #searchPropPanel #prop4 .propTable td {
+        padding: 4px 6px;
+        font-size: 14px;
+    }
 }

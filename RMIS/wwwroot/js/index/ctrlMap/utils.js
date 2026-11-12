@@ -1,4 +1,4 @@
-﻿import { Map } from '../map_test.js';
+﻿import { Map } from '../map.js';
 import { resolvePointColor } from './layerEdit/pointStyleStore.js';
 
 let currentRectangle = null; // 用於保存當前的矩形

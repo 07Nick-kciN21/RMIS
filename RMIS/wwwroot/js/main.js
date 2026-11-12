@@ -1,6 +1,5 @@
 ﻿// main.js
-import { Map } from './index/map_test.js'
-import { initMap } from './index/map.js';
+import { Map } from './index/map.js'
 import { initMenu } from './index/ctrlMap/menu.js';
 // import { initCommonLink } from './index/commonLink.js';
 import { initPanel } from './index/panel.js';

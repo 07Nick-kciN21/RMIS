@@ -1,7 +1,7 @@
 import { addFocusPipeline, removePipeline } from './ctrlMap/pipeline.js';
 import { add2List, remove2List} from './ctrlMap/list.js';
 import { addFocusLayer2Map } from './ctrlMap/layers.js';
-import { Map } from './map_test.js';
+import { Map } from './map.js';
 
 let currentRow = null;
 let currentSquare = null;

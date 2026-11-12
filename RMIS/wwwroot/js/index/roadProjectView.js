@@ -1,6 +1,6 @@
 import BoxManager from './box.js';
 import ProcessBox from './processBox.js';
-import { Map } from './map_test.js';
+import { Map } from './map.js';
 import RoadProjectEdit from './roadProjectEdit.js';
 import { showLoading, hideLoading } from '../loading.js';
 

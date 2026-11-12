@@ -21,46 +21,74 @@
     padding: 10px 15px 0;
 }
 
+/* 搜尋欄位：左標籤（固定寬）+ 右欄位（填滿），左右留內距不貼邊框 */
 #accidentPanel #acc2 .form-group{
     margin-bottom: 10px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
 #accidentPanel #acc2 .form-group label {
-    width: 30%;
+    width: 72px;
     flex-shrink: 0;
 }
 
-#accidentPanel #acc2 .form-group select,
-#accidentPanel #acc2 .form-group div {
-    width: 70%;
+#accidentPanel #acc2 .form-group .form-select,
+#accidentPanel #acc2 .form-group .form-control {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 34px;
+    padding: 4px 28px 4px 8px;
+    font-size: 14px;
+    background-position: right 8px center;
 }
 
+#accidentPanel #acc2 .form-group .form-control {
+    padding-right: 8px;
+}
+
+/* 日期範圍：起、迄各一行（年 / 月） */
 #accidentPanel #acc2 .acc-date-row {
-    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+#accidentPanel #acc2 .acc-date-row > label {
+    line-height: 34px;
 }
 
 #accidentPanel #acc2 .acc-date-selects {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#accidentPanel #acc2 .acc-date-pair {
     display: flex;
     align-items: center;
     gap: 4px;
-    width: 70%;
 }
 
-#accidentPanel #acc2 .acc-date-selects select {
-    width: auto;
-    flex: 1;
-    min-width: 55px;
-    padding: 4px 2px;
-    font-size: 13px;
-    border-radius: 0;
-}
-
-#accidentPanel #acc2 .acc-date-selects span {
+#accidentPanel #acc2 .acc-date-pair span {
     font-size: 13px;
     color: #666;
     flex-shrink: 0;
+}
+
+#accidentPanel #acc2 .acc-date-pair .acc-date-tag {
+    width: 18px;
+}
+
+#accidentPanel #acc2 .acc-date-pair .form-select {
+    border-radius: 0;
+}
+
+/* 進行篩選：滿寬 */
+#accidentPanel #acc2 #acc2GoResult {
+    width: 100%;
 }
 
 #accidentPanel #acc2 #accidentTable {

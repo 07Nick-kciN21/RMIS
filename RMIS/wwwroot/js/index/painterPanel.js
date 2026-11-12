@@ -1,4 +1,4 @@
-﻿import { Map } from './map_test.js';
+﻿import { Map } from './map.js';
 
 let $indexMap;
 let borderColor = '#FF0000';
@@ -28,7 +28,7 @@ export function initPainterPanel() {
         $('#painterPanel').addClass('hide');
 
         // 提示訊息
-        const tooltipMessage = "右鍵退出編輯模式";
+        const tooltipMessage = "右鍵退出編輯模式，雙擊文字可修改內容";
 
         // 創建一個臨時的 Tooltip 並將其添加到地圖
         const tooltip = L.tooltip({
@@ -47,16 +47,15 @@ export function initPainterPanel() {
         $indexMap.on('mousemove', moveTooltip);
 
         // 當編輯模式停止時，移除 Tooltip 並取消鼠標移動事件綁定
-        $indexMap.on('draw:editstop', function () {
+        $indexMap.once('draw:editstop', function () {
             $indexMap.removeLayer(tooltip);
             $indexMap.off('mousemove', moveTooltip);
         });
     });
 
-    // 監聽繪圖開始事件
+    // 監聽繪圖開始事件：顯示跟隨滑鼠的提示。
+    // 繪製時面板保持顯示（同 PPT），可隨時調整樣式或切換工具
     $indexMap.on('draw:drawstart', function (e) {
-        $('#painterPanel').addClass('hide');
-
         const type = e.layerType;
         let tooltipMessage;
 
@@ -73,11 +72,14 @@ export function initPainterPanel() {
             case 'circle':
                 tooltipMessage = '點擊並拖動以繪製圓形';
                 break;
+            case 'circlemarker':
+                tooltipMessage = '點擊地圖以放置圓形標記';
+                break;
             case 'marker':
                 tooltipMessage = '點擊地圖以放置標記';
                 break;
             case 'text':
-                tooltipMessage = '點擊地圖以放置文字';
+                tooltipMessage = '點擊地圖後輸入文字，Enter 完成';
                 break;
             case 'clear':
                 tooltipMessage = '點擊圖形進行清除'
@@ -95,28 +97,21 @@ export function initPainterPanel() {
             .setLatLng($indexMap.getCenter())
             .addTo($indexMap);
 
-        $indexMap.on('mousemove', function (event) {
+        function moveTooltip(event) {
             tooltip.setLatLng(event.latlng);
-        });
+        }
 
-        // 繪圖完成時移除tooltip
-        $indexMap.on('draw:drawstop', function () {
+        $indexMap.on('mousemove', moveTooltip);
+
+        // 繪圖結束時移除 tooltip 與滑鼠事件
+        $indexMap.once('draw:drawstop', function () {
             $indexMap.removeLayer(tooltip);
+            $indexMap.off('mousemove', moveTooltip);
         });
-    });
-
-    // 監聽繪圖停止事件
-    $indexMap.on('draw:drawstop', function () {
-        $('#painterPanel').removeClass('hide');
     });
 
     // 監聽編輯結束
     $indexMap.on('draw:editstop', function () {
-        $('#painterPanel').removeClass('hide');
-    });
-
-    // 監聽繪圖創建事件以重新顯示工具列
-    $indexMap.on('draw:created', function () {
         $('#painterPanel').removeClass('hide');
     });
 
@@ -126,26 +121,64 @@ export function initPainterPanel() {
         handleLayerCreation(e, layerCount++);
     });
 
-    $('.goDraw').on('click', function (e) {
-        draw();
+    // 面板關閉時結束進行中的繪製，避免關閉後仍在地圖上繪圖
+    $('#tb-painterPanel, #painterPanel .closeButton').on('click', function () {
+        if ($('#painterPanel').hasClass('hide')) {
+            stopActiveDrawer();
+        }
     });
 
 }
 
 let selectTool;
+// 目前啟用中的繪製器（點選工具即開始繪製）
+let activeDrawer = null;
+
+// 點選即開始繪製的工具，樣式取自共用樣式列
+const DIRECT_DRAW_TOOLS = {
+    drawPolyline: initPolyline,
+    drawPolygon: initPolygon,
+    drawRectangle: initRectangle,
+    drawCircle: initCircle,
+    drawCircleMarker: initCircleMarker,
+    drawMarker: initMarker,
+    drawText: initText,
+};
 
 // 開始繪製
 function initDraw() {
     drawnItems = new L.FeatureGroup();
     $indexMap.addLayer(drawnItems);
 
+    initStyleBar();
+
+    // 繪製完成或取消（Esc）後，結束直接繪製模式並取消工具選取，與 PPT 畫完一個圖形即回到選取狀態一致
+    $indexMap.on('draw:drawstop', function () {
+        if (activeDrawer) {
+            activeDrawer = null;
+            $('#colorPickerContent').empty();
+            if (selectTool) {
+                selectTool.removeClass('active');
+                selectTool = null;
+            }
+        }
+    });
+
     // 使用 jQuery 手動啟用多邊形繪製
     $('.dtBtn').click(function (event) {
+        let drawItem = $(this).attr('id');
+
+        // 再點一次正在繪製的工具：取消繪製
+        if (activeDrawer && selectTool && selectTool.attr('id') === drawItem) {
+            stopActiveDrawer();
+            return;
+        }
+        stopActiveDrawer();
+
         if (selectTool) {
             selectTool.removeClass('active');
         }
         selectTool = $(this);
-        let drawItem = selectTool.attr('id');
         // 切到其他工具時收起匯入/匯出選單；原本是靠這次點擊冒泡到 document 觸發 hideMenu，
         // 但面板現在會攔截冒泡避免誤觸地圖點擊，改成切換工具時直接關閉，不依賴冒泡
         if (drawItem !== "drawIO") {
@@ -159,14 +192,15 @@ function initDraw() {
         }
         else if (drawItem == "drawClear") {
             $('#colorPickerContent').empty();
-            $('.goDraw').css('display', 'none');
             initClear();
         }
         else if (drawItem == "drawEdit") {
+            $('#colorPickerContent').empty();
             initEdit();
         }
-        else {
-            initColorPicker(drawItem);
+        else if (DIRECT_DRAW_TOOLS[drawItem]) {
+            renderToolOptions(drawItem);
+            DIRECT_DRAW_TOOLS[drawItem]();
         }
         $(this).addClass('active');
     });
@@ -178,113 +212,72 @@ function initDraw() {
     })
 }
 
-// 選擇工具時創造對應的選項
-function initColorPicker(drawItem) {
-    let colorPickerContent;
+// 工具專屬選項（共用樣式以外的設定），切換工具後再回來會保留上次的值
+const toolOptions = {
+    markerSize: 4,               // 1~10，實際像素為 x8
+    markerImage: 'markerRectangle',
+    fontSize: 2,                 // 1~10，實際像素為 x10
+};
 
-    if (drawItem == "drawPolyline") {
-        colorPickerContent = `
-            <div>
-                <span>填滿</span>
-            </div>
-            <div class="custom-color-picker">
-                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
-            </div>
-            <div>
-                <span>線段粗細</span>
-            </div>
-            <div>
-                <select id="cp_lineThick" class="select2">
-                    ${generateOptions(1, 10)}
-                </select>
-            </div>
-        `;
-    }
-    else if (drawItem == "drawPolygon" || drawItem == "drawRectangle" || drawItem == "drawCircle" || drawItem == "drawCircleMarker") {
-        colorPickerContent = `
-            <div>
-                <span>填滿</span>
-            </div>
-            <div class="custom-color-picker">
-                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
-            </div>
-            <div>
-                <span>外框</span>
-            </div>
-            <div class="custom-color-picker">
-                <input class="color-box" type="color" id="cp_borderColor" name="colorPicker" value="#ff0000">
-            </div>
-            <div>
-                <span>外框粗細</span>
-            </div>
-            <div>
-                <select id="cp_borderWidth" class="select2">
-                    ${generateOptions(1, 10)}
-                </select>
-            </div>
-        `;
-    }
-    else if (drawItem == "drawText") {
-        colorPickerContent = `
-            <div>
-                <span>顏色</span>
-            </div>
-            <div class="custom-color-picker">
-                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
-            </div>
+// 選擇工具時顯示該工具專屬的選項；顏色、外框、粗細一律使用共用樣式列
+function renderToolOptions(drawItem) {
+    let content = '';
+
+    if (drawItem == "drawText") {
+        content = `
             <div>
                 <span>字級</span>
             </div>
             <div>
                 <select id="cp_fontSize" class="select2">
-                    ${generateOptions(1, 10)}
+                    ${generateOptions(1, 10, toolOptions.fontSize)}
                 </select>
-            </div>
-            <div style="width:100%">
-                <input id="cp_text" type="text" style="width:100%" placeholder="輸入文字..." />
             </div>
         `;
     }
     else if (drawItem == "drawMarker") {
-        colorPickerContent = `
-            <div>
-                <span>顏色</span>
-            </div>
-            <div class="custom-color-picker">
-                <input class="color-box" type="color" id="cp_fillColor" name="colorPicker" value="#ff0000">
-            </div>
+        const images = ['markerRectangle', 'markerCircle', 'markerCross'];
+        const imageOptions = images.map(function (image) {
+            const selected = image === toolOptions.markerImage ? 'selected' : '';
+            return `<option value="${image}" data-tag="${image}" ${selected}></option>`;
+        }).join('');
+        content = `
             <div>
                 <span>大小</span>
             </div>
             <div>
-                <select id="cp_fontSize" class="select2">
-                    ${generateOptions(1, 10)}
+                <select id="cp_markerSize" class="select2">
+                    ${generateOptions(1, 10, toolOptions.markerSize)}
                 </select>
             </div>
             <div>
                 <span>樣式</span>
             </div>
             <div class="custom-select">
-                <select name="state" id="imageSelect" class="select2">
-                    <option value="markerRectangle" data-tag="markerRectangle"></option>
-                    <option value="markerCircle" data-tag="markerCircle"></option>
-                    <option value="markerCross" data-tag="markerCross"></option>
+                <select name="state" id="imageSelect">
+                    ${imageOptions}
                 </select>
             </div>
         `;
     }
-    if (colorPickerContent) {
-        $('#colorPickerContent').html(colorPickerContent);
-        $('.goDraw').css('display', 'block');
 
-        // 初始化所有的 select 為 select2
-        $('.select2').select2({
-            minimumResultsForSearch: Infinity, // 隱藏搜索框
-            dropdownParent: $('#colorPicker'),
-        });
+    $('#colorPickerContent').html(content);
+    if (!content) {
+        return;
     }
 
-    if (drawItem == "drawMarker") {
+    $('#colorPickerContent .select2').select2({
+        minimumResultsForSearch: Infinity, // 隱藏搜索框
+        dropdownParent: $('#colorPicker'),
+    });
+
+    if (drawItem == "drawText") {
+        $('#cp_fontSize').on('change', function () {
+            toolOptions.fontSize = parseInt(this.value) || 1;
+            refreshActiveDrawerStyle();
+        });
+    }
+    else if (drawItem == "drawMarker") {
         $('#imageSelect').select2({
             dropdownParent: $('#colorPicker'),
             templateResult: formatState,
@@ -294,23 +287,32 @@ function initColorPicker(drawItem) {
             height: '27px'
         });
 
-        function formatState(option) {
-            if (!option.id) {
-                return option.text;  // 保留預設的選項顯示（例如空選項）
-            }
-            var tagId = $(option.element).data('tag');
-
-            // 構建 span 元素
-            var span = `<span id="${tagId}" style="display:block"></span>`;
-            return $(span);
-        }
+        $('#cp_markerSize').on('change', function () {
+            toolOptions.markerSize = parseInt(this.value) || 1;
+            refreshMarkerIcon();
+        });
+        $('#imageSelect').on('change', function () {
+            toolOptions.markerImage = this.value;
+            refreshMarkerIcon();
+        });
     }
 }
 
-function generateOptions(min, max) {
+function formatState(option) {
+    if (!option.id) {
+        return option.text;  // 保留預設的選項顯示（例如空選項）
+    }
+    var tagId = $(option.element).data('tag');
+
+    // 構建 span 元素
+    var span = `<span id="${tagId}" style="display:block"></span>`;
+    return $(span);
+}
+
+function generateOptions(min, max, selected) {
     let options = '';
     for (let i = min; i <= max; i++) {
-        options += `<option value="${i}">${i}</option>`;
+        options += `<option value="${i}" ${i === selected ? 'selected' : ''}>${i}</option>`;
     }
     return options;
 }
@@ -337,16 +339,7 @@ function handleLayerCreation(event, layerCount) {
 // 物件加入設定
 function applyLayerStyle(layer, layerType) {
     if (layerType != 'marker' && layerType != 'text') {
-        let style = {
-            color: borderColor,
-            weight: borderWidth,
-            opacity: 1,
-        };
-        if (layerType === 'polygon' || layerType === 'rectangle' || layerType === 'circle') {
-            style.fillColor = fillColor;
-            style.fillOpacity = 1;
-        }
-        layer.setStyle(style);
+        layer.setStyle(getShapeStyle(layerType !== 'polyline'));
     }
 }
 
@@ -381,139 +374,89 @@ function getArea(layer) {
     })]);
     return turf.area(polygon);
 }
-function draw() {
-    if (selectTool.attr('id') == "drawPolyline") {
-        initPolyline();
-    }
-    if (selectTool.attr('id') == "drawPolygon") {
-        initPolygon();
-    }
-    if (selectTool.attr('id') == "drawRectangle") {
-        initRectangle();
-    }
-    if (selectTool.attr('id') == "drawCircle") {
-        initCircle();
-    }
-    if (selectTool.attr('id') == "drawMarker") {
-        initMarker();
-    }
-    if (selectTool.attr('id') == "drawCircleMarker") {
-        initCircleMarker();
-    }
-    if (selectTool.attr('id') == "drawText") {
-        initText();
-    }
+
+// 綁定共用樣式列，變更時同步到 fillColor / borderColor / borderWidth
+function initStyleBar() {
+    $('#ds_borderWidth').select2({
+        minimumResultsForSearch: Infinity, // 隱藏搜索框
+        dropdownParent: $('#drawStyleBar'),
+    });
+
+    $('#ds_fillColor').on('input change', function () {
+        fillColor = this.value;
+        refreshActiveDrawerStyle();
+    });
+    $('#ds_borderColor').on('input change', function () {
+        borderColor = this.value;
+        refreshActiveDrawerStyle();
+    });
+    $('#ds_borderWidth').on('change', function () {
+        borderWidth = parseInt(this.value) || 1;
+        refreshActiveDrawerStyle();
+    });
 }
-function getShapeOption1() {
-    const fillColor = $('#cp_fillColor').val();
-    const borderColor = $('#cp_borderColor').val();
-    const borderWidth = parseFloat($('#cp_borderWidth').val());
-    return {
+
+// 依共用樣式列產生圖形樣式；線段只用外框顏色與粗細（同 PPT 線條）
+function getShapeStyle(withFill) {
+    const style = {
         color: borderColor,
-        fillColor: fillColor,
-        weight: isNaN(borderWidth) ? 3 : borderWidth 
+        weight: borderWidth,
+        opacity: 1,
     };
-}
-function getShapeOption2() {
-    const fillColor = $('#cp_fillColor').val();
-    const lineThick = $('#cp_lineThick').val();
-    return {
-        fillColor: fillColor,
-        weight: parseInt(lineThick) || 1, // 線段粗細，確保為數字並設置默認值為 1
-        color: fillColor, // 使用填滿顏色作為邊框顏色
-    };
-}
-function getShapeOption3() {
-    const fillColor = $('#cp_fillColor').val();
-    const fontSize = $('#cp_fontSize').val();
-    console.log(fillColor, fontSize);
-    return {
-        fontSize: parseInt(fontSize) * 10, // 將字級轉換為合理的 px 大小，例如字級 1~10 轉為 2px ~ 20px
-        fillColor: fillColor,
-    };
+    if (withFill) {
+        style.fill = true;
+        style.fillColor = fillColor;
+        style.fillOpacity = 1;
+    }
+    return style;
 }
 
-function getShapeOption4() {
-    // 取得選中圖標的值（例如標記的 ID）
-    var image = $('#imageSelect').val();
-    var fontSize = $('#cp_fontSize').val();
-    var fillColor = $('#cp_fillColor').val();
-    console.log(fillColor, fontSize);
-    return {
-        image: image,
-        fontSize: parseInt(fontSize) * 8, // 將字級轉換為合理的 px 大小，例如字級 1~10 轉為 2px ~ 20px
-        fillColor: fillColor,
-    };
+// 繪製中變更樣式時，同步更新繪製器設定與繪製中的預覽圖形
+function refreshActiveDrawerStyle() {
+    if (!activeDrawer || !selectTool) {
+        return;
+    }
+    const drawItem = selectTool.attr('id');
+    if (drawItem === 'drawMarker') {
+        refreshMarkerIcon();
+        return;
+    }
+    if (drawItem === 'drawText') {
+        activeDrawer.refreshStyle();
+        return;
+    }
+
+    const style = getShapeStyle(drawItem !== 'drawPolyline');
+    // CircleMarker 的樣式直接放在 options，其餘繪製器放在 options.shapeOptions
+    L.extend(activeDrawer.options.shapeOptions || activeDrawer.options, style);
+    const preview = activeDrawer._poly || activeDrawer._shape || activeDrawer._marker;
+    if (preview && preview.setStyle) {
+        preview.setStyle(style);
+    }
 }
 
+// 結束目前啟用中的直接繪製（disable 會觸發 draw:drawstop）
+function stopActiveDrawer() {
+    if (activeDrawer) {
+        activeDrawer.disable();
+    }
+}
+
+// 以下各工具建立繪製器後立即啟用；完成後由 draw:created 的 handleLayerCreation 套用樣式並加入 drawnItems
+
+// 線段：以外框顏色與粗細繪製（同 PPT 線條使用外框設定）
 function initPolyline() {
-
-    // 手動觸發繪圖開始事件
-    $indexMap.fire('draw:drawstart');
-
-    // 創建折線工具
-    const polylineDrawer = new L.Draw.Polyline($indexMap, {
-        shapeOptions: {
-            color: '#0000FF', // 可以更改為你想要的顏色
-            weight: 3,        // 線的寬度
-            opacity: 1.0
-        }
+    activeDrawer = new L.Draw.Polyline($indexMap, {
+        shapeOptions: getShapeStyle(false)
     });
-
-    // 啟用折線繪製模式
-    polylineDrawer.enable();
-    // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once('draw:created', function (event) {
-        if (event.layerType === 'polyline') {
-            const layer = event.layer;
-
-            layer.setStyle(getShapeOption2())
-            // 添加到地圖
-            $indexMap.addLayer(layer);
-
-            console.log("Polyline created");
-
-            // 停止繪製
-            polylineDrawer.disable();
-
-            // 手動觸發繪圖停止事件，重新顯示工具面板
-            $indexMap.fire('draw:drawstop');
-        }
-    });
+    activeDrawer.enable();
 }
 
 function initPolygon() {
-    // 手動觸發繪圖開始事件
-    $indexMap.fire('draw:drawstart');
-
-    // 創建多邊形工具
-    const polygonDrawer = new L.Draw.Polygon($indexMap, {
-        shapeOptions: getShapeOption1()
+    activeDrawer = new L.Draw.Polygon($indexMap, {
+        shapeOptions: getShapeStyle(true)
     });
-
-    // 啟用多邊形繪製模式
-    polygonDrawer.enable();
-
-    // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once('draw:created', function (event) {
-        if (event.layerType === 'polygon') {
-            const layer = event.layer;
-
-            // 更新多邊形的樣式為最新的 shapeOptions
-            layer.setStyle(getShapeOption1());
-
-            // 添加到地圖
-            $indexMap.addLayer(layer);
-
-            console.log("Polygon created", getShapeOption1());
-
-            // 停止繪製
-            polygonDrawer.disable();
-
-            // 手動觸發繪圖停止事件，重新顯示工具面板
-            $indexMap.fire('draw:drawstop');
-        }
-    });
+    activeDrawer.enable();
 }
 
 
@@ -563,6 +506,8 @@ function initEdit() {
     // 若已有編輯工作階段在進行中，先結束前一個，避免事件重複綁定造成 undo 記錄重複寫入
     if (activeEditHandler) {
         $indexMap.off('contextmenu', activeEditExitHandler);
+        disableTextContentEditing();
+        removeTextResizeHandles();
         activeEditHandler.save();
         activeEditHandler.disable();
     }
@@ -579,6 +524,8 @@ function initEdit() {
     });
 
     editHandler.enable(); // 啟動編輯模式
+    addTextResizeHandles();
+    enableTextContentEditing();
 
     // 當使用者完成編輯（save() 觸發）時，把實際變動過的圖層寫入復原堆疊
     $indexMap.on('draw:edited', function (e) {
@@ -592,7 +539,9 @@ function initEdit() {
 
     activeEditHandler = editHandler;
     activeEditExitHandler = function () {
-        // 先儲存變動（觸發 draw:edited 寫入復原堆疊），再結束編輯模式
+        // 先完成文字修改並儲存變動（觸發 draw:edited 寫入復原堆疊），再結束編輯模式
+        disableTextContentEditing();
+        removeTextResizeHandles();
         editHandler.save();
         editHandler.disable();
         $indexMap.off('contextmenu', activeEditExitHandler);
@@ -605,194 +554,417 @@ function initEdit() {
 }
 
 function initCircle() {
-    // 手動觸發繪圖開始事件
-    // $indexMap.fire('draw:drawstart');
-
-    // 創建圓形工具
-    const circleDrawer = new L.Draw.Circle($indexMap, {
-        shapeOptions: {
-            color: '#00FF00', // 可以更改為你想要的顏色
-            weight: 3,        // 線的寬度
-            opacity: 1.0
-        }
+    activeDrawer = new L.Draw.Circle($indexMap, {
+        shapeOptions: getShapeStyle(true)
     });
-
-    // 啟用圓形繪製模式
-    circleDrawer.enable();
-
-    // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once('draw:created', function (event) {
-        if (event.layerType === 'circle') {
-            const layer = event.layer;
-
-            layer.setStyle(getShapeOption1());
-            // 添加到地圖
-            $indexMap.addLayer(layer);
-
-            console.log("Circle created");
-
-            // 停止繪製
-            circleDrawer.disable();
-
-            // 手動觸發繪圖停止事件，重新顯示工具面板
-            $indexMap.fire('draw:drawstop');
-        }
-    });
+    activeDrawer.enable();
 }
-function initMarker() {
-    const { image, fontSize, fillColor } = getShapeOption4();
 
-    // 如果沒有選擇圖標，則不繼續執行
-    if (!image) {
-        console.error("請先選擇一個圖標");
+function initRectangle() {
+    activeDrawer = new L.Draw.Rectangle($indexMap, {
+        shapeOptions: getShapeStyle(true)
+    });
+    activeDrawer.enable();
+}
+
+function initCircleMarker() {
+    // CircleMarker 的樣式設定直接放在 options 而非 shapeOptions
+    activeDrawer = new L.Draw.CircleMarker($indexMap, getShapeStyle(true));
+    activeDrawer.enable();
+}
+
+// 標記 SVG 快取（key: 樣式名稱），變更大小或顏色時不必重新下載
+const markerSvgCache = {};
+
+// 依目前的填滿色與標記選項產生圖示，SVG 未快取時會先下載
+function getMarkerIcon(callback) {
+    const image = toolOptions.markerImage;
+    const build = function (svgText) {
+        callback(buildMarkerIcon(svgText, toolOptions.markerSize * 8, fillColor));
+    };
+
+    if (markerSvgCache[image]) {
+        build(markerSvgCache[image]);
         return;
     }
-    // 加载 SVG 文件
     $.get(`/svg/drawtool/marker/${image}.svg`, function (svgContent) {
-        const svgElement = svgContent.documentElement;
-        svgElement.setAttribute('width', fontSize);
-        svgElement.setAttribute('height', fontSize);
-        svgElement.setAttribute('fill', fillColor);
-
-        const customIcon = new L.DivIcon({
-            html: new XMLSerializer().serializeToString(svgElement),
-            className: '',
-            iconAnchor: [16, 16], // 设置锚点
-            popupAnchor: [0, -16] // 设置弹出窗口锚点
-        });
-
-        // 手動觸發繪圖開始事件
-        $indexMap.fire('draw:drawstart');
-
-        // 創建標記工具
-        const markerDrawer = new L.Draw.Marker($indexMap, {
-            icon: customIcon // 使用自定義圖標
-        });
-
-        // 啟用標記繪製模式
-        markerDrawer.enable();
-
-        // 使用一次性事件監聽器，只在繪製完成後處理一次
-        $indexMap.once('draw:created', function (event) {
-            if (event.layerType === 'marker') {
-                const layer = event.layer;
-
-                // 將自定義圖標應用於繪製的標記
-                layer.setIcon(customIcon);
-
-                // 添加到地圖
-                $indexMap.addLayer(layer);
-                // 停止繪製
-                markerDrawer.disable();
-
-                // 手動觸發繪圖停止事件，重新顯示工具面板
-                $indexMap.fire('draw:drawstop');
-            }
-        });
+        markerSvgCache[image] = new XMLSerializer().serializeToString(svgContent.documentElement);
+        build(markerSvgCache[image]);
     }).fail(function () {
         console.error("無法加載選中的圖標文件");
     });
 }
 
-function initRectangle() {
-    // 手動觸發繪圖開始事件
-    $indexMap.fire('draw:drawstart');
+function buildMarkerIcon(svgText, size, color) {
+    const svgElement = new DOMParser().parseFromString(svgText, 'image/svg+xml').documentElement;
+    svgElement.setAttribute('width', size);
+    svgElement.setAttribute('height', size);
+    svgElement.setAttribute('fill', color);
 
-    // 創建矩形工具
-    const rectangleDrawer = new L.Draw.Rectangle($indexMap, {
-        shapeOptions: {
-            color: '#FFA500', // 可以更改為你想要的顏色
-            weight: 3,        // 線的寬度
-            opacity: 1.0
-        }
-    });
-    $('#measuretip').css('display', 'block');
-    // 啟用矩形繪製模式
-    rectangleDrawer.enable();
-
-    // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once('draw:created', function (event) {
-        if (event.layerType === 'rectangle') {
-            const layer = event.layer;
-            layer.setStyle(getShapeOption1());
-            // 添加到地圖
-            $indexMap.addLayer(layer);
-
-            console.log("Rectangle created");
-
-            // 停止繪製
-            rectangleDrawer.disable();
-
-            // 手動觸發繪圖停止事件，重新顯示工具面板
-            $indexMap.fire('draw:drawstop');
-        }
+    return L.divIcon({
+        html: new XMLSerializer().serializeToString(svgElement),
+        className: '',
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2], // 錨點置中
+        popupAnchor: [0, -size / 2]
     });
 }
-function initCircleMarker() {
-    // 手動觸發繪圖開始事件
-    $indexMap.fire('draw:drawstart');
 
-    // 創建圓形標記工具
-    const circleMarkerDrawer = new L.Draw.CircleMarker($indexMap, {
-        shapeOptions: {
-            color: '#800080', // 可以更改為你想要的顏色
-            weight: 3,        // 線的寬度
-            opacity: 1.0,
-            radius: 10        // 圓形標記的半徑大小
+function initMarker() {
+    getMarkerIcon(function (icon) {
+        // 圖示下載期間若已切換到其他工具，就不再啟用
+        if (!selectTool || selectTool.attr('id') !== 'drawMarker' || activeDrawer) {
+            return;
         }
+        activeDrawer = new L.Draw.Marker($indexMap, { icon: icon });
+        activeDrawer.enable();
     });
+}
 
-    // 啟用圓形標記繪製模式
-    circleMarkerDrawer.enable();
-
-    // 使用一次性事件監聽器，只在繪製完成後處理一次
-    $indexMap.once('draw:created', function (event) {
-        if (event.layerType === 'circlemarker') {
-            const layer = event.layer;
-            layer.setStyle(getShapeOption1());
-            // 添加到地圖
-            $indexMap.addLayer(layer);
-
-            console.log("CircleMarker created");
-
-            // 停止繪製
-            circleMarkerDrawer.disable();
-
-            // 手動觸發繪圖停止事件，重新顯示工具面板
-            $indexMap.fire('draw:drawstop');
+// 標記繪製中變更大小、樣式或顏色時，更新跟隨滑鼠的預覽圖示與之後放置的圖示
+function refreshMarkerIcon() {
+    getMarkerIcon(function (icon) {
+        if (!activeDrawer || !selectTool || selectTool.attr('id') !== 'drawMarker') {
+            return;
+        }
+        activeDrawer.options.icon = icon;
+        if (activeDrawer._marker) {
+            activeDrawer._marker.setIcon(icon);
         }
     });
 }
 
-// 初始化添加文字的功能
-function initText() {
-    $indexMap.fire('draw:drawstart');
-    // 讓用戶點擊地圖來添加文字
-    $indexMap.once('click', function (e) {
-        const latlng = e.latlng;
-        console.log(latlng);
-        const text = $('#cp_text').val();
-        if (text) {
-            const { fontSize, fillColor } = getShapeOption3();
-            const textMarker = L.marker(latlng, {
-                icon: L.divIcon({
-                    className: 'custom-text-label',
-                    html: `<b style="color:${fillColor}; font-size:${fontSize}px">${text}</b>`,
-                    iconSize: null,
-                }),
-            })
+// 文字圖層的內容與樣式存在 layer.textData：{ text, color, fontSize, width, height }
+// width 為 null 時依內容自動寬度；有值時固定框寬並自動換行（同 PPT 文字方塊）
+// height 為 null 時依內容自動高度；有值時固定框高，文字靠上，超出部分照常顯示
+function buildTextIcon(textData) {
+    const $text = $('<div class="painter-text">')
+        .css({ color: textData.color, 'font-size': `${textData.fontSize}px` })
+        .text(textData.text);
+    if (textData.width) {
+        $text.addClass('fixed-width').css('width', `${textData.width}px`);
+    }
+    if (textData.height) {
+        $text.css('height', `${textData.height}px`);
+    }
+    return L.divIcon({
+        className: 'custom-text-label',
+        html: $text.prop('outerHTML'),
+        iconSize: null,
+    });
+}
 
-            $indexMap.addLayer(textMarker);
-            // 手動觸發 'draw:created' 事件，確保流程一致
-            $indexMap.fire('draw:created', {
-                layer: textMarker,
-                layerType: 'text'
+function createTextMarker(latlng, textData) {
+    const marker = L.marker(latlng, { icon: buildTextIcon(textData) });
+    marker.textData = textData;
+    return marker;
+}
+
+// 文字框的拖曳控制點：右側調寬、下方調高、右下角同時調整
+const TEXT_RESIZE_HANDLES = [
+    { name: 'e', resizeX: true, resizeY: false, title: '拖曳調整文字框寬度' },
+    { name: 's', resizeX: false, resizeY: true, title: '拖曳調整文字框高度' },
+    { name: 'se', resizeX: true, resizeY: true, title: '拖曳調整文字框大小' },
+];
+
+// 編輯模式下，在每個文字框加上拖曳控制點以調整框的大小
+function addTextResizeHandles() {
+    drawnItems.eachLayer(function (layer) {
+        const iconElement = layer.textData && layer.getElement && layer.getElement();
+        if (!iconElement) {
+            return; // 非文字圖層，或已隱藏不在地圖上
+        }
+        TEXT_RESIZE_HANDLES.forEach(function (direction) {
+            const handle = L.DomUtil.create('div', `painter-text-resize resize-${direction.name}`, iconElement);
+            handle.title = direction.title;
+            // 攔截按下事件，避免同時觸發標記拖曳（移動位置）
+            L.DomEvent.disableClickPropagation(handle);
+            L.DomEvent.on(handle, 'pointerdown', function (e) {
+                startTextResize(e, layer, handle, direction);
             });
+        });
+    });
+}
+
+function removeTextResizeHandles() {
+    $('.painter-text-resize').remove();
+}
+
+function startTextResize(e, layer, handle, direction) {
+    L.DomEvent.stop(e);
+
+    const textData = layer.textData;
+    const textElement = layer.getElement().querySelector('.painter-text');
+    const startRect = textElement.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const minSize = textData.fontSize; // 至少容納一個字
+    const startTextWidth = textData.width;
+    const startTextHeight = textData.height;
+
+    handle.setPointerCapture(e.pointerId);
+
+    function onMove(ev) {
+        if (direction.resizeX) {
+            const width = Math.max(minSize, Math.round(startRect.width + ev.clientX - startX));
+            textElement.classList.add('fixed-width');
+            textElement.style.width = `${width}px`;
+            textData.width = width;
+        }
+        if (direction.resizeY) {
+            const height = Math.max(minSize, Math.round(startRect.height + ev.clientY - startY));
+            textElement.style.height = `${height}px`;
+            textData.height = height;
+        }
+    }
+
+    function onUp() {
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        handle.removeEventListener('pointercancel', onUp);
+        if (textData.width === startTextWidth && textData.height === startTextHeight) {
+            return;
+        }
+        // 只更新 icon 設定、不呼叫 setIcon，避免編輯中重建圖示而失去拖曳與控制點；
+        // 之後重新顯示（眼睛開關）時會用新的寬度產生圖示
+        layer.options.icon = buildTextIcon(layer.textData);
+        // 讓 Leaflet.draw 在結束編輯時把此圖層列入 draw:edited，寫入復原堆疊
+        layer.edited = true;
+    }
+
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
+}
+
+// 編輯模式下雙擊文字可直接修改內容；記錄進行中的修改，結束編輯模式時先完成它
+let activeTextEditCommit = null;
+
+function enableTextContentEditing() {
+    drawnItems.eachLayer(function (layer) {
+        if (layer.textData) {
+            layer.on('dblclick', onTextDblClick);
+        }
+    });
+}
+
+function disableTextContentEditing() {
+    if (activeTextEditCommit) {
+        activeTextEditCommit();
+    }
+    drawnItems.eachLayer(function (layer) {
+        if (layer.textData) {
+            layer.off('dblclick', onTextDblClick);
+        }
+    });
+}
+
+function onTextDblClick(e) {
+    L.DomEvent.stop(e.originalEvent);
+    startTextContentEdit(e.target);
+}
+
+// 在原本的文字框內直接編輯（保留框寬、框高與換行），Enter 或點擊其他位置完成，Esc 取消
+function startTextContentEdit(layer) {
+    if (activeTextEditCommit) {
+        activeTextEditCommit();
+    }
+    const iconElement = layer.getElement();
+    if (!iconElement) {
+        return;
+    }
+    const textElement = iconElement.querySelector('.painter-text');
+    const textData = layer.textData;
+    const originalText = textData.text;
+
+    // 編輯中停用標記拖曳，滑鼠才能定位游標與選取文字
+    const wasDraggable = layer.dragging && layer.dragging.enabled();
+    if (wasDraggable) {
+        layer.dragging.disable();
+    }
+
+    // plaintext-only 可避免貼上或換行時插入 HTML，不支援的瀏覽器退回 true
+    textElement.setAttribute('contenteditable', 'plaintext-only');
+    if (textElement.contentEditable !== 'plaintext-only') {
+        textElement.setAttribute('contenteditable', 'true');
+    }
+    textElement.classList.add('editing');
+
+    // 攔截滑鼠與按鍵，避免拖動地圖、觸發標記事件或鍵盤平移縮放
+    const STOP_EVENTS = 'pointerdown mousedown touchstart click dblclick contextmenu';
+    L.DomEvent.on(textElement, STOP_EVENTS, L.DomEvent.stopPropagation);
+    textElement.addEventListener('keydown', onKeyDown);
+    textElement.addEventListener('blur', commit);
+
+    function onKeyDown(ev) {
+        ev.stopPropagation();
+        if (ev.key === 'Enter') {
+            ev.preventDefault();
+            finish(true);
+        } else if (ev.key === 'Escape') {
+            ev.preventDefault();
+            finish(false);
+        }
+    }
+
+    function commit() {
+        finish(true);
+    }
+
+    function finish(save) {
+        if (activeTextEditCommit !== commit) {
+            return; // 已結束
+        }
+        activeTextEditCommit = null;
+        L.DomEvent.off(textElement, STOP_EVENTS, L.DomEvent.stopPropagation);
+        textElement.removeEventListener('keydown', onKeyDown);
+        textElement.removeEventListener('blur', commit);
+        textElement.removeAttribute('contenteditable');
+        textElement.classList.remove('editing');
+        if (wasDraggable) {
+            layer.dragging.enable();
         }
 
-        // 手動觸發繪圖停止事件，重新顯示工具面板
-        $indexMap.fire('draw:drawstop');
-    });
+        const newText = textElement.textContent.trim();
+        if (save && newText && newText !== originalText) {
+            textData.text = newText;
+            // 同調整大小：只更新 icon 設定、不呼叫 setIcon，並標記給 Leaflet.draw 寫入復原堆疊
+            layer.options.icon = buildTextIcon(textData);
+            layer.edited = true;
+        }
+        // 正規化內容（移除編輯時可能插入的換行元素）；清空或取消時還原原文字
+        textElement.textContent = textData.text;
+    }
+
+    activeTextEditCommit = commit;
+    textElement.focus();
+    // 進入編輯時全選文字，方便直接改寫
+    const range = document.createRange();
+    range.selectNodeContents(textElement);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+// 文字：先點擊地圖決定位置，再於該處的文字框直接輸入（同 PPT 文字方塊），顏色使用填滿色。
+// 輸入中可調整面板上的顏色與字級（點面板不會結束輸入）；
+// Enter、點擊地圖其他位置或切換工具時完成，Esc 取消。
+// 介面與 Leaflet.draw 繪製器相同（disable），讓切換工具、Esc 取消的流程一致
+function initText() {
+    let enabled = true;
+    let editor = null;   // 輸入中的暫時文字框 { marker, input }
+
+    const drawer = {
+        disable: function () {
+            if (!enabled) {
+                return;
+            }
+            enabled = false;
+            commitEditor();
+            $indexMap.off('click', onMapClick);
+            $(document).off('keydown', onKeyDown);
+            $indexMap.fire('draw:drawstop', { layerType: 'text' });
+        },
+        // 共用樣式列或字級變更時，同步更新輸入中的文字框
+        refreshStyle: function () {
+            if (editor) {
+                $(editor.input).css(getTextCss());
+            }
+        }
+    };
+
+    function getTextCss() {
+        return { color: fillColor, 'font-size': `${toolOptions.fontSize * 10}px` };
+    }
+
+    function onMapClick(e) {
+        // 已在輸入時點擊地圖其他位置，視為完成輸入
+        if (editor) {
+            drawer.disable();
+            return;
+        }
+        openEditor(e.latlng);
+    }
+
+    function openEditor(latlng) {
+        const input = $('<input type="text" class="painter-text-editor" size="1" />').css(getTextCss())[0];
+        const marker = L.marker(latlng, {
+            icon: L.divIcon({
+                className: 'custom-text-label',
+                html: input,
+                iconSize: null,
+            }),
+            keyboard: false,
+            zIndexOffset: 1000,
+        }).addTo($indexMap);
+
+        // 文字框位於地圖內，攔截點擊與按鍵，避免觸發地圖點擊、拖曳或鍵盤平移縮放
+        L.DomEvent.disableClickPropagation(input);
+        $(input).on('keydown', function (e) {
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+                drawer.disable();
+            } else if (e.key === 'Escape') {
+                cancelEditor();
+                drawer.disable();
+            }
+        });
+        // 隨內容調整寬度
+        $(input).on('input', function () {
+            this.size = Math.max(this.value.length, 1);
+        });
+
+        editor = { marker: marker, input: input };
+        setTimeout(function () {
+            input.focus();
+        }, 0);
+    }
+
+    function cancelEditor() {
+        if (editor) {
+            $indexMap.removeLayer(editor.marker);
+            editor = null;
+        }
+    }
+
+    // 有輸入文字才建立文字圖層，空白則直接捨棄
+    function commitEditor() {
+        if (!editor) {
+            return;
+        }
+        const text = editor.input.value.trim();
+        const latlng = editor.marker.getLatLng();
+        cancelEditor();
+        if (!text) {
+            return;
+        }
+
+        const textMarker = createTextMarker(latlng, {
+            text: text,
+            color: fillColor,
+            fontSize: toolOptions.fontSize * 10,
+            width: null,
+            height: null,
+        });
+
+        // 手動觸發 'draw:created' 事件，確保流程一致
+        $indexMap.fire('draw:created', {
+            layer: textMarker,
+            layerType: 'text'
+        });
+    }
+
+    // 尚未開始輸入時，Esc 取消文字工具（輸入中的 Esc 由文字框自行處理）
+    function onKeyDown(e) {
+        if (e.key === 'Escape') {
+            drawer.disable();
+        }
+    }
+
+    activeDrawer = drawer;
+    $indexMap.on('click', onMapClick);
+    $(document).on('keydown', onKeyDown);
+    $indexMap.fire('draw:drawstart', { layerType: 'text' });
 }
 
 function initInOut() {
@@ -1209,6 +1381,8 @@ function redo() {
 function getLayerGeometrySnapshot(layer) {
     if (layer instanceof L.Circle) {
         return { latlng: layer.getLatLng(), radius: layer.getRadius() };
+    } else if (layer.textData) { // 文字：位置與框的大小
+        return { latlng: layer.getLatLng(), text: layer.textData.text, width: layer.textData.width, height: layer.textData.height };
     } else if (layer instanceof L.CircleMarker || layer instanceof L.Marker) {
         return { latlng: layer.getLatLng() };
     } else if (layer instanceof L.Polyline) { // 涵蓋 Polygon、Rectangle（皆繼承自 Polyline）
@@ -1223,6 +1397,14 @@ function applyLayerGeometrySnapshot(layer, snapshot) {
     if (layer instanceof L.Circle) {
         layer.setLatLng(snapshot.latlng);
         layer.setRadius(snapshot.radius);
+    } else if (layer.textData) {
+        layer.setLatLng(snapshot.latlng);
+        if (snapshot.text !== layer.textData.text || snapshot.width !== layer.textData.width || snapshot.height !== layer.textData.height) {
+            layer.textData.text = snapshot.text;
+            layer.textData.width = snapshot.width;
+            layer.textData.height = snapshot.height;
+            layer.setIcon(buildTextIcon(layer.textData));
+        }
     } else if (layer instanceof L.CircleMarker || layer instanceof L.Marker) {
         layer.setLatLng(snapshot.latlng);
     } else if (layer instanceof L.Polyline) {

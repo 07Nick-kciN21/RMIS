@@ -1,5 +1,5 @@
 import { layers } from './layers.js';
-import { Map } from '../map_test.js';
+import { Map } from '../map.js';
 // opacity: 0~100
 
 export function opacityLayer(opacity, layersId) {

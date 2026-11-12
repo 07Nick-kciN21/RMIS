@@ -1,4 +1,4 @@
-﻿import { Map } from './map_test.js';
+﻿import { Map } from './map.js';
 
 let $indexMap;
 let selectTool;

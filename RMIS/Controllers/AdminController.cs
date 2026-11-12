@@ -501,6 +501,13 @@ namespace RMIS.Controllers
                     return Unauthorized(new { success = false, message = "請重新登入後再試" });
                 }
 
+                var photoError = StreetPhotoValidator.Validate(input.StreetViewPhoto, allowExisting: false);
+                if (photoError != null)
+                {
+                    LogOp("新增道路專案", false, photoError);
+                    return BadRequest(new { success = false, message = photoError });
+                }
+
                 var newId = await _adminInterface.AddRoadProjectAsync(input, currentUser?.Id);
 
                 if (newId > 0)

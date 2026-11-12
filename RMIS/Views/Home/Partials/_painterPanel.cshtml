@@ -28,11 +28,35 @@
         </div>
     </div>
     <div class="panelInput" style="display:block">
-        <div id="colorPicker" class="colorPickers">
-            <div id="colorPickerContent">
+        @* 共用樣式列：填滿、外框、粗細獨立於工具，類似 PPT 的圖形格式 *@
+        <div id="drawStyleBar" class="colorPickers">
+            <div>
+                <span>填滿</span>
+            </div>
+            <div class="custom-color-picker">
+                <input class="color-box" type="color" id="ds_fillColor" value="#ff0000">
             </div>
             <div>
-                <button class="goDraw">繪製</button>
+                <span>外框</span>
+            </div>
+            <div class="custom-color-picker">
+                <input class="color-box" type="color" id="ds_borderColor" value="#ff0000">
+            </div>
+            <div>
+                <span>粗細</span>
+            </div>
+            <div>
+                <select id="ds_borderWidth" class="ds-select2">
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div id="colorPicker" class="colorPickers">
+            @* 工具專屬選項（標記大小與樣式、文字內容與字級） *@
+            <div id="colorPickerContent">
             </div>
         </div>
     </div>

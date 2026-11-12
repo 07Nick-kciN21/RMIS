@@ -2,6 +2,7 @@ import BoxManager from './box.js';
 import { showLoading, hideLoading } from '../loading.js';
 import { MAX_FILE_MB, MAX_FILE_BYTES, checkUploadSize, readErrorResponse, getErrorMessage } from '../uploadLimit.js';
 import { initPreviewBasemapCtrl } from './previewBasemapCtrl.js';
+import { checkStreetPhotos } from './streetPhotoCheck.js';
 
 /**
  * 道路專案新增模組
@@ -18,12 +19,9 @@ const RoadProjectAdd = {
     // 彈出視窗參考
     mapWindow: null,
 
-    // 起點/終點座標（來自路名搜尋選擇）
-    startCoord: null,
-    endCoord: null,
-
-    // 地圖視窗來的中間範圍點
-    middleRangePoints: [],
+    // 拓寬範圍點（依多邊形順序排列）：{ lat, lng, role: 'start' | 'end' | 'middle' }
+    // start / end 來自路名搜尋選擇，middle 來自點圖新增；起訖點不一定在頭尾
+    rangePoints: [],
 
     // 路名搜尋延遲計時器
     searchTimer: null,
@@ -91,15 +89,13 @@ const RoadProjectAdd = {
 
         // 綁定起點路名搜尋
         $(document).on('input', '#add-start-point', function() {
-            self.startCoord = null;
-            self.syncRangeTable();
+            self.setRolePoint('start', null);
             self.scheduleSearch('start', $(this).val().trim());
         });
 
         // 綁定終點路名搜尋
         $(document).on('input', '#add-end-point', function() {
-            self.endCoord = null;
-            self.syncRangeTable();
+            self.setRolePoint('end', null);
             self.scheduleSearch('end', $(this).val().trim());
         });
 
@@ -161,21 +157,22 @@ const RoadProjectAdd = {
             self.onRangeInputChange(this);
         });
 
-        // 綁定範圍點刪除按鈕（起點、終點、中間點）
+        // 綁定範圍點刪除按鈕
         $(document).on('click', '.btn-delete-range-point', function() {
-            const pointType = $(this).data('point-type');
-            if (pointType === 'start') {
-                self.deleteStartPoint();
-            } else if (pointType === 'end') {
-                self.deleteEndPoint();
-            } else if (pointType === 'middle') {
-                self.deleteMiddlePoint(parseInt($(this).data('middle-index')));
-            }
+            self.deleteRangePoint(parseInt($(this).data('row-index')));
         });
+
 
         // 綁定點圖新增範圍點切換按鈕
         $(document).on('click', '#btn-toggle-add-range-point', function() {
             self.toggleAddRangePoint();
+        });
+
+        // 連續新增範圍點時按 Esc 結束
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && self.addingRangePoint && !$('#page-project-add').hasClass('hidden')) {
+                self.toggleAddRangePoint();
+            }
         });
 
         // 綁定點圖新增街景照片切換按鈕
@@ -235,14 +232,12 @@ const RoadProjectAdd = {
         $('#add-total-budget').val(0);
 
         // 重置拓寬範圍資料
-        this.startCoord = null;
-        this.endCoord = null;
-        this.middleRangePoints = [];
+        this.rangePoints = [];
         this.rangeList = [];
         this.searchResults = { start: [], end: [] };
         this.addingRangePoint = false;
         this.addingPhotoPoint = false;
-        $('#btn-toggle-add-range-point').removeClass('active');
+        $('#btn-toggle-add-range-point').removeClass('active').html('<i class="fa fa-plus"></i> 點圖新增範圍點');
         $('#btn-toggle-add-photo-point').removeClass('active');
         $('#add-preview-map').removeClass('adding-point');
         $('.autocomplete-dropdown').addClass('hidden').empty();
@@ -353,27 +348,64 @@ const RoadProjectAdd = {
         const [lng, lat] = item.location.split(',').map(Number);
         const coord = { lat, lng };
 
-        if (type === 'start') {
-            $('#add-start-point-dropdown').addClass('hidden');
-            this.startCoord = coord;
-        } else {
-            $('#add-end-point-dropdown').addClass('hidden');
-            this.endCoord = coord;
-        }
-        this.syncRangeTable();
+        $(type === 'start' ? '#add-start-point-dropdown' : '#add-end-point-dropdown').addClass('hidden');
+        this.setRolePoint(type, coord);
         this.combineLocation();
     },
 
     /**
-     * 從三個來源組合 rangeList（資料層，不觸及 DOM）
+     * 設定起點 / 終點座標（coord 為 null 時移除）：
+     * 已存在則原位更新，不改變其在多邊形中的順序；新增時起點放最前、終點放最後
+     */
+    setRolePoint: function(role, coord) {
+        const idx = this.rangePoints.findIndex(p => p.role === role);
+        if (!coord) {
+            if (idx >= 0) this.rangePoints.splice(idx, 1);
+        } else if (idx >= 0) {
+            this.rangePoints[idx] = { lat: coord.lat, lng: coord.lng, role };
+        } else if (role === 'start') {
+            this.rangePoints.unshift({ lat: coord.lat, lng: coord.lng, role });
+        } else {
+            this.rangePoints.push({ lat: coord.lat, lng: coord.lng, role });
+        }
+        this.syncRangeTable();
+    },
+
+    /**
+     * 點圖新增範圍點：插入到使多邊形周長增加最少的邊上（含首尾相接的閉合邊），
+     * 讓點擊順序不影響形狀。例：起訖點 A、C，依序點 B、D → A B C D（而非 A B D C 的交叉形）
+     */
+    insertRangePoint: function(coord) {
+        const pts = this.rangePoints;
+        const point = { lat: coord.lat, lng: coord.lng, role: 'middle' };
+        if (pts.length < 2) {
+            pts.push(point);
+            return;
+        }
+
+        // 以平面近似計算距離（經度依緯度縮放），範圍小時足夠準確
+        const kx = Math.cos(coord.lat * Math.PI / 180);
+        const dist = (a, b) => Math.hypot((a.lng - b.lng) * kx, a.lat - b.lat);
+
+        let bestIdx = pts.length;
+        let bestCost = Infinity;
+        for (let i = 0; i < pts.length; i++) {
+            const a = pts[i];
+            const b = pts[(i + 1) % pts.length];
+            const cost = dist(a, point) + dist(point, b) - dist(a, b);
+            if (cost < bestCost) {
+                bestCost = cost;
+                bestIdx = i + 1;
+            }
+        }
+        pts.splice(bestIdx, 0, point);
+    },
+
+    /**
+     * 由 rangePoints 產生送出用的 rangeList（資料層，不觸及 DOM）
      */
     rebuildRangeList: function() {
-        const combined = [];
-        if (this.startCoord) combined.push(this.startCoord);
-        this.middleRangePoints.forEach(p => combined.push(p));
-        if (this.endCoord) combined.push(this.endCoord);
-
-        this.rangeList = combined.map((item, index) => ({
+        this.rangeList = this.rangePoints.map((item, index) => ({
             Id: index,
             Latitude: item.lat,
             Longitude: item.lng
@@ -381,46 +413,25 @@ const RoadProjectAdd = {
     },
 
     /**
-     * 渲染拓寬範圍表格（含可編輯緯經度輸入、中間點刪除鈕）
+     * 渲染拓寬範圍表格（含可編輯緯經度輸入、刪除鈕）
      */
     renderRangeTable: function() {
         const $tbody = $('#add-expansion-range-tbody');
         $tbody.empty();
 
         if (this.rangeList.length === 0) {
-            $tbody.html('<tr class="empty-row"><td colspan="4">尚無資料，請輸入起訖路名、點圖新增或點「編輯範圍」</td></tr>');
+            $tbody.html('<tr class="empty-row"><td colspan="4">尚無資料，請輸入起訖路名或點圖新增範圍點</td></tr>');
             return;
         }
 
-        let middleIdx = 0;
-        this.rangeList.forEach((item, index) => {
-            const isStart  = (index === 0 && this.startCoord);
-            const isEnd    = (index === this.rangeList.length - 1 && this.endCoord);
-            const isMiddle = !isStart && !isEnd;
-
-            const currentMiddleIdx = isMiddle ? middleIdx : -1;
-            if (isMiddle) middleIdx++;
-
-            let label = '';
-            if (isStart) label = ' (起點)';
-            else if (isEnd) label = ' (終點)';
-
-            // 所有點都可刪除，透過不同的 data 屬性區分類型
-            let deleteBtn = '';
-            if (isStart) {
-                deleteBtn = `<button type="button" class="btn-delete-range-point" data-point-type="start"><i class="fa fa-trash"></i> 刪除</button>`;
-            } else if (isEnd) {
-                deleteBtn = `<button type="button" class="btn-delete-range-point" data-point-type="end"><i class="fa fa-trash"></i> 刪除</button>`;
-            } else {
-                deleteBtn = `<button type="button" class="btn-delete-range-point" data-point-type="middle" data-middle-index="${currentMiddleIdx}"><i class="fa fa-trash"></i> 刪除</button>`;
-            }
-
+        this.rangePoints.forEach((item, index) => {
+            const label = item.role === 'start' ? ' (起點)' : item.role === 'end' ? ' (終點)' : '';
             $tbody.append(`
                 <tr>
                     <td>${index + 1}${label}</td>
-                    <td><input type="text" class="form-control range-lat-input" data-row-index="${index}" value="${Number(item.Latitude).toFixed(6)}"></td>
-                    <td><input type="text" class="form-control range-lng-input" data-row-index="${index}" value="${Number(item.Longitude).toFixed(6)}"></td>
-                    <td>${deleteBtn}</td>
+                    <td><input type="text" class="form-control range-lat-input" data-row-index="${index}" value="${Number(item.lat).toFixed(6)}"></td>
+                    <td><input type="text" class="form-control range-lng-input" data-row-index="${index}" value="${Number(item.lng).toFixed(6)}"></td>
+                    <td><button type="button" class="btn-delete-range-point" data-row-index="${index}"><i class="fa fa-trash"></i> 刪除</button></td>
                 </tr>
             `);
         });
@@ -440,82 +451,43 @@ const RoadProjectAdd = {
      */
     onRangeInputChange: function(inputEl) {
         const $input = $(inputEl);
-        const rowIndex = parseInt($input.data('row-index'));
-        const isLat    = $input.hasClass('range-lat-input');
-        const value    = parseFloat($input.val());
-        if (isNaN(value)) return;
+        const point = this.rangePoints[parseInt($input.data('row-index'))];
+        const value = parseFloat($input.val());
+        if (!point || isNaN(value)) return;
 
-        const isStart = (rowIndex === 0 && this.startCoord);
-        const isEnd   = (rowIndex === this.rangeList.length - 1 && this.endCoord);
-
-        if (isStart) {
-            if (isLat) this.startCoord.lat = value; else this.startCoord.lng = value;
-        } else if (isEnd) {
-            if (isLat) this.endCoord.lat = value; else this.endCoord.lng = value;
-        } else {
-            const middleIdx = rowIndex - (this.startCoord ? 1 : 0);
-            if (this.middleRangePoints[middleIdx]) {
-                if (isLat) this.middleRangePoints[middleIdx].lat = value;
-                else       this.middleRangePoints[middleIdx].lng = value;
-            }
-        }
+        if ($input.hasClass('range-lat-input')) point.lat = value;
+        else point.lng = value;
 
         this.rebuildRangeList();
         this.updatePreviewMap();
     },
 
     /**
-     * 刪除起點
+     * 刪除指定範圍點（rangePoints 索引）
      */
-    deleteStartPoint: function() {
-        // 如果有中間點，將第一個中間點升級為新起點
-        if (this.middleRangePoints.length > 0) {
-            this.startCoord = this.middleRangePoints.shift();
-        } else if (this.endCoord) {
-            // 沒有中間點但有終點，將終點變成起點
-            this.startCoord = this.endCoord;
-            this.endCoord = null;
-        } else {
-            // 只剩起點，直接清空
-            this.startCoord = null;
-        }
+    deleteRangePoint: function(index) {
+        if (isNaN(index) || !this.rangePoints[index]) return;
+        this.rangePoints.splice(index, 1);
         this.syncRangeTable();
     },
 
     /**
-     * 刪除終點
-     */
-    deleteEndPoint: function() {
-        // 如果有中間點，將最後一個中間點升級為新終點
-        if (this.middleRangePoints.length > 0) {
-            this.endCoord = this.middleRangePoints.pop();
-        } else {
-            // 沒有中間點，直接清空終點
-            this.endCoord = null;
-        }
-        this.syncRangeTable();
-    },
-
-    /**
-     * 刪除指定中間範圍點（middleRangePoints 裡的索引）
-     */
-    deleteMiddlePoint: function(middleIndex) {
-        this.middleRangePoints.splice(middleIndex, 1);
-        this.syncRangeTable();
-    },
-
-    /**
-     * 切換「點圖新增範圍點」模式（與照片點模式互斥）
+     * 切換「點圖新增範圍點」模式（與照片點模式互斥）：
+     * 開啟後每次點擊地圖即依序新增一個範圍點（插在終點之前），
+     * 再按一次按鈕（「完成新增」）或按 Esc 結束
      */
     toggleAddRangePoint: function() {
         this.addingRangePoint = !this.addingRangePoint;
+        const $btn = $('#btn-toggle-add-range-point');
         if (this.addingRangePoint) {
             this.addingPhotoPoint = false;
             $('#btn-toggle-add-photo-point').removeClass('active');
-            $('#btn-toggle-add-range-point').addClass('active');
+            $btn.addClass('active').html('<i class="fa fa-check"></i> 完成新增');
             this.scrollToPreviewMap();
         } else {
-            $('#btn-toggle-add-range-point').removeClass('active');
+            $btn.removeClass('active').html('<i class="fa fa-plus"></i> 點圖新增範圍點');
+            // 結束後補做一次自動縮放（新增期間不縮放，避免地圖跳動）
+            this.updatePreviewMap();
         }
         $('#add-preview-map').toggleClass('adding-point', this.addingRangePoint || this.addingPhotoPoint);
     },
@@ -527,7 +499,7 @@ const RoadProjectAdd = {
         this.addingPhotoPoint = !this.addingPhotoPoint;
         if (this.addingPhotoPoint) {
             this.addingRangePoint = false;
-            $('#btn-toggle-add-range-point').removeClass('active');
+            $('#btn-toggle-add-range-point').removeClass('active').html('<i class="fa fa-plus"></i> 點圖新增範圍點');
             $('#btn-toggle-add-photo-point').addClass('active');
             this.scrollToPreviewMap();
         } else {
@@ -570,14 +542,14 @@ const RoadProjectAdd = {
         this.previewRangeLayer = L.layerGroup().addTo(this.previewMap);
         this.previewPhotoLayer = L.layerGroup().addTo(this.previewMap);
 
-        // 點圖新增模式：點擊地圖時插入範圍點或街景照片並關閉模式，完成後捲回來源區塊
+        // 點圖新增模式：
+        //   範圍點 → 連續新增，模式保持開啟直到按「完成新增」或 Esc
+        //   街景照片 → 新增一筆後關閉模式並捲回照片區塊
         const self = this;
         this.previewMap.on('click', function(e) {
             if (self.addingRangePoint) {
-                self.middleRangePoints.push({ lat: e.latlng.lat, lng: e.latlng.lng });
+                self.insertRangePoint(e.latlng);
                 self.syncRangeTable();
-                self.toggleAddRangePoint();
-                self.scrollToSection('#add-expansion-range-table');
             } else if (self.addingPhotoPoint) {
                 self.photoList.push({
                     Id: self.photoList.length,
@@ -648,30 +620,19 @@ const RoadProjectAdd = {
             allCoords.push([Number(this.rangeList[0].Latitude), Number(this.rangeList[0].Longitude)]);
         }
 
-        // ── 起點標記（可拖曳）──
-        if (this.startCoord) {
-            this.createDraggableMarker(
-                [this.startCoord.lat, this.startCoord.lng],
-                'range-marker-start', '起點',
-                function(ll) { self.startCoord = { lat: ll.lat, lng: ll.lng }; self.syncRangeTable(); }
-            ).addTo(this.previewRangeLayer);
-        }
-
-        // ── 終點標記（可拖曳）──
-        if (this.endCoord) {
-            this.createDraggableMarker(
-                [this.endCoord.lat, this.endCoord.lng],
-                'range-marker-end', '終點',
-                function(ll) { self.endCoord = { lat: ll.lat, lng: ll.lng }; self.syncRangeTable(); }
-            ).addTo(this.previewRangeLayer);
-        }
-
-        // ── 中間範圍點標記（可拖曳）──
-        this.middleRangePoints.forEach(function(p, idx) {
+        // ── 範圍點標記（可拖曳）：起點綠色、終點紅色、其餘藍色 ──
+        let middleNo = 0;
+        this.rangePoints.forEach(function(p, idx) {
+            const iconClass = p.role === 'start' ? 'range-marker-start'
+                : p.role === 'end' ? 'range-marker-end' : 'range-marker-middle';
+            const popup = p.role === 'start' ? '起點'
+                : p.role === 'end' ? '終點' : `範圍點 ${++middleNo}`;
             self.createDraggableMarker(
-                [p.lat, p.lng],
-                'range-marker-middle', `範圍點 ${idx + 1}`,
-                function(ll) { self.middleRangePoints[idx] = { lat: ll.lat, lng: ll.lng }; self.syncRangeTable(); }
+                [p.lat, p.lng], iconClass, popup,
+                function(ll) {
+                    self.rangePoints[idx] = { lat: ll.lat, lng: ll.lng, role: p.role };
+                    self.syncRangeTable();
+                }
             ).addTo(self.previewRangeLayer);
         });
 
@@ -693,7 +654,8 @@ const RoadProjectAdd = {
             }
         });
 
-        // ── 自動縮放範圍 ──
+        // ── 自動縮放範圍（連續新增範圍點期間不縮放，避免地圖跳動）──
+        if (this.addingRangePoint) return;
         if (allCoords.length > 1) {
             this.previewMap.fitBounds(L.latLngBounds(allCoords), { padding: [20, 20] });
         } else if (allCoords.length === 1) {
@@ -768,17 +730,17 @@ const RoadProjectAdd = {
 
     /**
      * 更新拓寬範圍中間點（來自地圖視窗）
-     * 起點/終點座標不受影響，由 syncRangeTable 重新組合
+     * 起點/終點保留，中間點整批替換為「起點、地圖視窗的點…、終點」
      */
     updateExpansionRangeTable: function(data) {
-        this.middleRangePoints = [];
-        if (data && data.length > 0) {
-            data.forEach((item) => {
-                this.middleRangePoints.push({ lat: item.lat, lng: item.lng });
-            });
-        }
+        const start = this.rangePoints.find(p => p.role === 'start');
+        const end = this.rangePoints.find(p => p.role === 'end');
+        this.rangePoints = [
+            ...(start ? [start] : []),
+            ...(data || []).map(item => ({ lat: item.lat, lng: item.lng, role: 'middle' })),
+            ...(end ? [end] : [])
+        ];
         this.syncRangeTable();
-        console.log('拓寬範圍 (中間點):', this.middleRangePoints);
     },
 
     /**
@@ -911,6 +873,17 @@ const RoadProjectAdd = {
         self.combineLocation();
         if (!$('#add-location').val().trim()) {
             alert('請輸入起點與終點以組合起訖位置');
+            return;
+        }
+
+        // 街景照片：每筆都要有圖檔與有效緯經度
+        const photoError = checkStreetPhotos(self.photoList, index => ({
+            lat: $(`.photo-lat-input[data-index="${index}"]`).val(),
+            lng: $(`.photo-lng-input[data-index="${index}"]`).val()
+        }));
+        if (photoError) {
+            alert(photoError);
+            self.scrollToSection('#street-photo-list');
             return;
         }
 

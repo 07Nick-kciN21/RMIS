@@ -968,6 +968,13 @@ namespace RMIS.Controllers
                 var ownershipError = await CheckProjectOwnershipAsync(input.ProjectId);
                 if (ownershipError != null) return ownershipError;
 
+                var photoError = StreetPhotoValidator.Validate(input.PhotoPoints, allowExisting: true);
+                if (photoError != null)
+                {
+                    LogOp("更新座標點", false, photoError);
+                    return BadRequest(new { success = false, message = photoError });
+                }
+
                 var result = await _adminInterface.UpdateProjectPointsAsync(input.ProjectId, input.RangePoints, input.PhotoPoints);
                 if (result)
                 {

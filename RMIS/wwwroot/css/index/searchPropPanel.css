@@ -33,6 +33,23 @@
     text-decoration: none;
 }
 
+/* 結果分頁列：字級比照結果表格 18px */
+#searchPropPanel .tablePage {
+    font-size: 18px;
+}
+
+/* select 預設不繼承字級 */
+#searchPropPanel .tablePage select {
+    font-size: inherit;
+}
+
+/* 頁碼放大後，兩三位數的頁碼放不進原本 20px 的寬度 */
+#searchPropPanel .tablePage .pageList a {
+    width: auto;
+    min-width: 24px;
+    padding: 0 2px;
+}
+
 #searchPropPanel #prop4 .form-check label{
     font-size: 26px;
 }

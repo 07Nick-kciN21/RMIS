@@ -1,4 +1,4 @@
-﻿import { Map } from '../map_test.js';
+﻿import { Map } from '../map.js';
 import { addMarkersToLayer, addLineToLayer, addPolygonToLayer, addArrowlineToLayer } from './utils.js';
 import { showLoading, hideLoading } from '../../loading.js';
 import { getPointStyleRule } from './layerEdit/pointStyleStore.js';

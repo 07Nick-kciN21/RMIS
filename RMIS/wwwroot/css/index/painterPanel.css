@@ -1,6 +1,11 @@
-﻿#painterPanel #colorPickerContent {
+﻿#painterPanel #colorPickerContent,
+#painterPanel #drawStyleBar {
     font-size: 16px;
     font-weight: bold;
+}
+
+#painterPanel #drawStyleBar {
+    margin-bottom: 10px;
 }
 
 #ptbInOut {
@@ -23,6 +28,71 @@
             background: #f0f0f0;
         }
 
+/* 地圖上的文字輸入框：無內距與邊框，與完成後的文字位置、字型一致，以虛線外框提示正在輸入 */
+.painter-text-editor {
+    padding: 0;
+    margin: 0;
+    border: none;
+    outline: 1px dashed #666;
+    background: rgba(255, 255, 255, 0.6);
+    font-family: inherit;
+    font-weight: bold;
+    line-height: normal;
+}
+
+/* 地圖上的文字：預設依內容寬度不換行；拖曳調整框寬後固定寬度並自動換行 */
+.painter-text {
+    font-weight: bold;
+    line-height: normal;
+    white-space: nowrap;
+}
+
+    .painter-text.fixed-width {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    /* 編輯模式下雙擊修改文字內容；Leaflet 標記預設禁止選取文字，編輯時需開放 */
+    .painter-text.editing {
+        cursor: text;
+        outline: 1px dashed #666;
+        background: rgba(255, 255, 255, 0.6);
+        -webkit-user-select: text;
+        user-select: text;
+    }
+
+/* 編輯模式下文字框的大小控制點：右側調寬、下方調高、右下角同時調整 */
+.painter-text-resize {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border: 1px solid #333;
+    touch-action: none;
+}
+
+    .painter-text-resize.resize-e {
+        top: 50%;
+        right: -6px;
+        height: 18px;
+        margin-top: -9px;
+        cursor: ew-resize;
+    }
+
+    .painter-text-resize.resize-s {
+        left: 50%;
+        bottom: -6px;
+        width: 18px;
+        margin-left: -9px;
+        cursor: ns-resize;
+    }
+
+    .painter-text-resize.resize-se {
+        right: -6px;
+        bottom: -6px;
+        cursor: nwse-resize;
+    }
+
 .editableBox {
     padding-left:5px;
 }
@@ -32,18 +102,6 @@
     display: flex;
     gap: 2px;
 }
-
-.goDraw {
-    width: 100%;
-    display: none;
-    border-radius: 5px;
-    border: none;
-}
-
-    .goDraw:hover {
-        color:white;
-        background-color:gray;
-    }
 
 .searchBar {
     font-weight: bold;
