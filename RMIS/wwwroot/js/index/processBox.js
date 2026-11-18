@@ -166,6 +166,7 @@ const ProcessBox = {
             '公文核定':   'type-official',
             '進度說明':   'type-progress',
             '局長補充格式': 'type-official',
+            '歷程匯出':   'type-official',
             '檔案上傳':   'type-file'
         };
 
@@ -175,6 +176,9 @@ const ProcessBox = {
             const currentResolution   = r.currentMeetingResolution ? self.escapeHtml(r.currentMeetingResolution) : '';
             const districtHtml = r.district
                 ? `<span class="record-date"><i class="fa fa-map-marker"></i> ${self.escapeHtml(r.district)}</span>`
+                : '';
+            const supplementCodeHtml = ((r.recordType === '局長補充格式' || r.recordType === '歷程匯出') && r.category)
+                ? `<span class="record-date"><i class="fa fa-key"></i> 補充碼：${self.escapeHtml(r.category)}</span>`
                 : '';
             const statusHtml = currentStatus
                 ? `<p class="record-desc" style="margin-bottom:6px;"><b>最新辦理情形：</b>${currentStatus}</p>`
@@ -193,6 +197,7 @@ const ProcessBox = {
                                 <h4 class="record-title">${self.escapeHtml(r.recordTitle || '-')}</h4>
                             </div>
                             ${districtHtml}
+                            ${supplementCodeHtml}
                         </div>
                         ${statusHtml}
                         ${resolutionHtml}
@@ -295,7 +300,7 @@ const ProcessBox = {
         }
 
         if (self.allProcessData && self.allProcessData.length > 0) {
-            const last = [...self.allProcessData].reverse().find(r => r.recordType !== '局長補充格式');
+            const last = [...self.allProcessData].reverse().find(r => r.recordType !== '局長補充格式' && r.recordType !== '歷程匯出');
             $('#sa-previous-status').val(last?.currentStatus || '');
             $('#sa-previous-resolution').val(last?.currentMeetingResolution || '');
         }
@@ -595,7 +600,7 @@ const ProcessBox = {
         $('#detail-project-name').text(self.currentProject?.name || '');
         $('#detail-record-title').text(record.recordTitle || '-');
         self.renderDetail(record);
-        $('#btn-detail-edit').toggle(record.recordType !== '局長補充格式');
+        $('#btn-detail-edit').toggle(record.recordType !== '局長補充格式' && record.recordType !== '歷程匯出');
         BoxManager.openRightBoxPage('page-process-detail', '記錄詳情');
         if (record.processId) self.fetchDetailFiles(record.processId);
     },
@@ -727,6 +732,7 @@ const ProcessBox = {
                     </div>
                     <div style="margin-top:8px; font-size:13px; color:#64748b;">
                         ${record.district ? `<span style="margin-right:12px;"><i class="fa fa-map-marker"></i> ${self.escapeHtml(record.district)}</span>` : ''}
+                        ${(record.recordType === '局長補充格式' || record.recordType === '歷程匯出') && record.category ? `<span style="margin-right:12px;"><i class="fa fa-key"></i> 補充碼：${self.escapeHtml(record.category)}</span>` : ''}
                         ${record.createdAt ? `<span><i class="fa fa-calendar"></i> ${self.formatDate(record.createdAt)}</span>` : ''}
                     </div>
                 </div>
@@ -735,7 +741,7 @@ const ProcessBox = {
                 ['執行單位', record.executionUnit],
                 ['工程單位', record.constructionUnit],
                 ['工程名稱', record.projectName],
-                ['類別',     record.category],
+                ['類別',     (record.recordType === '局長補充格式' || record.recordType === '歷程匯出') ? null : record.category],
                 ['關心議員', self.currentProject?._raw?.proposer]
             ])}
             ${section('fa-home', '用地取得資訊', [
@@ -934,9 +940,9 @@ const ProcessBox = {
             return;
         }
 
-        // 沒有歷程（或只有局長補充格式記錄）時仍可匯出：專案層級欄位照常帶入，歷程相關欄位留空
+        // 沒有歷程（或只有局長補充格式／歷程匯出記錄）時仍可匯出：專案層級欄位照常帶入，歷程相關欄位留空
         const raw = self.currentProject?._raw || {};
-        const last = [...(self.allProcessData || [])].reverse().find(r => r.recordType !== '局長補充格式') || {};
+        const last = [...(self.allProcessData || [])].reverse().find(r => r.recordType !== '局長補充格式' && r.recordType !== '歷程匯出') || {};
 
         const projectName = last.projectName || self.currentProject?.name || '';
         const executionUnit = last.executionUnit || '';

@@ -34,7 +34,7 @@ namespace RMIS.Repositories
         public async Task<List<RoadProjectProcess>> GetLastProcessRecordsByProjectIdsAsync(List<string> projectIds)
         {
             var records = await _mapDBContext.RoadProjectProcesses
-                .Where(p => projectIds.Contains(p.ProjectId) && p.RecordType != "局長補充格式")
+                .Where(p => projectIds.Contains(p.ProjectId) && p.RecordType != "局長補充格式" && p.RecordType != "歷程匯出")
                 .GroupBy(p => p.ProjectId)
                 .Select(g => g.OrderByDescending(p => p.OrderIndex).First())
                 .ToListAsync();

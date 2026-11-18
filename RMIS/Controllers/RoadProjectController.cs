@@ -1068,7 +1068,7 @@ namespace RMIS.Controllers
 
                 // 1. 產生 Word
                 var ms = new MemoryStream();
-                BuildSupplementWord(ms, input, image);
+                BuildSupplementWord(ms, input, image, out var headerCode);
                 var wordBytes = ms.ToArray();
                 var today = DateTime.Now.ToString("yyyyMMdd");
                 var fileName = $"局長補充資料_{input.ProjectName}_{today}.docx";
@@ -1088,7 +1088,8 @@ namespace RMIS.Controllers
                     RecordType = "局長補充格式",
                     RecordTitle = Path.GetFileNameWithoutExtension(fileName),
                     ExecutionUnit = input.ExecutionUnit,
-                    CurrentStatus = input.CurrentStatus
+                    CurrentStatus = input.CurrentStatus,
+                    Category = headerCode
                 };
                 var (result, processId) = await _roadProjectInterface.AddProcessRecordWithFilesAsync(
                     process, files, User.Identity.Name);
@@ -1176,11 +1177,34 @@ namespace RMIS.Controllers
 
                 var headers = input.Headers.ToArray();
                 var dataRows = input.Rows.Select(r => r.ToArray()).ToList();
+                var headerCode = $"RP{DateTime.Now:yyyyMMddHHmmss}";
 
-                var bytes = BuildExportWorkbook(headers, dataRows, exportUser, out var exportTime);
+                var bytes = BuildExportWorkbook(headers, dataRows, exportUser, out var exportTime, headerCode);
 
-                LogOp("匯出資料(Excel)", true, $"已匯出 {dataRows.Count} 筆資料");
-                var fileName = $"{(string.IsNullOrWhiteSpace(input.FileLabel) ? "匯出資料" : input.FileLabel)}_{exportTime:yyyyMMdd}.xlsx";
+                var fileLabel = string.IsNullOrWhiteSpace(input.FileLabel) ? "匯出資料" : input.FileLabel;
+                var fileName = $"{fileLabel}_{exportTime:yyyyMMdd}.xlsx";
+
+                // 為本次匯出涵蓋的每個專案，於其歷程新增一筆「歷程匯出」記錄，並將匯出的 Excel 存為佐證文件供下載
+                if (input.ProjectIds != null && input.ProjectIds.Count > 0)
+                {
+                    var uploadUser = User.Identity?.Name ?? exportUser;
+                    var files = new List<(string FileName, byte[] Content)> { (fileName, bytes) };
+                    foreach (var projectId in input.ProjectIds.Distinct())
+                    {
+                        var process = new RoadProjectProcess
+                        {
+                            ProjectId = projectId,
+                            RecordType = "歷程匯出",
+                            RecordTitle = Path.GetFileNameWithoutExtension(fileName),
+                            Category = headerCode
+                        };
+                        var (result, _) = await _roadProjectInterface.AddProcessRecordWithFilesAsync(process, files, uploadUser);
+                        if (result != "success")
+                            LogOp("匯出歷程", false, $"專案:{projectId}，新增歷程匯出記錄失敗:{result}");
+                    }
+                }
+
+                LogOp("匯出資料(Excel)", true, $"已匯出 {dataRows.Count} 筆資料，補充碼:{headerCode}");
                 return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
@@ -1193,10 +1217,12 @@ namespace RMIS.Controllers
         /// <summary>
         /// 用 NPOI 建立 Excel：第一行跨欄合併並靠右對齊顯示「匯出時間/匯出人」，第二行為標題列，其後為資料列
         /// </summary>
-        private static byte[] BuildExportWorkbook(string[] headers, List<string[]> dataRows, string exportUser, out DateTime exportTime)
+        private static byte[] BuildExportWorkbook(string[] headers, List<string[]> dataRows, string exportUser, out DateTime exportTime, string? supplementCode = null)
         {
             exportTime = DateTime.Now;
             var metaText = $"匯出時間:{exportTime:yyyy-MM-dd HH:mm:ss} 匯出人:{exportUser}";
+            if (!string.IsNullOrEmpty(supplementCode))
+                metaText += $" 補充碼:{supplementCode}";
 
             // 欄寬改用字元顯示寬度估算（而非 AutoSizeColumn），避免依賴 NPOI 用於量測字型的 SkiaSharp
             // （SkiaSharp 的 Runtime 資產在 NPOI 的 nuspec 裡被標記 exclude，不會自動複製到輸出目錄，
@@ -1318,12 +1344,24 @@ namespace RMIS.Controllers
             return null;
         }
 
-        private static void BuildSupplementWord(MemoryStream ms, SupplementWordInput input, SupplementImage? image)
+        private static void BuildSupplementWord(MemoryStream ms, SupplementWordInput input, SupplementImage? image, out string headerCode)
         {
             using var doc = WordprocessingDocument.Create(ms, WordprocessingDocumentType.Document);
             var mainPart = doc.AddMainDocumentPart();
             mainPart.Document = new Document();
             var body = mainPart.Document.AppendChild(new Body());
+
+            // 頁首：隨機碼 RP + 產生時間 (yyyyMMddHHmmss)，供文件追蹤辨識用
+            var headerPart = mainPart.AddNewPart<HeaderPart>();
+            headerCode = $"RP{DateTime.Now:yyyyMMddHHmmss}";
+            headerPart.Header = new Header(
+                new Paragraph(
+                    new ParagraphProperties(new Justification { Val = JustificationValues.Right }),
+                    new Run(
+                        new RunProperties(new RunFonts { Ascii = "標楷體", EastAsia = "標楷體", ComplexScript = "標楷體" }),
+                        new Text(headerCode))));
+            headerPart.Header.Save();
+            var headerId = mainPart.GetIdOfPart(headerPart);
 
             // 粗體標楷體 16pt（標題欄位用）
             static RunProperties BoldKaitiRp() => new(
@@ -1567,6 +1605,7 @@ namespace RMIS.Controllers
 
             // Page layout: A4, narrow margins
             body.Append(new SectionProperties(
+                new HeaderReference { Type = HeaderFooterValues.Default, Id = headerId },
                 new PageSize { Width = 11906U, Height = 16838U },
                 new PageMargin { Top = 720, Bottom = 720, Left = 1080, Right = 1080 }));
 

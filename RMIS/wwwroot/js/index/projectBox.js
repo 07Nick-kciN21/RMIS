@@ -894,7 +894,7 @@ const ProjectBox = {
                 const response = await fetch('/api/RoadProject/ExportGenericExcel', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ headers, rows, fileLabel: presetName || '快速套用' })
+                    body: JSON.stringify({ headers, rows, fileLabel: presetName || '快速套用', projectIds: selectedIds })
                 });
                 if (!response.ok) throw new Error('伺服器回傳錯誤');
 
