@@ -1100,7 +1100,7 @@ namespace RMIS.Controllers
                     return StatusCode(500, new { success = false, message = result });
                 }
 
-                LogOp("匯出歷程補充資料", true, $"專案:{input.ProjectName}，歷程:{processId}");
+                LogOp("匯出歷程補充資料", true, $"專案:{input.ProjectName}，歷程:{processId}, 補充碼:{headerCode}");
                 return File(wordBytes,
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     fileName);
